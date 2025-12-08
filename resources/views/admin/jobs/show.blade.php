@@ -45,10 +45,10 @@
 
                 <div>
                     <h4 style="margin-bottom: 1rem; font-weight: 600;">Informations</h4>
-                    <p><strong>Entreprise:</strong> {{ $job->company->name }}</p>
-                    <p><strong>Catégorie:</strong> {{ $job->category->name ?? 'N/A' }}</p>
-                    <p><strong>Localisation:</strong> {{ $job->location->name ?? 'N/A' }}</p>
-                    <p><strong>Type de contrat:</strong> {{ $job->contractType->name ?? 'N/A' }}</p>
+                    <p><strong>Entreprise:</strong> {{ $job->company?->name ?? 'N/A' }}</p>
+                    <p><strong>Catégorie:</strong> {{ $job->category?->name ?? 'N/A' }}</p>
+                    <p><strong>Localisation:</strong> {{ $job->location?->name ?? 'N/A' }}</p>
+                    <p><strong>Type de contrat:</strong> {{ $job->contractType?->name ?? 'N/A' }}</p>
                     <p><strong>Niveau d'expérience:</strong> {{ ucfirst($job->experience_level ?? 'N/A') }}</p>
 
                     @if($job->salary_min || $job->salary_max)
@@ -79,7 +79,7 @@
                     <p><strong>Candidatures:</strong> {{ $job->applications->count() }}</p>
                     <p><strong>Date limite:</strong> {{ $job->application_deadline ? $job->application_deadline->format('d/m/Y') : 'N/A' }}</p>
                     <p><strong>Publié le:</strong> {{ $job->published_at ? $job->published_at->format('d/m/Y H:i') : 'N/A' }}</p>
-                    <p><strong>Publié par:</strong> {{ $job->postedBy->name }}</p>
+                    <p><strong>Publié par:</strong> {{ $job->postedBy?->name ?? 'N/A' }}</p>
                 </div>
             </div>
         </div>
@@ -103,8 +103,8 @@
                 <tbody>
                     @forelse($job->applications as $application)
                         <tr>
-                            <td>{{ $application->user->name }}</td>
-                            <td>{{ $application->user->email }}</td>
+                            <td>{{ $application->user?->name ?? 'N/A' }}</td>
+                            <td>{{ $application->user?->email ?? 'N/A' }}</td>
                             <td>
                                 @if($application->status === 'pending')
                                     <span class="badge badge-warning">En attente</span>

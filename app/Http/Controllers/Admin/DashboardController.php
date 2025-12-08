@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Company;
+use App\Models\Favorite;
 use App\Models\Job;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\View\View;
 
@@ -22,6 +24,10 @@ class DashboardController extends Controller
             'total_applications' => Application::count(),
             'pending_applications' => Application::where('status', 'pending')->count(),
             'total_candidates' => User::where('role', 'candidate')->count(),
+            'total_recruiters' => User::where('role', 'recruiter')->count(),
+            'total_favorites' => Favorite::count(),
+            'total_notifications' => Notification::count(),
+            'unread_notifications' => Notification::where('is_read', false)->count(),
         ];
 
         $recentJobs = Job::with(['company', 'category', 'applications'])

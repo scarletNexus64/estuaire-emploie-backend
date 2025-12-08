@@ -4,6 +4,12 @@
 @section('page-title', 'Gestion des Candidatures')
 
 @section('content')
+    <!-- Bulk Delete Form -->
+    <form id="bulkDeleteForm" action="{{ route('admin.applications.bulk-delete') }}" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Liste des Candidatures</h3>
@@ -23,6 +29,9 @@
             <table>
                 <thead>
                     <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" class="custom-checkbox" title="Tout sélectionner">
+                        </th>
                         <th>Candidat</th>
                         <th>Email</th>
                         <th>Offre</th>
@@ -35,12 +44,15 @@
                 <tbody>
                     @forelse($applications as $application)
                         <tr>
-                            <td>
-                                <strong>{{ $application->user->name }}</strong>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $application->id }}">
                             </td>
-                            <td>{{ $application->user->email }}</td>
-                            <td>{{ $application->job->title }}</td>
-                            <td>{{ $application->job->company->name }}</td>
+                            <td>
+                                <strong>{{ $application->user?->name ?? 'N/A' }}</strong>
+                            </td>
+                            <td>{{ $application->user?->email ?? 'N/A' }}</td>
+                            <td>{{ $application->job?->title ?? 'N/A' }}</td>
+                            <td>{{ $application->job?->company?->name ?? 'N/A' }}</td>
                             <td>
                                 @if($application->status === 'pending')
                                     <span class="badge badge-warning">En attente</span>
@@ -63,7 +75,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 2rem;">
+                            <td colspan="8" style="text-align: center; padding: 2rem;">
                                 Aucune candidature trouvée
                             </td>
                         </tr>

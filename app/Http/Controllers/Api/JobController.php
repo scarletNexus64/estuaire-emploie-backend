@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Application;
 use App\Models\Job;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -165,6 +167,225 @@ class JobController extends Controller
 
         return response()->json([
             'data' => $jobs,
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/jobs",
+     *     summary="Créer une nouvelle offre d'emploi",
+     *     description="Permet à un recruteur de créer une nouvelle offre d'emploi pour son entreprise. L'offre sera en attente de validation par l'administrateur.",
+     *     operationId="createJob",
+     *     tags={"Jobs"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","description","category_id","location_id","contract_type_id","experience_level"},
+     *             @OA\Property(property="title", type="string", example="Développeur Full Stack Senior"),
+     *             @OA\Property(property="description", type="string", example="Nous recherchons un développeur Full Stack avec expertise Laravel et Vue.js"),
+     *             @OA\Property(property="category_id", type="integer", example=1),
+     *             @OA\Property(property="location_id", type="integer", example=1),
+     *             @OA\Property(property="contract_type_id", type="integer", example=1),
+     *             @OA\Property(property="salary_min", type="number", example=500000, nullable=true),
+     *             @OA\Property(property="salary_max", type="number", example=800000, nullable=true),
+     *             @OA\Property(property="salary_negotiable", type="boolean", example=false),
+     *             @OA\Property(property="experience_level", type="string", enum={"junior", "intermediaire", "senior", "expert"}, example="senior"),
+     *             @OA\Property(property="requirements", type="string", example="3+ ans d'expérience en PHP/Laravel", nullable=true),
+     *             @OA\Property(property="benefits", type="string", example="Assurance santé, primes de performance", nullable=true),
+     *             @OA\Property(property="application_deadline", type="string", format="date", example="2025-01-15", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Offre créée avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Offre créée avec succès. En attente de validation."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Non autorisé à publier des offres",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Vous n'êtes pas autorisé à publier des offres")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Erreur de validation")
+     * )
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $recruiter = auth()->user()->recruiter;
+
+        if (! $recruiter || ! $recruiter->can_publish) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à publier des offres',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'location_id' => 'required|exists:locations,id',
+            'contract_type_id' => 'required|exists:contract_types,id',
+            'salary_min' => 'nullable|numeric|min:0',
+            'salary_max' => 'nullable|numeric|min:0',
+            'salary_negotiable' => 'sometimes|boolean',
+            'experience_level' => 'required|in:junior,intermediaire,senior,expert',
+            'requirements' => 'nullable|string',
+            'benefits' => 'nullable|string',
+            'application_deadline' => 'nullable|date|after:today',
+        ]);
+
+        $job = Job::create(array_merge($validated, [
+            'company_id' => $recruiter->company_id,
+            'posted_by' => auth()->id(),
+            'status' => 'pending', // Admin doit approuver
+        ]));
+
+        return response()->json([
+            'message' => 'Offre créée avec succès. En attente de validation.',
+            'data' => $job->load(['company', 'category', 'location', 'contractType']),
+        ], 201);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/recruiter/jobs",
+     *     summary="Mes offres d'emploi (Recruteur)",
+     *     description="Récupère toutes les offres d'emploi publiées par le recruteur connecté pour son entreprise",
+     *     operationId="getMyJobs",
+     *     tags={"Jobs"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filtrer par statut",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"draft", "pending", "published", "closed", "expired"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des offres du recruteur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Vous n'êtes pas recruteur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Vous n'êtes pas recruteur")
+     *         )
+     *     )
+     * )
+     */
+    public function myJobs(Request $request): JsonResponse
+    {
+        $recruiter = auth()->user()->recruiter;
+
+        if (! $recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        $query = Job::where('company_id', $recruiter->company_id)
+            ->with(['category', 'location', 'contractType'])
+            ->withCount('applications');
+
+        // Filtrer par statut si fourni
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $jobs = $query->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($jobs);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/recruiter/dashboard",
+     *     summary="Dashboard recruteur",
+     *     description="Récupère les statistiques et données essentielles du dashboard recruteur (stats, offres actives, candidatures récentes)",
+     *     operationId="getRecruiterDashboard",
+     *     tags={"Jobs"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Données du dashboard",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="statistics", type="object",
+     *                 @OA\Property(property="total_jobs", type="integer", example=12),
+     *                 @OA\Property(property="active_jobs", type="integer", example=8),
+     *                 @OA\Property(property="total_applications", type="integer", example=45),
+     *                 @OA\Property(property="new_applications", type="integer", example=5),
+     *                 @OA\Property(property="total_views", type="integer", example=1248)
+     *             ),
+     *             @OA\Property(property="active_jobs", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="recent_applications", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Vous n'êtes pas recruteur"
+     *     )
+     * )
+     */
+    public function dashboard(): JsonResponse
+    {
+        $recruiter = auth()->user()->recruiter;
+
+        if (! $recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        // Statistiques
+        $stats = [
+            'total_jobs' => Job::where('company_id', $recruiter->company_id)->count(),
+            'active_jobs' => Job::where('company_id', $recruiter->company_id)
+                ->where('status', 'published')
+                ->count(),
+            'total_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->count(),
+            'new_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->where('status', 'pending')->count(),
+            'total_views' => Job::where('company_id', $recruiter->company_id)
+                ->sum('views_count'),
+        ];
+
+        // Top 5 offres actives avec nombre de candidatures
+        $activeJobs = Job::where('company_id', $recruiter->company_id)
+            ->where('status', 'published')
+            ->withCount('applications')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // 5 dernières candidatures reçues
+        $recentApplications = Application::whereHas('job', function ($q) use ($recruiter) {
+            $q->where('company_id', $recruiter->company_id);
+        })
+            ->with(['user', 'job'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'statistics' => $stats,
+            'active_jobs' => $activeJobs,
+            'recent_applications' => $recentApplications,
         ]);
     }
 }

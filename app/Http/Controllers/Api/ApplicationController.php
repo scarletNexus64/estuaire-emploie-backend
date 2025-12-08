@@ -20,6 +20,7 @@ class ApplicationController extends Controller
      * @OA\Post(
      *     path="/api/jobs/{id}/apply",
      *     summary="Postuler à une offre d'emploi",
+     *     description="Permet à un candidat de postuler à une offre avec CV, lettre de motivation et portfolio",
      *     tags={"Applications"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -30,10 +31,14 @@ class ApplicationController extends Controller
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="cover_letter", type="string", description="Lettre de motivation"),
-     *             @OA\Property(property="portfolio_url", type="string", description="URL du portfolio")
+     *         required=false,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="cv", type="string", format="binary", description="Fichier CV (PDF, DOC, DOCX - max 5MB)"),
+     *                 @OA\Property(property="cover_letter", type="string", description="Lettre de motivation"),
+     *                 @OA\Property(property="portfolio_url", type="string", description="URL du portfolio")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -41,11 +46,12 @@ class ApplicationController extends Controller
      *         description="Candidature soumise avec succès",
      *         @OA\JsonContent(
      *             @OA\Property(property="data", type="object"),
-     *             @OA\Property(property="message", type="string")
+     *             @OA\Property(property="message", type="string", example="Candidature soumise avec succès")
      *         )
      *     ),
      *     @OA\Response(response=400, description="Vous avez déjà postulé à cette offre"),
-     *     @OA\Response(response=404, description="Offre non trouvée")
+     *     @OA\Response(response=404, description="Offre non trouvée"),
+     *     @OA\Response(response=422, description="Erreur de validation (CV requis, format invalide, etc.)")
      * )
      */
     public function apply(Request $request, Job $job): JsonResponse
@@ -68,13 +74,21 @@ class ApplicationController extends Controller
         }
 
         $validated = $request->validate([
+            'cv' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
             'cover_letter' => 'nullable|string',
             'portfolio_url' => 'nullable|url',
         ]);
 
+        // Upload du CV
+        $cvPath = null;
+        if ($request->hasFile('cv')) {
+            $cvPath = $request->file('cv')->store('cvs', 'public');
+        }
+
         $application = Application::create([
             'job_id' => $job->id,
             'user_id' => $request->user()->id,
+            'cv_path' => $cvPath,
             'cover_letter' => $validated['cover_letter'] ?? null,
             'portfolio_url' => $validated['portfolio_url'] ?? null,
             'status' => 'pending',
@@ -160,6 +174,157 @@ class ApplicationController extends Controller
 
         return response()->json([
             'data' => $application,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/recruiter/applications",
+     *     summary="Candidatures reçues (Recruteur)",
+     *     description="Récupère toutes les candidatures reçues pour les offres d'emploi de l'entreprise du recruteur connecté",
+     *     operationId="getReceivedApplications",
+     *     tags={"Applications"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filtrer par statut",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"pending", "viewed", "shortlisted", "rejected", "interview", "accepted"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="job_id",
+     *         in="query",
+     *         description="Filtrer par offre d'emploi",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des candidatures reçues",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Vous n'êtes pas recruteur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Vous n'êtes pas recruteur")
+     *         )
+     *     )
+     * )
+     */
+    public function receivedApplications(Request $request): JsonResponse
+    {
+        $recruiter = auth()->user()->recruiter;
+
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        $query = Application::whereHas('job', function ($q) use ($recruiter) {
+            $q->where('company_id', $recruiter->company_id);
+        })->with(['user', 'job']);
+
+        // Filtrer par statut si fourni
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filtrer par job_id si fourni
+        if ($request->has('job_id')) {
+            $query->where('job_id', $request->job_id);
+        }
+
+        $applications = $query->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($applications);
+    }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/applications/{id}/status",
+     *     summary="Mettre à jour le statut d'une candidature (Recruteur)",
+     *     description="Permet au recruteur de changer le statut d'une candidature (acceptée, refusée, en révision, etc.)",
+     *     operationId="updateApplicationStatus",
+     *     tags={"Applications"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de la candidature",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(property="status", type="string", enum={"pending", "viewed", "shortlisted", "rejected", "interview", "accepted"}, example="viewed"),
+     *             @OA\Property(property="internal_notes", type="string", example="Bon profil, à convoquer pour entretien")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Statut de la candidature mis à jour"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Non autorisé - Cette candidature ne concerne pas votre entreprise"
+     *     ),
+     *     @OA\Response(response=404, description="Candidature non trouvée"),
+     *     @OA\Response(response=422, description="Erreur de validation")
+     * )
+     */
+    public function updateStatus(Request $request, Application $application): JsonResponse
+    {
+        $recruiter = auth()->user()->recruiter;
+
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        // Vérifier que la candidature concerne l'entreprise du recruteur
+        if ($application->job->company_id !== $recruiter->company_id) {
+            return response()->json([
+                'message' => 'Cette candidature ne concerne pas votre entreprise',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,viewed,shortlisted,rejected,interview,accepted',
+            'internal_notes' => 'nullable|string',
+        ]);
+
+        $application->update($validated);
+
+        // Marquer comme "viewed" si ce n'est pas déjà fait
+        if (!$application->viewed_at && $validated['status'] !== 'pending') {
+            $application->viewed_at = now();
+            $application->save();
+        }
+
+        // Marquer comme "responded" si accepté ou refusé
+        if (in_array($validated['status'], ['accepted', 'rejected']) && !$application->responded_at) {
+            $application->responded_at = now();
+            $application->save();
+        }
+
+        return response()->json([
+            'message' => 'Statut de la candidature mis à jour',
+            'data' => $application->fresh(['user', 'job']),
         ]);
     }
 }

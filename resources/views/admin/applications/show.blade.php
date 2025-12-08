@@ -6,7 +6,7 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Candidature de {{ $application->user->name }}</h3>
+            <h3 class="card-title">Candidature de {{ $application->user?->name ?? 'N/A' }}</h3>
             <a href="{{ route('admin.applications.index') }}" class="btn btn-secondary">Retour</a>
         </div>
 
@@ -14,18 +14,18 @@
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
                 <div>
                     <h4 style="margin-bottom: 1rem; font-weight: 600;">Informations du Candidat</h4>
-                    <p><strong>Nom:</strong> {{ $application->user->name }}</p>
-                    <p><strong>Email:</strong> {{ $application->user->email }}</p>
-                    <p><strong>Téléphone:</strong> {{ $application->user->phone ?? 'N/A' }}</p>
-                    <p><strong>Niveau d'expérience:</strong> {{ ucfirst($application->user->experience_level ?? 'N/A') }}</p>
+                    <p><strong>Nom:</strong> {{ $application->user?->name ?? 'N/A' }}</p>
+                    <p><strong>Email:</strong> {{ $application->user?->email ?? 'N/A' }}</p>
+                    <p><strong>Téléphone:</strong> {{ $application->user?->phone ?? 'N/A' }}</p>
+                    <p><strong>Niveau d'expérience:</strong> {{ ucfirst($application->user?->experience_level ?? 'N/A') }}</p>
 
-                    @if($application->user->skills)
+                    @if($application->user?->skills)
                         <p><strong>Compétences:</strong> {{ $application->user->skills }}</p>
                     @endif
 
                     <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Offre d'Emploi</h4>
-                    <p><strong>Titre:</strong> {{ $application->job->title }}</p>
-                    <p><strong>Entreprise:</strong> {{ $application->job->company->name }}</p>
+                    <p><strong>Titre:</strong> {{ $application->job?->title ?? 'N/A' }}</p>
+                    <p><strong>Entreprise:</strong> {{ $application->job?->company?->name ?? 'N/A' }}</p>
 
                     <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Lettre de Motivation</h4>
                     <p style="white-space: pre-wrap;">{{ $application->cover_letter ?? 'Aucune lettre de motivation fournie' }}</p>

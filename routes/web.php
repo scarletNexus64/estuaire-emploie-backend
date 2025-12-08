@@ -37,22 +37,27 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('companies', CompanyController::class);
     Route::patch('companies/{company}/verify', [CompanyController::class, 'verify'])->name('companies.verify');
     Route::patch('companies/{company}/suspend', [CompanyController::class, 'suspend'])->name('companies.suspend');
+    Route::delete('companies/bulk-delete', [CompanyController::class, 'bulkDelete'])->name('companies.bulk-delete');
 
     // Jobs Management
     Route::resource('jobs', JobController::class);
     Route::patch('jobs/{job}/publish', [JobController::class, 'publish'])->name('jobs.publish');
     Route::patch('jobs/{job}/feature', [JobController::class, 'feature'])->name('jobs.feature');
+    Route::delete('jobs/bulk-delete', [JobController::class, 'bulkDelete'])->name('jobs.bulk-delete');
 
     // Applications Management
     Route::get('applications', [ApplicationController::class, 'index'])->name('applications.index');
     Route::get('applications/{application}', [ApplicationController::class, 'show'])->name('applications.show');
     Route::patch('applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
+    Route::delete('applications/bulk-delete', [ApplicationController::class, 'bulkDelete'])->name('applications.bulk-delete');
 
     // Users (Candidates) Management
     Route::resource('users', UserController::class)->only(['index', 'show', 'destroy']);
+    Route::delete('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk-delete');
 
     // Recruiters Management
     Route::resource('recruiters', RecruiterController::class);
+    Route::delete('recruiters/bulk-delete', [RecruiterController::class, 'bulkDelete'])->name('recruiters.bulk-delete');
 
     // Admin Management (Super Admin only)
     Route::prefix('admins')->name('admins.')->group(function () {
@@ -64,6 +69,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/{user}', [AdminManagementController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminManagementController::class, 'destroy'])->name('destroy');
         Route::patch('/{user}/permissions', [AdminManagementController::class, 'updatePermissions'])->name('permissions');
+        Route::delete('bulk-delete', [AdminManagementController::class, 'bulkDelete'])->name('bulk-delete');
     });
 
     // Sections Management

@@ -16,6 +16,12 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" action="<?php echo e(route('admin.jobs.bulk-delete')); ?>" method="POST" style="display: none;">
+    <?php echo csrf_field(); ?>
+    <?php echo method_field('DELETE'); ?>
+</form>
+
 <!-- Stats Overview -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
     <div class="stat-card">
@@ -105,6 +111,9 @@
         <table>
             <thead>
                 <tr>
+                    <th class="checkbox-cell">
+                        <input type="checkbox" id="selectAll" class="custom-checkbox" title="Tout sélectionner">
+                    </th>
                     <th>Offre</th>
                     <th>Entreprise</th>
                     <th>Localisation</th>
@@ -118,17 +127,20 @@
             <tbody>
                 <?php $__empty_1 = true; $__currentLoopData = $jobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox custom-checkbox" value="<?php echo e($job->id); ?>">
+                    </td>
                     <td>
                         <div>
                             <strong style="display: block;"><?php echo e($job->title); ?></strong>
-                            <small style="color: var(--secondary); display: block;"><?php echo e($job->category->name ?? 'N/A'); ?></small>
+                            <small style="color: var(--secondary); display: block;"><?php echo e($job->category?->name ?? 'N/A'); ?></small>
                             <?php if($job->is_featured): ?>
                                 <span class="badge badge-warning" style="margin-top: 0.25rem;">⭐ Featured</span>
                             <?php endif; ?>
                         </div>
                     </td>
-                    <td><?php echo e($job->company->name); ?></td>
-                    <td><?php echo e($job->location->city ?? 'N/A'); ?></td>
+                    <td><?php echo e($job->company?->name ?? 'N/A'); ?></td>
+                    <td><?php echo e($job->location?->city ?? 'N/A'); ?></td>
                     <td>
                         <?php if($job->status === 'published'): ?>
                             <span class="badge badge-success">Publiée</span>
@@ -196,7 +208,7 @@
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--secondary);">
+                    <td colspan="9" style="text-align: center; padding: 3rem; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
                         <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucune offre trouvée</p>
                         <p style="margin-bottom: 1.5rem;">Commencez par créer une nouvelle offre d'emploi</p>

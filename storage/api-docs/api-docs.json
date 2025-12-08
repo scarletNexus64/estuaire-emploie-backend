@@ -14,7 +14,7 @@
     },
     "servers": [
         {
-            "url": "http://my-default-host.com",
+            "url": "http://localhost:8000",
             "description": "Serveur API Principal"
         }
     ],
@@ -25,6 +25,7 @@
                     "Applications"
                 ],
                 "summary": "Postuler à une offre d'emploi",
+                "description": "Permet à un candidat de postuler à une offre avec CV, lettre de motivation et portfolio",
                 "operationId": "40e59a18fb7f7e8eaef58d6258674856",
                 "parameters": [
                     {
@@ -38,11 +39,16 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
+                                    "cv": {
+                                        "description": "Fichier CV (PDF, DOC, DOCX - max 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
                                     "cover_letter": {
                                         "description": "Lettre de motivation",
                                         "type": "string"
@@ -68,7 +74,8 @@
                                             "type": "object"
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Candidature soumise avec succès"
                                         }
                                     },
                                     "type": "object"
@@ -81,6 +88,9 @@
                     },
                     "404": {
                         "description": "Offre non trouvée"
+                    },
+                    "422": {
+                        "description": "Erreur de validation (CV requis, format invalide, etc.)"
                     }
                 },
                 "security": [
@@ -182,6 +192,178 @@
                     },
                     "404": {
                         "description": "Candidature non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/recruiter/applications": {
+            "get": {
+                "tags": [
+                    "Applications"
+                ],
+                "summary": "Candidatures reçues (Recruteur)",
+                "description": "Récupère toutes les candidatures reçues pour les offres d'emploi de l'entreprise du recruteur connecté",
+                "operationId": "getReceivedApplications",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "viewed",
+                                "shortlisted",
+                                "rejected",
+                                "interview",
+                                "accepted"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "job_id",
+                        "in": "query",
+                        "description": "Filtrer par offre d'emploi",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des candidatures reçues",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Vous n'êtes pas recruteur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'êtes pas recruteur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/applications/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Applications"
+                ],
+                "summary": "Mettre à jour le statut d'une candidature (Recruteur)",
+                "description": "Permet au recruteur de changer le statut d'une candidature (acceptée, refusée, en révision, etc.)",
+                "operationId": "updateApplicationStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la candidature",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "viewed",
+                                            "shortlisted",
+                                            "rejected",
+                                            "interview",
+                                            "accepted"
+                                        ],
+                                        "example": "viewed"
+                                    },
+                                    "internal_notes": {
+                                        "type": "string",
+                                        "example": "Bon profil, à convoquer pour entretien"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Statut mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statut de la candidature mis à jour"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Non autorisé - Cette candidature ne concerne pas votre entreprise"
+                    },
+                    "404": {
+                        "description": "Candidature non trouvée"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
                     }
                 },
                 "security": [
@@ -390,6 +572,367 @@
                 ]
             }
         },
+        "/api/user/role": {
+            "put": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Mettre à jour le rôle de l'utilisateur",
+                "description": "Permet à l'utilisateur de choisir son rôle entre candidat et recruteur après la connexion",
+                "operationId": "updateRole",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "candidate",
+                                            "recruiter"
+                                        ],
+                                        "example": "candidate"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rôle mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rôle mis à jour avec succès"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/user/profile": {
+            "put": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Mettre à jour le profil utilisateur",
+                "description": "Permet à l'utilisateur de mettre à jour ses informations personnelles et professionnelles",
+                "operationId": "updateProfile",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Jean Dupont"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237 690 123 456"
+                                    },
+                                    "bio": {
+                                        "type": "string",
+                                        "example": "Développeur passionné avec 5 ans d'expérience"
+                                    },
+                                    "skills": {
+                                        "type": "string",
+                                        "example": "PHP, Laravel, JavaScript, Vue.js"
+                                    },
+                                    "experience_level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "junior",
+                                            "intermediaire",
+                                            "senior",
+                                            "expert"
+                                        ]
+                                    },
+                                    "portfolio_url": {
+                                        "type": "string",
+                                        "example": "https://monportfolio.com"
+                                    },
+                                    "profile_photo": {
+                                        "description": "Photo de profil (JPG, JPEG, PNG, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profil mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profil mis à jour avec succès"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/user/statistics": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Statistiques de l'utilisateur",
+                "description": "Récupère les statistiques personnalisées selon le rôle (candidat ou recruteur)",
+                "operationId": "getUserStatistics",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques récupérées avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "statistics": {
+                                            "properties": {
+                                                "total_applications": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "pending_applications": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "accepted_applications": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "total_favorites": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "profile_views": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/password/forgot": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Demande de réinitialisation de mot de passe",
+                "description": "Envoie un email avec un lien de réinitialisation de mot de passe",
+                "operationId": "forgotPassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jean.dupont@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Lien de réinitialisation envoyé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lien de réinitialisation envoyé par email"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "500": {
+                        "description": "Impossible d'envoyer le lien",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Impossible d'envoyer le lien"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/password/reset": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Réinitialiser le mot de passe",
+                "description": "Réinitialise le mot de passe avec le token reçu par email",
+                "operationId": "resetPassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "abc123..."
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jean.dupont@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe réinitialisé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mot de passe réinitialisé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    },
+                    "500": {
+                        "description": "Impossible de réinitialiser le mot de passe",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Impossible de réinitialiser le mot de passe"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/categories": {
             "get": {
                 "tags": [
@@ -504,6 +1047,102 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Créer une nouvelle entreprise",
+                "description": "Permet à un recruteur de créer le profil de son entreprise avec logo. L'entreprise sera en attente de vérification par l'administrateur.",
+                "operationId": "createCompany",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "description"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tech Solutions SARL"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@techsolutions.cm"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237 690 123 456"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Entreprise spécialisée dans le développement web et mobile"
+                                    },
+                                    "logo": {
+                                        "description": "Logo de l'entreprise (PNG, JPG, JPEG - max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "sector": {
+                                        "type": "string",
+                                        "example": "Technologie & IT"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Bonanjo, Rue des Cocotiers"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Douala"
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "example": "https://techsolutions.cm"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Entreprise créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Entreprise créée avec succès. En attente de vérification."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/companies/{id}": {
@@ -550,6 +1189,520 @@
                         "description": "Entreprise non trouvée"
                     }
                 }
+            }
+        },
+        "/api/my-company": {
+            "get": {
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Récupérer mon entreprise",
+                "description": "Récupère les informations de l'entreprise associée au recruteur connecté",
+                "operationId": "getMyCompany",
+                "responses": {
+                    "200": {
+                        "description": "Informations de l'entreprise",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": "string"
+                                                },
+                                                "logo": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "sector": {
+                                                    "type": "string"
+                                                },
+                                                "website": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "address": {
+                                                    "type": "string"
+                                                },
+                                                "city": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pending",
+                                                        "verified",
+                                                        "suspended"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Aucune entreprise associée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'avez pas d'entreprise associée"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Mettre à jour mon entreprise",
+                "description": "Permet au recruteur de mettre à jour les informations de son entreprise avec logo. Utiliser POST au lieu de PUT pour supporter le multipart/form-data.",
+                "operationId": "updateMyCompany",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "description": "Méthode HTTP (pour Laravel)",
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tech Solutions SARL"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@techsolutions.cm"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+237 690 123 456"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "logo": {
+                                        "description": "Nouveau logo (PNG, JPG, JPEG - max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "sector": {
+                                        "type": "string",
+                                        "example": "Technologie & IT"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "city": {
+                                        "type": "string",
+                                        "example": "Douala"
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "example": "https://techsolutions.cm"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entreprise mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Entreprise mise à jour avec succès"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Non autorisé à modifier cette entreprise",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'êtes pas autorisé à modifier cette entreprise"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune entreprise associée"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/favorites": {
+            "get": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "Liste des offres favorites",
+                "description": "Récupère la liste paginée de toutes les offres d'emploi mises en favori par l'utilisateur connecté",
+                "operationId": "getFavorites",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des favoris récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Développeur Full Stack"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "salary_min": {
+                                                        "type": "string",
+                                                        "example": "500000"
+                                                    },
+                                                    "salary_max": {
+                                                        "type": "string",
+                                                        "example": "800000"
+                                                    },
+                                                    "salary_negotiable": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "experience_level": {
+                                                        "type": "string",
+                                                        "example": "intermediaire"
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "views_count": {
+                                                        "type": "integer",
+                                                        "example": 150
+                                                    },
+                                                    "published_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "company": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "logo": {
+                                                                "type": "string"
+                                                            },
+                                                            "is_verified": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "location": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "contract_type": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 20
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 45
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/jobs/{job}/favorite": {
+            "post": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "Ajouter/Retirer une offre des favoris",
+                "description": "Toggle le statut favori d'une offre d'emploi. Si l'offre est déjà en favori, elle sera retirée. Sinon, elle sera ajoutée.",
+                "operationId": "toggleFavorite",
+                "parameters": [
+                    {
+                        "name": "job",
+                        "in": "path",
+                        "description": "ID de l'offre d'emploi",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statut favori mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ajouté aux favoris"
+                                        },
+                                        "is_favorite": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Offre d'emploi non trouvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Job not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/jobs/{job}/is-favorite": {
+            "get": {
+                "tags": [
+                    "Favorites"
+                ],
+                "summary": "Vérifier si une offre est en favori",
+                "description": "Vérifie si une offre d'emploi spécifique est dans les favoris de l'utilisateur connecté",
+                "operationId": "isFavorite",
+                "parameters": [
+                    {
+                        "name": "job",
+                        "in": "path",
+                        "description": "ID de l'offre d'emploi",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statut favori de l'offre",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "is_favorite": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Offre d'emploi non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/jobs": {
@@ -638,6 +1791,142 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "Jobs"
+                ],
+                "summary": "Créer une nouvelle offre d'emploi",
+                "description": "Permet à un recruteur de créer une nouvelle offre d'emploi pour son entreprise. L'offre sera en attente de validation par l'administrateur.",
+                "operationId": "createJob",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "description",
+                                    "category_id",
+                                    "location_id",
+                                    "contract_type_id",
+                                    "experience_level"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Développeur Full Stack Senior"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Nous recherchons un développeur Full Stack avec expertise Laravel et Vue.js"
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "location_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "contract_type_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "salary_min": {
+                                        "type": "number",
+                                        "example": 500000,
+                                        "nullable": true
+                                    },
+                                    "salary_max": {
+                                        "type": "number",
+                                        "example": 800000,
+                                        "nullable": true
+                                    },
+                                    "salary_negotiable": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "experience_level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "junior",
+                                            "intermediaire",
+                                            "senior",
+                                            "expert"
+                                        ],
+                                        "example": "senior"
+                                    },
+                                    "requirements": {
+                                        "type": "string",
+                                        "example": "3+ ans d'expérience en PHP/Laravel",
+                                        "nullable": true
+                                    },
+                                    "benefits": {
+                                        "type": "string",
+                                        "example": "Assurance santé, primes de performance",
+                                        "nullable": true
+                                    },
+                                    "application_deadline": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-15",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Offre créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Offre créée avec succès. En attente de validation."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Non autorisé à publier des offres",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'êtes pas autorisé à publier des offres"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/jobs/{id}": {
@@ -708,6 +1997,491 @@
                     }
                 }
             }
+        },
+        "/api/recruiter/jobs": {
+            "get": {
+                "tags": [
+                    "Jobs"
+                ],
+                "summary": "Mes offres d'emploi (Recruteur)",
+                "description": "Récupère toutes les offres d'emploi publiées par le recruteur connecté pour son entreprise",
+                "operationId": "getMyJobs",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "pending",
+                                "published",
+                                "closed",
+                                "expired"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des offres du recruteur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Vous n'êtes pas recruteur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Vous n'êtes pas recruteur"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/recruiter/dashboard": {
+            "get": {
+                "tags": [
+                    "Jobs"
+                ],
+                "summary": "Dashboard recruteur",
+                "description": "Récupère les statistiques et données essentielles du dashboard recruteur (stats, offres actives, candidatures récentes)",
+                "operationId": "getRecruiterDashboard",
+                "responses": {
+                    "200": {
+                        "description": "Données du dashboard",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "statistics": {
+                                            "properties": {
+                                                "total_jobs": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "active_jobs": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "total_applications": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "new_applications": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "total_views": {
+                                                    "type": "integer",
+                                                    "example": 1248
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "active_jobs": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "recent_applications": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Vous n'êtes pas recruteur"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Liste des notifications",
+                "description": "Récupère la liste paginée de toutes les notifications de l'utilisateur connecté, triées par date (les plus récentes en premier)",
+                "operationId": "getNotifications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrer par type de notification",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "application",
+                                "job",
+                                "system"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_read",
+                        "in": "query",
+                        "description": "Filtrer par statut lu/non lu (0=non lu, 1=lu)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des notifications récupérée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Nouvelle candidature"
+                                                    },
+                                                    "message": {
+                                                        "type": "string",
+                                                        "example": "Jean Dupont a postulé pour Développeur Full Stack"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "application",
+                                                            "job",
+                                                            "system"
+                                                        ],
+                                                        "example": "application"
+                                                    },
+                                                    "is_read": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "read_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "data": {
+                                                        "type": "object",
+                                                        "example": {
+                                                            "job_id": 5,
+                                                            "application_id": 12
+                                                        },
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 123
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/unread-count": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Nombre de notifications non lues",
+                "description": "Récupère le nombre total de notifications non lues pour l'utilisateur connecté",
+                "operationId": "getUnreadCount",
+                "responses": {
+                    "200": {
+                        "description": "Nombre de notifications non lues",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}/read": {
+            "put": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Marquer une notification comme lue",
+                "description": "Marque une notification spécifique comme lue",
+                "operationId": "markAsRead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la notification",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marquée comme lue",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification marquée comme lue"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "is_read": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "read_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Non autorisé - Cette notification ne vous appartient pas"
+                    },
+                    "404": {
+                        "description": "Notification non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/read-all": {
+            "put": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Marquer toutes les notifications comme lues",
+                "description": "Marque toutes les notifications non lues de l'utilisateur comme lues",
+                "operationId": "markAllAsRead",
+                "responses": {
+                    "200": {
+                        "description": "Toutes les notifications marquées comme lues",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Toutes les notifications marquées comme lues"
+                                        },
+                                        "count": {
+                                            "description": "Nombre de notifications marquées comme lues",
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}": {
+            "delete": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Supprimer une notification",
+                "description": "Supprime définitivement une notification",
+                "operationId": "deleteNotification",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la notification",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification supprimée"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Non autorisé - Cette notification ne vous appartient pas"
+                    },
+                    "404": {
+                        "description": "Notification non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -738,8 +2512,16 @@
             "description": "API Endpoints pour les entreprises"
         },
         {
+            "name": "Favorites",
+            "description": "API pour la gestion des favoris (offres d'emploi sauvegardées)"
+        },
+        {
             "name": "Jobs",
             "description": "API Endpoints pour la gestion des offres d'emploi"
+        },
+        {
+            "name": "Notifications",
+            "description": "API pour la gestion des notifications utilisateur"
         }
     ]
 }

@@ -138,4 +138,21 @@ class AdminManagementController extends Controller
 
         return back()->with('success', 'Permissions mises à jour avec succès');
     }
+
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $ids = json_decode($request->input('ids'), true);
+
+            if (!is_array($ids) || empty($ids)) {
+                return redirect()->back()->with('error', 'Aucun élément sélectionné');
+            }
+
+            $count = User::whereIn('id', $ids)->delete();
+
+            return redirect()->back()->with('success', "$count élément(s) supprimé(s) avec succès");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
+    }
 }

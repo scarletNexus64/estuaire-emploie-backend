@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -61,6 +62,22 @@ class User extends Authenticatable
     public function postedJobs(): HasMany
     {
         return $this->hasMany(Job::class, 'posted_by');
+    }
+
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(Job::class, 'favorites')
+            ->withTimestamps();
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->where('is_read', false);
     }
 
     public function isAdmin(): bool

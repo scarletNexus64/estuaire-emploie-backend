@@ -76,4 +76,21 @@ class RecruiterController extends Controller
         return redirect()->route('admin.recruiters.index')
             ->with('success', 'Recruteur supprimé avec succès');
     }
+
+    public function bulkDelete(Request $request)
+    {
+        try {
+            $ids = json_decode($request->input('ids'), true);
+
+            if (!is_array($ids) || empty($ids)) {
+                return redirect()->back()->with('error', 'Aucun élément sélectionné');
+            }
+
+            $count = Recruiter::whereIn('id', $ids)->delete();
+
+            return redirect()->back()->with('success', "$count élément(s) supprimé(s) avec succès");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
+    }
 }

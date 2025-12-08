@@ -18,6 +18,12 @@
 @endsection
 
 @section('content')
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" action="{{ route('admin.admins.bulk-delete') }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
 <!-- Stats Overview -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
     <div class="stat-card">
@@ -67,6 +73,9 @@
         <table>
             <thead>
                 <tr>
+                    <th class="checkbox-cell">
+                        <input type="checkbox" id="selectAll" class="custom-checkbox" title="Tout sélectionner">
+                    </th>
                     <th>Administrateur</th>
                     <th>Rôle</th>
                     <th>Permissions</th>
@@ -78,6 +87,9 @@
             <tbody>
                 @forelse($admins as $admin)
                 <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $admin->id }}">
+                    </td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
@@ -152,7 +164,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 3rem; color: var(--secondary);">
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
                         <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucun administrateur trouvé</p>
                         <p style="margin-bottom: 1.5rem;">Créez un nouvel administrateur</p>

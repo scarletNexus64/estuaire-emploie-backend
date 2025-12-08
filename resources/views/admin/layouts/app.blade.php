@@ -706,6 +706,61 @@
             min-height: 120px;
         }
 
+        /* Bulk Actions Toolbar */
+        .bulk-actions-toolbar {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid var(--border);
+        }
+
+        .bulk-actions-toolbar.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .bulk-actions-toolbar .selected-count {
+            font-weight: 700;
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 10px;
+        }
+
+        .bulk-actions-toolbar .btn {
+            padding: 0.625rem 1.25rem;
+        }
+
+        /* Checkbox Styling */
+        .checkbox-cell {
+            width: 50px;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        table tbody tr.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -713,6 +768,12 @@
 
             .main-content {
                 margin-left: 0;
+            }
+
+            .bulk-actions-toolbar {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 1rem;
             }
         }
     </style>
@@ -786,19 +847,23 @@
                 </div>
 
                 <div class="menu-section">
+                    <div class="menu-section-title">API & Documentation</div>
+                    <a href="/api/documentation" target="_blank" class="menu-item">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        Documentation API
+                        <span class="menu-badge" style="background: #10b981;">Swagger</span>
+                    </a>
+                </div>
+
+                <div class="menu-section">
                     <div class="menu-section-title">Administration</div>
                     <a href="{{ route('admin.admins.index') }}" class="menu-item {{ request()->routeIs('admin.admins.*') ? 'active' : '' }}">
                         <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
                         Administrateurs
-                    </a>
-
-                    <a href="{{ route('admin.sections.index') }}" class="menu-item {{ request()->routeIs('admin.sections.*') ? 'active' : '' }}">
-                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                        </svg>
-                        Sections
                     </a>
 
                     <a href="{{ route('admin.settings.index') }}" class="menu-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
@@ -900,6 +965,142 @@
             </div>
         </main>
     </div>
+
+    <!-- Bulk Actions Toolbar -->
+    <div id="bulkActionsToolbar" class="bulk-actions-toolbar">
+        <span class="selected-count">
+            <span id="selectedCount">0</span> sélectionné(s)
+        </span>
+        <button onclick="bulkActions.deselectAll()" class="btn btn-secondary">Désélectionner tout</button>
+        <button onclick="bulkActions.confirmDelete()" class="btn btn-danger">Supprimer</button>
+    </div>
+
+    <script>
+        // Bulk Actions Manager
+        const bulkActions = {
+            selectedIds: new Set(),
+            toolbar: null,
+            checkboxes: null,
+            selectAllCheckbox: null,
+
+            init() {
+                this.toolbar = document.getElementById('bulkActionsToolbar');
+                if (!this.toolbar) return;
+
+                this.checkboxes = document.querySelectorAll('.row-checkbox');
+                this.selectAllCheckbox = document.getElementById('selectAll');
+
+                // Setup event listeners
+                if (this.selectAllCheckbox) {
+                    this.selectAllCheckbox.addEventListener('change', () => this.toggleAll());
+                }
+
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', () => this.toggle(checkbox));
+                });
+
+                this.updateUI();
+            },
+
+            toggle(checkbox) {
+                const id = checkbox.value;
+                const row = checkbox.closest('tr');
+
+                if (checkbox.checked) {
+                    this.selectedIds.add(id);
+                    row?.classList.add('selected');
+                } else {
+                    this.selectedIds.delete(id);
+                    row?.classList.remove('selected');
+                }
+
+                this.updateUI();
+            },
+
+            toggleAll() {
+                const isChecked = this.selectAllCheckbox.checked;
+
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    const row = checkbox.closest('tr');
+
+                    if (isChecked) {
+                        this.selectedIds.add(checkbox.value);
+                        row?.classList.add('selected');
+                    } else {
+                        this.selectedIds.delete(checkbox.value);
+                        row?.classList.remove('selected');
+                    }
+                });
+
+                this.updateUI();
+            },
+
+            deselectAll() {
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.closest('tr')?.classList.remove('selected');
+                });
+
+                if (this.selectAllCheckbox) {
+                    this.selectAllCheckbox.checked = false;
+                }
+
+                this.selectedIds.clear();
+                this.updateUI();
+            },
+
+            updateUI() {
+                const count = this.selectedIds.size;
+                document.getElementById('selectedCount').textContent = count;
+
+                if (count > 0) {
+                    this.toolbar.classList.add('show');
+                } else {
+                    this.toolbar.classList.remove('show');
+                }
+
+                // Update select all checkbox state
+                if (this.selectAllCheckbox && this.checkboxes.length > 0) {
+                    const allChecked = Array.from(this.checkboxes).every(cb => cb.checked);
+                    this.selectAllCheckbox.checked = allChecked;
+                }
+            },
+
+            async confirmDelete() {
+                if (this.selectedIds.size === 0) return;
+
+                if (!confirm(`Êtes-vous sûr de vouloir supprimer ${this.selectedIds.size} élément(s) ?`)) {
+                    return;
+                }
+
+                await this.bulkDelete();
+            },
+
+            async bulkDelete() {
+                const form = document.getElementById('bulkDeleteForm');
+                if (!form) {
+                    console.error('Bulk delete form not found');
+                    return;
+                }
+
+                // Add selected IDs to form
+                const idsInput = document.createElement('input');
+                idsInput.type = 'hidden';
+                idsInput.name = 'ids';
+                idsInput.value = JSON.stringify(Array.from(this.selectedIds));
+                form.appendChild(idsInput);
+
+                // Submit form
+                form.submit();
+            }
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            bulkActions.init();
+        });
+    </script>
 
     @stack('scripts')
 </body>

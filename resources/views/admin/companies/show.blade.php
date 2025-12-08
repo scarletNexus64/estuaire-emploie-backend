@@ -85,8 +85,8 @@
                 <tbody>
                     @forelse($company->recruiters as $recruiter)
                         <tr>
-                            <td>{{ $recruiter->user->name }}</td>
-                            <td>{{ $recruiter->user->email }}</td>
+                            <td>{{ $recruiter->user?->name ?? 'N/A' }}</td>
+                            <td>{{ $recruiter->user?->email ?? 'N/A' }}</td>
                             <td>{{ $recruiter->position ?? 'N/A' }}</td>
                             <td>
                                 @if($recruiter->can_publish) <span class="badge badge-success">Publier</span> @endif

@@ -18,6 +18,12 @@
 @endsection
 
 @section('content')
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" action="{{ route('admin.jobs.bulk-delete') }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
 <!-- Stats Overview -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
     <div class="stat-card">
@@ -107,6 +113,9 @@
         <table>
             <thead>
                 <tr>
+                    <th class="checkbox-cell">
+                        <input type="checkbox" id="selectAll" class="custom-checkbox" title="Tout sélectionner">
+                    </th>
                     <th>Offre</th>
                     <th>Entreprise</th>
                     <th>Localisation</th>
@@ -120,17 +129,20 @@
             <tbody>
                 @forelse($jobs as $job)
                 <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $job->id }}">
+                    </td>
                     <td>
                         <div>
                             <strong style="display: block;">{{ $job->title }}</strong>
-                            <small style="color: var(--secondary); display: block;">{{ $job->category->name ?? 'N/A' }}</small>
+                            <small style="color: var(--secondary); display: block;">{{ $job->category?->name ?? 'N/A' }}</small>
                             @if($job->is_featured)
                                 <span class="badge badge-warning" style="margin-top: 0.25rem;">⭐ Featured</span>
                             @endif
                         </div>
                     </td>
-                    <td>{{ $job->company->name }}</td>
-                    <td>{{ $job->location->city ?? 'N/A' }}</td>
+                    <td>{{ $job->company?->name ?? 'N/A' }}</td>
+                    <td>{{ $job->location?->city ?? 'N/A' }}</td>
                     <td>
                         @if($job->status === 'published')
                             <span class="badge badge-success">Publiée</span>
@@ -198,7 +210,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--secondary);">
+                    <td colspan="9" style="text-align: center; padding: 3rem; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
                         <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucune offre trouvée</p>
                         <p style="margin-bottom: 1.5rem;">Commencez par créer une nouvelle offre d'emploi</p>

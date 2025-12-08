@@ -67,8 +67,8 @@
                 <tbody>
                     @forelse($user->applications as $application)
                         <tr>
-                            <td>{{ $application->job->title }}</td>
-                            <td>{{ $application->job->company->name }}</td>
+                            <td>{{ $application->job?->title ?? 'N/A' }}</td>
+                            <td>{{ $application->job?->company?->name ?? 'N/A' }}</td>
                             <td>
                                 @if($application->status === 'pending')
                                     <span class="badge badge-warning">En attente</span>

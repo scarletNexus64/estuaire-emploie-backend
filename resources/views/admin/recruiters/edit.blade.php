@@ -6,7 +6,7 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">{{ $recruiter->user->name }}</h3>
+            <h3 class="card-title">{{ $recruiter->user?->name ?? 'N/A' }}</h3>
             <a href="{{ route('admin.recruiters.index') }}" class="btn btn-secondary">Retour</a>
         </div>
 
@@ -17,7 +17,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Utilisateur</label>
-                    <input type="text" class="form-control" value="{{ $recruiter->user->name }} ({{ $recruiter->user->email }})" disabled>
+                    <input type="text" class="form-control" value="{{ $recruiter->user?->name ?? 'N/A' }} ({{ $recruiter->user?->email ?? 'N/A' }})" disabled>
                 </div>
 
                 <div class="form-group">

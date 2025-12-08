@@ -4,6 +4,12 @@
 @section('page-title', 'Gestion des Candidats')
 
 @section('content')
+    <!-- Bulk Delete Form -->
+    <form id="bulkDeleteForm" action="{{ route('admin.users.bulk-delete') }}" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Liste des Candidats</h3>
@@ -13,6 +19,9 @@
             <table>
                 <thead>
                     <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" class="custom-checkbox" title="Tout sélectionner">
+                        </th>
                         <th>Nom</th>
                         <th>Email</th>
                         <th>Téléphone</th>
@@ -26,6 +35,9 @@
                 <tbody>
                     @forelse($users as $user)
                         <tr>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $user->id }}">
+                            </td>
                             <td><strong>{{ $user->name }}</strong></td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->phone ?? 'N/A' }}</td>
@@ -52,7 +64,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 2rem;">
+                            <td colspan="9" style="text-align: center; padding: 2rem;">
                                 Aucun candidat trouvé
                             </td>
                         </tr>

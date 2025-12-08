@@ -4,35 +4,100 @@ use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
-// Routes publiques
+// ============================================
+// ROUTES PUBLIQUES (Pas d'authentification)
+// ============================================
+
+// Authentification
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
+Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 
 // Jobs publics
 Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/featured', [JobController::class, 'featured']);
 Route::get('/jobs/{job}', [JobController::class, 'show']);
 
-// Entreprises
+// Entreprises publiques
 Route::get('/companies', [CompanyController::class, 'index']);
 Route::get('/companies/{company}', [CompanyController::class, 'show']);
 
-// Catégories et filtres
+// Catégories et filtres (données de référence)
 Route::get('/categories', [CategoryController::class, 'categories']);
 Route::get('/locations', [CategoryController::class, 'locations']);
 Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
 
-// Routes protégées (nécessitent une authentification)
+// ============================================
+// ROUTES PROTÉGÉES (Nécessitent authentification)
+// ============================================
 Route::middleware('auth:sanctum')->group(function () {
-    // Authentification
+
+    // ------------------
+    // AUTHENTIFICATION & PROFIL
+    // ------------------
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/role', [AuthController::class, 'updateRole']);
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::get('/user/statistics', [AuthController::class, 'statistics']);
 
-    // Candidatures
+    // ------------------
+    // CANDIDATURES (Candidat & Recruteur)
+    // ------------------
+    // Candidat: Postuler à une offre
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'apply']);
+    // Candidat: Mes candidatures
     Route::get('/my-applications', [ApplicationController::class, 'myApplications']);
+    // Détails d'une candidature
     Route::get('/applications/{application}', [ApplicationController::class, 'show']);
+
+    // ------------------
+    // FAVORIS (Candidat)
+    // ------------------
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/jobs/{job}/favorite', [FavoriteController::class, 'toggle']);
+    Route::get('/jobs/{job}/is-favorite', [FavoriteController::class, 'isFavorite']);
+
+    // ------------------
+    // NOTIFICATIONS
+    // ------------------
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
+    // ------------------
+    // RECRUTEUR - GESTION DES JOBS
+    // ------------------
+    // Créer une offre d'emploi (recruteur)
+    Route::post('/jobs', [JobController::class, 'store']);
+    // Mes offres (recruteur)
+    Route::get('/recruiter/jobs', [JobController::class, 'myJobs']);
+    // Dashboard recruteur (statistiques + données récentes)
+    Route::get('/recruiter/dashboard', [JobController::class, 'dashboard']);
+
+    // ------------------
+    // RECRUTEUR - GESTION DES CANDIDATURES
+    // ------------------
+    // Candidatures reçues pour mes offres
+    Route::get('/recruiter/applications', [ApplicationController::class, 'receivedApplications']);
+    // Mettre à jour le statut d'une candidature
+    Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus']);
+
+    // ------------------
+    // RECRUTEUR - GESTION DE L'ENTREPRISE
+    // ------------------
+    // Créer une entreprise
+    Route::post('/companies', [CompanyController::class, 'store']);
+    // Récupérer mon entreprise
+    Route::get('/my-company', [CompanyController::class, 'myCompany']);
+    // Mettre à jour mon entreprise
+    Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
 });

@@ -4,6 +4,12 @@
 @section('page-title', 'Gestion des Recruteurs')
 
 @section('content')
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" action="{{ route('admin.recruiters.bulk-delete') }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Liste des Recruteurs</h3>
@@ -14,6 +20,9 @@
             <table>
                 <thead>
                     <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" class="custom-checkbox" title="Tout sélectionner">
+                        </th>
                         <th>Nom</th>
                         <th>Email</th>
                         <th>Entreprise</th>
@@ -26,9 +35,12 @@
                 <tbody>
                     @forelse($recruiters as $recruiter)
                         <tr>
-                            <td><strong>{{ $recruiter->user->name }}</strong></td>
-                            <td>{{ $recruiter->user->email }}</td>
-                            <td>{{ $recruiter->company->name }}</td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $recruiter->id }}">
+                            </td>
+                            <td><strong>{{ $recruiter->user?->name ?? 'N/A' }}</strong></td>
+                            <td>{{ $recruiter->user?->email ?? 'N/A' }}</td>
+                            <td>{{ $recruiter->company?->name ?? 'N/A' }}</td>
                             <td>{{ $recruiter->position ?? 'N/A' }}</td>
                             <td>
                                 @if($recruiter->can_publish)
@@ -53,7 +65,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 2rem;">
+                            <td colspan="8" style="text-align: center; padding: 2rem;">
                                 Aucun recruteur trouvé
                             </td>
                         </tr>

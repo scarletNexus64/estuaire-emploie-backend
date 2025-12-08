@@ -37,15 +37,16 @@
 - ✅ Configuration des catégories, localisations et types de contrats
 
 ### API REST (Application Mobile)
-- ✅ Documentation Swagger interactive
+- ✅ Documentation Swagger interactive complète
 - ✅ Authentification Laravel Sanctum (Bearer Token)
-- ✅ Inscription et connexion candidats
-- ✅ Consultation des offres d'emploi avec filtres avancés
-- ✅ Système de candidatures en ligne
-- ✅ Profils d'entreprises
-- ✅ Gestion des catégories et localisations
-- ✅ Pagination optimisée
-- ✅ Réponses JSON standardisées
+- ✅ **Authentification** : Inscription, connexion, reset password, gestion profil
+- ✅ **Candidats** : Consultation offres, candidatures, favoris, notifications
+- ✅ **Recruteurs** : Création entreprise, publication offres, gestion candidatures
+- ✅ **Jobs** : Filtres avancés (catégorie, ville, type, expérience, recherche)
+- ✅ **Notifications** : Système complet avec marquage lu/non-lu
+- ✅ **Favoris** : Sauvegarde et gestion des offres favorites
+- ✅ **Statistiques** : Dashboard candidat et recruteur
+- ✅ Pagination optimisée + Réponses JSON standardisées
 
 ### Base de Données
 - **Users** : Admins, Recruteurs, Candidats
@@ -230,13 +231,18 @@ L'API utilise **Laravel Sanctum** avec authentification par Bearer Token.
 
 ### Endpoints Principaux
 
-#### 🔑 Authentication
+#### 🔑 Authentication & Profile
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
 | POST | `/api/register` | ❌ | Inscription candidat |
 | POST | `/api/login` | ❌ | Connexion |
 | POST | `/api/logout` | ✅ | Déconnexion |
+| POST | `/api/password/forgot` | ❌ | Demande reset password |
+| POST | `/api/password/reset` | ❌ | Réinitialiser password |
 | GET | `/api/user` | ✅ | Profil utilisateur |
+| PUT | `/api/user/role` | ✅ | Changer de rôle (candidat/recruteur) |
+| PUT | `/api/user/profile` | ✅ | Mettre à jour profil + photo |
+| GET | `/api/user/statistics` | ✅ | Statistiques utilisateur |
 
 #### 💼 Jobs (Offres d'Emploi)
 | Méthode | Endpoint | Auth | Description |
@@ -244,6 +250,9 @@ L'API utilise **Laravel Sanctum** avec authentification par Bearer Token.
 | GET | `/api/jobs` | ❌ | Liste des offres + filtres |
 | GET | `/api/jobs/featured` | ❌ | Offres en vedette ⭐ |
 | GET | `/api/jobs/{id}` | ❌ | Détails d'une offre |
+| POST | `/api/jobs` | ✅ | Créer une offre (recruteur) |
+| GET | `/api/recruiter/jobs` | ✅ | Mes offres (recruteur) |
+| GET | `/api/recruiter/dashboard` | ✅ | Dashboard recruteur |
 
 **Filtres disponibles** : `category_id`, `location_id`, `contract_type_id`, `experience_level`, `search`
 
@@ -251,14 +260,35 @@ L'API utilise **Laravel Sanctum** avec authentification par Bearer Token.
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
 | POST | `/api/jobs/{id}/apply` | ✅ | Postuler à une offre |
-| GET | `/api/my-applications` | ✅ | Mes candidatures |
+| GET | `/api/my-applications` | ✅ | Mes candidatures (candidat) |
 | GET | `/api/applications/{id}` | ✅ | Détails candidature |
+| GET | `/api/recruiter/applications` | ✅ | Candidatures reçues (recruteur) |
+| PATCH | `/api/applications/{id}/status` | ✅ | Modifier statut (recruteur) |
+
+#### ❤️ Favorites (Favoris)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/api/favorites` | ✅ | Liste des favoris |
+| POST | `/api/jobs/{id}/favorite` | ✅ | Ajouter/Retirer favori |
+| GET | `/api/jobs/{id}/is-favorite` | ✅ | Vérifier si favori |
+
+#### 🔔 Notifications
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/api/notifications` | ✅ | Liste notifications |
+| GET | `/api/notifications/unread-count` | ✅ | Nombre non lues |
+| PUT | `/api/notifications/{id}/read` | ✅ | Marquer comme lue |
+| PUT | `/api/notifications/read-all` | ✅ | Tout marquer comme lu |
+| DELETE | `/api/notifications/{id}` | ✅ | Supprimer notification |
 
 #### 🏢 Companies (Entreprises)
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
 | GET | `/api/companies` | ❌ | Liste entreprises |
 | GET | `/api/companies/{id}` | ❌ | Détails + offres |
+| POST | `/api/companies` | ✅ | Créer entreprise (recruteur) |
+| GET | `/api/my-company` | ✅ | Mon entreprise (recruteur) |
+| PUT | `/api/my-company` | ✅ | Modifier entreprise (recruteur) |
 
 #### 📑 Categories & Filters
 | Méthode | Endpoint | Auth | Description |
