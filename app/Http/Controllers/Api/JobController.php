@@ -73,6 +73,7 @@ class JobController extends Controller
         $query = Job::with(['company', 'category', 'location', 'contractType'])
             ->where('status', 'published');
 
+        // Filtres de base
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
@@ -89,11 +90,28 @@ class JobController extends Controller
             $query->where('experience_level', $request->experience_level);
         }
 
-        if ($request->has('search')) {
+        // Recherche améliorée avec support des accents
+        if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+
+            // Normaliser la recherche (retirer les accents pour meilleure correspondance)
+            $normalizedSearch = $this->normalizeString($search);
+
+            $query->where(function ($q) use ($search, $normalizedSearch) {
+                // Recherche dans le titre (insensible aux accents via COLLATE)
+                $q->whereRaw('LOWER(title) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                    // Recherche dans la description
+                    ->orWhereRaw('LOWER(description) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                    // Recherche dans les exigences
+                    ->orWhereRaw('LOWER(requirements) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                    // Recherche dans le nom de l'entreprise
+                    ->orWhereHas('company', function ($companyQuery) use ($normalizedSearch) {
+                        $companyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                    })
+                    // Recherche dans la catégorie
+                    ->orWhereHas('category', function ($categoryQuery) use ($normalizedSearch) {
+                        $categoryQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                    });
             });
         }
 
@@ -101,6 +119,45 @@ class JobController extends Controller
             ->paginate(20);
 
         return response()->json($jobs);
+    }
+
+    /**
+     * Normalise une chaîne pour la recherche (retire les accents, convertit en minuscules)
+     */
+    private function normalizeString(string $str): string
+    {
+        // Convertir en minuscules
+        $str = mb_strtolower($str, 'UTF-8');
+
+        // Tableau de correspondance des caractères accentués (majuscules et minuscules)
+        $unwanted = [
+            // Minuscules
+            'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'ae',
+            'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'œ' => 'oe',
+            'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ý' => 'y', 'ÿ' => 'y',
+            'ñ' => 'n', 'ç' => 'c',
+            // Majuscules (au cas où)
+            'À' => 'a', 'Á' => 'a', 'Â' => 'a', 'Ã' => 'a', 'Ä' => 'a', 'Å' => 'a', 'Æ' => 'ae',
+            'È' => 'e', 'É' => 'e', 'Ê' => 'e', 'Ë' => 'e',
+            'Ì' => 'i', 'Í' => 'i', 'Î' => 'i', 'Ï' => 'i',
+            'Ò' => 'o', 'Ó' => 'o', 'Ô' => 'o', 'Õ' => 'o', 'Ö' => 'o', 'Ø' => 'o', 'Œ' => 'oe',
+            'Ù' => 'u', 'Ú' => 'u', 'Û' => 'u', 'Ü' => 'u',
+            'Ý' => 'y', 'Ÿ' => 'y',
+            'Ñ' => 'n', 'Ç' => 'c',
+        ];
+
+        $str = strtr($str, $unwanted);
+
+        // Utiliser iconv pour retirer les accents restants
+        $str = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $str);
+
+        // Nettoyer les caractères non alphanumériques sauf espaces
+        $str = preg_replace('/[^a-z0-9\s]/i', '', $str);
+
+        return $str;
     }
 
     /**
@@ -386,6 +443,50 @@ class JobController extends Controller
             'statistics' => $stats,
             'active_jobs' => $activeJobs,
             'recent_applications' => $recentApplications,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/jobs/{id}/has-applied",
+     *     summary="Vérifier si l'utilisateur a déjà postulé à cette offre",
+     *     tags={"Jobs"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'offre",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut de candidature",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="has_applied", type="boolean")
+     *         )
+     *     )
+     * )
+     */
+    public function hasApplied($jobId): JsonResponse
+    {
+        // Récupérer le job par son ID (sans restriction de statut)
+        $job = Job::find($jobId);
+
+        if (!$job) {
+            return response()->json([
+                'has_applied' => false,
+            ]);
+        }
+
+        // Vérifier aussi les candidatures soft deleted
+        $hasApplied = Application::withTrashed()
+            ->where('job_id', $job->id)
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        return response()->json([
+            'has_applied' => $hasApplied,
         ]);
     }
 }

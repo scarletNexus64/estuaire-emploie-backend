@@ -27,6 +27,20 @@
                     <p><strong>Titre:</strong> {{ $application->job?->title ?? 'N/A' }}</p>
                     <p><strong>Entreprise:</strong> {{ $application->job?->company?->name ?? 'N/A' }}</p>
 
+                    <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">CV</h4>
+                    @if($application->cv_path)
+                        <p>
+                            <a href="{{ asset('storage/' . $application->cv_path) }}"
+                               target="_blank"
+                               class="btn btn-primary"
+                               style="display: inline-block; padding: 0.5rem 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+                                <i class="fas fa-file-download"></i> Télécharger le CV
+                            </a>
+                        </p>
+                    @else
+                        <p style="color: #dc3545;">Aucun CV fourni</p>
+                    @endif
+
                     <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Lettre de Motivation</h4>
                     <p style="white-space: pre-wrap;">{{ $application->cover_letter ?? 'Aucune lettre de motivation fournie' }}</p>
 
@@ -45,12 +59,8 @@
                         <div class="form-group">
                             <label class="form-label">Changer le statut</label>
                             <select name="status" class="form-control">
-                                <option value="pending" {{ $application->status === 'pending' ? 'selected' : '' }}>En attente</option>
-                                <option value="viewed" {{ $application->status === 'viewed' ? 'selected' : '' }}>Vue</option>
-                                <option value="shortlisted" {{ $application->status === 'shortlisted' ? 'selected' : '' }}>Retenue</option>
-                                <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>Rejetée</option>
-                                <option value="interview" {{ $application->status === 'interview' ? 'selected' : '' }}>Entretien</option>
-                                <option value="accepted" {{ $application->status === 'accepted' ? 'selected' : '' }}>Acceptée</option>
+                                <option value="accepted" {{ $application->status === 'accepted' ? 'selected' : '' }}>✅ Acceptée</option>
+                                <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>❌ Rejetée</option>
                             </select>
                         </div>
 

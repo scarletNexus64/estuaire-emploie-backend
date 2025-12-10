@@ -14,11 +14,8 @@
             <div>
                 <select class="form-control" onchange="window.location.href='?status=' + this.value" style="width: auto; display: inline-block;">
                     <option value="">Tous les statuts</option>
-                    <option value="pending" <?php echo e(request('status') === 'pending' ? 'selected' : ''); ?>>En attente</option>
-                    <option value="viewed" <?php echo e(request('status') === 'viewed' ? 'selected' : ''); ?>>Vues</option>
-                    <option value="shortlisted" <?php echo e(request('status') === 'shortlisted' ? 'selected' : ''); ?>>Retenues</option>
-                    <option value="rejected" <?php echo e(request('status') === 'rejected' ? 'selected' : ''); ?>>Rejetées</option>
-                    <option value="interview" <?php echo e(request('status') === 'interview' ? 'selected' : ''); ?>>Entretien</option>
+                    <option value="accepted" <?php echo e(request('status') === 'accepted' ? 'selected' : ''); ?>>✅ Acceptées</option>
+                    <option value="rejected" <?php echo e(request('status') === 'rejected' ? 'selected' : ''); ?>>❌ Rejetées</option>
                 </select>
             </div>
         </div>
@@ -34,6 +31,7 @@
                         <th>Email</th>
                         <th>Offre</th>
                         <th>Entreprise</th>
+                        <th>CV</th>
                         <th>Statut</th>
                         <th>Date de soumission</th>
                         <th>Actions</th>
@@ -52,18 +50,21 @@
                             <td><?php echo e($application->job?->title ?? 'N/A'); ?></td>
                             <td><?php echo e($application->job?->company?->name ?? 'N/A'); ?></td>
                             <td>
-                                <?php if($application->status === 'pending'): ?>
-                                    <span class="badge badge-warning">En attente</span>
-                                <?php elseif($application->status === 'viewed'): ?>
-                                    <span class="badge badge-info">Vue</span>
-                                <?php elseif($application->status === 'shortlisted'): ?>
-                                    <span class="badge badge-success">Retenue</span>
-                                <?php elseif($application->status === 'rejected'): ?>
-                                    <span class="badge badge-danger">Rejetée</span>
-                                <?php elseif($application->status === 'interview'): ?>
-                                    <span class="badge badge-success">Entretien</span>
+                                <?php if($application->cv_path): ?>
+                                    <a href="<?php echo e(asset('storage/' . $application->cv_path)); ?>" target="_blank" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-file-download"></i> Voir CV
+                                    </a>
                                 <?php else: ?>
-                                    <span class="badge badge-secondary"><?php echo e(ucfirst($application->status)); ?></span>
+                                    <span style="color: #dc3545;">Aucun</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if($application->status === 'accepted'): ?>
+                                    <span class="badge badge-success">✅ Acceptée</span>
+                                <?php elseif($application->status === 'rejected'): ?>
+                                    <span class="badge badge-danger">❌ Rejetée</span>
+                                <?php else: ?>
+                                    <span class="badge badge-warning">⏳ En cours</span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo e($application->created_at->format('d/m/Y H:i')); ?></td>
@@ -73,7 +74,7 @@
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 2rem;">
+                            <td colspan="9" style="text-align: center; padding: 2rem;">
                                 Aucune candidature trouvée
                             </td>
                         </tr>

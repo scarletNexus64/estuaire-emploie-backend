@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ------------------
     // Candidat: Postuler à une offre
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'apply']);
+    // Candidat: Statistiques de mes candidatures
+    Route::get('/my-applications/stats', [ApplicationController::class, 'myApplicationsStats']);
     // Candidat: Mes candidatures
     Route::get('/my-applications', [ApplicationController::class, 'myApplications']);
     // Détails d'une candidature
@@ -63,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/jobs/{job}/favorite', [FavoriteController::class, 'toggle']);
     Route::get('/jobs/{job}/is-favorite', [FavoriteController::class, 'isFavorite']);
+    Route::get('/jobs/{job}/has-applied', [JobController::class, 'hasApplied']);
 
     // ------------------
     // NOTIFICATIONS

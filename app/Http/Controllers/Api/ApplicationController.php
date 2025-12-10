@@ -62,12 +62,20 @@ class ApplicationController extends Controller
             ], 404);
         }
 
-        // Vérifier si l'utilisateur a déjà postulé
-        $existingApplication = Application::where('job_id', $job->id)
+        // Vérifier si l'utilisateur a déjà postulé (incluant les soft deleted)
+        $existingApplication = Application::withTrashed()
+            ->where('job_id', $job->id)
             ->where('user_id', $request->user()->id)
             ->first();
 
         if ($existingApplication) {
+            // Si l'application est soft deleted, on peut la restaurer
+            if ($existingApplication->trashed()) {
+                return response()->json([
+                    'message' => 'Vous avez déjà postulé à cette offre (candidature archivée)',
+                ], 400);
+            }
+
             return response()->json([
                 'message' => 'Vous avez déjà postulé à cette offre',
             ], 400);
@@ -85,21 +93,69 @@ class ApplicationController extends Controller
             $cvPath = $request->file('cv')->store('cvs', 'public');
         }
 
-        $application = Application::create([
-            'job_id' => $job->id,
-            'user_id' => $request->user()->id,
-            'cv_path' => $cvPath,
-            'cover_letter' => $validated['cover_letter'] ?? null,
-            'portfolio_url' => $validated['portfolio_url'] ?? null,
-            'status' => 'pending',
-        ]);
+        try {
+            $application = Application::create([
+                'job_id' => $job->id,
+                'user_id' => $request->user()->id,
+                'cv_path' => $cvPath,
+                'cover_letter' => $validated['cover_letter'] ?? null,
+                'portfolio_url' => $validated['portfolio_url'] ?? null,
+                'status' => 'pending',
+            ]);
 
-        $application->load(['job.company']);
+            $application->load(['job.company']);
 
-        return response()->json([
-            'data' => $application,
-            'message' => 'Candidature soumise avec succès',
-        ], 201);
+            return response()->json([
+                'data' => $application,
+                'message' => 'Candidature soumise avec succès',
+            ], 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Gérer l'erreur de contrainte unique au cas où
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'Vous avez déjà postulé à cette offre',
+                ], 400);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/my-applications/stats",
+     *     summary="Statistiques de mes candidatures",
+     *     tags={"Applications"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statistiques des candidatures par statut",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="total", type="integer", example=10),
+     *             @OA\Property(property="pending", type="integer", example=5),
+     *             @OA\Property(property="accepted", type="integer", example=3),
+     *             @OA\Property(property="rejected", type="integer", example=2)
+     *         )
+     *     )
+     * )
+     */
+    public function myApplicationsStats(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $stats = [
+            'total' => Application::where('user_id', $userId)->count(),
+            'pending' => Application::where('user_id', $userId)
+                ->whereIn('status', ['pending', 'viewed', 'shortlisted', 'interview'])
+                ->count(),
+            'accepted' => Application::where('user_id', $userId)
+                ->where('status', 'accepted')
+                ->count(),
+            'rejected' => Application::where('user_id', $userId)
+                ->where('status', 'rejected')
+                ->count(),
+        ];
+
+        return response()->json($stats);
     }
 
     /**
@@ -113,7 +169,7 @@ class ApplicationController extends Controller
      *         in="query",
      *         description="Filtrer par statut",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"pending", "viewed", "shortlisted", "rejected", "interview", "accepted"})
+     *         @OA\Schema(type="string", enum={"accepted", "rejected"})
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -126,7 +182,7 @@ class ApplicationController extends Controller
      */
     public function myApplications(Request $request): JsonResponse
     {
-        $query = Application::with(['job.company', 'job.location'])
+        $query = Application::with(['job.company', 'job.location', 'job.category', 'job.contractType'])
             ->where('user_id', $request->user()->id);
 
         if ($request->has('status')) {
@@ -190,7 +246,7 @@ class ApplicationController extends Controller
      *         in="query",
      *         description="Filtrer par statut",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"pending", "viewed", "shortlisted", "rejected", "interview", "accepted"})
+     *         @OA\Schema(type="string", enum={"accepted", "rejected"})
      *     ),
      *     @OA\Parameter(
      *         name="job_id",
@@ -265,8 +321,8 @@ class ApplicationController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"status"},
-     *             @OA\Property(property="status", type="string", enum={"pending", "viewed", "shortlisted", "rejected", "interview", "accepted"}, example="viewed"),
-     *             @OA\Property(property="internal_notes", type="string", example="Bon profil, à convoquer pour entretien")
+     *             @OA\Property(property="status", type="string", enum={"accepted", "rejected"}, example="accepted"),
+     *             @OA\Property(property="internal_notes", type="string", example="Candidat retenu pour le poste")
      *         )
      *     ),
      *     @OA\Response(
@@ -304,7 +360,7 @@ class ApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,viewed,shortlisted,rejected,interview,accepted',
+            'status' => 'required|in:accepted,rejected',
             'internal_notes' => 'nullable|string',
         ]);
 

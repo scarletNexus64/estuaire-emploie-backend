@@ -38,7 +38,7 @@ class ApplicationController extends Controller
     public function updateStatus(Request $request, Application $application): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,viewed,shortlisted,rejected,interview,accepted',
+            'status' => 'required|in:accepted,rejected',
             'internal_notes' => 'nullable|string',
         ]);
 
@@ -47,6 +47,12 @@ class ApplicationController extends Controller
         }
 
         $application->update($validated);
+
+        // Marquer comme répondu
+        if (!$application->responded_at) {
+            $application->responded_at = now();
+            $application->save();
+        }
 
         return redirect()->back()
             ->with('success', 'Statut de la candidature mis à jour');

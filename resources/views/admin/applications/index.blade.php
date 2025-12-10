@@ -16,11 +16,8 @@
             <div>
                 <select class="form-control" onchange="window.location.href='?status=' + this.value" style="width: auto; display: inline-block;">
                     <option value="">Tous les statuts</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>En attente</option>
-                    <option value="viewed" {{ request('status') === 'viewed' ? 'selected' : '' }}>Vues</option>
-                    <option value="shortlisted" {{ request('status') === 'shortlisted' ? 'selected' : '' }}>Retenues</option>
-                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejetées</option>
-                    <option value="interview" {{ request('status') === 'interview' ? 'selected' : '' }}>Entretien</option>
+                    <option value="accepted" {{ request('status') === 'accepted' ? 'selected' : '' }}>✅ Acceptées</option>
+                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>❌ Rejetées</option>
                 </select>
             </div>
         </div>
@@ -36,6 +33,7 @@
                         <th>Email</th>
                         <th>Offre</th>
                         <th>Entreprise</th>
+                        <th>CV</th>
                         <th>Statut</th>
                         <th>Date de soumission</th>
                         <th>Actions</th>
@@ -54,18 +52,21 @@
                             <td>{{ $application->job?->title ?? 'N/A' }}</td>
                             <td>{{ $application->job?->company?->name ?? 'N/A' }}</td>
                             <td>
-                                @if($application->status === 'pending')
-                                    <span class="badge badge-warning">En attente</span>
-                                @elseif($application->status === 'viewed')
-                                    <span class="badge badge-info">Vue</span>
-                                @elseif($application->status === 'shortlisted')
-                                    <span class="badge badge-success">Retenue</span>
-                                @elseif($application->status === 'rejected')
-                                    <span class="badge badge-danger">Rejetée</span>
-                                @elseif($application->status === 'interview')
-                                    <span class="badge badge-success">Entretien</span>
+                                @if($application->cv_path)
+                                    <a href="{{ asset('storage/' . $application->cv_path) }}" target="_blank" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-file-download"></i> Voir CV
+                                    </a>
                                 @else
-                                    <span class="badge badge-secondary">{{ ucfirst($application->status) }}</span>
+                                    <span style="color: #dc3545;">Aucun</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($application->status === 'accepted')
+                                    <span class="badge badge-success">✅ Acceptée</span>
+                                @elseif($application->status === 'rejected')
+                                    <span class="badge badge-danger">❌ Rejetée</span>
+                                @else
+                                    <span class="badge badge-warning">⏳ En cours</span>
                                 @endif
                             </td>
                             <td>{{ $application->created_at->format('d/m/Y H:i') }}</td>
@@ -75,7 +76,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 2rem;">
+                            <td colspan="9" style="text-align: center; padding: 2rem;">
                                 Aucune candidature trouvée
                             </td>
                         </tr>
