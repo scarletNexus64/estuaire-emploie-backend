@@ -8,15 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('type');
-            $table->morphs('notifiable');
-            $table->text('data');
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
-        });
-
         Schema::create('cache', function (Blueprint $table) {
             $table->string('key')->primary();
             $table->mediumText('value');
@@ -70,6 +61,5 @@ return new class extends Migration
         Schema::dropIfExists('jobs_queue');
         Schema::dropIfExists('cache_locks');
         Schema::dropIfExists('cache');
-        Schema::dropIfExists('notifications');
     }
 };
