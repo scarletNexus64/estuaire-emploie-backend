@@ -7,10 +7,13 @@ use App\Models\Application;
 use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
+use App\Notifications\RegistedNotification;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -138,6 +141,13 @@ class AuthController extends Controller
         $user->favorites_count = $user->favorites()->count();
 
         $token = $user->createToken('mobile-app')->plainTextToken;
+        // Teste d'envoye de notifications
+        $user->notify(new RegistedNotification([
+            'type' => 'test',
+            'title' => 'Test in login controller',
+            'message' => 'This message will verified pas notifications',
+            'is_read' => false
+        ]));
 
         return response()->json([
             'user' => $user,

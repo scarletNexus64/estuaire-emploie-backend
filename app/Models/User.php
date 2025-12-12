@@ -70,15 +70,15 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
-    }
+    // public function notifications(): HasMany
+    // {
+    //     return $this->hasMany(Notification::class);
+    // }
 
-    public function unreadNotifications(): HasMany
-    {
-        return $this->hasMany(Notification::class)->where('is_read', false);
-    }
+    // public function unreadNotifications(): HasMany
+    // {
+    //     return $this->hasMany(Notification::class)->where('is_read', false);
+    // }
 
     public function isAdmin(): bool
     {
