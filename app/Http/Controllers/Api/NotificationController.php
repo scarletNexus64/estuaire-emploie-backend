@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -74,7 +77,7 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Notification::where('user_id', auth()->id());
+        $query = Auth::user()->notifications();
 
         // Filtrer par type si fourni
         if ($request->has('type')) {
@@ -82,12 +85,14 @@ class NotificationController extends Controller
         }
 
         // Filtrer par statut lu/non lu si fourni
-        if ($request->has('is_read')) {
-            $query->where('is_read', (bool) $request->is_read);
+        if ($request->has('read_at')) {
+            $query->where('read_at', $request->is_read);
         }
 
         $notifications = $query->orderBy('created_at', 'desc')
             ->paginate(50);
+
+        Log::info('Test not', [$notifications]);
 
         return response()->json($notifications);
     }
@@ -115,9 +120,7 @@ class NotificationController extends Controller
      */
     public function unreadCount()
     {
-        $count = Notification::where('user_id', auth()->id())
-            ->where('is_read', false)
-            ->count();
+        $count = Auth::user()->unreadNotifications->count();
 
         return response()->json(['count' => $count]);
     }
@@ -165,14 +168,14 @@ class NotificationController extends Controller
      */
     public function markAsRead($id)
     {
-        $notification = Notification::where('user_id', auth()->id())
-            ->findOrFail($id);
-
-        $notification->markAsRead();
+        $notification = Auth::user()->notifications()->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+        }
 
         return response()->json([
             'message' => 'Notification marquée comme lue',
-            'data' => $notification->fresh(),
+            // 'data' => $notification->fresh(),
         ]);
     }
 
@@ -200,16 +203,11 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        $count = Notification::where('user_id', auth()->id())
-            ->where('is_read', false)
-            ->update([
-                'is_read' => true,
-                'read_at' => now(),
-            ]);
+        Auth::user()->unreadNotifications->markAsRead();
 
         return response()->json([
             'message' => 'Toutes les notifications marquées comme lues',
-            'count' => $count,
+            // 'count' => $count,
         ]);
     }
 
@@ -251,8 +249,7 @@ class NotificationController extends Controller
      */
     public function destroy($id)
     {
-        $notification = Notification::where('user_id', auth()->id())
-            ->findOrFail($id);
+        $notification = Auth::user()->notifications()->find($id);
 
         $notification->delete();
 
