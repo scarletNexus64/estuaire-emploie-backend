@@ -12,6 +12,12 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             LocationSeeder::class,
             ContractTypeSeeder::class,
+
+            // Monétisation - Config des plans et services
+            SubscriptionPlanSeeder::class,
+            PremiumServiceConfigSeeder::class,
+            AddonServiceConfigSeeder::class,
+
             UserSeeder::class,
             CompanySeeder::class,
             RecruiterSeeder::class,

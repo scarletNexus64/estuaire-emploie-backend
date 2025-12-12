@@ -6,6 +6,9 @@
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo $__env->yieldContent('title', 'Dashboard'); ?> - Estuaire Emploie Admin</title>
 
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+
     <style>
         * {
             margin: 0;
@@ -761,6 +764,319 @@
             color: white;
         }
 
+        .btn-info {
+            background: var(--info);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-outline-secondary {
+            background: transparent;
+            color: var(--secondary);
+            border: 2px solid var(--border);
+            box-shadow: none;
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        /* Bootstrap Grid System */
+        .container-fluid {
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+
+        [class*="col-"] {
+            position: relative;
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+
+        .col-12 { flex: 0 0 100%; max-width: 100%; }
+        .col-lg-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+        .col-lg-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+        .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+        .col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+
+        @media (max-width: 992px) {
+            .col-lg-8, .col-lg-4 { flex: 0 0 100%; max-width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .col-md-6, .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .nav-tabs .nav-item {
+            list-style: none;
+        }
+
+        .nav-tabs .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.875rem 1.5rem;
+            color: var(--secondary);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 600;
+            background: transparent;
+            border-radius: 0;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary);
+            border-bottom-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            padding: 1.5rem 0;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.show.active,
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Form Elements */
+        .form-select, select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 12px;
+            padding-right: 3rem;
+        }
+
+        .input-group {
+            display: flex;
+            width: 100%;
+        }
+
+        .input-group .form-control {
+            flex: 1;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .input-group .btn {
+            border-radius: 0 10px 10px 0;
+            border-left: none;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .form-check-label {
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--dark);
+        }
+
+        .form-switch .form-check-input {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background-color: var(--border);
+            border: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .form-switch .form-check-input:checked {
+            background-color: var(--success);
+        }
+
+        .invalid-feedback {
+            display: block;
+            margin-top: 0.5rem;
+            color: var(--danger);
+            font-size: 0.8125rem;
+        }
+
+        .is-invalid {
+            border-color: var(--danger) !important;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border-left: 4px solid var(--info);
+        }
+
+        .alert-dismissible .btn-close {
+            background: transparent;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            opacity: 0.5;
+            margin-left: auto;
+        }
+
+        /* Utility Classes */
+        .d-flex { display: flex; }
+        .d-inline { display: inline; }
+        .d-block { display: block; }
+        .d-none { display: none; }
+        .justify-content-between { justify-content: space-between; }
+        .justify-content-center { justify-content: center; }
+        .align-items-center { align-items: center; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 1rem; }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 1rem; }
+        .mt-4 { margin-top: 1.5rem; }
+
+        .ms-1 { margin-left: 0.25rem; }
+        .me-2 { margin-right: 0.5rem; }
+
+        .p-3 { padding: 1rem; }
+
+        .text-danger { color: var(--danger); }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-info { color: var(--info); }
+        .text-muted { color: var(--secondary); }
+        .text-center { text-align: center; }
+
+        .bg-light { background-color: var(--light); }
+        .bg-success { background-color: var(--success); }
+        .bg-warning { background-color: var(--warning); }
+
+        .border { border: 1px solid var(--border); }
+
+        .small { font-size: 0.8125rem; }
+
+        .page-title-box {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-title-right {
+            float: right;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--secondary);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: '/';
+            padding: 0 0.5rem;
+            color: var(--secondary);
+        }
+
+        .breadcrumb-item.active {
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0;
+        }
+
+        .fade {
+            transition: opacity 0.15s linear;
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -847,6 +1163,72 @@
                 </div>
 
                 <div class="menu-section">
+                    <div class="menu-section-title">Monétisation</div>
+
+                    <a href="<?php echo e(route('admin.subscription-plans.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.subscription-plans.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        Plans & Tarifs
+                    </a>
+
+                    <a href="<?php echo e(route('admin.subscriptions.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.subscriptions.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Abonnements
+                        <?php if(class_exists('\App\Models\Subscription')): ?>
+                            <?php $activeSubscriptions = \App\Models\Subscription::where('status', 'active')->count(); ?>
+                            <?php if($activeSubscriptions > 0): ?>
+                                <span class="menu-badge" style="background: #10b981;"><?php echo e($activeSubscriptions); ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </a>
+
+                    <a href="<?php echo e(route('admin.payments.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.payments.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        Paiements & Transactions
+                    </a>
+
+                    <a href="<?php echo e(route('admin.premium-services.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.premium-services.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                        Services Premium
+                    </a>
+
+                    <a href="<?php echo e(route('admin.addon-services.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.addon-services.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Services Additionnels
+                    </a>
+
+                    <a href="<?php echo e(route('admin.cvtheque.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.cvtheque.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        CVthèque
+                    </a>
+
+                    <a href="<?php echo e(route('admin.advertisements.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.advertisements.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                        </svg>
+                        Publicité
+                    </a>
+
+                    <a href="<?php echo e(route('admin.financial-stats.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.financial-stats.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Statistiques Financières
+                    </a>
+                </div>
+
+                <div class="menu-section">
                     <div class="menu-section-title">API & Documentation</div>
                     <a href="/api/documentation" target="_blank" class="menu-item">
                         <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -872,6 +1254,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                         Paramètres
+                    </a>
+
+                    <a href="<?php echo e(route('admin.service-config.index')); ?>" class="menu-item <?php echo e(request()->routeIs('admin.service-config.*') ? 'active' : ''); ?>">
+                        <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Configuration API
                     </a>
                 </div>
             </nav>
@@ -1101,6 +1490,39 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             bulkActions.init();
+        });
+    </script>
+
+    <!-- Bootstrap-like Tabs JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle tab clicks
+            const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
+
+            tabLinks.forEach(function(tabLink) {
+                tabLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Get target tab pane
+                    const targetId = this.getAttribute('href');
+                    const targetPane = document.querySelector(targetId);
+
+                    if (!targetPane) return;
+
+                    // Remove active class from all tabs and panes
+                    const allTabs = this.closest('.nav-tabs').querySelectorAll('.nav-link');
+                    const allPanes = targetPane.closest('.tab-content').querySelectorAll('.tab-pane');
+
+                    allTabs.forEach(tab => tab.classList.remove('active'));
+                    allPanes.forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+
+                    // Add active class to clicked tab and target pane
+                    this.classList.add('active');
+                    targetPane.classList.add('show', 'active');
+                });
+            });
         });
     </script>
 

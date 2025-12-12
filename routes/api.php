@@ -34,6 +34,13 @@ Route::get('/locations', [CategoryController::class, 'locations']);
 Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
 
 // ============================================
+// WEBHOOKS (Callbacks externes)
+// ============================================
+
+// FreeMoPay payment callback
+Route::post('/webhooks/freemopay', [\App\Http\Controllers\Api\WebhookController::class, 'freemopayCallback']);
+
+// ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
 Route::middleware('auth:sanctum')->group(function () {

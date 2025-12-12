@@ -19,6 +19,419 @@
         }
     ],
     "paths": {
+        "/admin/service-config/test/whatsapp": {
+            "post": {
+                "tags": [
+                    "Service Configuration"
+                ],
+                "summary": "Tester la connexion WhatsApp Business API",
+                "description": "Vérifie la validité des credentials WhatsApp Business en appelant l'API Facebook Graph",
+                "operationId": "7b10e6308e7038c643a1da1805cf9c43",
+                "responses": {
+                    "200": {
+                        "description": "Test de connexion réussi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "WhatsApp connection successful"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "verified_name": {
+                                                    "type": "string",
+                                                    "example": "Ma Business"
+                                                },
+                                                "display_phone_number": {
+                                                    "type": "string",
+                                                    "example": "+237 6XX XXX XXX"
+                                                },
+                                                "quality_rating": {
+                                                    "type": "string",
+                                                    "example": "GREEN"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Configuration invalide ou connexion échouée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Configuration WhatsApp invalide ou incomplète"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/service-config/test/nexah": {
+            "post": {
+                "tags": [
+                    "Service Configuration"
+                ],
+                "summary": "Tester la connexion Nexah SMS API",
+                "description": "Vérifie la validité des credentials Nexah SMS en appelant l'API de vérification de crédits",
+                "operationId": "efdbdbd8723d67e07bb7f0aadff06a42",
+                "responses": {
+                    "200": {
+                        "description": "Test de connexion réussi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Nexah SMS connection successful"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "credits": {
+                                                    "type": "number",
+                                                    "example": 1500.5
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "example": "XAF"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Configuration invalide ou connexion échouée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Configuration Nexah invalide ou incomplète"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/service-config/test/freemopay": {
+            "post": {
+                "tags": [
+                    "Service Configuration"
+                ],
+                "summary": "Tester la connexion FreeMoPay API",
+                "description": "Vérifie la validité des credentials FreeMoPay en générant un token d'accès",
+                "operationId": "b0bc89900697a5e0e07cac5a890dbba7",
+                "responses": {
+                    "200": {
+                        "description": "Test de connexion réussi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "FreeMoPay connection successful, token generated"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "token_length": {
+                                                    "type": "integer",
+                                                    "example": 256
+                                                },
+                                                "token_preview": {
+                                                    "type": "string",
+                                                    "example": "eyJhbGciOi..."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Configuration invalide ou connexion échouée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Connection test failed: Connection timed out"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/service-config/send-test/whatsapp": {
+            "post": {
+                "tags": [
+                    "Service Configuration"
+                ],
+                "summary": "Envoyer un message WhatsApp de test",
+                "description": "Envoie un code OTP de test via WhatsApp Business API pour vérifier le bon fonctionnement",
+                "operationId": "50f38dda16a1726b3cb6593b9c3fa95c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone",
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "description": "Numéro de téléphone (format: +237658895572 ou 237658895572)",
+                                        "type": "string",
+                                        "example": "+237658895572"
+                                    },
+                                    "otp": {
+                                        "description": "Code OTP à envoyer (6 chiffres)",
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Message envoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "WhatsApp message sent successfully"
+                                        },
+                                        "message_id": {
+                                            "type": "string",
+                                            "example": "wamid.XXX"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de l'envoi ou configuration invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "config_debug": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/service-config/send-test/nexah": {
+            "post": {
+                "tags": [
+                    "Service Configuration"
+                ],
+                "summary": "Envoyer un SMS de test via Nexah",
+                "description": "Envoie un message SMS de test via l'API Nexah pour vérifier le bon fonctionnement",
+                "operationId": "627a99652978c43a2d9fe9e2eca0efdc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "description": "Numéro de téléphone (format: +237658895572 ou 237658895572)",
+                                        "type": "string",
+                                        "example": "+237658895572"
+                                    },
+                                    "message": {
+                                        "description": "Message à envoyer",
+                                        "type": "string",
+                                        "example": "Ceci est un message de test depuis Estuaire Emploie"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "SMS envoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "SMS sent successfully"
+                                        },
+                                        "message_id": {
+                                            "type": "string",
+                                            "example": "MSG123456"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur lors de l'envoi ou configuration invalide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/jobs/{id}/apply": {
             "post": {
                 "tags": [
@@ -100,6 +513,50 @@
                 ]
             }
         },
+        "/api/my-applications/stats": {
+            "get": {
+                "tags": [
+                    "Applications"
+                ],
+                "summary": "Statistiques de mes candidatures",
+                "operationId": "ae2ee90d4188c5d3b4d8ef87116ebd6f",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques des candidatures par statut",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "pending": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "accepted": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "rejected": {
+                                            "type": "integer",
+                                            "example": 2
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/my-applications": {
             "get": {
                 "tags": [
@@ -116,12 +573,8 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "pending",
-                                "viewed",
-                                "shortlisted",
-                                "rejected",
-                                "interview",
-                                "accepted"
+                                "accepted",
+                                "rejected"
                             ]
                         }
                     }
@@ -218,12 +671,8 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "pending",
-                                "viewed",
-                                "shortlisted",
-                                "rejected",
-                                "interview",
-                                "accepted"
+                                "accepted",
+                                "rejected"
                             ]
                         }
                     },
@@ -314,18 +763,14 @@
                                     "status": {
                                         "type": "string",
                                         "enum": [
-                                            "pending",
-                                            "viewed",
-                                            "shortlisted",
-                                            "rejected",
-                                            "interview",
-                                            "accepted"
+                                            "accepted",
+                                            "rejected"
                                         ],
-                                        "example": "viewed"
+                                        "example": "accepted"
                                     },
                                     "internal_notes": {
                                         "type": "string",
-                                        "example": "Bon profil, à convoquer pour entretien"
+                                        "example": "Candidat retenu pour le poste"
                                     }
                                 },
                                 "type": "object"
@@ -2142,6 +2587,48 @@
                 ]
             }
         },
+        "/api/jobs/{id}/has-applied": {
+            "get": {
+                "tags": [
+                    "Jobs"
+                ],
+                "summary": "Vérifier si l'utilisateur a déjà postulé à cette offre",
+                "operationId": "ac5f4c74d7e3c4145824a4dc84aeb9a1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'offre",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statut de candidature",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "has_applied": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/notifications": {
             "get": {
                 "tags": [
@@ -2482,6 +2969,76 @@
                     }
                 ]
             }
+        },
+        "/api/webhooks/freemopay": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "FreeMoPay payment callback webhook",
+                "description": "Receives payment status updates from FreeMoPay",
+                "operationId": "e21cada83675741741f8f82b8d1cfff6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reference": {
+                                        "type": "string",
+                                        "example": "FMP123456789"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "SUCCESS"
+                                    },
+                                    "externalId": {
+                                        "type": "string",
+                                        "example": "PAY-20251212120000"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 5000
+                                    },
+                                    "payer": {
+                                        "type": "string",
+                                        "example": "237658895572"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Webhook processed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid webhook data"
+                    },
+                    "404": {
+                        "description": "Payment not found"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2495,6 +3052,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Service Configuration",
+            "description": "API Endpoints pour la configuration et le test des services externes (WhatsApp, Nexah SMS, FreeMoPay)"
+        },
         {
             "name": "Applications",
             "description": "API Endpoints pour la gestion des candidatures"
@@ -2522,6 +3083,10 @@
         {
             "name": "Notifications",
             "description": "API pour la gestion des notifications utilisateur"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Webhooks"
         }
     ]
 }

@@ -83,4 +83,102 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('settings/categories', [SettingsController::class, 'categories'])->name('settings.categories');
     Route::post('settings/categories', [SettingsController::class, 'storeCategory'])->name('settings.categories.store');
     Route::delete('settings/categories/{category}', [SettingsController::class, 'deleteCategory'])->name('settings.categories.delete');
+
+    // MONÉTISATION - Subscription Plans
+    Route::prefix('subscription-plans')->name('subscription-plans.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'store'])->name('store');
+        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'edit'])->name('edit');
+        Route::put('/{plan}', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'update'])->name('update');
+        Route::delete('/{plan}', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'destroy'])->name('destroy');
+    });
+
+    // MONÉTISATION - Subscriptions
+    Route::prefix('subscriptions')->name('subscriptions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\SubscriptionController::class, 'index'])->name('index');
+        Route::get('/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'show'])->name('show');
+        Route::patch('/{subscription}/cancel', [\App\Http\Controllers\Admin\SubscriptionController::class, 'cancel'])->name('cancel');
+        Route::patch('/{subscription}/activate', [\App\Http\Controllers\Admin\SubscriptionController::class, 'activate'])->name('activate');
+        Route::delete('/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'destroy'])->name('destroy');
+    });
+
+    // MONÉTISATION - Payments
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('index');
+        Route::get('/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('show');
+        Route::patch('/{payment}/verify', [\App\Http\Controllers\Admin\PaymentController::class, 'verify'])->name('verify');
+        Route::patch('/{payment}/refund', [\App\Http\Controllers\Admin\PaymentController::class, 'refund'])->name('refund');
+    });
+
+    // MONÉTISATION - Premium Services
+    Route::prefix('premium-services')->name('premium-services.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'store'])->name('store');
+        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'edit'])->name('edit');
+        Route::put('/{service}', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'update'])->name('update');
+        Route::delete('/{service}', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'destroy'])->name('destroy');
+        Route::patch('/{service}/toggle', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'toggle'])->name('toggle');
+        Route::get('/{service}', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'show'])->name('show');
+    });
+
+    // MONÉTISATION - Add-on Services
+    Route::prefix('addon-services')->name('addon-services.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AddonServiceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\AddonServiceController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\AddonServiceController::class, 'store'])->name('store');
+        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\AddonServiceController::class, 'edit'])->name('edit');
+        Route::put('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'update'])->name('update');
+        Route::delete('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'destroy'])->name('destroy');
+        Route::patch('/{service}/toggle', [\App\Http\Controllers\Admin\AddonServiceController::class, 'toggle'])->name('toggle');
+        Route::get('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'show'])->name('show');
+    });
+
+    // MONÉTISATION - CVthèque
+    Route::prefix('cvtheque')->name('cvtheque.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CVthequeController::class, 'index'])->name('index');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
+        Route::get('/export/all', [\App\Http\Controllers\Admin\CVthequeController::class, 'export'])->name('export');
+    });
+
+    // MONÉTISATION - Advertisements
+    Route::prefix('advertisements')->name('advertisements.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdvertisementController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\AdvertisementController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\AdvertisementController::class, 'store'])->name('store');
+        Route::get('/{ad}/edit', [\App\Http\Controllers\Admin\AdvertisementController::class, 'edit'])->name('edit');
+        Route::put('/{ad}', [\App\Http\Controllers\Admin\AdvertisementController::class, 'update'])->name('update');
+        Route::delete('/{ad}', [\App\Http\Controllers\Admin\AdvertisementController::class, 'destroy'])->name('destroy');
+        Route::patch('/{ad}/toggle', [\App\Http\Controllers\Admin\AdvertisementController::class, 'toggle'])->name('toggle');
+    });
+
+    // MONÉTISATION - Financial Statistics
+    Route::prefix('financial-stats')->name('financial-stats.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FinancialStatsController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\FinancialStatsController::class, 'export'])->name('export');
+    });
+
+    // Service Configuration (WhatsApp, SMS, Payment)
+    Route::prefix('service-config')->name('service-config.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'index'])->name('index');
+
+        // Update configurations
+        Route::put('/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateWhatsApp'])->name('update-whatsapp');
+        Route::put('/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNexah'])->name('update-nexah');
+        Route::put('/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateFreeMoPay'])->name('update-freemopay');
+        Route::put('/preferences', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNotificationPreferences'])->name('update-preferences');
+
+        // Test connections
+        Route::post('/test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testWhatsApp'])->name('test-whatsapp');
+        Route::post('/test/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testNexah'])->name('test-nexah');
+        Route::post('/test/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testFreeMoPay'])->name('test-freemopay');
+
+        // Send actual test messages
+        Route::post('/send-test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'sendTestWhatsApp'])->name('send-test-whatsapp');
+        Route::post('/send-test/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'sendTestNexah'])->name('send-test-nexah');
+
+        // Clear cache
+        Route::post('/clear-cache', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'clearCache'])->name('clear-cache');
+    });
 });
