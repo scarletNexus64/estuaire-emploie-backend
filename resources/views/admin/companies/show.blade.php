@@ -27,6 +27,16 @@
         </div>
 
         <div style="padding: 1.5rem;">
+            <!-- Logo Section -->
+            @if($company->logo)
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <img src="{{ $company->logo_url }}"
+                     alt="Logo {{ $company->name }}"
+                     style="max-width: 200px; max-height: 200px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
+                     onerror="this.style.display='none'">
+            </div>
+            @endif
+
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
                 <div>
                     <h4 style="margin-bottom: 1rem; font-weight: 600;">Informations Générales</h4>

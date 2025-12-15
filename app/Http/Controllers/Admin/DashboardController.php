@@ -27,7 +27,7 @@ class DashboardController extends Controller
             'total_recruiters' => User::where('role', 'recruiter')->count(),
             'total_favorites' => Favorite::count(),
             'total_notifications' => Notification::count(),
-            'unread_notifications' => Notification::where('is_read', false)->count(),
+            'unread_notifications' => Notification::unread()->count(),
         ];
 
         $recentJobs = Job::with(['company', 'category', 'applications'])

@@ -25,9 +25,29 @@
         <h3 class="card-title">Modifier {{ $company->name }}</h3>
     </div>
 
-    <form method="POST" action="{{ route('admin.companies.update', $company) }}">
+    <form method="POST" action="{{ route('admin.companies.update', $company) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+
+        <!-- Logo Section -->
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label class="form-label">Logo de l'entreprise</label>
+            @if($company->logo)
+            <div style="margin-bottom: 1rem;">
+                <img src="{{ $company->logo_url }}"
+                     alt="Logo actuel"
+                     style="max-width: 150px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <p style="color: var(--secondary); font-size: 0.875rem; margin-top: 0.5rem;">Logo actuel</p>
+            </div>
+            @endif
+            <input type="file" name="logo" class="form-control" accept="image/png,image/jpeg,image/jpg">
+            <small style="color: var(--secondary); font-size: 0.875rem; display: block; margin-top: 0.5rem;">
+                Formats acceptés: PNG, JPG, JPEG - Taille max: 2 MB
+            </small>
+            @error('logo')
+                <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+            @enderror
+        </div>
 
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
             <div class="form-group">
