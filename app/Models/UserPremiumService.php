@@ -13,7 +13,7 @@ class UserPremiumService extends Model
 
     protected $fillable = [
         'user_id',
-        'premium_service_config_id',
+        'premium_services_config_id',
         'payment_id',
         'purchased_at',
         'activated_at',
@@ -42,7 +42,7 @@ class UserPremiumService extends Model
 
     public function config(): BelongsTo
     {
-        return $this->belongsTo(PremiumServiceConfig::class, 'premium_service_config_id');
+        return $this->belongsTo(PremiumServiceConfig::class, 'premium_services_config_id');
     }
 
     public function payment(): BelongsTo
@@ -53,6 +53,6 @@ class UserPremiumService extends Model
     public function isValid(): bool
     {
         return $this->is_active &&
-               ($this->expires_at === null || $this->expires_at >= now());
+            ($this->expires_at === null || $this->expires_at >= now());
     }
 }

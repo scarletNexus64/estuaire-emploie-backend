@@ -13,7 +13,7 @@ return new class extends Migration
 
             // Relations
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->foreignId('addon_service_config_id')->constrained()->onDelete('restrict');
+            $table->foreignId('addon_services_config_id')->constrained()->onDelete('restrict');
             $table->foreignId('payment_id')->nullable()->constrained()->onDelete('set null');
 
             // Relations optionnelles (selon le type de service)

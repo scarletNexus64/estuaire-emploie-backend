@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
@@ -110,4 +111,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-company', [CompanyController::class, 'myCompany']);
     // Mettre à jour mon entreprise
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
+
+
+    Route::post('/send-message', [ChatController::class, 'send']);
+    Route::post('/read/{conversation}', [ChatController::class, 'markRead']);
+    Route::post('/typing', [ChatController::class, 'typing']);
+    Route::post('/online', [ChatController::class, 'online']);
+    Route::post('/offline', [ChatController::class, 'offline']);
+    Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
 });

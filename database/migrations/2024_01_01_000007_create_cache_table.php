@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('expiration');
         });
 
-        Schema::create('jobs_queue', function (Blueprint $table) {
+        Schema::create('job_queue', function (Blueprint $table) {
             $table->id();
             $table->string('queue')->index();
             $table->longText('payload');

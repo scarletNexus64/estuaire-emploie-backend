@@ -22,12 +22,12 @@ class JobController extends Controller
         // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%')
-                  ->orWhereHas('company', function($q) use ($search) {
-                      $q->where('name', 'like', '%' . $search . '%');
-                  });
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhereHas('company', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
             });
         }
 
@@ -50,7 +50,7 @@ class JobController extends Controller
     {
         $companies = Company::where('status', 'verified')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
-        $locations = Location::orderBy('city')->get();
+        $locations = Location::orderBy('name')->get();
         $contractTypes = ContractType::orderBy('name')->get();
 
         return view('admin.jobs.create', compact('companies', 'categories', 'locations', 'contractTypes'));
@@ -101,7 +101,7 @@ class JobController extends Controller
     {
         $companies = Company::where('status', 'verified')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
-        $locations = Location::orderBy('city')->get();
+        $locations = Location::orderBy('name')->get();
         $contractTypes = ContractType::orderBy('name')->get();
 
         return view('admin.jobs.edit', compact('job', 'companies', 'categories', 'locations', 'contractTypes'));

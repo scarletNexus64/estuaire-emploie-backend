@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('addon_services_config', function (Blueprint $table) {
+        Schema::create('addon_services_configs', function (Blueprint $table) {
             $table->id();
 
             // Informations de base
@@ -50,6 +50,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('addon_services_config');
+        Schema::dropIfExists('addon_services_configs');
     }
 };

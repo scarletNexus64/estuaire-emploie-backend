@@ -11,8 +11,7 @@ class AddonServiceConfig extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'addon_services_config';
-
+    protected $table = 'addon_services_configs';
     protected $fillable = [
         'name',
         'slug',
@@ -43,6 +42,6 @@ class AddonServiceConfig extends Model
 
     public function companyServices(): HasMany
     {
-        return $this->hasMany(CompanyAddonService::class);
+        return $this->hasMany(CompanyAddonService::class, 'addon_services_config_id');
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
 
             // Relations
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('premium_service_config_id')->constrained()->onDelete('restrict');
+            $table->foreignId('premium_services_config_id')->constrained()->onDelete('restrict');
             $table->foreignId('payment_id')->nullable()->constrained()->onDelete('set null');
 
             // Période d'activation

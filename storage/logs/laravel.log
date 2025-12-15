@@ -1,17 +1,103 @@
-[2025-12-12 11:24:52] local.INFO: Sending WhatsApp OTP to +237658895572  
-[2025-12-12 11:24:52] local.DEBUG: WhatsApp API URL: https://graph.facebook.com/v22.0/672988359234155/messages  
-[2025-12-12 11:24:52] local.DEBUG: WhatsApp API payload template: ngoma_auth_fr  
-[2025-12-12 11:24:55] local.INFO: WhatsApp API response status: 200  
-[2025-12-12 11:24:55] local.DEBUG: WhatsApp API response: {"messaging_product":"whatsapp","contacts":[{"input":"+237658895572","wa_id":"237658895572"}],"messages":[{"id":"wamid.HBgMMjM3NjU4ODk1NTcyFQIAERgSRERGODUzNzlFM0I3RTVDM0EyAA==","message_status":"accepted"}]}  
-[2025-12-12 11:28:01] local.INFO: Sending SMS to 237658895572  
-[2025-12-12 11:28:01] local.DEBUG: Nexah API URL: https://smsvas.com/bulk/public/index.php/api/v1/sendsms  
-[2025-12-12 11:28:01] local.DEBUG: Nexah API payload user: steve.boussa@outlook.com, sender: NGOMA  
-[2025-12-12 11:28:02] local.INFO: Nexah API response: 200  
-[2025-12-12 11:28:02] local.DEBUG: Nexah API response text: {"responsecode":1,"responsedescription":"success","responsemessage":"success","sms":[{"status":"success","smsclientid":"brk.ocm.693bfc437ae08e3e8e02c50f","messageid":"brk.ocm.d99347c9-bf02-4e8a-96ce-c2b3c383e132","mobileno":"+237658895572","errorcode":null,"errordescription":null,"total_sms_unit":1,"balance":677}]}  
-[2025-12-12 11:39:35] local.INFO: [FreeMoPay TokenManager] Generating new access token  
-[2025-12-12 11:39:35] local.INFO: [FreeMoPay TokenManager] Requesting new token from: https://api-v2.freemopay.com/api/v2/payment/token  
-[2025-12-12 11:39:35] local.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment/token  
-[2025-12-12 11:39:35] local.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
-[2025-12-12 11:39:35] local.DEBUG: [FreeMoPay] Body: {"appKey":"8381e965-51e0-42bd-b260-a78d9affa316","secretKey":"[HIDDEN]"}  
-[2025-12-12 11:39:45] local.ERROR: [FreeMoPay] Connection error: cURL error 28: Connection timed out after 10002 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/token  
-[2025-12-12 11:39:45] local.ERROR: [FreeMoPay TokenManager] Token generation failed: Connection error: cURL error 28: Connection timed out after 10002 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/token  
+[2025-12-14 14:25:05] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-14 14:25:15] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-14 14:25:19] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-14 14:41:09] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":17} 
+[2025-12-14 14:48:43] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":17} 
+[2025-12-14 14:52:45] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":18} 
+[2025-12-14 15:13:53] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":18} 
+[2025-12-14 15:16:25] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":19} 
+[2025-12-14 15:17:56] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":19} 
+[2025-12-14 15:19:23] local.INFO: Messages fetched for conversation {"conversation_id":1,"messages_count":19} 
+[2025-12-15 07:20:40] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-15 07:20:50] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-15 07:20:54] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 

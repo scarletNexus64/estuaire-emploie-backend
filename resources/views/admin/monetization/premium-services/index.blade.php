@@ -85,8 +85,12 @@
                                 @endif
                             </td>
                             <td>
+                                @if ($service->userServices->count() == 0)
+                                    <span style="color: #94a3b8;">Aucun achat</span>
+                                @endif
                                 <strong>{{ $service->userServices->count() }}</strong>
                             </td>
+
                             <td>
                                 <div style="display: flex; gap: 0.5rem;">
                                     <a href="{{ route('admin.premium-services.edit', $service->id) }}" class="btn btn-sm btn-primary">

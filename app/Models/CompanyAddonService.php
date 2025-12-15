@@ -13,7 +13,7 @@ class CompanyAddonService extends Model
 
     protected $fillable = [
         'company_id',
-        'addon_service_config_id',
+        'addon_services_config_id',
         'payment_id',
         'related_job_id',
         'related_user_id',
@@ -46,7 +46,7 @@ class CompanyAddonService extends Model
 
     public function config(): BelongsTo
     {
-        return $this->belongsTo(AddonServiceConfig::class, 'addon_service_config_id');
+        return $this->belongsTo(AddonServiceConfig::class, 'addon_services_config_id');
     }
 
     public function payment(): BelongsTo
@@ -67,6 +67,6 @@ class CompanyAddonService extends Model
     public function isValid(): bool
     {
         return $this->is_active &&
-               ($this->expires_at === null || $this->expires_at >= now());
+            ($this->expires_at === null || $this->expires_at >= now());
     }
 }

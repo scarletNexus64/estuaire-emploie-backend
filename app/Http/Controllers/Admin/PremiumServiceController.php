@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PremiumServiceConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PremiumServiceController extends Controller
@@ -12,6 +13,7 @@ class PremiumServiceController extends Controller
     public function index()
     {
         $services = PremiumServiceConfig::orderBy('display_order')->get();
+        Log::info('Admin viewed premium services list', ['admin' => $services]);
         return view('admin.monetization.premium-services.index', compact('services'));
     }
 

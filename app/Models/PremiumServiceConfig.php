@@ -11,8 +11,7 @@ class PremiumServiceConfig extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'premium_services_config';
-
+    protected $table = 'premium_services_configs';
     protected $fillable = [
         'name',
         'slug',
@@ -41,7 +40,7 @@ class PremiumServiceConfig extends Model
 
     public function userServices(): HasMany
     {
-        return $this->hasMany(UserPremiumService::class);
+        return $this->hasMany(UserPremiumService::class, 'premium_services_config_id');
     }
 
     public function isPermanent(): bool
