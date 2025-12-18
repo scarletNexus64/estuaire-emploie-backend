@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -80,6 +81,8 @@ class ApplicationController extends Controller
                 'message' => 'Vous avez déjà postulé à cette offre',
             ], 400);
         }
+
+        Log::info('Nouvelle candidature pour l\'offre ID: ' . $job->id . ' par l\'utilisateur ID: ' . $request->user()->id);
 
         $validated = $request->validate([
             'cv' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB

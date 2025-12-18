@@ -16,54 +16,39 @@ use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
- public function getMessages($conversationId)
-{
-    // $authId = Auth::user()->id;
-
-    // // Récupère la conversation entre l'utilisateur connecté et l'autre utilisateur
-    // $conversation = Conversation::where(function($query) use ($conversationId, $authId) {
-    //     $query->where('user_one', $authId)
-    //           ->where('user_two', ($conversationId + 1));
-    // })->orWhere(function($query) use ($conversationId, $authId) {
-    //     $query->where('user_one', ($conversationId + 1))
-    //           ->where('user_two', $authId);
-    // })->first();
-
-    // if (!$conversation) {
-    //     return response()->json([]); // pas de conversation, renvoie un tableau vide
-    // }
-
-    // Récupère tous les messages de cette conversation, triés par date
-    $messages = Message::where('conversation_id', $conversationId)
-        ->orderBy('created_at', 'asc')
-        ->get()
-        ->map(function ($msg) {
-            return [
-                'id' => $msg->id,
-                'conversation_id' => $msg->conversation_id,
-                'sender_id' => $msg->sender_id,
+    public function getMessages($conversationId)
+    {
+        $messages = Message::where('conversation_id', $conversationId)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($msg) {
+                return [
+                    'id' => $msg->id,
+                    'conversation_id' => $msg->conversation_id,
+                    'sender_id' => $msg->sender_id,
+                'sender_name' => ($msg->sender_id == Auth::user()->id) ? 'Vous' : $msg->user->name,
                 'message' => $msg->message,
                 'status' => $msg->status,
                 'created_at' => $msg->created_at ? $msg->created_at->toDateTimeString() : null,
                 'updated_at' => $msg->updated_at ? $msg->updated_at->toDateTimeString() : null,
             ];
-        })->toArray(); // convertit en tableau pur
+            })->toArray();
 
-        Log::info('Messages fetched for conversation', ['conversation_id' => $conversationId, 'messages_count' => count($messages)]);
-
-
-    // Renvoie directement le tableau, prêt à être consommé côté Flutter
-    return response()->json($messages, 200);
-}
-
+        return response()->json($messages, 200);
+    }
 
     public function send(Request $request)
     {
+        $validated = $request->validate([
+            'conversation_id' => 'required|exists:conversations,id',
+            'message' => 'required|string|max:5000',
+            'status' => 'in:sent,delivered,read',
+        ]);
         $message = Message::create([
-            'conversation_id' => $request->conversation_id,
+            'conversation_id' => $validated['conversation_id'],
             'sender_id' => Auth::user()->id,
-            'message' => $request->message,
-            'status' => 'sent'
+            'message' => $validated['message'],
+            'status' => $validated['status'] ?? 'sent',
         ]);
 
         // destinataire en ligne ?
@@ -72,7 +57,7 @@ class ChatController extends Controller
             broadcast(new MessageStatusUpdated($message->id, 'delivered'));
         }
 
-        broadcast(new MessageSent($message))->toOthers();
+        broadcast(new MessageSent($message));
         return response()->json($message);
     }
 
@@ -91,7 +76,7 @@ class ChatController extends Controller
 
     public function typing(Request $request)
     {
-        broadcast(new TypingEvent($request->conversation_id, Auth::user()->id))->toOthers();
+        broadcast(new TypingEvent($request->conversation_id, Auth::user()->id));
     }
 
     public function online()

@@ -59,6 +59,27 @@ class User extends Authenticatable
         return $this->hasMany(Application::class);
     }
 
+    public function conversationsAsUserOne(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_one');
+    }
+    public function conversationsAsUserTwo(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_two');
+    }
+    public function conversations(): HasMany
+    {
+        return $this->conversationsAsUserOne()->union($this->conversationsAsUserTwo());
+    }
+    public function presence()
+    {
+        return $this->hasOne(UserPresence::class);
+    }
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
     public function postedJobs(): HasMany
     {
         return $this->hasMany(Job::class, 'posted_by');

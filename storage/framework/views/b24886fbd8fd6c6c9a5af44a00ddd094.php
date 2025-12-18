@@ -445,4 +445,4 @@
     </div>
 </body>
 </html>
-<?php /**PATH /home/djstar-service/Documents/Project/My_project/Estuaire Emploie New/estuaire-emploie-backend/resources/views/admin/auth/login.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/resources/views/admin/auth/login.blade.php ENDPATH**/ ?>

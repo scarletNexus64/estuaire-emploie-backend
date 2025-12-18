@@ -17,10 +17,13 @@ class MessageSent implements ShouldBroadcast
     {
         return [
             'id' => $this->message->id,
-            'message' => $this->message->message,
+            'conversation_id' => $this->message->conversation_id,
             'sender_id' => $this->message->sender_id,
+            'sender_name' => $this->message->user->name,
+            'message' => $this->message->message,
             'status' => $this->message->status,
             'created_at' => $this->message->created_at->toDateTimeString(),
+
         ];
     }
 }

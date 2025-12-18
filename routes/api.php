@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
@@ -118,5 +119,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/typing', [ChatController::class, 'typing']);
     Route::post('/online', [ChatController::class, 'online']);
     Route::post('/offline', [ChatController::class, 'offline']);
-    Route::get('/messages/{userId}', [ChatController::class, 'getMessages']);
+    Route::get('/messages/{conversationId}', [ChatController::class, 'getMessages']);
+
+    Route::get('/conversations', [ConversationController::class, 'getConversationsList']);
 });

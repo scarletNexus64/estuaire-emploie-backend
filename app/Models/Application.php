@@ -31,11 +31,14 @@ class Application extends Model
         ];
     }
 
+    public function conversation()
+    {
+        return $this->hasOne(Conversation::class);
+    }
     public function job(): BelongsTo
     {
         return $this->belongsTo(Job::class);
     }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

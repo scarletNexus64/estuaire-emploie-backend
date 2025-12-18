@@ -10,4 +10,10 @@ class UserPresence extends Model
     protected $primaryKey = 'user_id';
     protected $fillable = ['user_id', 'online', 'last_seen'];
     public $timestamps = false;
+
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
