@@ -1,5 +1,5 @@
 <?php
-
+// MessageSent.php
 namespace App\Events;
 
 use App\Models\Message;
@@ -9,10 +9,13 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 class MessageSent implements ShouldBroadcast
 {
     public function __construct(public Message $message) {}
+
     public function broadcastOn()
     {
+        // CORRECTION: utiliser "chat" au lieu de "chat"
         return new PrivateChannel('chat.' . $this->message->conversation_id);
     }
+
     public function broadcastWith()
     {
         return [
@@ -23,7 +26,7 @@ class MessageSent implements ShouldBroadcast
             'message' => $this->message->message,
             'status' => $this->message->status,
             'created_at' => $this->message->created_at->toDateTimeString(),
-
+            'updated_at' => $this->message->updated_at->toDateTimeString(),
         ];
     }
 }

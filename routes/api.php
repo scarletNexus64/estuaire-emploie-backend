@@ -45,7 +45,7 @@ Route::post('/webhooks/freemopay', [\App\Http\Controllers\Api\WebhookController:
 // ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])->group(function () {
 
     // ------------------
     // AUTHENTIFICATION & PROFIL
@@ -114,12 +114,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
 
 
-    Route::post('/send-message', [ChatController::class, 'send']);
-    Route::post('/read/{conversation}', [ChatController::class, 'markRead']);
-    Route::post('/typing', [ChatController::class, 'typing']);
-    Route::post('/online', [ChatController::class, 'online']);
-    Route::post('/offline', [ChatController::class, 'offline']);
-    Route::get('/messages/{conversationId}', [ChatController::class, 'getMessages']);
-
+    // ------------------
+    // CHAT & CONVERSATIONS (WebSocket)
+    // ------------------
+    // Liste des conversations
     Route::get('/conversations', [ConversationController::class, 'getConversationsList']);
+    // Créer une nouvelle conversation
+    Route::post('/conversations', [ConversationController::class, 'store']);
+    // Récupérer les messages d'une conversation
+    Route::get('/conversations/{conversationId}/messages', [ChatController::class, 'getMessages']);
+    // Envoyer un message
+    Route::post('/conversations/messages', [ChatController::class, 'send']);
+    // Marquer les messages comme lus
+    Route::put('/conversations/{conversation}/read', [ChatController::class, 'markRead']);
+    // Indicateur de saisie
+    Route::post('/conversations/typing', [ChatController::class, 'typing']);
+    // Statut de présence
+    Route::post('/presence/online', [ChatController::class, 'online']);
+    Route::post('/presence/offline', [ChatController::class, 'offline']);
+
+    // ------------------
+    // BROADCASTING AUTH (WebSocket Authentication)
+    // ------------------
+    Route::post('/broadcasting/auth', function () {
+        return Broadcast::auth(request());
+    });
 });

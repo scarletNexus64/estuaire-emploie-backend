@@ -63,13 +63,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(Conversation::class, 'user_one');
     }
+
     public function conversationsAsUserTwo(): HasMany
     {
         return $this->hasMany(Conversation::class, 'user_two');
     }
-    public function conversations(): HasMany
+
+    public function conversations()
     {
-        return $this->conversationsAsUserOne()->union($this->conversationsAsUserTwo());
+        return Conversation::where('user_one', $this->id)
+            ->orWhere('user_two', $this->id);
     }
     public function presence()
     {
