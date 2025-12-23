@@ -185,7 +185,7 @@ class ApplicationController extends Controller
      */
     public function myApplications(Request $request): JsonResponse
     {
-        $query = Application::with(['job.company', 'job.location', 'job.category', 'job.contractType'])
+        $query = Application::with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation'])
             ->where('user_id', $request->user()->id);
 
         if ($request->has('status')) {
@@ -287,7 +287,7 @@ class ApplicationController extends Controller
 
         $query = Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
-        })->with(['user', 'job']);
+        })->with(['user', 'job.company', 'job.location', 'job.category', 'job.contractType', 'conversation']);
 
         // Filtrer par statut si fourni
         if ($request->has('status')) {

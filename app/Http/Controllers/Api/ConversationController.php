@@ -47,16 +47,34 @@ class ConversationController extends Controller
             ], 403);
         }
 
-        // Vérifier que l'utilisateur actuel est le recruteur
-        $recruiterId = $application->job->posted_by;
-        if (Auth::id() !== $recruiterId) {
-            \Log::warning('💬 User is not the recruiter', [
-                'current_user' => Auth::id(),
-                'recruiter_id' => $recruiterId
+        // Vérifier que l'utilisateur actuel est un recruteur de la même entreprise
+        $currentUser = Auth::user();
+        $currentRecruiter = $currentUser->recruiter;
+
+        if (!$currentRecruiter) {
+            \Log::warning('💬 User is not a recruiter', [
+                'current_user_id' => Auth::id(),
+                'current_user_role' => $currentUser->role,
             ]);
 
             return response()->json([
-                'message' => 'Seul le recruteur peut initier une conversation',
+                'message' => 'Seul un recruteur peut initier une conversation',
+            ], 403);
+        }
+
+        // Vérifier que le recruteur appartient à la même entreprise que le job
+        $jobCompanyId = $application->job->company_id;
+        $recruiterCompanyId = $currentRecruiter->company_id;
+
+        if ($jobCompanyId !== $recruiterCompanyId) {
+            \Log::warning('💬 Recruiter is not from the same company', [
+                'current_user_id' => Auth::id(),
+                'job_company_id' => $jobCompanyId,
+                'recruiter_company_id' => $recruiterCompanyId,
+            ]);
+
+            return response()->json([
+                'message' => 'Seul un recruteur de l\'entreprise peut initier une conversation',
             ], 403);
         }
 
