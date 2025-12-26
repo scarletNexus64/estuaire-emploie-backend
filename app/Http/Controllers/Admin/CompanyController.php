@@ -50,6 +50,7 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:companies,email',
             'phone' => 'nullable|string|max:20',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'sector' => 'required|string|max:255',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
@@ -59,6 +60,12 @@ class CompanyController extends Controller
             'status' => 'required|in:pending,verified,suspended',
             'subscription_plan' => 'required|in:free,premium',
         ]);
+
+        // Gérer l'upload du logo
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('logos', 'public');
+            $validated['logo'] = $logoPath;
+        }
 
         if ($validated['status'] === 'verified') {
             $validated['verified_at'] = now();
@@ -88,6 +95,7 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:companies,email,' . $company->id,
             'phone' => 'nullable|string|max:20',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'sector' => 'required|string|max:255',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
@@ -96,6 +104,18 @@ class CompanyController extends Controller
             'status' => 'required|in:pending,verified,suspended',
             'subscription_plan' => 'required|in:free,premium',
         ]);
+
+        // Gérer l'upload du logo
+        if ($request->hasFile('logo')) {
+            // Supprimer l'ancien logo si existant
+            if ($company->logo && \Storage::disk('public')->exists($company->logo)) {
+                \Storage::disk('public')->delete($company->logo);
+            }
+
+            // Sauvegarder le nouveau logo
+            $logoPath = $request->file('logo')->store('logos', 'public');
+            $validated['logo'] = $logoPath;
+        }
 
         if ($validated['status'] === 'verified' && !$company->verified_at) {
             $validated['verified_at'] = now();

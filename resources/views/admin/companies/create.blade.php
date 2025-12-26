@@ -25,8 +25,20 @@
         <h3 class="card-title">Nouvelle Entreprise</h3>
     </div>
 
-    <form method="POST" action="{{ route('admin.companies.store') }}">
+    <form method="POST" action="{{ route('admin.companies.store') }}" enctype="multipart/form-data">
         @csrf
+
+        <!-- Logo Section -->
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label class="form-label">Logo de l'entreprise</label>
+            <input type="file" name="logo" class="form-control" accept="image/png,image/jpeg,image/jpg">
+            <small style="color: var(--secondary); font-size: 0.875rem; display: block; margin-top: 0.5rem;">
+                Formats acceptés: PNG, JPG, JPEG - Taille max: 2 MB
+            </small>
+            @error('logo')
+                <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+            @enderror
+        </div>
 
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
             <div class="form-group">
