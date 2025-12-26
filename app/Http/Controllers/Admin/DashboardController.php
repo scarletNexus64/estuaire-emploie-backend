@@ -9,7 +9,6 @@ use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -27,8 +26,8 @@ class DashboardController extends Controller
             'total_candidates' => User::where('role', 'candidate')->count(),
             'total_recruiters' => User::where('role', 'recruiter')->count(),
             'total_favorites' => Favorite::count(),
-            'total_notifications' => Notification::count(),
-            'unread_notifications' => Notification::unread()->count(),
+            'total_notifications' => DatabaseNotification::count(),
+            'unread_notifications' => DatabaseNotification::whereNull('read_at')->count(),
         ];
 
         $recentJobs = Job::with(['company', 'category', 'applications'])

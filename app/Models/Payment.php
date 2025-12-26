@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -73,5 +74,39 @@ class Payment extends Model
     public function isFailed(): bool
     {
         return $this->status === 'failed';
+    }
+
+    /**
+     * Relation vers la souscription utilisateur (relation ternaire)
+     */
+    public function userSubscriptionPlan(): HasOne
+    {
+        return $this->hasOne(UserSubscriptionPlan::class);
+    }
+
+    /**
+     * Marque le paiement comme complété
+     */
+    public function markAsCompleted(): self
+    {
+        $this->update([
+            'status' => 'completed',
+            'paid_at' => now(),
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Marque le paiement comme échoué
+     */
+    public function markAsFailed(string $reason = null): self
+    {
+        $this->update([
+            'status' => 'failed',
+            'failure_reason' => $reason,
+        ]);
+
+        return $this;
     }
 }

@@ -14,7 +14,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000",
+            "url": "http://my-default-host.com",
             "description": "Serveur API Principal"
         }
     ],
@@ -504,50 +504,6 @@
                     },
                     "422": {
                         "description": "Erreur de validation (CV requis, format invalide, etc.)"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/my-applications/stats": {
-            "get": {
-                "tags": [
-                    "Applications"
-                ],
-                "summary": "Statistiques de mes candidatures",
-                "operationId": "ae2ee90d4188c5d3b4d8ef87116ebd6f",
-                "responses": {
-                    "200": {
-                        "description": "Statistiques des candidatures par statut",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "total": {
-                                            "type": "integer",
-                                            "example": 10
-                                        },
-                                        "pending": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "accepted": {
-                                            "type": "integer",
-                                            "example": 3
-                                        },
-                                        "rejected": {
-                                            "type": "integer",
-                                            "example": 2
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -2970,6 +2926,544 @@
                 ]
             }
         },
+        "/api/subscription-plans": {
+            "get": {
+                "tags": [
+                    "Subscription Plans"
+                ],
+                "summary": "Liste des plans d'abonnement disponibles",
+                "description": "Récupère tous les plans d'abonnement actifs pour les recruteurs",
+                "operationId": "93e49ee223a5ac6a91fe2a4194d96301",
+                "responses": {
+                    "200": {
+                        "description": "Liste des plans d'abonnement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Plans d'abonnement récupérés avec succès"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "STARTER"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string",
+                                                        "example": "starter"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Idéal pour débuter"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 15000
+                                                    },
+                                                    "duration_days": {
+                                                        "type": "integer",
+                                                        "example": 30
+                                                    },
+                                                    "jobs_limit": {
+                                                        "type": "integer",
+                                                        "example": 3,
+                                                        "nullable": true
+                                                    },
+                                                    "contacts_limit": {
+                                                        "type": "integer",
+                                                        "example": 10,
+                                                        "nullable": true
+                                                    },
+                                                    "can_access_cvtheque": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "can_boost_jobs": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "can_see_analytics": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "priority_support": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "is_popular": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "color": {
+                                                        "type": "string",
+                                                        "example": "#667eea",
+                                                        "nullable": true
+                                                    },
+                                                    "icon": {
+                                                        "type": "string",
+                                                        "example": "rocket",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/subscription-plans/{id}": {
+            "get": {
+                "tags": [
+                    "Subscription Plans"
+                ],
+                "summary": "Détails d'un plan d'abonnement",
+                "description": "Récupère les informations détaillées d'un plan d'abonnement spécifique",
+                "operationId": "307bd88a594195e42a95bca0652279bc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID du plan d'abonnement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du plan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Plan d'abonnement récupéré avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "STARTER"
+                                                },
+                                                "slug": {
+                                                    "type": "string",
+                                                    "example": "starter"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Idéal pour débuter"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 15000
+                                                },
+                                                "duration_days": {
+                                                    "type": "integer",
+                                                    "example": 30
+                                                },
+                                                "jobs_limit": {
+                                                    "type": "integer",
+                                                    "example": 3,
+                                                    "nullable": true
+                                                },
+                                                "contacts_limit": {
+                                                    "type": "integer",
+                                                    "example": 10,
+                                                    "nullable": true
+                                                },
+                                                "can_access_cvtheque": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "can_boost_jobs": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "can_see_analytics": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "priority_support": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "featured_company_badge": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "custom_company_page": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "features": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "is_popular": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "color": {
+                                                    "type": "string",
+                                                    "example": "#667eea",
+                                                    "nullable": true
+                                                },
+                                                "icon": {
+                                                    "type": "string",
+                                                    "example": "rocket",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Plan non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Plan d'abonnement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/subscriptions/activate": {
+            "post": {
+                "tags": [
+                    "Subscription Plans"
+                ],
+                "summary": "Activer un abonnement après paiement",
+                "description": "Active l'abonnement d'un utilisateur si le paiement associé est complété.\n     *                  Cette méthode vérifie le statut du paiement et retourne un message approprié.",
+                "operationId": "6a046a49b29ebeb4d33ed55942556cc2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "subscription_plan_id",
+                                    "payment_id"
+                                ],
+                                "properties": {
+                                    "subscription_plan_id": {
+                                        "description": "ID du plan d'abonnement",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "payment_id": {
+                                        "description": "ID du paiement associé",
+                                        "type": "integer",
+                                        "example": 123
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Abonnement activé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Abonnement activé avec succès"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "subscription_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "plan_name": {
+                                                    "type": "string",
+                                                    "example": "STARTER"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string",
+                                                    "format": "datetime"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string",
+                                                    "format": "datetime"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Paiement non confirmé ou données invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paiement non confirmé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Plan ou paiement non trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Plan d'abonnement non trouvé"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Abonnement déjà existant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cet abonnement existe déjà"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-subscription": {
+            "get": {
+                "tags": [
+                    "Subscription Plans"
+                ],
+                "summary": "Récupérer l'abonnement actif de l'utilisateur",
+                "description": "Retourne l'abonnement actif de l'utilisateur connecté avec les détails du plan",
+                "operationId": "2fa9a09ac7eef8e452323f1535050000",
+                "responses": {
+                    "200": {
+                        "description": "Abonnement actif trouvé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Abonnement actif récupéré"
+                                        },
+                                        "has_active_subscription": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "subscription_id": {
+                                                    "type": "integer"
+                                                },
+                                                "plan": {
+                                                    "type": "object"
+                                                },
+                                                "payment": {
+                                                    "type": "object"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string",
+                                                    "format": "datetime"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string",
+                                                    "format": "datetime"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                },
+                                                "is_expired": {
+                                                    "type": "boolean"
+                                                },
+                                                "days_remaining": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/my-subscriptions": {
+            "get": {
+                "tags": [
+                    "Subscription Plans"
+                ],
+                "summary": "Historique des abonnements de l'utilisateur",
+                "description": "Retourne l'historique de tous les abonnements de l'utilisateur connecté",
+                "operationId": "46e65cdf941f1fb975f36901cc9d6706",
+                "responses": {
+                    "200": {
+                        "description": "Historique des abonnements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Historique des abonnements récupéré"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/webhooks/freemopay": {
             "post": {
                 "tags": [
@@ -3083,6 +3577,10 @@
         {
             "name": "Notifications",
             "description": "API pour la gestion des notifications utilisateur"
+        },
+        {
+            "name": "Subscription Plans",
+            "description": "API Endpoints pour la gestion des abonnements recruteurs"
         },
         {
             "name": "Webhooks",

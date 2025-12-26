@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -70,5 +71,39 @@ class SubscriptionPlan extends Model
     public function isUnlimitedContacts(): bool
     {
         return $this->contacts_limit === null;
+    }
+
+    /**
+     * Relation vers les souscriptions utilisateurs (relation ternaire via pivot)
+     */
+    public function userSubscriptionPlans(): HasMany
+    {
+        return $this->hasMany(UserSubscriptionPlan::class);
+    }
+
+    /**
+     * Relation many-to-many vers les utilisateurs via la table pivot ternaire
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_subscription_plans')
+            ->withPivot('payment_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Scope pour les plans actifs uniquement
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope pour ordonner par ordre d'affichage
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('display_order');
     }
 }

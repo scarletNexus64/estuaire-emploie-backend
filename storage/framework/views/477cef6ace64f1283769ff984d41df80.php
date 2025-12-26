@@ -139,10 +139,17 @@
                     </td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem;">
-                                <?php echo e(strtoupper(substr($company->name, 0, 1))); ?>
+                            <?php if($company->logo): ?>
+                                <img src="<?php echo e($company->logo_url); ?>"
+                                     alt="Logo <?php echo e($company->name); ?>"
+                                     style="width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 2px solid #e5e7eb;"
+                                     onerror="this.onerror=null; this.outerHTML='<div style=\'width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem;\'><?php echo e(strtoupper(substr($company->name, 0, 1))); ?></div>';">
+                            <?php else: ?>
+                                <div style="width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem;">
+                                    <?php echo e(strtoupper(substr($company->name, 0, 1))); ?>
 
-                            </div>
+                                </div>
+                            <?php endif; ?>
                             <div>
                                 <strong style="display: block;"><?php echo e($company->name); ?></strong>
                                 <small style="color: var(--secondary); display: block;"><?php echo e($company->email); ?></small>

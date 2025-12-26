@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TestNotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
@@ -38,6 +39,10 @@ Route::get('/companies/{company}', [CompanyController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'categories']);
 Route::get('/locations', [CategoryController::class, 'locations']);
 Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
+
+// Plans d'abonnement publics (consultation)
+Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
+Route::get('/subscription-plans/{id}', [SubscriptionPlanController::class, 'show']);
 
 // ============================================
 // WEBHOOKS (Callbacks externes)
@@ -123,6 +128,16 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/my-company', [CompanyController::class, 'myCompany']);
     // Mettre à jour mon entreprise
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
+
+    // ------------------
+    // RECRUTEUR - ABONNEMENTS
+    // ------------------
+    // Activer un abonnement après paiement
+    Route::post('/subscriptions/activate', [SubscriptionPlanController::class, 'activate']);
+    // Mon abonnement actif
+    Route::get('/my-subscription', [SubscriptionPlanController::class, 'mySubscription']);
+    // Historique de mes abonnements
+    Route::get('/my-subscriptions', [SubscriptionPlanController::class, 'mySubscriptions']);
 
 
     // ------------------

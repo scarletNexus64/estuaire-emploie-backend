@@ -133,4 +133,52 @@ class User extends Authenticatable
     {
         return $this->role === 'admin' && $this->email === 'admin@estuaire-emploie.com';
     }
+
+    /**
+     * Relation vers les souscriptions de l'utilisateur (relation ternaire via pivot)
+     */
+    public function userSubscriptionPlans(): HasMany
+    {
+        return $this->hasMany(UserSubscriptionPlan::class);
+    }
+
+    /**
+     * Relation many-to-many vers les plans d'abonnement via la table pivot ternaire
+     */
+    public function subscriptionPlans(): BelongsToMany
+    {
+        return $this->belongsToMany(SubscriptionPlan::class, 'user_subscription_plans')
+            ->withPivot('payment_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Récupère l'abonnement actif de l'utilisateur (le plus récent avec paiement complété)
+     */
+    public function activeSubscription(): ?UserSubscriptionPlan
+    {
+        return $this->userSubscriptionPlans()
+            ->active()
+            ->with(['subscriptionPlan', 'payment'])
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Vérifie si l'utilisateur a un abonnement actif et valide
+     */
+    public function hasActiveSubscription(): bool
+    {
+        $subscription = $this->activeSubscription();
+        return $subscription && $subscription->isValid();
+    }
+
+    /**
+     * Récupère le plan d'abonnement actif de l'utilisateur
+     */
+    public function currentPlan(): ?SubscriptionPlan
+    {
+        $subscription = $this->activeSubscription();
+        return $subscription?->subscriptionPlan;
+    }
 }
