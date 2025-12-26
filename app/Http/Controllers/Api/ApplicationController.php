@@ -1,10 +1,11 @@
 <?php
-
+//e4hBxqVaSh6dmmhFQwSKSN:APA91bHU_RD5_rmgJGWXyd7uPdduONndevaCHK2qgjZRV3cxunBo7c_5i6M-vJqrCj1I0_eX1HUf-vOnz3d9OjYnpeYi23OqAMHQX14LH0kDxM0wYObPeOE
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Job;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -108,58 +109,48 @@ class ApplicationController extends Controller
 
             $application->load(['job.company']);
 
-            return response()->json([
-                'data' => $application,
-                'message' => 'Candidature soumise avec succès',
-            ], 201);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Gérer l'erreur de contrainte unique au cas où
-            if ($e->getCode() === '23000') {
-                return response()->json([
-                    'message' => 'Vous avez déjà postulé à cette offre',
-                ], 400);
+        // Envoi de notification à tous les recruteurs de l'entreprise
+        // Le token FCM est enregistré sur l'utilisateur (`users.fcm_token`),
+        // donc on charge la relation `user` puis on utilise `user->fcm_token`.
+        $recruiters = $application->job->company->recruiters()->with('user')->get();
+        $firebase = new FirebaseNotificationService();
+
+        foreach ($recruiters as $recruiter) {
+            $token = $recruiter->user->fcm_token ?? null;
+            if ($token) {
+                $sent = $firebase->sendToToken(
+                    $token,
+                    "Nouvelle candidature",
+                    "{$request->user()->name} a postulé à votre offre: {$application->job->title}",
+                    [
+                        'job_id' => $application->job->id,
+                        'applicant_id' => $request->user()->id,
+                        'application_id' => $application->id,
+                    ]
+                );
+
+                if (!$sent) {
+                    Log::error('Notification FCM non envoyée au recruteur', [
+                        'recruiter_id' => $recruiter->id,
+                        'user_id' => $recruiter->user->id ?? null,
+                        'token' => $token,
+                        'application_id' => $application->id,
+                    ]);
+                }
+            } else {
+                Log::info('Aucun token FCM pour ce recruteur', [
+                    'recruiter_id' => $recruiter->id,
+                    'user_id' => $recruiter->user->id ?? null,
+                ]);
             }
-            throw $e;
         }
+
+        return response()->json([
+            'data' => $application,
+            'message' => 'Candidature soumise avec succès',
+        ], 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/my-applications/stats",
-     *     summary="Statistiques de mes candidatures",
-     *     tags={"Applications"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Statistiques des candidatures par statut",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="total", type="integer", example=10),
-     *             @OA\Property(property="pending", type="integer", example=5),
-     *             @OA\Property(property="accepted", type="integer", example=3),
-     *             @OA\Property(property="rejected", type="integer", example=2)
-     *         )
-     *     )
-     * )
-     */
-    public function myApplicationsStats(Request $request): JsonResponse
-    {
-        $userId = $request->user()->id;
-
-        $stats = [
-            'total' => Application::where('user_id', $userId)->count(),
-            'pending' => Application::where('user_id', $userId)
-                ->whereIn('status', ['pending', 'viewed', 'shortlisted', 'interview'])
-                ->count(),
-            'accepted' => Application::where('user_id', $userId)
-                ->where('status', 'accepted')
-                ->count(),
-            'rejected' => Application::where('user_id', $userId)
-                ->where('status', 'rejected')
-                ->count(),
-        ];
-
-        return response()->json($stats);
-    }
 
     /**
      * @OA\Get(

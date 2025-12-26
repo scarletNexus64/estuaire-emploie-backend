@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
@@ -9,7 +10,10 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\TestNotificationController;
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use App\Services\FirebaseNotificationService;
 
 // ============================================
 // ROUTES PUBLIQUES (Pas d'authentification)
@@ -84,6 +88,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read', [NotificationController::class, 'markAllAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
+    //---------------------
+    // NoTIFICATION FCM
+    //---------------------
+    Route::post('/send-fcm-token', [UserController::class, 'saveFcmToken']);
+    
+
 
     // ------------------
     // RECRUTEUR - GESTION DES JOBS

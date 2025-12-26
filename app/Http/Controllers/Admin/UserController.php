@@ -35,6 +35,21 @@ class UserController extends Controller
             ->with('success', 'Utilisateur supprimé avec succès');
     }
 
+    public function saveFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user = $request->user(); // utilisateur connecté
+        $user->fcm_token = $request->token;
+        $user->save();
+
+        return response()->json([
+            'message' => 'FCM token sauvegardé avec succès',
+        ]);
+    }
+
     public function bulkDelete(Request $request)
     {
         try {
