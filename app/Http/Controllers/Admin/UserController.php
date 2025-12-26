@@ -38,7 +38,7 @@ class UserController extends Controller
     public function saveFcmToken(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
+            'fcm_token' => 'required|string',
         ]);
 
         $user = $request->user(); // utilisateur connecté

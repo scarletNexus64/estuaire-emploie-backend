@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+
 
 /**
  * @OA\Tag(
@@ -112,39 +114,47 @@ class AuthController extends Controller
      *     @OA\Response(response=401, description="Identifiants invalides")
      * )
      */
-    public function login(Request $request): JsonResponse
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+    // Dans app/Http/Controllers/Api/AuthController.php
 
-        $user = User::where('email', $request->email)->first();
+// Assurez-vous d'importer les bonnes classes
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Les identifiants fournis sont incorrects.'],
-            ]);
-        }
+public function login(Request $request)
+{
+    // 1. Valider les données entrantes, y compris le fcm_token optionnel
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+        'fcm_token' => 'nullable|string', // On attend le token ici
+    ]);
 
-        // Charger les relations du user
-        if ($user->isRecruiter()) {
-            $user->load(['recruiter.company']);
-        }
-        $user->load(['unreadNotifications']);
-
-        // Ajouter les comptes
-        $user->applications_count = $user->applications()->count();
-        $user->favorites_count = $user->favorites()->count();
-
-        $token = $user->createToken('mobile-app')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-            'message' => 'Connexion réussie',
-        ]);
+    // 2. Tenter l'authentification
+    if (!Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
+        return response()->json(['message' => 'Email ou mot de passe incorrect.'], 401);
     }
+
+    // 3. L'authentification a réussi, on récupère l'utilisateur
+    $user = Auth::user();
+
+    // 4. Si un fcm_token a été envoyé, on l'enregistre
+    if ($request->filled('fcm_token')) {
+        \Log::debug('Enregistrement du FCM token pour l\'utilisateur: ' . $user->id);
+        try {
+            $user->update(['fcm_token' => $request->fcm_token]);
+        } catch (\Throwable $e) {
+            \Log::error('Erreur en enregistrant le FCM token pour user '. $user->id .': '. $e->getMessage());
+        }
+    }
+
+    // 5. Créer et renvoyer le token d'API (Sanctum)
+    $token = $user->createToken('auth-token-mobile')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Connexion réussie',
+        'token' => $token,
+        'user' => $user, // Renvoyer aussi les infos de l'utilisateur
+    ]);
+}
+
 
     /**
      * @OA\Post(

@@ -8,7 +8,10 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\TestNotificationController;
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use App\Services\FirebaseNotificationService;
 
 // ============================================
 // ROUTES PUBLIQUES (Pas d'authentification)
@@ -37,6 +40,8 @@ Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
 // ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
+
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // ------------------
@@ -77,7 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
     //---------------------
     // NoTIFICATION FCM
     //---------------------
-    Route::post('/save-fcm-token', [UserController::class, 'saveFcmToken']);
+    Route::post('/send-fcm-token', [UserController::class, 'saveFcmToken']);
+    
+
 
     // ------------------
     // RECRUTEUR - GESTION DES JOBS
@@ -106,4 +113,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-company', [CompanyController::class, 'myCompany']);
     // Mettre à jour mon entreprise
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
+
+    // ------------------
+    // TEST NOTIFICATIONS
+    // ------------------
+    
 });
+Route::get('/test-notification', [TestNotificationController::class, 'send']);

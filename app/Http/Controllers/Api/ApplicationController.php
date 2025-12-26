@@ -1,12 +1,14 @@
 <?php
-
+//e4hBxqVaSh6dmmhFQwSKSN:APA91bHU_RD5_rmgJGWXyd7uPdduONndevaCHK2qgjZRV3cxunBo7c_5i6M-vJqrCj1I0_eX1HUf-vOnz3d9OjYnpeYi23OqAMHQX14LH0kDxM0wYObPeOE
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Job;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -96,11 +98,48 @@ class ApplicationController extends Controller
 
         $application->load(['job.company']);
 
+        // Envoi de notification à tous les recruteurs de l'entreprise
+        // Le token FCM est enregistré sur l'utilisateur (`users.fcm_token`),
+        // donc on charge la relation `user` puis on utilise `user->fcm_token`.
+        $recruiters = $application->job->company->recruiters()->with('user')->get();
+        $firebase = new FirebaseNotificationService();
+
+        foreach ($recruiters as $recruiter) {
+            $token = $recruiter->user->fcm_token ?? null;
+            if ($token) {
+                $sent = $firebase->sendToToken(
+                    $token,
+                    "Nouvelle candidature",
+                    "{$request->user()->name} a postulé à votre offre: {$application->job->title}",
+                    [
+                        'job_id' => $application->job->id,
+                        'applicant_id' => $request->user()->id,
+                        'application_id' => $application->id,
+                    ]
+                );
+
+                if (!$sent) {
+                    Log::error('Notification FCM non envoyée au recruteur', [
+                        'recruiter_id' => $recruiter->id,
+                        'user_id' => $recruiter->user->id ?? null,
+                        'token' => $token,
+                        'application_id' => $application->id,
+                    ]);
+                }
+            } else {
+                Log::info('Aucun token FCM pour ce recruteur', [
+                    'recruiter_id' => $recruiter->id,
+                    'user_id' => $recruiter->user->id ?? null,
+                ]);
+            }
+        }
+
         return response()->json([
             'data' => $application,
             'message' => 'Candidature soumise avec succès',
         ], 201);
     }
+
 
     /**
      * @OA\Get(
