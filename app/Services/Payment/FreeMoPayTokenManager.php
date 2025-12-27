@@ -53,7 +53,11 @@ class FreeMoPayTokenManager
     }
 
     /**
-     * Generate a new access token from FreeMoPay API
+     * Generate a new access token from FreeMoPay API v2
+     *
+     * API v2 endpoint: POST /api/v2/payment/token
+     * Body: { "appKey": "...", "secretKey": "..." }
+     * Response: { "access_token": "...", "expires_in": 3600 }
      *
      * @return string
      * @throws \Exception
@@ -61,7 +65,9 @@ class FreeMoPayTokenManager
     protected function generateToken(): string
     {
         try {
-            $url = $this->config->freemopay_base_url . '/payment/token';
+            // FreeMoPay API v2 endpoint
+            $baseUrl = rtrim($this->config->freemopay_base_url, '/');
+            $url = $baseUrl . '/api/v2/payment/token';
 
             $payload = [
                 'appKey' => $this->config->freemopay_app_key,
@@ -70,17 +76,17 @@ class FreeMoPayTokenManager
 
             Log::info("[FreeMoPay TokenManager] Requesting new token from: {$url}");
 
-            // Use Basic Auth for token generation
+            // API v2: Use JSON body (no Basic Auth, no Bearer token)
             $response = $this->client->post(
                 $url,
                 $payload,
-                null, // no bearer token
-                true, // use basic auth
-                $this->config->freemopay_token_timeout ?? 10
+                null,  // no bearer token
+                false, // no basic auth - just JSON body
+                $this->config->freemopay_token_timeout ?? 30
             );
 
-            // Extract token from response
-            $token = $response['token'] ?? $response['access_token'] ?? $response['data']['token'] ?? null;
+            // Extract token from response (API v2 returns access_token)
+            $token = $response['access_token'] ?? $response['token'] ?? $response['data']['token'] ?? null;
 
             if (!$token) {
                 Log::error("[FreeMoPay TokenManager] No token in response: " . json_encode($response));

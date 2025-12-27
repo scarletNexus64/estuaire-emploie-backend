@@ -130,8 +130,12 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
 
     // ------------------
-    // RECRUTEUR - ABONNEMENTS
+    // RECRUTEUR - ABONNEMENTS & PAIEMENTS
     // ------------------
+    // Initier un paiement pour un abonnement
+    Route::post('/payments/init', [SubscriptionPlanController::class, 'initPayment']);
+    // Vérifier le statut d'un paiement
+    Route::get('/payments/{id}/status', [SubscriptionPlanController::class, 'checkPaymentStatus']);
     // Activer un abonnement après paiement
     Route::post('/subscriptions/activate', [SubscriptionPlanController::class, 'activate']);
     // Mon abonnement actif

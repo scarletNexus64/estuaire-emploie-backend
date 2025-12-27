@@ -15,6 +15,11 @@ class FreeMoPayService
     protected FreeMoPayClient $client;
     protected FreeMoPayTokenManager $tokenManager;
 
+    // Polling configuration
+    protected int $pollingInterval = 3;      // seconds between each status check
+    protected int $pollingTimeout = 90;      // max seconds to wait for payment completion
+    protected int $maxPollingAttempts = 30;  // max number of polling attempts
+
     public function __construct()
     {
         $this->config = ServiceConfiguration::getFreeMoPayConfig();
@@ -23,13 +28,20 @@ class FreeMoPayService
     }
 
     /**
-     * Initialize a payment with FreeMoPay
+     * Initialize a payment with FreeMoPay and wait for completion (SYNCHRONOUS)
+     *
+     * This method will:
+     * 1. Create payment record in DB
+     * 2. Call FreeMoPay API to initiate payment
+     * 3. Poll for status until SUCCESS, FAILED, or CANCELLED
+     * 4. Return final result to caller
      *
      * @param User|Company $payer The entity making the payment
      * @param float $amount Payment amount
-     * @param string $phoneNumber Payer's phone number (237XXXXXXXXX or 243XXXXXXXXX)
+     * @param string $phoneNumber Payer's phone number (237XXXXXXXXX)
      * @param string $description Payment description
      * @param string|null $externalId Optional external ID
+     * @param \Illuminate\Database\Eloquent\Model|null $payable The payable entity (e.g., SubscriptionPlan)
      * @return Payment
      * @throws \Exception
      */
@@ -38,13 +50,14 @@ class FreeMoPayService
         float $amount,
         string $phoneNumber,
         string $description,
-        ?string $externalId = null
+        ?string $externalId = null,
+        $payable = null
     ): Payment {
         if (!$this->config || !$this->config->isConfigured()) {
             throw new \Exception('FreeMoPay service is not configured properly');
         }
 
-        Log::info("[FreeMoPay Service] Initiating payment - Amount: {$amount}, Phone: {$phoneNumber}");
+        Log::info("[FreeMoPay Service] Initiating SYNCHRONOUS payment - Amount: {$amount}, Phone: {$phoneNumber}");
 
         // 1. Validate phone number
         $normalizedPhone = $this->normalizePhoneNumber($phoneNumber);
@@ -53,8 +66,6 @@ class FreeMoPayService
         if (!$externalId) {
             $externalId = $this->generateExternalId();
         }
-
-        // Ensure unique external ID
         $externalId = $this->ensureUniqueExternalId($externalId);
 
         // 3. Get callback URL
@@ -63,21 +74,32 @@ class FreeMoPayService
         Log::info("[FreeMoPay Service] Callback URL: {$callbackUrl}, External ID: {$externalId}");
 
         // 4. Create Payment record in database (status: pending)
-        $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId) {
+        $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId, $payable) {
+            // Déterminer la méthode de paiement en fonction du préfixe téléphone
+            $paymentMethod = $this->detectPaymentMethod($normalizedPhone);
+
             $paymentData = [
                 'amount' => $amount,
+                'fees' => 0,
+                'total' => $amount,
                 'phone_number' => $normalizedPhone,
                 'description' => $description,
                 'external_id' => $externalId,
                 'status' => 'pending',
                 'provider' => 'freemopay',
+                'payment_method' => $paymentMethod,
             ];
 
-            // Add payer information based on type
             if ($payer instanceof Company) {
                 $paymentData['company_id'] = $payer->id;
             } elseif ($payer instanceof User) {
                 $paymentData['user_id'] = $payer->id;
+            }
+
+            // Add payable (morph relation) if provided
+            if ($payable) {
+                $paymentData['payable_type'] = get_class($payable);
+                $paymentData['payable_id'] = $payable->id;
             }
 
             return Payment::create($paymentData);
@@ -85,7 +107,7 @@ class FreeMoPayService
 
         Log::info("[FreeMoPay Service] Payment record created - ID: {$payment->id}");
 
-        // 5. Call FreeMoPay API
+        // 5. Call FreeMoPay API to initiate payment
         try {
             $freemoResponse = $this->callFreeMoPayAPI(
                 $normalizedPhone,
@@ -95,7 +117,6 @@ class FreeMoPayService
                 $callbackUrl
             );
 
-            // 6. Update payment with FreeMoPay reference
             $reference = $freemoResponse['reference'] ?? null;
 
             if (!$reference) {
@@ -105,25 +126,121 @@ class FreeMoPayService
             }
 
             $payment->update([
-                'reference' => $reference,
-                'provider_response' => $freemoResponse,
+                'provider_reference' => $reference,
+                'payment_provider_response' => $freemoResponse,
             ]);
 
-            Log::info("[FreeMoPay Service] Payment initiated successfully - Reference: {$reference}, Payment ID: {$payment->id}");
+            Log::info("[FreeMoPay Service] Payment initiated - Reference: {$reference}");
 
-            return $payment;
+            // 6. SYNCHRONOUS POLLING: Wait for payment completion
+            $finalPayment = $this->waitForPaymentCompletion($payment, $reference);
+
+            return $finalPayment;
 
         } catch (\Exception $e) {
-            // Mark payment as failed
             $payment->update(['status' => 'failed']);
-
             Log::error("[FreeMoPay Service] Payment initiation failed: " . $e->getMessage());
             throw $e;
         }
     }
 
     /**
-     * Call FreeMoPay API to initialize payment
+     * Poll FreeMoPay API until payment is completed, failed, or timeout
+     *
+     * @param Payment $payment
+     * @param string $reference
+     * @return Payment
+     * @throws \Exception
+     */
+    protected function waitForPaymentCompletion(Payment $payment, string $reference): Payment
+    {
+        Log::info("[FreeMoPay Service] Starting polling for reference: {$reference}");
+
+        $startTime = time();
+        $attempts = 0;
+
+        // Terminal statuses that indicate payment is complete
+        $successStatuses = ['SUCCESS', 'SUCCESSFUL', 'COMPLETED'];
+        $failedStatuses = ['FAILED', 'FAILURE', 'ERROR', 'REJECTED', 'CANCELLED', 'CANCELED'];
+
+        while (true) {
+            $attempts++;
+            $elapsed = time() - $startTime;
+
+            // Check timeout
+            if ($elapsed >= $this->pollingTimeout) {
+                Log::warning("[FreeMoPay Service] Polling timeout after {$elapsed}s - Reference: {$reference}");
+                $payment->update([
+                    'status' => 'pending',
+                    'notes' => "Payment timeout after {$elapsed} seconds. Please check status manually.",
+                ]);
+                throw new \Exception("Payment timeout. Please check your phone and try again.");
+            }
+
+            // Check max attempts
+            if ($attempts > $this->maxPollingAttempts) {
+                Log::warning("[FreeMoPay Service] Max polling attempts ({$this->maxPollingAttempts}) reached - Reference: {$reference}");
+                break;
+            }
+
+            try {
+                Log::debug("[FreeMoPay Service] Polling attempt {$attempts} - Elapsed: {$elapsed}s");
+
+                $statusResponse = $this->checkPaymentStatus($reference);
+                $currentStatus = strtoupper($statusResponse['status'] ?? '');
+
+                Log::info("[FreeMoPay Service] Poll {$attempts}: Status = {$currentStatus}");
+
+                // Check for SUCCESS
+                if (in_array($currentStatus, $successStatuses)) {
+                    Log::info("[FreeMoPay Service] Payment SUCCESS - Reference: {$reference}");
+                    $payment->update([
+                        'status' => 'completed',
+                        'paid_at' => now(),
+                        'payment_provider_response' => $statusResponse,
+                    ]);
+                    return $payment->fresh();
+                }
+
+                // Check for FAILED/CANCELLED
+                if (in_array($currentStatus, $failedStatuses)) {
+                    $message = $statusResponse['message'] ?? 'Payment failed or cancelled';
+                    Log::info("[FreeMoPay Service] Payment FAILED - Reference: {$reference}, Reason: {$message}");
+                    $payment->update([
+                        'status' => 'failed',
+                        'failure_reason' => $message,
+                        'payment_provider_response' => $statusResponse,
+                    ]);
+                    throw new \Exception("Payment failed: {$message}");
+                }
+
+                // Still PENDING/PROCESSING - wait and retry
+                Log::debug("[FreeMoPay Service] Payment still pending, waiting {$this->pollingInterval}s...");
+                sleep($this->pollingInterval);
+
+            } catch (\Exception $e) {
+                // If it's our own exception (payment failed), rethrow it
+                if (str_starts_with($e->getMessage(), 'Payment failed:') ||
+                    str_starts_with($e->getMessage(), 'Payment timeout')) {
+                    throw $e;
+                }
+
+                // Otherwise, log and continue polling
+                Log::warning("[FreeMoPay Service] Polling error (attempt {$attempts}): " . $e->getMessage());
+                sleep($this->pollingInterval);
+            }
+        }
+
+        // If we exit the loop without success/failure, return current state
+        return $payment->fresh();
+    }
+
+    /**
+     * Call FreeMoPay API v2 to initialize payment
+     *
+     * Endpoint: POST /api/v2/payment
+     * Headers: Authorization: Bearer <token>
+     * Body: { payer, amount, externalId, description, callback }
      *
      * @param string $payer
      * @param float $amount
@@ -152,23 +269,27 @@ class FreeMoPayService
             'callback' => $callback
         ];
 
-        Log::info("[FreeMoPay Service] Calling FreeMoPay API");
-        Log::info("[FreeMoPay Service] Payload: " . json_encode($payload));
-        Log::info("[FreeMoPay Service] URL: {$this->config->freemopay_base_url}/payment");
+        // API v2 endpoint
+        $baseUrl = rtrim($this->config->freemopay_base_url, '/');
+        $endpoint = "{$baseUrl}/api/v2/payment";
 
-        // POST /payment
+        Log::info("[FreeMoPay Service] Calling FreeMoPay API v2");
+        Log::info("[FreeMoPay Service] URL: {$endpoint}");
+        Log::info("[FreeMoPay Service] Payload: " . json_encode($payload));
+
+        // POST /api/v2/payment
         $response = $this->client->post(
-            '/payment',
+            $endpoint,
             $payload,
             $bearerToken,
             false,
-            $this->config->freemopay_init_payment_timeout
+            $this->config->freemopay_init_payment_timeout ?? 60
         );
 
         Log::info("[FreeMoPay Service] FreeMoPay response: " . json_encode($response));
 
         // Check init status
-        $initStatus = $response['status'] ?? null;
+        $initStatus = strtoupper($response['status'] ?? '');
 
         // Valid init statuses
         $validInitStatuses = ['SUCCESS', 'CREATED', 'PENDING', 'PROCESSING'];
@@ -183,14 +304,16 @@ class FreeMoPayService
         }
 
         if (!in_array($initStatus, $validInitStatuses)) {
-            Log::warning("[FreeMoPay Service] Unknown init status: {$initStatus}, treating as success");
+            Log::warning("[FreeMoPay Service] Unknown init status: {$initStatus}, treating as pending");
         }
 
         return $response;
     }
 
     /**
-     * Check payment status
+     * Check payment status via FreeMoPay API v2
+     *
+     * Endpoint: GET /api/v2/payment/{reference}
      *
      * @param string $reference FreeMoPay reference
      * @return array
@@ -202,26 +325,30 @@ class FreeMoPayService
             throw new \Exception('FreeMoPay service is not configured properly');
         }
 
-        Log::info("[FreeMoPay Service] Checking payment status - Reference: {$reference}");
+        Log::debug("[FreeMoPay Service] Checking payment status - Reference: {$reference}");
 
         // Get Bearer token
         $bearerToken = $this->tokenManager->getToken();
 
-        // GET /payment/{reference}
+        // API v2 endpoint
+        $baseUrl = rtrim($this->config->freemopay_base_url, '/');
+        $endpoint = "{$baseUrl}/api/v2/payment/{$reference}";
+
+        // GET /api/v2/payment/{reference}
         $response = $this->client->get(
-            "/payment/{$reference}",
+            $endpoint,
             $bearerToken,
             false,
-            $this->config->freemopay_status_check_timeout
+            $this->config->freemopay_status_check_timeout ?? 30
         );
 
-        Log::info("[FreeMoPay Service] Status check response: " . json_encode($response));
+        Log::debug("[FreeMoPay Service] Status check response: " . json_encode($response));
 
         return $response;
     }
 
     /**
-     * Normalize phone number for FreeMoPay (237XXXXXXXXX or 243XXXXXXXXX)
+     * Normalize phone number for FreeMoPay (237XXXXXXXXX)
      *
      * @param string $phone
      * @return string
@@ -236,14 +363,14 @@ class FreeMoPayService
         // Remove +, spaces, dashes
         $cleaned = preg_replace('/[\s\-+]/', '', $phone);
 
-        // Check if starts with 243 (RDC) or 237 (Cameroon)
-        if (!str_starts_with($cleaned, '243') && !str_starts_with($cleaned, '237')) {
-            throw new \Exception("Phone number must start with 243 (RDC) or 237 (Cameroon): {$phone}");
+        // Check if starts with 237 (Cameroon) or 243 (RDC)
+        if (!str_starts_with($cleaned, '237') && !str_starts_with($cleaned, '243')) {
+            throw new \Exception("Phone number must start with 237 (Cameroon) or 243 (RDC): {$phone}");
         }
 
         // Check length (12 digits expected)
         if (strlen($cleaned) !== 12 || !ctype_digit($cleaned)) {
-            throw new \Exception("Invalid phone format. Expected 12 digits (237XXXXXXXXX or 243XXXXXXXXX): {$phone}");
+            throw new \Exception("Invalid phone format. Expected 12 digits (237XXXXXXXXX): {$phone}");
         }
 
         return $cleaned;
@@ -258,7 +385,8 @@ class FreeMoPayService
     protected function generateExternalId(string $prefix = 'PAY'): string
     {
         $timestamp = now()->format('YmdHis');
-        return "{$prefix}-{$timestamp}";
+        $random = substr(uniqid(), -4);
+        return "{$prefix}-{$timestamp}-{$random}";
     }
 
     /**
@@ -297,7 +425,8 @@ class FreeMoPayService
                 ];
             }
 
-            // Try to get/generate a token
+            // Clear cache and generate fresh token
+            $this->tokenManager->clearToken();
             $token = $this->tokenManager->getToken();
 
             return [
@@ -305,7 +434,7 @@ class FreeMoPayService
                 'message' => 'FreeMoPay connection successful, token generated',
                 'data' => [
                     'token_length' => strlen($token),
-                    'token_preview' => substr($token, 0, 10) . '...'
+                    'token_preview' => substr($token, 0, 20) . '...'
                 ]
             ];
 
@@ -316,5 +445,71 @@ class FreeMoPayService
                 'data' => null
             ];
         }
+    }
+
+    /**
+     * Set polling configuration
+     *
+     * @param int $interval Seconds between polls
+     * @param int $timeout Max seconds to wait
+     * @return self
+     */
+    public function setPollingConfig(int $interval = 3, int $timeout = 90): self
+    {
+        $this->pollingInterval = $interval;
+        $this->pollingTimeout = $timeout;
+        $this->maxPollingAttempts = (int) ceil($timeout / $interval);
+        return $this;
+    }
+
+    /**
+     * Detect payment method based on phone number prefix
+     *
+     * Cameroon (237):
+     * - MTN: 67, 68, 650-654
+     * - Orange: 69, 655-659
+     *
+     * RDC (243):
+     * - MTN: 81, 82, 83, 84, 85
+     * - Orange: 89, 80
+     *
+     * @param string $phone Normalized phone (237XXXXXXXXX or 243XXXXXXXXX)
+     * @return string
+     */
+    protected function detectPaymentMethod(string $phone): string
+    {
+        // Cameroon numbers (237)
+        if (str_starts_with($phone, '237')) {
+            $prefix = substr($phone, 3, 2); // Get digits after 237
+            $prefix3 = substr($phone, 3, 3); // Get 3 digits after 237
+
+            // MTN prefixes: 67, 68, 650-654
+            if (in_array($prefix, ['67', '68']) || in_array($prefix3, ['650', '651', '652', '653', '654'])) {
+                return 'mtn_money';
+            }
+
+            // Orange prefixes: 69, 655-659
+            if ($prefix === '69' || in_array($prefix3, ['655', '656', '657', '658', '659'])) {
+                return 'orange_money';
+            }
+        }
+
+        // RDC numbers (243)
+        if (str_starts_with($phone, '243')) {
+            $prefix = substr($phone, 3, 2);
+
+            // MTN prefixes: 81, 82, 83, 84, 85
+            if (in_array($prefix, ['81', '82', '83', '84', '85'])) {
+                return 'mtn_money';
+            }
+
+            // Orange prefixes: 89, 80
+            if (in_array($prefix, ['89', '80'])) {
+                return 'orange_money';
+            }
+        }
+
+        // Default to MTN if unknown
+        return 'mtn_money';
     }
 }

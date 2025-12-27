@@ -106,6 +106,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // MONÉTISATION - Payments
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('export');
         Route::get('/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('show');
         Route::patch('/{payment}/verify', [\App\Http\Controllers\Admin\PaymentController::class, 'verify'])->name('verify');
         Route::patch('/{payment}/refund', [\App\Http\Controllers\Admin\PaymentController::class, 'refund'])->name('refund');

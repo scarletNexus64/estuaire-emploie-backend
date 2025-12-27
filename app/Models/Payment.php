@@ -22,7 +22,10 @@ class Payment extends Model
         'fees',
         'total',
         'payment_method',
+        'provider',
         'transaction_reference',
+        'external_id',
+        'provider_reference',
         'phone_number',
         'payment_provider_response',
         'status',
@@ -30,6 +33,7 @@ class Payment extends Model
         'refunded_at',
         'cancelled_at',
         'notes',
+        'description',
         'failure_reason',
     ];
 

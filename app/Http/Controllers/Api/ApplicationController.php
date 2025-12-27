@@ -159,6 +159,45 @@ class ApplicationController extends Controller
 
     /**
      * @OA\Get(
+     *     path="/api/my-applications/stats",
+     *     summary="Statistiques de mes candidatures",
+     *     description="Retourne les statistiques des candidatures de l'utilisateur connecté",
+     *     tags={"Applications"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statistiques des candidatures",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="total", type="integer", example=15),
+     *                 @OA\Property(property="pending", type="integer", example=5),
+     *                 @OA\Property(property="accepted", type="integer", example=3),
+     *                 @OA\Property(property="rejected", type="integer", example=7)
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function myApplicationsStats(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $stats = [
+            'total' => Application::where('user_id', $userId)->count(),
+            'pending' => Application::where('user_id', $userId)->where('status', 'pending')->count(),
+            'accepted' => Application::where('user_id', $userId)->where('status', 'accepted')->count(),
+            'rejected' => Application::where('user_id', $userId)->where('status', 'rejected')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
      *     path="/api/my-applications",
      *     summary="Mes candidatures",
      *     tags={"Applications"},

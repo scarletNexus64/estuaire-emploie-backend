@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscriptionPlan;
+use App\Services\Payment\FreeMoPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -426,6 +428,221 @@ class SubscriptionPlanController extends Controller
             'success' => true,
             'message' => 'Historique des abonnements récupéré',
             'data' => $subscriptions,
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/payments/init",
+     *     summary="Initier un paiement pour un abonnement",
+     *     description="Initie un paiement FreeMoPay pour souscrire à un plan d'abonnement",
+     *     tags={"Subscription Plans"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"subscription_plan_id", "phone_number"},
+     *             @OA\Property(
+     *                 property="subscription_plan_id",
+     *                 type="integer",
+     *                 description="ID du plan d'abonnement",
+     *                 example=1
+     *             ),
+     *             @OA\Property(
+     *                 property="phone_number",
+     *                 type="string",
+     *                 description="Numéro de téléphone pour le paiement (format: 237XXXXXXXXX)",
+     *                 example="237658895572"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paiement initié avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Paiement initié avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="payment_id", type="integer", example=123),
+     *                 @OA\Property(property="reference", type="string", example="FMP123456789"),
+     *                 @OA\Property(property="amount", type="number", example=15000),
+     *                 @OA\Property(property="status", type="string", example="pending"),
+     *                 @OA\Property(property="subscription_plan_id", type="integer", example=1),
+     *                 @OA\Property(property="plan_name", type="string", example="STARTER")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides ou erreur de paiement",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Numéro de téléphone invalide")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Plan non trouvé",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Plan d'abonnement non trouvé")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     )
+     * )
+     */
+    public function initPayment(Request $request): JsonResponse
+    {
+        $request->validate([
+            'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
+            'phone_number' => 'required|string|min:12|max:15',
+        ]);
+
+        $user = $request->user();
+        $subscriptionPlanId = $request->subscription_plan_id;
+        $phoneNumber = $request->phone_number;
+
+        // Vérifier que le plan existe et est actif
+        $plan = SubscriptionPlan::active()->find($subscriptionPlanId);
+        if (!$plan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plan d\'abonnement non trouvé ou inactif',
+            ], 404);
+        }
+
+        try {
+            // Initialiser le service de paiement
+            $freemoPayService = new FreeMoPayService();
+
+            // Description du paiement
+            $description = "Abonnement {$plan->name} - Estuaire Emploie";
+
+            // Initier le paiement (passer le plan comme payable)
+            $payment = $freemoPayService->initPayment(
+                $user,
+                $plan->price,
+                $phoneNumber,
+                $description,
+                "SUB-{$user->id}-{$plan->id}-" . now()->format('YmdHis'),
+                $plan  // payable
+            );
+
+            Log::info("[SubscriptionPlanController] Payment initiated - Payment ID: {$payment->id}, Plan: {$plan->name}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Paiement initié avec succès. Veuillez confirmer sur votre téléphone.',
+                'data' => [
+                    'payment_id' => $payment->id,
+                    'reference' => $payment->provider_reference,
+                    'external_id' => $payment->external_id,
+                    'amount' => $payment->amount,
+                    'status' => $payment->status,
+                    'subscription_plan_id' => $plan->id,
+                    'plan_name' => $plan->name,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("[SubscriptionPlanController] Payment init failed: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/payments/{id}/status",
+     *     summary="Vérifier le statut d'un paiement",
+     *     description="Vérifie le statut actuel d'un paiement en cours",
+     *     tags={"Subscription Plans"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID du paiement",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut du paiement",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Statut récupéré"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="payment_id", type="integer", example=123),
+     *                 @OA\Property(property="status", type="string", example="completed"),
+     *                 @OA\Property(property="is_completed", type="boolean", example=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Paiement non trouvé"
+     *     )
+     * )
+     */
+    public function checkPaymentStatus(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $payment = Payment::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$payment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Paiement non trouvé',
+            ], 404);
+        }
+
+        // Si le paiement est encore pending, vérifier avec FreeMoPay
+        if ($payment->status === 'pending' && $payment->provider_reference) {
+            try {
+                $freemoPayService = new FreeMoPayService();
+                $statusResponse = $freemoPayService->checkPaymentStatus($payment->provider_reference);
+
+                $freemoStatus = $statusResponse['status'] ?? null;
+
+                // Mettre à jour le statut local si nécessaire
+                if ($freemoStatus === 'SUCCESS' && $payment->status !== 'completed') {
+                    $payment->update([
+                        'status' => 'completed',
+                        'paid_at' => now(),
+                    ]);
+                } elseif (in_array($freemoStatus, ['FAILED', 'CANCELLED', 'REJECTED'])) {
+                    $payment->update(['status' => 'failed']);
+                }
+
+            } catch (\Exception $e) {
+                Log::warning("[SubscriptionPlanController] Could not check payment status: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statut récupéré',
+            'data' => [
+                'payment_id' => $payment->id,
+                'reference' => $payment->provider_reference,
+                'amount' => $payment->amount,
+                'status' => $payment->status,
+                'is_completed' => $payment->isCompleted(),
+                'paid_at' => $payment->paid_at?->toIso8601String(),
+            ],
         ]);
     }
 
