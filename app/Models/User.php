@@ -181,4 +181,207 @@ class User extends Authenticatable
         $subscription = $this->activeSubscription();
         return $subscription?->subscriptionPlan;
     }
+
+    /**
+     * Vérifie si l'utilisateur peut publier une nouvelle offre d'emploi
+     * Basé sur jobs_limit du plan actif
+     */
+    public function canPublishJob(): bool
+    {
+        $plan = $this->currentPlan();
+
+        if (!$plan) {
+            return false; // Pas d'abonnement = pas de publication
+        }
+
+        // Si jobs_limit est null = illimité
+        if ($plan->jobs_limit === null) {
+            return true;
+        }
+
+        // Compter les jobs actifs (published + pending) de l'utilisateur
+        $activeJobsCount = $this->postedJobs()
+            ->whereIn('status', ['published', 'pending'])
+            ->count();
+
+        return $activeJobsCount < $plan->jobs_limit;
+    }
+
+    /**
+     * Retourne le nombre de jobs restants que l'utilisateur peut publier
+     */
+    public function remainingJobsCount(): ?int
+    {
+        $plan = $this->currentPlan();
+
+        if (!$plan) {
+            return 0;
+        }
+
+        if ($plan->jobs_limit === null) {
+            return null; // Illimité
+        }
+
+        $activeJobsCount = $this->postedJobs()
+            ->whereIn('status', ['published', 'pending'])
+            ->count();
+
+        return max(0, $plan->jobs_limit - $activeJobsCount);
+    }
+
+    /**
+     * Vérifie si l'utilisateur peut accéder aux contacts d'un candidat
+     * Basé sur contacts_limit du plan actif
+     */
+    public function canViewContact(): bool
+    {
+        $plan = $this->currentPlan();
+
+        if (!$plan) {
+            return false;
+        }
+
+        // Si contacts_limit est null = illimité
+        if ($plan->contacts_limit === null) {
+            return true;
+        }
+
+        // Compter les contacts déjà vus ce mois-ci
+        $viewedContactsCount = $this->viewedContacts()
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        return $viewedContactsCount < $plan->contacts_limit;
+    }
+
+    /**
+     * Retourne le nombre de contacts restants que l'utilisateur peut voir ce mois
+     */
+    public function remainingContactsCount(): ?int
+    {
+        $plan = $this->currentPlan();
+
+        if (!$plan) {
+            return 0;
+        }
+
+        if ($plan->contacts_limit === null) {
+            return null; // Illimité
+        }
+
+        $viewedContactsCount = $this->viewedContacts()
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        return max(0, $plan->contacts_limit - $viewedContactsCount);
+    }
+
+    /**
+     * Relation vers les contacts vus par l'utilisateur (recruteur)
+     */
+    public function viewedContacts(): HasMany
+    {
+        return $this->hasMany(ViewedContact::class, 'recruiter_user_id');
+    }
+
+    /**
+     * Enregistre qu'un contact a été vu
+     */
+    public function markContactAsViewed(int $candidateUserId): bool
+    {
+        // Vérifier si déjà vu
+        $alreadyViewed = $this->viewedContacts()
+            ->where('candidate_user_id', $candidateUserId)
+            ->exists();
+
+        if ($alreadyViewed) {
+            return true; // Déjà vu, pas de nouvelle consommation
+        }
+
+        // Vérifier la limite
+        if (!$this->canViewContact()) {
+            return false;
+        }
+
+        // Enregistrer le nouveau contact vu
+        $this->viewedContacts()->create([
+            'candidate_user_id' => $candidateUserId,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Vérifie si l'utilisateur peut booster des offres
+     */
+    public function canBoostJobs(): bool
+    {
+        $plan = $this->currentPlan();
+        return $plan && $plan->can_boost_jobs;
+    }
+
+    /**
+     * Vérifie si l'utilisateur peut voir les analytics
+     */
+    public function canSeeAnalytics(): bool
+    {
+        $plan = $this->currentPlan();
+        return $plan && $plan->can_see_analytics;
+    }
+
+    /**
+     * Vérifie si l'utilisateur peut accéder à la CVthèque
+     */
+    public function canAccessCvtheque(): bool
+    {
+        $plan = $this->currentPlan();
+        return $plan && $plan->can_access_cvtheque;
+    }
+
+    /**
+     * Retourne les infos de l'abonnement actuel pour l'API
+     */
+    public function getSubscriptionInfo(): array
+    {
+        $subscription = $this->activeSubscription();
+        $plan = $subscription?->subscriptionPlan;
+
+        if (!$plan) {
+            return [
+                'has_subscription' => false,
+                'plan' => null,
+                'limits' => null,
+                'usage' => null,
+            ];
+        }
+
+        return [
+            'has_subscription' => true,
+            'plan' => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'slug' => $plan->slug,
+            ],
+            'expires_at' => $subscription->end_date?->toIso8601String(),
+            'is_expired' => $subscription->isExpired(),
+            'limits' => [
+                'jobs_limit' => $plan->jobs_limit,
+                'contacts_limit' => $plan->contacts_limit,
+                'can_boost_jobs' => $plan->can_boost_jobs,
+                'can_see_analytics' => $plan->can_see_analytics,
+                'can_access_cvtheque' => $plan->can_access_cvtheque,
+            ],
+            'usage' => [
+                'jobs_used' => $this->postedJobs()->whereIn('status', ['published', 'pending'])->count(),
+                'jobs_remaining' => $this->remainingJobsCount(),
+                'contacts_used_this_month' => $this->viewedContacts()
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->count(),
+                'contacts_remaining' => $this->remainingContactsCount(),
+            ],
+        ];
+    }
 }

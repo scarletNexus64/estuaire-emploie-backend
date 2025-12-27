@@ -8,6 +8,7 @@ use App\Models\Job;
 use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @OA\Tag(
@@ -274,11 +275,33 @@ class JobController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
 
         if (! $recruiter || ! $recruiter->can_publish) {
             return response()->json([
                 'message' => 'Vous n\'êtes pas autorisé à publier des offres',
+            ], 403);
+        }
+
+        // Vérifier l'abonnement actif
+        if (!$user->hasActiveSubscription()) {
+            return response()->json([
+                'message' => 'Vous devez avoir un abonnement actif pour publier des offres',
+                'error_code' => 'NO_SUBSCRIPTION',
+                'subscription_required' => true,
+            ], 403);
+        }
+
+        // Vérifier la limite de jobs du plan
+        if (!$user->canPublishJob()) {
+            $plan = $user->currentPlan();
+            return response()->json([
+                'message' => "Vous avez atteint la limite de {$plan->jobs_limit} offres de votre plan {$plan->name}. Passez à un plan supérieur pour publier plus d'offres.",
+                'error_code' => 'JOBS_LIMIT_REACHED',
+                'limit' => $plan->jobs_limit,
+                'used' => $user->postedJobs()->whereIn('status', ['published', 'pending'])->count(),
+                'upgrade_required' => true,
             ], 403);
         }
 
@@ -299,7 +322,7 @@ class JobController extends Controller
 
         $job = Job::create(array_merge($validated, [
             'company_id' => $recruiter->company_id,
-            'posted_by' => auth()->id(),
+            'posted_by' => Auth::id(),
             'status' => 'pending', // Admin doit approuver
         ]));
 
@@ -343,7 +366,7 @@ class JobController extends Controller
      */
     public function myJobs(Request $request): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $recruiter = Auth::user()->recruiter;
 
         if (! $recruiter) {
             return response()->json([
@@ -398,7 +421,8 @@ class JobController extends Controller
      */
     public function dashboard(): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
 
         if (! $recruiter) {
             return response()->json([
@@ -406,7 +430,16 @@ class JobController extends Controller
             ], 403);
         }
 
-        // Statistiques
+        // Vérifier l'abonnement actif
+        if (!$user->hasActiveSubscription()) {
+            return response()->json([
+                'message' => 'Vous devez avoir un abonnement actif pour accéder au dashboard',
+                'error_code' => 'NO_SUBSCRIPTION',
+                'subscription_required' => true,
+            ], 403);
+        }
+
+        // Statistiques de base (toujours disponibles)
         $stats = [
             'total_jobs' => Job::where('company_id', $recruiter->company_id)->count(),
             'active_jobs' => Job::where('company_id', $recruiter->company_id)
@@ -418,9 +451,27 @@ class JobController extends Controller
             'new_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
                 $q->where('company_id', $recruiter->company_id);
             })->where('status', 'pending')->count(),
-            'total_views' => Job::where('company_id', $recruiter->company_id)
-                ->sum('views_count'),
         ];
+
+        // Analytics avancées (nécessitent can_see_analytics)
+        $canSeeAnalytics = $user->canSeeAnalytics();
+        $analytics = null;
+
+        if ($canSeeAnalytics) {
+            $analytics = [
+                'total_views' => Job::where('company_id', $recruiter->company_id)
+                    ->sum('views_count'),
+                'views_this_month' => Job::where('company_id', $recruiter->company_id)
+                    ->whereMonth('created_at', now()->month)
+                    ->sum('views_count'),
+                'applications_this_month' => Application::whereHas('job', function ($q) use ($recruiter) {
+                    $q->where('company_id', $recruiter->company_id);
+                })->whereMonth('created_at', now()->month)->count(),
+                'conversion_rate' => $stats['total_applications'] > 0 && $stats['total_jobs'] > 0
+                    ? round(($stats['total_applications'] / Job::where('company_id', $recruiter->company_id)->sum('views_count')) * 100, 2)
+                    : 0,
+            ];
+        }
 
         // Top 5 offres actives avec nombre de candidatures
         $activeJobs = Job::where('company_id', $recruiter->company_id)
@@ -430,19 +481,27 @@ class JobController extends Controller
             ->limit(5)
             ->get();
 
-        // 5 dernières candidatures reçues
+        // 5 dernières candidatures reçues (infos limitées sans contact)
         $recentApplications = Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
         })
-            ->with(['user', 'job'])
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name', 'profile_photo', 'experience_level', 'created_at');
+            }, 'job'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
+        // Infos d'abonnement
+        $subscriptionInfo = $user->getSubscriptionInfo();
+
         return response()->json([
             'statistics' => $stats,
+            'analytics' => $analytics,
+            'can_see_analytics' => $canSeeAnalytics,
             'active_jobs' => $activeJobs,
             'recent_applications' => $recentApplications,
+            'subscription' => $subscriptionInfo,
         ]);
     }
 
@@ -482,7 +541,7 @@ class JobController extends Controller
         // Vérifier aussi les candidatures soft deleted
         $hasApplied = Application::withTrashed()
             ->where('job_id', $job->id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->exists();
 
         return response()->json([

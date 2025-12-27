@@ -53,14 +53,24 @@ class SubscriptionPlan extends Model
         ];
     }
 
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
+    /**
+     * Relation vers les souscriptions actives (via UserSubscriptionPlan avec paiement complété)
+     * Utilisé pour compter les abonnés actifs dans l'admin
+     */
     public function activeSubscriptions(): HasMany
     {
-        return $this->hasMany(Subscription::class)->where('status', 'active');
+        return $this->hasMany(UserSubscriptionPlan::class)
+            ->whereHas('payment', function ($query) {
+                $query->where('status', 'completed');
+            });
+    }
+
+    /**
+     * Relation vers toutes les souscriptions (via UserSubscriptionPlan)
+     */
+    public function allSubscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubscriptionPlan::class);
     }
 
     public function isUnlimitedJobs(): bool

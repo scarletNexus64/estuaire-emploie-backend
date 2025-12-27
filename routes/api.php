@@ -118,6 +118,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/recruiter/applications', [ApplicationController::class, 'receivedApplications']);
     // Mettre à jour le statut d'une candidature
     Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus']);
+    // Débloquer les coordonnées d'un candidat (consomme 1 contact)
+    Route::post('/applications/{application}/unlock-contact', [ApplicationController::class, 'unlockContact']);
+    // Vérifier si les coordonnées d'un candidat sont débloquées
+    Route::get('/applications/{application}/contact-status', [ApplicationController::class, 'contactStatus']);
 
     // ------------------
     // RECRUTEUR - GESTION DE L'ENTREPRISE

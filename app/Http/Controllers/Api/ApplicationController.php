@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Job;
+use App\Models\ViewedContact;
 use App\Services\FirebaseNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -312,7 +313,8 @@ class ApplicationController extends Controller
      */
     public function receivedApplications(Request $request): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $user = auth()->user();
+        $recruiter = $user->recruiter;
 
         if (!$recruiter) {
             return response()->json([
@@ -320,9 +322,23 @@ class ApplicationController extends Controller
             ], 403);
         }
 
+        // Vérifier l'abonnement actif
+        if (!$user->hasActiveSubscription()) {
+            return response()->json([
+                'message' => 'Vous devez avoir un abonnement actif pour voir les candidatures',
+                'error_code' => 'NO_SUBSCRIPTION',
+                'subscription_required' => true,
+            ], 403);
+        }
+
         $query = Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
-        })->with(['user', 'job.company', 'job.location', 'job.category', 'job.contractType', 'conversation']);
+        })->with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation']);
+
+        // Charger les infos utilisateur de base (sans contact sensible)
+        $query->with(['user' => function ($q) {
+            $q->select('id', 'name', 'profile_photo', 'experience_level', 'created_at');
+        }]);
 
         // Filtrer par statut si fourni
         if ($request->has('status')) {
@@ -337,7 +353,14 @@ class ApplicationController extends Controller
         $applications = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return response()->json($applications);
+        // Ajouter les infos d'abonnement dans la réponse
+        $response = $applications->toArray();
+        $response['subscription_info'] = [
+            'contacts_remaining' => $user->remainingContactsCount(),
+            'contacts_limit' => $user->currentPlan()->contacts_limit,
+        ];
+
+        return response()->json($response);
     }
 
     /**
@@ -420,5 +443,196 @@ class ApplicationController extends Controller
             'message' => 'Statut de la candidature mis à jour',
             'data' => $application->fresh(['user', 'job']),
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/applications/{id}/unlock-contact",
+     *     summary="Débloquer les coordonnées d'un candidat (Recruteur)",
+     *     description="Permet au recruteur de voir les coordonnées complètes d'un candidat. Consomme 1 contact du quota mensuel.",
+     *     operationId="unlockCandidateContact",
+     *     tags={"Applications"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de la candidature",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Coordonnées débloquées avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="contact", type="object",
+     *                 @OA\Property(property="email", type="string"),
+     *                 @OA\Property(property="phone", type="string")
+     *             ),
+     *             @OA\Property(property="already_unlocked", type="boolean"),
+     *             @OA\Property(property="contacts_remaining", type="integer")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Limite de contacts atteinte ou pas d'abonnement"),
+     *     @OA\Response(response=404, description="Candidature non trouvée")
+     * )
+     */
+    public function unlockContact(Application $application): JsonResponse
+    {
+        $user = auth()->user();
+        $recruiter = $user->recruiter;
+
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        // Vérifier que la candidature concerne l'entreprise du recruteur
+        if ($application->job->company_id !== $recruiter->company_id) {
+            return response()->json([
+                'message' => 'Cette candidature ne concerne pas votre entreprise',
+            ], 403);
+        }
+
+        // Vérifier l'abonnement actif
+        if (!$user->hasActiveSubscription()) {
+            return response()->json([
+                'message' => 'Vous devez avoir un abonnement actif pour voir les coordonnées des candidats',
+                'error_code' => 'NO_SUBSCRIPTION',
+                'subscription_required' => true,
+            ], 403);
+        }
+
+        $candidateId = $application->user_id;
+
+        // Vérifier si déjà débloqué
+        $alreadyUnlocked = $user->viewedContacts()
+            ->where('candidate_user_id', $candidateId)
+            ->exists();
+
+        if ($alreadyUnlocked) {
+            // Déjà débloqué, retourner les infos sans consommer de quota
+            $candidate = $application->user;
+            return response()->json([
+                'success' => true,
+                'message' => 'Coordonnées déjà débloquées',
+                'contact' => [
+                    'name' => $candidate->name,
+                    'email' => $candidate->email,
+                    'phone' => $candidate->phone,
+                ],
+                'already_unlocked' => true,
+                'contacts_remaining' => $user->remainingContactsCount(),
+            ]);
+        }
+
+        // Vérifier la limite de contacts
+        if (!$user->canViewContact()) {
+            $plan = $user->currentPlan();
+            return response()->json([
+                'message' => "Vous avez atteint la limite de {$plan->contacts_limit} contacts de votre plan {$plan->name} ce mois-ci. Passez à un plan supérieur pour voir plus de contacts.",
+                'error_code' => 'CONTACTS_LIMIT_REACHED',
+                'limit' => $plan->contacts_limit,
+                'used' => $user->viewedContacts()
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->count(),
+                'upgrade_required' => true,
+            ], 403);
+        }
+
+        // Enregistrer le contact vu
+        $user->viewedContacts()->create([
+            'candidate_user_id' => $candidateId,
+        ]);
+
+        // Retourner les coordonnées
+        $candidate = $application->user;
+        return response()->json([
+            'success' => true,
+            'message' => 'Coordonnées débloquées avec succès',
+            'contact' => [
+                'name' => $candidate->name,
+                'email' => $candidate->email,
+                'phone' => $candidate->phone,
+            ],
+            'already_unlocked' => false,
+            'contacts_remaining' => $user->remainingContactsCount(),
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/applications/{id}/contact-status",
+     *     summary="Vérifier si les coordonnées d'un candidat sont débloquées (Recruteur)",
+     *     description="Vérifie si le recruteur a déjà débloqué les coordonnées de ce candidat",
+     *     operationId="checkContactStatus",
+     *     tags={"Applications"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de la candidature",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut du contact",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="is_unlocked", type="boolean"),
+     *             @OA\Property(property="contact", type="object", nullable=true),
+     *             @OA\Property(property="can_unlock", type="boolean"),
+     *             @OA\Property(property="contacts_remaining", type="integer")
+     *         )
+     *     )
+     * )
+     */
+    public function contactStatus(Application $application): JsonResponse
+    {
+        $user = auth()->user();
+        $recruiter = $user->recruiter;
+
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        // Vérifier que la candidature concerne l'entreprise du recruteur
+        if ($application->job->company_id !== $recruiter->company_id) {
+            return response()->json([
+                'message' => 'Cette candidature ne concerne pas votre entreprise',
+            ], 403);
+        }
+
+        $candidateId = $application->user_id;
+
+        // Vérifier si déjà débloqué
+        $isUnlocked = $user->viewedContacts()
+            ->where('candidate_user_id', $candidateId)
+            ->exists();
+
+        $response = [
+            'is_unlocked' => $isUnlocked,
+            'can_unlock' => $user->canViewContact(),
+            'contacts_remaining' => $user->remainingContactsCount(),
+            'contacts_limit' => $user->currentPlan()?->contacts_limit,
+        ];
+
+        if ($isUnlocked) {
+            $candidate = $application->user;
+            $response['contact'] = [
+                'name' => $candidate->name,
+                'email' => $candidate->email,
+                'phone' => $candidate->phone,
+            ];
+        } else {
+            $response['contact'] = null;
+        }
+
+        return response()->json($response);
     }
 }
