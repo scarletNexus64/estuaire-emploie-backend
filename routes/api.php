@@ -107,9 +107,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // Créer une offre d'emploi (recruteur) - vérifie la limite du plan
     Route::post('/jobs', [JobController::class, 'store'])->middleware('subscription:can_post_job');
     // Mettre à jour une offre d'emploi (recruteur) - vérifie que l'abonnement est valide
-    Route::put('/jobs/{job}', [JobController::class, 'update'])->middleware('subscription:valid');
+    Route::put('/jobs/{id}', [JobController::class, 'update'])->middleware('subscription:valid');
+    // Supprimer une offre d'emploi (recruteur) - vérifie que l'abonnement est valide
+    Route::delete('/jobs/{id}', [JobController::class, 'destroy'])->middleware('subscription:valid');
     // Mes offres (recruteur) - vérifie que l'abonnement est valide
     Route::get('/recruiter/jobs', [JobController::class, 'myJobs'])->middleware('subscription:valid');
+    // Détails d'une offre (recruteur) - vérifie que l'abonnement est valide
+    Route::get('/recruiter/jobs/{id}', [JobController::class, 'showRecruiterJob'])->middleware('subscription:valid');
     // Dashboard recruteur (statistiques + données récentes) - vérifie que l'abonnement est valide
     Route::get('/recruiter/dashboard', [JobController::class, 'dashboard'])->middleware('subscription:valid');
 

@@ -185,12 +185,6 @@ class JobController extends Controller
      */
     public function show(Job $job): JsonResponse
     {
-        if ($job->status !== 'published') {
-            return response()->json([
-                'message' => 'Offre non disponible',
-            ], 404);
-        }
-
         $job->incrementViews();
 
         $job->load(['company', 'category', 'location', 'contractType', 'postedBy']);
@@ -335,6 +329,66 @@ class JobController extends Controller
             'message' => 'Offre créée avec succès. En attente de validation.',
             'data' => $job->load(['company', 'category', 'location', 'contractType']),
         ], 201);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/recruiter/jobs/{id}",
+     *     summary="Détails d'une offre d'emploi (Recruteur)",
+     *     description="Récupère les détails d'une offre d'emploi appartenant à l'entreprise du recruteur, quel que soit son statut (draft, pending, published, closed, expired)",
+     *     operationId="getRecruiterJob",
+     *     tags={"Jobs"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'offre",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Détails de l'offre",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(response=403, description="Vous n'êtes pas autorisé à voir cette offre"),
+     *     @OA\Response(response=404, description="Offre non trouvée")
+     * )
+     */
+    public function showRecruiterJob(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
+
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas recruteur',
+            ], 403);
+        }
+
+        $job = Job::with(['company', 'category', 'location', 'contractType', 'postedBy'])
+            ->withCount('applications')
+            ->find($id);
+
+        if (!$job) {
+            return response()->json([
+                'message' => 'Offre non trouvée',
+            ], 404);
+        }
+
+        // Vérifier que l'offre appartient à l'entreprise du recruteur
+        if ($job->company_id !== $recruiter->company_id) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à voir cette offre',
+            ], 403);
+        }
+
+        return response()->json([
+            'data' => $job,
+        ]);
     }
 
     /**
@@ -556,7 +610,7 @@ class JobController extends Controller
      *     @OA\Response(response=422, description="Erreur de validation")
      * )
      */
-    public function update(Request $request, Job $job): JsonResponse
+    public function update(Request $request, int $id): JsonResponse
     {
         $user = Auth::user();
         $recruiter = $user->recruiter;
@@ -566,6 +620,15 @@ class JobController extends Controller
             return response()->json([
                 'message' => 'Vous n\'êtes pas autorisé à modifier des offres',
             ], 403);
+        }
+
+        $job = Job::find($id);
+
+        // Vérifier que l'offre existe
+        if (!$job) {
+            return response()->json([
+                'message' => 'Offre non trouvée',
+            ], 404);
         }
 
         // Vérifier que l'offre appartient à l'entreprise du recruteur
@@ -597,6 +660,82 @@ class JobController extends Controller
             'data' => $job->load(['company', 'category', 'location', 'contractType']),
         ]);
     }
+    /**
+     * @OA\Delete(
+     *     path="/api/jobs/{id}",
+     *     summary="Supprimer une offre d'emploi",
+     *     description="Permet au recruteur de supprimer une offre d'emploi de son entreprise",
+     *     operationId="deleteJob",
+     *     tags={"Jobs"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'offre",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Offre supprimée avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Offre supprimée avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(response=403, description="Non autorisé à supprimer cette offre"),
+     *     @OA\Response(response=404, description="Offre non trouvée")
+     * )
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
+
+        // Vérifier que l'utilisateur est recruteur
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à supprimer des offres',
+            ], 403);
+        }
+
+        $job = Job::with(['company', 'category', 'location', 'contractType', 'postedBy'])
+            ->withCount('applications')
+            ->find($id);
+
+        // Vérifier que l'offre existe
+        if (!$job) {
+            return response()->json([
+                'message' => 'Offre non trouvée',
+            ], 404);
+        }
+
+        // Vérifier que l'offre appartient à l'entreprise du recruteur
+        if ($job->company_id !== $recruiter->company_id) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à supprimer cette offre',
+            ], 403);
+        }
+
+        // Décrémenter le compteur jobs_used de l'abonnement actif
+        $subscription = $user->activeSubscription();
+        if ($subscription && $subscription->jobs_used > 0) {
+            $subscription->decrement('jobs_used');
+        }
+
+        $job->delete();
+
+        return response()->json([
+            'message' => 'Offre supprimée avec succès',
+            'usage' => $subscription ? [
+                'jobs_used' => $subscription->jobs_used,
+                'jobs_limit' => $subscription->getEffectiveJobsLimit(),
+                'jobs_remaining' => $subscription->jobs_remaining,
+                'can_post_job' => $subscription->canPostJob(),
+            ] : null,
+        ]);
+    }
+
 
     /**
      * @OA\Get(
