@@ -84,8 +84,8 @@
         </div>
 
         <?php if($applications->hasPages()): ?>
-            <div style="padding: 1.5rem;">
-                <?php echo e($applications->links()); ?>
+            <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
+                <?php echo e($applications->links('vendor.pagination.custom')); ?>
 
             </div>
         <?php endif; ?>

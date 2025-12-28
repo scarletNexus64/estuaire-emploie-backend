@@ -227,7 +227,7 @@
 
     <?php if($jobs->hasPages()): ?>
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        <?php echo e($jobs->links()); ?>
+        <?php echo e($jobs->links('vendor.pagination.custom')); ?>
 
     </div>
     <?php endif; ?>

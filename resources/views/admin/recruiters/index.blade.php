@@ -75,8 +75,8 @@
         </div>
 
         @if($recruiters->hasPages())
-            <div style="padding: 1.5rem;">
-                {{ $recruiters->links() }}
+            <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
+                {{ $recruiters->links('vendor.pagination.custom') }}
             </div>
         @endif
     </div>

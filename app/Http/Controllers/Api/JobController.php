@@ -285,7 +285,8 @@ class JobController extends Controller
         }
 
         // Vérifier l'abonnement actif
-        if (!$user->hasActiveSubscription()) {
+        $subscription = $user->activeSubscription();
+        if (!$subscription || !$subscription->isValid()) {
             return response()->json([
                 'message' => 'Vous devez avoir un abonnement actif pour publier des offres',
                 'error_code' => 'NO_SUBSCRIPTION',
@@ -293,14 +294,14 @@ class JobController extends Controller
             ], 403);
         }
 
-        // Vérifier la limite de jobs du plan
-        if (!$user->canPublishJob()) {
-            $plan = $user->currentPlan();
+        // Vérifier la limite de jobs (utilise les limites effectives cumulées)
+        if (!$subscription->canPostJob()) {
+            $effectiveJobsLimit = $subscription->getEffectiveJobsLimit();
             return response()->json([
-                'message' => "Vous avez atteint la limite de {$plan->jobs_limit} offres de votre plan {$plan->name}. Passez à un plan supérieur pour publier plus d'offres.",
+                'message' => "Vous avez atteint la limite de {$effectiveJobsLimit} offres. Passez à un plan supérieur pour publier plus d'offres.",
                 'error_code' => 'JOBS_LIMIT_REACHED',
-                'limit' => $plan->jobs_limit,
-                'used' => $user->postedJobs()->whereIn('status', ['published', 'pending'])->count(),
+                'limit' => $effectiveJobsLimit,
+                'used' => $subscription->jobs_used,
                 'upgrade_required' => true,
             ], 403);
         }
@@ -325,6 +326,10 @@ class JobController extends Controller
             'posted_by' => Auth::id(),
             'status' => 'pending', // Admin doit approuver
         ]));
+
+        // Incrémenter le compteur de jobs utilisés dans l'abonnement
+        // $subscription est déjà défini plus haut
+        $subscription->incrementJobsUsed();
 
         return response()->json([
             'message' => 'Offre créée avec succès. En attente de validation.',
@@ -502,6 +507,94 @@ class JobController extends Controller
             'active_jobs' => $activeJobs,
             'recent_applications' => $recentApplications,
             'subscription' => $subscriptionInfo,
+        ]);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/jobs/{id}",
+     *     summary="Mettre à jour une offre d'emploi",
+     *     description="Permet au recruteur de modifier une offre d'emploi de son entreprise",
+     *     operationId="updateJob",
+     *     tags={"Jobs"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'offre",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Développeur Full Stack Senior"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="category_id", type="integer"),
+     *             @OA\Property(property="location_id", type="integer"),
+     *             @OA\Property(property="contract_type_id", type="integer"),
+     *             @OA\Property(property="salary_min", type="number", nullable=true),
+     *             @OA\Property(property="salary_max", type="number", nullable=true),
+     *             @OA\Property(property="salary_negotiable", type="boolean"),
+     *             @OA\Property(property="experience_level", type="string", enum={"junior", "intermediaire", "senior", "expert"}),
+     *             @OA\Property(property="requirements", type="string", nullable=true),
+     *             @OA\Property(property="benefits", type="string", nullable=true),
+     *             @OA\Property(property="application_deadline", type="string", format="date", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Offre mise à jour avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Offre mise à jour avec succès"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(response=403, description="Non autorisé à modifier cette offre"),
+     *     @OA\Response(response=404, description="Offre non trouvée"),
+     *     @OA\Response(response=422, description="Erreur de validation")
+     * )
+     */
+    public function update(Request $request, Job $job): JsonResponse
+    {
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
+
+        // Vérifier que l'utilisateur est recruteur
+        if (!$recruiter) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à modifier des offres',
+            ], 403);
+        }
+
+        // Vérifier que l'offre appartient à l'entreprise du recruteur
+        if ($job->company_id !== $recruiter->company_id) {
+            return response()->json([
+                'message' => 'Vous n\'êtes pas autorisé à modifier cette offre',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'location_id' => 'sometimes|required|exists:locations,id',
+            'contract_type_id' => 'sometimes|required|exists:contract_types,id',
+            'salary_min' => 'nullable|numeric|min:0',
+            'salary_max' => 'nullable|numeric|min:0',
+            'salary_negotiable' => 'sometimes|boolean',
+            'experience_level' => 'sometimes|required|in:junior,intermediaire,senior,expert',
+            'requirements' => 'nullable|string',
+            'benefits' => 'nullable|string',
+            'application_deadline' => 'nullable|date|after:today',
+        ]);
+
+        $job->update($validated);
+
+        return response()->json([
+            'message' => 'Offre mise à jour avec succès',
+            'data' => $job->load(['company', 'category', 'location', 'contractType']),
         ]);
     }
 

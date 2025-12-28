@@ -183,7 +183,7 @@
 
     @if($admins->hasPages())
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        {{ $admins->links() }}
+        {{ $admins->links('vendor.pagination.custom') }}
     </div>
     @endif
 </div>

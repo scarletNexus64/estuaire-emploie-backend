@@ -86,8 +86,8 @@
         </div>
 
         @if($applications->hasPages())
-            <div style="padding: 1.5rem;">
-                {{ $applications->links() }}
+            <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
+                {{ $applications->links('vendor.pagination.custom') }}
             </div>
         @endif
     </div>

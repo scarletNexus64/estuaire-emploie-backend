@@ -10,6 +10,8 @@ use App\Models\Location;
 use App\Models\ContractType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class JobController extends Controller
@@ -69,24 +71,28 @@ class JobController extends Controller
             'benefits' => 'nullable|string',
             'salary_min' => 'nullable|string',
             'salary_max' => 'nullable|string',
-            'salary_negotiable' => 'boolean',
             'experience_level' => 'nullable|string|max:50',
             'status' => 'required|in:draft,pending,published,closed,expired',
-            'is_featured' => 'boolean',
             'application_deadline' => 'nullable|date|after:today',
         ]);
 
-        $validated['posted_by'] = auth()->id();
-        $validated['salary_negotiable'] = $request->has('salary_negotiable');
-        $validated['is_featured'] = $request->has('is_featured');
+        // Auteur de l'offre
+        $validated['posted_by'] = Auth::id();
 
+        // Gestion propre des checkbox
+        $validated['salary_negotiable'] = $request->boolean('salary_negotiable');
+        $validated['is_featured'] = $request->boolean('is_featured');
+
+        // Publication auto
         if ($validated['status'] === 'published') {
             $validated['published_at'] = now();
         }
 
+        // Création
         Job::create($validated);
 
-        return redirect()->route('admin.jobs.index')
+        return redirect()
+            ->route('admin.jobs.index')
             ->with('success', 'Offre créée avec succès');
     }
 
@@ -120,15 +126,13 @@ class JobController extends Controller
             'benefits' => 'nullable|string',
             'salary_min' => 'nullable|string',
             'salary_max' => 'nullable|string',
-            'salary_negotiable' => 'boolean',
             'experience_level' => 'nullable|string|max:50',
             'status' => 'required|in:draft,pending,published,closed,expired',
-            'is_featured' => 'boolean',
             'application_deadline' => 'nullable|date',
         ]);
 
-        $validated['salary_negotiable'] = $request->has('salary_negotiable');
-        $validated['is_featured'] = $request->has('is_featured');
+        $validated['salary_negotiable'] = $request->boolean('salary_negotiable');
+        $validated['is_featured'] = $request->boolean('is_featured');
 
         if ($validated['status'] === 'published' && !$job->published_at) {
             $validated['published_at'] = now();
@@ -136,7 +140,8 @@ class JobController extends Controller
 
         $job->update($validated);
 
-        return redirect()->route('admin.jobs.index')
+        return redirect()
+            ->route('admin.jobs.index')
             ->with('success', 'Offre mise à jour avec succès');
     }
 

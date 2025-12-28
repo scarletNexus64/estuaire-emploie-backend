@@ -548,6 +548,12 @@ class ApplicationController extends Controller
             'candidate_user_id' => $candidateId,
         ]);
 
+        // Incrémenter le compteur de contacts utilisés dans l'abonnement
+        $subscription = $user->activeSubscription();
+        if ($subscription) {
+            $subscription->incrementContactsUsed();
+        }
+
         // Retourner les coordonnées
         $candidate = $application->user;
         return response()->json([

@@ -24,7 +24,7 @@ class RecruiterController extends Controller
     public function create(): View
     {
         $companies = Company::where('status', 'verified')->get();
-        $users = User::where('role', 'recruiter')->get();
+        $users = User::where('role', 'candidate')->get();
 
         return view('admin.recruiters.create', compact('companies', 'users'));
     }

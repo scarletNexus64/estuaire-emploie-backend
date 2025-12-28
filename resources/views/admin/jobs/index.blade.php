@@ -229,7 +229,7 @@
 
     @if($jobs->hasPages())
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        {{ $jobs->links() }}
+        {{ $jobs->links('vendor.pagination.custom') }}
     </div>
     @endif
 </div>

@@ -217,8 +217,22 @@ class CompanyController extends Controller
             ], 404);
         }
 
+        $company = $recruiter->company;
+
+        // Charger les statistiques
+        $activeJobs = $company->jobs()->where('status', 'published')->count();
+        $totalJobs = $company->jobs()->count();
+        $totalApplications = $company->jobs()->withCount('applications')->get()->sum('applications_count');
+        $totalViews = $company->jobs()->sum('views_count');
+
         return response()->json([
-            'data' => $recruiter->company,
+            'data' => $company,
+            'statistics' => [
+                'active_jobs' => $activeJobs,
+                'total_jobs' => $totalJobs,
+                'total_applications' => $totalApplications,
+                'total_views' => $totalViews,
+            ],
         ]);
     }
 

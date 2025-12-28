@@ -74,8 +74,8 @@
         </div>
 
         @if($users->hasPages())
-            <div style="padding: 1.5rem;">
-                {{ $users->links() }}
+            <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
+                {{ $users->links('vendor.pagination.custom') }}
             </div>
         @endif
     </div>

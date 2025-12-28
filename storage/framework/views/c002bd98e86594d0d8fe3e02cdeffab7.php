@@ -72,8 +72,8 @@
         </div>
 
         <?php if($users->hasPages()): ?>
-            <div style="padding: 1.5rem;">
-                <?php echo e($users->links()); ?>
+            <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
+                <?php echo e($users->links('vendor.pagination.custom')); ?>
 
             </div>
         <?php endif; ?>

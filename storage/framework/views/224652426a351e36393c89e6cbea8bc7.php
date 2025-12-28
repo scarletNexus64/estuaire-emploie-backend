@@ -258,7 +258,7 @@
 
     <?php if($payments->hasPages()): ?>
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        <?php echo e($payments->links()); ?>
+        <?php echo e($payments->links('vendor.pagination.custom')); ?>
 
     </div>
     <?php endif; ?>

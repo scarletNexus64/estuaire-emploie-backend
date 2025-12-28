@@ -104,22 +104,24 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // RECRUTEUR - GESTION DES JOBS
     // ------------------
-    // Créer une offre d'emploi (recruteur)
-    Route::post('/jobs', [JobController::class, 'store']);
-    // Mes offres (recruteur)
-    Route::get('/recruiter/jobs', [JobController::class, 'myJobs']);
-    // Dashboard recruteur (statistiques + données récentes)
-    Route::get('/recruiter/dashboard', [JobController::class, 'dashboard']);
+    // Créer une offre d'emploi (recruteur) - vérifie la limite du plan
+    Route::post('/jobs', [JobController::class, 'store'])->middleware('subscription:can_post_job');
+    // Mettre à jour une offre d'emploi (recruteur) - vérifie que l'abonnement est valide
+    Route::put('/jobs/{job}', [JobController::class, 'update'])->middleware('subscription:valid');
+    // Mes offres (recruteur) - vérifie que l'abonnement est valide
+    Route::get('/recruiter/jobs', [JobController::class, 'myJobs'])->middleware('subscription:valid');
+    // Dashboard recruteur (statistiques + données récentes) - vérifie que l'abonnement est valide
+    Route::get('/recruiter/dashboard', [JobController::class, 'dashboard'])->middleware('subscription:valid');
 
     // ------------------
     // RECRUTEUR - GESTION DES CANDIDATURES
     // ------------------
-    // Candidatures reçues pour mes offres
-    Route::get('/recruiter/applications', [ApplicationController::class, 'receivedApplications']);
-    // Mettre à jour le statut d'une candidature
-    Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus']);
-    // Débloquer les coordonnées d'un candidat (consomme 1 contact)
-    Route::post('/applications/{application}/unlock-contact', [ApplicationController::class, 'unlockContact']);
+    // Candidatures reçues pour mes offres - vérifie que l'abonnement est valide
+    Route::get('/recruiter/applications', [ApplicationController::class, 'receivedApplications'])->middleware('subscription:valid');
+    // Mettre à jour le statut d'une candidature - vérifie que l'abonnement est valide
+    Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->middleware('subscription:valid');
+    // Débloquer les coordonnées d'un candidat (consomme 1 contact) - vérifie la limite de contacts
+    Route::post('/applications/{application}/unlock-contact', [ApplicationController::class, 'unlockContact'])->middleware('subscription:can_contact');
     // Vérifier si les coordonnées d'un candidat sont débloquées
     Route::get('/applications/{application}/contact-status', [ApplicationController::class, 'contactStatus']);
 
@@ -146,6 +148,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/my-subscription', [SubscriptionPlanController::class, 'mySubscription']);
     // Historique de mes abonnements
     Route::get('/my-subscriptions', [SubscriptionPlanController::class, 'mySubscriptions']);
+    // Statut détaillé de l'abonnement (jours restants, alertes)
+    Route::get('/subscription/status', [SubscriptionPlanController::class, 'subscriptionStatus']);
+    // Utilisation de l'abonnement (jobs/contacts utilisés, limites)
+    Route::get('/subscription/usage', [SubscriptionPlanController::class, 'subscriptionUsage']);
 
 
     // ------------------

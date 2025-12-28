@@ -69,4 +69,4 @@
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/sylvinhio/estuaire-emplois/estuaire-emploie-backend/resources/views/admin/recruiters/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/resources/views/admin/recruiters/create.blade.php ENDPATH**/ ?>

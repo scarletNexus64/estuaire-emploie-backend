@@ -257,7 +257,7 @@
 
     <?php if($companies->hasPages()): ?>
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        <?php echo e($companies->links()); ?>
+        <?php echo e($companies->links('vendor.pagination.custom')); ?>
 
     </div>
     <?php endif; ?>

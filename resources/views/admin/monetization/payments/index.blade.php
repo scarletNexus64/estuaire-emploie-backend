@@ -258,7 +258,7 @@
 
     @if($payments->hasPages())
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        {{ $payments->links() }}
+        {{ $payments->links('vendor.pagination.custom') }}
     </div>
     @endif
 </div>

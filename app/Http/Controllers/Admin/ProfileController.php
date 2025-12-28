@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
@@ -12,13 +13,13 @@ class ProfileController extends Controller
 {
     public function index(): View
     {
-        $user = auth()->user();
+        $user = Auth::user();
         return view('admin.profile.index', compact('user'));
     }
 
     public function update(Request $request): RedirectResponse
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -39,7 +40,7 @@ class ProfileController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!Hash::check($validated['current_password'], $user->password)) {
             return back()->withErrors(['current_password' => 'Le mot de passe actuel est incorrect']);

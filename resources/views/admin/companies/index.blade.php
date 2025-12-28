@@ -257,7 +257,7 @@
 
     @if($companies->hasPages())
     <div style="padding: 1.5rem; border-top: 2px solid var(--light);">
-        {{ $companies->links() }}
+        {{ $companies->links('vendor.pagination.custom') }}
     </div>
     @endif
 </div>
