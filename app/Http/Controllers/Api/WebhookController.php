@@ -69,8 +69,8 @@ class WebhookController extends Controller
                 ], 400);
             }
 
-            // Find payment by reference or external_id
-            $payment = Payment::where('reference', $reference)
+            // Find payment by provider_reference or external_id
+            $payment = Payment::where('provider_reference', $reference)
                 ->orWhere('external_id', $externalId)
                 ->first();
 

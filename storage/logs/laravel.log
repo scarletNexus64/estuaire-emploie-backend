@@ -3970,3 +3970,343 @@ _token=Ie0Ld7RRdte1ws49gK6e4WtxdxbPbCJwPed0D69q&_method=PUT&title=D%C3%A9veloppe
 [2025-12-28 08:58:35] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
 [2025-12-28 08:59:49] local.INFO: 📋 Loading conversations for user {"user_id":35} 
 [2025-12-28 08:59:49] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-28 23:55:16] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-28 23:56:01] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-28 23:56:04] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-28 23:56:19] local.ERROR: The "--columns" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--columns\" option does not exist. at /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(153): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(289): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run()
+#7 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/djstar-service/Documents/Project/My_project/Estuaire/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2025-12-29 00:01:43] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 35  
+[2025-12-29 00:01:44] local.INFO: 📋 Loading conversations for user {"user_id":35} 
+[2025-12-29 00:01:44] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:04:59] local.INFO: [FreeMoPay Service] Initiating SYNCHRONOUS payment - Amount: 100, Phone: 237674693625  
+[2025-12-29 00:04:59] local.INFO: [FreeMoPay Service] Callback URL: https://supercurious-kathryn-fremdly.ngrok-free.dev/api/webhooks/freemopay, External ID: SUB-35-1-20251229000459  
+[2025-12-29 00:04:59] local.INFO: [FreeMoPay Service] Payment record created - ID: 17  
+[2025-12-29 00:04:59] local.INFO: [FreeMoPay TokenManager] Generating new access token  
+[2025-12-29 00:04:59] local.INFO: [FreeMoPay TokenManager] Requesting new token from: https://api-v2.freemopay.com/api/v2/payment/token  
+[2025-12-29 00:04:59] local.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment/token  
+[2025-12-29 00:04:59] local.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:04:59] local.DEBUG: [FreeMoPay] Body: {"appKey":"2366861d-599d-483b-a0cd-3aa59bc9b02d","secretKey":"[HIDDEN]"}  
+[2025-12-29 00:05:03] local.DEBUG: [FreeMoPay] Response 200 in 3.78s  
+[2025-12-29 00:05:03] local.DEBUG: [FreeMoPay] Body: {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2OTNjNjVlMjExNDE4ZDZkYzM3OGUyNjEiLCJpYXQiOjE3NjY5NjY3MDMsImV4cCI6MTc2Njk3MDMwM30.tb9725DqqkO0ujH89AIkTXiEmEkKN3kF-Q8l_YmYRNk","expires_in":3600}  
+[2025-12-29 00:05:03] local.WARNING: [FreeMoPay] Slow request: 3.78s  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay Client] Status Code: 200  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay Client] Response Headers: {"Date":["Mon, 29 Dec 2025 00:05:03 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["217"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"d9-H36P3eOzKHmXjzsSxXUcO6\/fe3w\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=0%2Bpf%2FEc1I0xJdkhLrIwwx1ANNoIRg5y%2BWqY0z2bP0MMUuKifpvoc8VDeFj7bHpC6YnMP5YZLryVddg1fiivu%2BNg%2BNQN16gqEV6jvR4TH8XU26gOD\"}]}"],"CF-RAY":["9b550b286941df12-LHR"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay Client] Response Body (raw): {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2OTNjNjVlMjExNDE4ZDZkYzM3OGUyNjEiLCJpYXQiOjE3NjY5NjY3MDMsImV4cCI6MTc2Njk3MDMwM30.tb9725DqqkO0ujH89AIkTXiEmEkKN3kF-Q8l_YmYRNk","expires_in":3600}  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay TokenManager] Token generated successfully  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay TokenManager] Token cached for 3600 seconds  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay Service] Calling FreeMoPay API v2  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay Service] URL: https://api-v2.freemopay.com/api/v2/payment  
+[2025-12-29 00:05:03] local.INFO: [FreeMoPay Service] Payload: {"payer":"237674693625","amount":100,"externalId":"SUB-35-1-20251229000459","description":"Abonnement Starter - Estuaire Emploie","callback":"https:\/\/supercurious-kathryn-fremdly.ngrok-free.dev\/api\/webhooks\/freemopay"}  
+[2025-12-29 00:05:03] local.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment  
+[2025-12-29 00:05:03] local.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:03] local.DEBUG: [FreeMoPay] Body: {"payer":"237674693625","amount":100,"externalId":"SUB-35-1-20251229000459","description":"Abonnement Starter - Estuaire Emploie","callback":"https:\/\/supercurious-kathryn-fremdly.ngrok-free.dev\/api\/webhooks\/freemopay"}  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay] Response 200 in 5.27s  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","status":"CREATED","message":"Transaction created"}  
+[2025-12-29 00:05:09] local.WARNING: [FreeMoPay] Slow request: 5.27s  
+[2025-12-29 00:05:09] local.INFO: [FreeMoPay Client] Status Code: 200  
+[2025-12-29 00:05:09] local.INFO: [FreeMoPay Client] Response Headers: {"Date":["Mon, 29 Dec 2025 00:05:05 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["103"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"67-Hg308wK0iM2X8URj0w3\/GT249EE\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=BoPBcen5IKGCwVBJ%2Bw5xFGWgTsuC0Z1ew5uzYYKd8S3yXGSyyvbN%2BeDrVX5fAEq1N3AybQveAj2dAKmJ4MaARp3ZtuFzCPk33Sx%2FzKLadMEgIc%2FQ\"}]}"],"CF-RAY":["9b550b326fca50b0-LHR"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2025-12-29 00:05:09] local.INFO: [FreeMoPay Client] Response Body (raw): {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","status":"CREATED","message":"Transaction created"}  
+[2025-12-29 00:05:09] local.INFO: [FreeMoPay Service] FreeMoPay response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","status":"CREATED","message":"Transaction created"}  
+[2025-12-29 00:05:09] local.INFO: [FreeMoPay Service] Payment initiated - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:09] local.INFO: [FreeMoPay Service] Starting polling for reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay Service] Polling attempt 1 - Elapsed: 0s  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:09] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:19] local.DEBUG: [FreeMoPay] Response 200 in 10.39s  
+[2025-12-29 00:05:19] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:19] local.WARNING: [FreeMoPay] Slow request: 10.39s  
+[2025-12-29 00:05:19] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:19] local.INFO: [FreeMoPay Service] Poll 1: Status = PENDING  
+[2025-12-29 00:05:19] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:05:22] local.DEBUG: [FreeMoPay Service] Polling attempt 2 - Elapsed: 13s  
+[2025-12-29 00:05:22] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:22] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:05:22] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:22] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:25] local.DEBUG: [FreeMoPay] Response 200 in 2.77s  
+[2025-12-29 00:05:25] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:25] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:25] local.INFO: [FreeMoPay Service] Poll 2: Status = PENDING  
+[2025-12-29 00:05:25] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:05:28] local.DEBUG: [FreeMoPay Service] Polling attempt 3 - Elapsed: 19s  
+[2025-12-29 00:05:28] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:28] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:05:28] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:28] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:32] local.DEBUG: [FreeMoPay] Response 200 in 4.05s  
+[2025-12-29 00:05:32] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:32] local.WARNING: [FreeMoPay] Slow request: 4.05s  
+[2025-12-29 00:05:32] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:32] local.INFO: [FreeMoPay Service] Poll 3: Status = PENDING  
+[2025-12-29 00:05:32] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:05:35] local.DEBUG: [FreeMoPay Service] Polling attempt 4 - Elapsed: 26s  
+[2025-12-29 00:05:35] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:35] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:05:35] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:35] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:45] local.DEBUG: [FreeMoPay] Response 200 in 9.89s  
+[2025-12-29 00:05:45] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:45] local.WARNING: [FreeMoPay] Slow request: 9.89s  
+[2025-12-29 00:05:45] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:45] local.INFO: [FreeMoPay Service] Poll 4: Status = PENDING  
+[2025-12-29 00:05:45] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:05:48] local.DEBUG: [FreeMoPay Service] Polling attempt 5 - Elapsed: 39s  
+[2025-12-29 00:05:48] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:48] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:05:48] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:48] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:52] local.DEBUG: [FreeMoPay] Response 200 in 3.94s  
+[2025-12-29 00:05:52] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:52] local.WARNING: [FreeMoPay] Slow request: 3.94s  
+[2025-12-29 00:05:52] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:52] local.INFO: [FreeMoPay Service] Poll 5: Status = PENDING  
+[2025-12-29 00:05:52] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:05:55] local.DEBUG: [FreeMoPay Service] Polling attempt 6 - Elapsed: 46s  
+[2025-12-29 00:05:55] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:55] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:05:55] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:05:55] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:05:58] local.DEBUG: [FreeMoPay] Response 200 in 3.24s  
+[2025-12-29 00:05:58] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:58] local.WARNING: [FreeMoPay] Slow request: 3.24s  
+[2025-12-29 00:05:58] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:05:58] local.INFO: [FreeMoPay Service] Poll 6: Status = PENDING  
+[2025-12-29 00:05:58] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:06:01] local.DEBUG: [FreeMoPay Service] Polling attempt 7 - Elapsed: 52s  
+[2025-12-29 00:06:01] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:01] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:06:01] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:01] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:06:02] local.DEBUG: [FreeMoPay] Response 200 in 1.18s  
+[2025-12-29 00:06:02] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:06:02] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:06:02] local.INFO: [FreeMoPay Service] Poll 7: Status = PENDING  
+[2025-12-29 00:06:02] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:06:05] local.DEBUG: [FreeMoPay Service] Polling attempt 8 - Elapsed: 56s  
+[2025-12-29 00:06:05] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:05] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:06:05] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:05] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:06:08] local.DEBUG: [FreeMoPay] Response 200 in 3.07s  
+[2025-12-29 00:06:08] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:06:08] local.WARNING: [FreeMoPay] Slow request: 3.07s  
+[2025-12-29 00:06:08] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:06:08] local.INFO: [FreeMoPay Service] Poll 8: Status = PENDING  
+[2025-12-29 00:06:08] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:06:11] local.DEBUG: [FreeMoPay Service] Polling attempt 9 - Elapsed: 62s  
+[2025-12-29 00:06:11] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:11] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:06:11] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:11] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:06:13] local.DEBUG: [FreeMoPay] Response 200 in 2.11s  
+[2025-12-29 00:06:13] local.DEBUG: [FreeMoPay] Body: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:06:13] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"4b9db93a-aed1-49c6-837a-e4a7078a46cf","merchandRef":"SUB-35-1-20251229000459","amount":100,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:06:13] local.INFO: [FreeMoPay Service] Poll 9: Status = SUCCESS  
+[2025-12-29 00:06:13] local.INFO: [FreeMoPay Service] Payment SUCCESS - Reference: 4b9db93a-aed1-49c6-837a-e4a7078a46cf  
+[2025-12-29 00:06:13] local.INFO: [SubscriptionPlanController] Payment initiated - Payment ID: 17, Plan: Starter  
+[2025-12-29 00:06:13] local.INFO: [SubscriptionPlanController] Subscription renewed for user 35 - Plan: Starter, Jobs: 9/12, New expiry: 2026-03-28 06:44:19  
+[2025-12-29 00:06:39] local.INFO: 📋 Loading conversations for user {"user_id":35} 
+[2025-12-29 00:06:39] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:30:57] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:30:57] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:31:19] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:31:19] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:31:27] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:31:27] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:36:41] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:36:41] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:37:18] local.INFO: [FreeMoPay Service] Initiating SYNCHRONOUS payment - Amount: 100, Phone: 237674693625  
+[2025-12-29 00:37:18] local.INFO: [FreeMoPay Service] Callback URL: https://supercurious-kathryn-fremdly.ngrok-free.dev/api/webhooks/freemopay, External ID: SUB-36-1-20251229003718  
+[2025-12-29 00:37:18] local.INFO: [FreeMoPay Service] Payment record created - ID: 18  
+[2025-12-29 00:37:18] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:37:18] local.INFO: [FreeMoPay Service] Calling FreeMoPay API v2  
+[2025-12-29 00:37:18] local.INFO: [FreeMoPay Service] URL: https://api-v2.freemopay.com/api/v2/payment  
+[2025-12-29 00:37:18] local.INFO: [FreeMoPay Service] Payload: {"payer":"237674693625","amount":100,"externalId":"SUB-36-1-20251229003718","description":"Abonnement Starter - Estuaire Emploie","callback":"https:\/\/supercurious-kathryn-fremdly.ngrok-free.dev\/api\/webhooks\/freemopay"}  
+[2025-12-29 00:37:18] local.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment  
+[2025-12-29 00:37:18] local.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:37:18] local.DEBUG: [FreeMoPay] Body: {"payer":"237674693625","amount":100,"externalId":"SUB-36-1-20251229003718","description":"Abonnement Starter - Estuaire Emploie","callback":"https:\/\/supercurious-kathryn-fremdly.ngrok-free.dev\/api\/webhooks\/freemopay"}  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay] Response 200 in 11.02s  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","status":"CREATED","message":"Transaction created"}  
+[2025-12-29 00:37:29] local.WARNING: [FreeMoPay] Slow request: 11.02s  
+[2025-12-29 00:37:29] local.INFO: [FreeMoPay Client] Status Code: 200  
+[2025-12-29 00:37:29] local.INFO: [FreeMoPay Client] Response Headers: {"Date":["Mon, 29 Dec 2025 00:37:28 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["103"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"67-hNt7fUD\/0laQp5oiEe2\/gvQwf10\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=V66uxEiHjZFdFmND6asxcYfSs5fISoHCiWqtPV707z%2FVwpE2bZZseeDZL9fAH3J28VTvXTYFDfBqZx8BwfR6jXYN%2FyvNq9s%2BHSZpgPq3PpimOKTr\"}]}"],"CF-RAY":["9b553aa0fd3e634c-LHR"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2025-12-29 00:37:29] local.INFO: [FreeMoPay Client] Response Body (raw): {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","status":"CREATED","message":"Transaction created"}  
+[2025-12-29 00:37:29] local.INFO: [FreeMoPay Service] FreeMoPay response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","status":"CREATED","message":"Transaction created"}  
+[2025-12-29 00:37:29] local.INFO: [FreeMoPay Service] Payment initiated - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:29] local.INFO: [FreeMoPay Service] Starting polling for reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay Service] Polling attempt 1 - Elapsed: 0s  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:29] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:37:30] local.DEBUG: [FreeMoPay] Response 200 in 0.81s  
+[2025-12-29 00:37:30] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"CREATED","reason":null}  
+[2025-12-29 00:37:30] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"CREATED","reason":null}  
+[2025-12-29 00:37:30] local.INFO: [FreeMoPay Service] Poll 1: Status = CREATED  
+[2025-12-29 00:37:30] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:37:33] local.DEBUG: [FreeMoPay Service] Polling attempt 2 - Elapsed: 4s  
+[2025-12-29 00:37:33] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:33] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:37:33] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:33] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:37:45] local.DEBUG: [FreeMoPay] Response 200 in 12.19s  
+[2025-12-29 00:37:45] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:37:45] local.WARNING: [FreeMoPay] Slow request: 12.19s  
+[2025-12-29 00:37:45] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:37:45] local.INFO: [FreeMoPay Service] Poll 2: Status = PENDING  
+[2025-12-29 00:37:45] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:37:48] local.DEBUG: [FreeMoPay Service] Polling attempt 3 - Elapsed: 19s  
+[2025-12-29 00:37:48] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:48] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:37:48] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:48] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:37:49] local.DEBUG: [FreeMoPay] Response 200 in 1.00s  
+[2025-12-29 00:37:49] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:37:49] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:37:49] local.INFO: [FreeMoPay Service] Poll 3: Status = PENDING  
+[2025-12-29 00:37:49] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:37:52] local.DEBUG: [FreeMoPay Service] Polling attempt 4 - Elapsed: 23s  
+[2025-12-29 00:37:52] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:52] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:37:52] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:52] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:37:55] local.DEBUG: [FreeMoPay] Response 200 in 2.27s  
+[2025-12-29 00:37:55] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:37:55] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:37:55] local.INFO: [FreeMoPay Service] Poll 4: Status = PENDING  
+[2025-12-29 00:37:55] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:37:58] local.DEBUG: [FreeMoPay Service] Polling attempt 5 - Elapsed: 29s  
+[2025-12-29 00:37:58] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:58] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:37:58] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:37:58] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:38:01] local.DEBUG: [FreeMoPay] Response 200 in 2.92s  
+[2025-12-29 00:38:01] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:01] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:01] local.INFO: [FreeMoPay Service] Poll 5: Status = PENDING  
+[2025-12-29 00:38:01] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:38:04] local.DEBUG: [FreeMoPay Service] Polling attempt 6 - Elapsed: 35s  
+[2025-12-29 00:38:04] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:04] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:38:04] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:04] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:38:09] local.DEBUG: [FreeMoPay] Response 200 in 5.19s  
+[2025-12-29 00:38:09] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:09] local.WARNING: [FreeMoPay] Slow request: 5.19s  
+[2025-12-29 00:38:09] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:09] local.INFO: [FreeMoPay Service] Poll 6: Status = PENDING  
+[2025-12-29 00:38:09] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:38:12] local.DEBUG: [FreeMoPay Service] Polling attempt 7 - Elapsed: 43s  
+[2025-12-29 00:38:12] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:12] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:38:12] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:12] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:38:15] local.DEBUG: [FreeMoPay] Response 200 in 3.54s  
+[2025-12-29 00:38:15] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:15] local.WARNING: [FreeMoPay] Slow request: 3.54s  
+[2025-12-29 00:38:15] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:15] local.INFO: [FreeMoPay Service] Poll 7: Status = PENDING  
+[2025-12-29 00:38:15] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:38:18] local.DEBUG: [FreeMoPay Service] Polling attempt 8 - Elapsed: 49s  
+[2025-12-29 00:38:18] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:18] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:38:18] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:18] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:38:20] local.DEBUG: [FreeMoPay] Response 200 in 1.82s  
+[2025-12-29 00:38:20] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:20] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:20] local.INFO: [FreeMoPay Service] Poll 8: Status = PENDING  
+[2025-12-29 00:38:20] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:38:23] local.DEBUG: [FreeMoPay Service] Polling attempt 9 - Elapsed: 54s  
+[2025-12-29 00:38:23] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:23] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:38:23] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:23] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:38:30] local.DEBUG: [FreeMoPay] Response 200 in 6.93s  
+[2025-12-29 00:38:30] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:30] local.WARNING: [FreeMoPay] Slow request: 6.93s  
+[2025-12-29 00:38:30] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:30] local.INFO: [FreeMoPay Service] Poll 9: Status = PENDING  
+[2025-12-29 00:38:30] local.DEBUG: [FreeMoPay Service] Payment still pending, waiting 3s...  
+[2025-12-29 00:38:33] local.DEBUG: [FreeMoPay Service] Polling attempt 10 - Elapsed: 64s  
+[2025-12-29 00:38:33] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:33] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-29 00:38:33] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:33] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-29 00:38:36] local.DEBUG: [FreeMoPay] Response 200 in 3.25s  
+[2025-12-29 00:38:36] local.DEBUG: [FreeMoPay] Body: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:36] local.WARNING: [FreeMoPay] Slow request: 3.25s  
+[2025-12-29 00:38:36] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"36147aa2-8ea1-44bd-be69-5eadd22b56c3","merchandRef":"SUB-36-1-20251229003718","amount":100,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2025-12-29 00:38:36] local.INFO: [FreeMoPay Service] Poll 10: Status = SUCCESS  
+[2025-12-29 00:38:36] local.INFO: [FreeMoPay Service] Payment SUCCESS - Reference: 36147aa2-8ea1-44bd-be69-5eadd22b56c3  
+[2025-12-29 00:38:36] local.INFO: [SubscriptionPlanController] Payment initiated - Payment ID: 18, Plan: Starter  
+[2025-12-29 00:38:37] local.INFO: [SubscriptionPlanController] New subscription created for user 36 - Plan: Starter  
+[2025-12-29 00:39:42] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:39:42] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:40:37] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:40:37] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-29 00:40:47] local.INFO: Test not [{"Illuminate\\Pagination\\LengthAwarePaginator":{"current_page":1,"data":[],"first_page_url":"http://192.168.43.73:8000/api/notifications?page=1","from":null,"last_page":1,"last_page_url":"http://192.168.43.73:8000/api/notifications?page=1","links":[{"url":null,"label":"pagination.previous","active":false},{"url":"http://192.168.43.73:8000/api/notifications?page=1","label":"1","active":true},{"url":null,"label":"pagination.next","active":false}],"next_page_url":null,"path":"http://192.168.43.73:8000/api/notifications","per_page":50,"prev_page_url":null,"to":null,"total":0}}] 
+[2025-12-29 00:42:10] local.INFO: Test not [{"Illuminate\\Pagination\\LengthAwarePaginator":{"current_page":1,"data":[],"first_page_url":"http://192.168.43.73:8000/api/notifications?page=1","from":null,"last_page":1,"last_page_url":"http://192.168.43.73:8000/api/notifications?page=1","links":[{"url":null,"label":"pagination.previous","active":false},{"url":"http://192.168.43.73:8000/api/notifications?page=1","label":"1","active":true},{"url":null,"label":"pagination.next","active":false}],"next_page_url":null,"path":"http://192.168.43.73:8000/api/notifications","per_page":50,"prev_page_url":null,"to":null,"total":0}}] 
+[2025-12-29 00:42:55] local.INFO: 📋 Loading conversations for user {"user_id":36} 
+[2025-12-29 00:42:55] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
