@@ -110,7 +110,7 @@
                         <input type="number" class="form-control @error('freemopay_status_check_timeout') is-invalid @enderror"
                                id="freemopay_status_check_timeout" name="freemopay_status_check_timeout"
                                value="{{ old('freemopay_status_check_timeout', $config->freemopay_status_check_timeout ?? 5) }}"
-                               min="1" max="30" required>
+                               min="1" max="90" required>
                         @error('freemopay_status_check_timeout')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
