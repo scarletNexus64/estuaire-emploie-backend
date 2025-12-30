@@ -90,17 +90,17 @@ class WebhookController extends Controller
             // Update payment
             $payment->update([
                 'status' => $newStatus,
-                'provider_response' => array_merge(
-                    $payment->provider_response ?? [],
+                'payment_provider_response' => array_merge(
+                    $payment->payment_provider_response ?? [],
                     ['webhook' => $request->all()]
                 ),
-                'completed_at' => in_array($newStatus, ['success', 'failed']) ? now() : null,
+                'paid_at' => $newStatus === 'completed' ? now() : null,
             ]);
 
             Log::info("[FreeMoPay Webhook] Payment updated - ID: {$payment->id}, New status: {$newStatus}");
 
             // Trigger events based on status
-            if ($newStatus === 'success') {
+            if ($newStatus === 'completed') {
                 // TODO: Trigger payment success event
                 // event(new PaymentSuccessful($payment));
                 Log::info("[FreeMoPay Webhook] Payment successful - ID: {$payment->id}");
@@ -135,7 +135,7 @@ class WebhookController extends Controller
     protected function mapFreeMoPayStatus(string $freemopayStatus): string
     {
         return match (strtoupper($freemopayStatus)) {
-            'SUCCESS', 'SUCCESSFUL', 'COMPLETED' => 'success',
+            'SUCCESS', 'SUCCESSFUL', 'COMPLETED' => 'completed',
             'FAILED', 'FAILURE', 'ERROR', 'REJECTED' => 'failed',
             'PENDING', 'PROCESSING', 'INITIATED' => 'pending',
             'CANCELLED', 'CANCELED' => 'cancelled',

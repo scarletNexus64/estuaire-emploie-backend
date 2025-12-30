@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Api\AdvertisementController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
@@ -43,6 +44,11 @@ Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
 // Plans d'abonnement publics (consultation)
 Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
 Route::get('/subscription-plans/{id}', [SubscriptionPlanController::class, 'show']);
+
+// Publicités actives (pour les bannières)
+Route::get('/advertisements', [AdvertisementController::class, 'index']);
+Route::post('/advertisements/{id}/impression', [AdvertisementController::class, 'recordImpression']);
+Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'recordClick']);
 
 // ============================================
 // WEBHOOKS (Callbacks externes)

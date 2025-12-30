@@ -11,27 +11,20 @@ return new class extends Migration
         Schema::create('advertisements', function (Blueprint $table) {
             $table->id();
 
-            // Relations
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->foreignId('payment_id')->nullable()->constrained()->onDelete('set null');
+            // Contenu de la publicité (simplifié)
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('image')->nullable(); // Chemin de l'image uploadée
+            $table->string('background_color')->default('#0277BD'); // Couleur de fond si pas d'image
 
             // Type de publicité
             $table->enum('ad_type', [
-                'homepage_banner',      // Bannière page d'accueil (25000 FCFA/mois)
-                'search_banner',        // Bannière résultats recherche (15000 FCFA/mois)
+                'homepage_banner',      // Bannière page d'accueil
+                'search_banner',        // Bannière résultats recherche
                 'featured_company',     // Entreprise en vedette
                 'sidebar',              // Bannière latérale
                 'custom'                // Position personnalisée
-            ]);
-
-            // Contenu de la publicité
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('image_url')->nullable(); // URL de l'image/bannière
-            $table->string('target_url')->nullable(); // URL de destination au clic
-
-            // Tarification (configurable)
-            $table->decimal('price', 10, 2); // Prix payé pour cette pub
+            ])->default('homepage_banner');
 
             // Période d'affichage
             $table->date('start_date');
@@ -44,20 +37,15 @@ return new class extends Migration
 
             // Paramètres d'affichage
             $table->integer('display_order')->default(0); // Ordre de priorité
-            $table->json('targeting')->nullable(); // Critères de ciblage (JSON)
 
             // Statut
             $table->boolean('is_active')->default(true);
-            $table->enum('status', ['pending', 'active', 'paused', 'expired'])->default('pending');
-
-            // Notes
-            $table->text('notes')->nullable();
+            $table->enum('status', ['active', 'paused', 'expired'])->default('active');
 
             $table->timestamps();
             $table->softDeletes();
 
             // Index
-            $table->index(['company_id', 'status']);
             $table->index(['ad_type', 'is_active']);
             $table->index(['start_date', 'end_date']);
         });

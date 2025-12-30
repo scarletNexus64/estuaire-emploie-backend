@@ -210,7 +210,7 @@ class JobController extends Controller
      */
     public function featured(): JsonResponse
     {
-        $jobs = Job::with(['company', 'category', 'location'])
+        $jobs = Job::with(['company', 'category', 'location', 'contractType'])
             ->where('status', 'published')
             ->where('is_featured', true)
             ->latest()

@@ -23,18 +23,9 @@ class AdminManagementController extends Controller
 
     public function create(): View
     {
-        $permissions = [
-            'manage_companies' => 'Gérer les entreprises',
-            'manage_jobs' => 'Gérer les offres d\'emploi',
-            'manage_applications' => 'Gérer les candidatures',
-            'manage_users' => 'Gérer les utilisateurs',
-            'manage_recruiters' => 'Gérer les recruteurs',
-            'manage_settings' => 'Gérer les paramètres',
-            'manage_sections' => 'Gérer les sections',
-            'manage_admins' => 'Gérer les administrateurs',
-        ];
+        $permissionsByCategory = \App\Services\NavigationService::getPermissionsByCategory();
 
-        return view('admin.admins.create', compact('permissions'));
+        return view('admin.admins.create', compact('permissionsByCategory'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -45,9 +36,10 @@ class AdminManagementController extends Controller
             'password' => 'required|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'permissions' => 'nullable|array',
+            'is_super_admin' => 'nullable|boolean',
         ]);
 
-        $user = User::create([
+        $data = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -55,7 +47,16 @@ class AdminManagementController extends Controller
             'role' => 'admin',
             'permissions' => $validated['permissions'] ?? [],
             'is_active' => true,
-        ]);
+        ];
+
+        // Only super admins can create other super admins
+        if (auth()->user()->isSuperAdmin() && $request->has('is_super_admin')) {
+            $data['is_super_admin'] = (bool) $request->input('is_super_admin');
+        } else {
+            $data['is_super_admin'] = false;
+        }
+
+        $user = User::create($data);
 
         return redirect()->route('admin.admins.index')
             ->with('success', 'Administrateur créé avec succès');
@@ -70,18 +71,9 @@ class AdminManagementController extends Controller
 
     public function edit(User $user): View
     {
-        $permissions = [
-            'manage_companies' => 'Gérer les entreprises',
-            'manage_jobs' => 'Gérer les offres d\'emploi',
-            'manage_applications' => 'Gérer les candidatures',
-            'manage_users' => 'Gérer les utilisateurs',
-            'manage_recruiters' => 'Gérer les recruteurs',
-            'manage_settings' => 'Gérer les paramètres',
-            'manage_sections' => 'Gérer les sections',
-            'manage_admins' => 'Gérer les administrateurs',
-        ];
+        $permissionsByCategory = \App\Services\NavigationService::getPermissionsByCategory();
 
-        return view('admin.admins.edit', compact('user', 'permissions'));
+        return view('admin.admins.edit', compact('user', 'permissionsByCategory'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -93,6 +85,7 @@ class AdminManagementController extends Controller
             'phone' => 'nullable|string|max:20',
             'permissions' => 'nullable|array',
             'is_active' => 'boolean',
+            'is_super_admin' => 'nullable|boolean',
         ]);
 
         $data = [
@@ -102,6 +95,11 @@ class AdminManagementController extends Controller
             'permissions' => $validated['permissions'] ?? [],
             'is_active' => $request->has('is_active'),
         ];
+
+        // Only super admins can modify super admin status
+        if (auth()->user()->isSuperAdmin()) {
+            $data['is_super_admin'] = (bool) $request->input('is_super_admin', false);
+        }
 
         if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);

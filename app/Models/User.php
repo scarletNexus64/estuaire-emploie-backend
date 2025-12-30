@@ -30,6 +30,7 @@ class User extends Authenticatable
         'experience_level',
         'visibility_score',
         'is_active',
+        'is_super_admin',
         'permissions',
         'last_login_at',
     ];
@@ -45,6 +46,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_super_admin' => 'boolean',
             'permissions' => 'array',
             'last_login_at' => 'datetime',
         ];
@@ -122,8 +124,9 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
-        if ($this->isAdmin()) {
-            return true; // Admin has all permissions
+        // Super admin has all permissions
+        if ($this->isSuperAdmin()) {
+            return true;
         }
 
         return in_array($permission, $this->permissions ?? []);
@@ -131,7 +134,7 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'admin' && $this->email === 'admin@estuaire-emploie.com';
+        return $this->role === 'admin' && $this->is_super_admin === true;
     }
 
     /**

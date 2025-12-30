@@ -27,7 +27,7 @@ class Company extends Model
         'verified_at',
     ];
 
-    protected $appends = ['logo_url'];
+    protected $appends = ['logo_url', 'is_verified'];
 
     protected function casts(): array
     {
@@ -52,6 +52,14 @@ class Company extends Model
 
         // Sinon, construire l'URL complète
         return url('storage/' . $this->logo);
+    }
+
+    /**
+     * Get the verification status as a boolean
+     */
+    public function getIsVerifiedAttribute(): bool
+    {
+        return $this->status === 'verified';
     }
 
     public function jobs(): HasMany
