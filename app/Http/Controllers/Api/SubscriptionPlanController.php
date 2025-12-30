@@ -607,6 +607,15 @@ class SubscriptionPlanController extends Controller
         }
 
         try {
+            Log::info("┌─────────────────────────────────────────────────────────────────┐");
+            Log::info("│ [SubscriptionPlanController] 📦 Processing payment request     │");
+            Log::info("└─────────────────────────────────────────────────────────────────┘");
+            Log::info("   👤 User ID: {$user->id}");
+            Log::info("   📧 Email: {$user->email}");
+            Log::info("   📋 Plan: {$plan->name} (ID: {$plan->id})");
+            Log::info("   💰 Amount: {$plan->price} XAF");
+            Log::info("   📱 Phone: {$phoneNumber}");
+
             // Initialiser le service de paiement
             $freemoPayService = new FreeMoPayService();
 
@@ -614,6 +623,7 @@ class SubscriptionPlanController extends Controller
             $description = "Abonnement {$plan->name} - Estuaire Emploie";
 
             // Initier le paiement (passer le plan comme payable)
+            // IMPORTANT: Cette méthode est SYNCHRONE et attend la confirmation du paiement
             $payment = $freemoPayService->initPayment(
                 $user,
                 $plan->price,
@@ -623,24 +633,45 @@ class SubscriptionPlanController extends Controller
                 $plan  // payable
             );
 
-            Log::info("[SubscriptionPlanController] Payment initiated - Payment ID: {$payment->id}, Plan: {$plan->name}");
+            Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            Log::info("[SubscriptionPlanController] ✅ Payment process completed!");
+            Log::info("[SubscriptionPlanController] 📋 Payment ID: {$payment->id}");
+            Log::info("[SubscriptionPlanController] 📊 Status: {$payment->status}");
+            Log::info("[SubscriptionPlanController] 🔖 Reference: {$payment->provider_reference}");
+            Log::info("[SubscriptionPlanController] 📦 Plan: {$plan->name}");
+            Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+            $responseData = [
+                'payment_id' => $payment->id,
+                'reference' => $payment->provider_reference,
+                'external_id' => $payment->external_id,
+                'amount' => $payment->amount,
+                'status' => $payment->status,
+                'is_completed' => $payment->isCompleted(),
+                'paid_at' => $payment->paid_at?->toIso8601String(),
+                'subscription_plan_id' => $plan->id,
+                'plan_name' => $plan->name,
+            ];
+
+            // Message de réponse selon le statut
+            $message = $payment->isCompleted()
+                ? 'Paiement effectué avec succès! Vous pouvez maintenant activer votre abonnement.'
+                : 'Paiement en cours de traitement.';
 
             return response()->json([
                 'success' => true,
-                'message' => 'Paiement initié avec succès. Veuillez confirmer sur votre téléphone.',
-                'data' => [
-                    'payment_id' => $payment->id,
-                    'reference' => $payment->provider_reference,
-                    'external_id' => $payment->external_id,
-                    'amount' => $payment->amount,
-                    'status' => $payment->status,
-                    'subscription_plan_id' => $plan->id,
-                    'plan_name' => $plan->name,
-                ],
+                'message' => $message,
+                'data' => $responseData,
             ]);
 
         } catch (\Exception $e) {
-            Log::error("[SubscriptionPlanController] Payment init failed: " . $e->getMessage());
+            Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            Log::error("[SubscriptionPlanController] ❌ Payment initialization failed");
+            Log::error("[SubscriptionPlanController] 👤 User ID: {$user->id}");
+            Log::error("[SubscriptionPlanController] 📋 Plan: {$plan->name} (ID: {$plan->id})");
+            Log::error("[SubscriptionPlanController] ❌ Error: {$e->getMessage()}");
+            Log::error("[SubscriptionPlanController] 📚 Trace: " . $e->getTraceAsString());
+            Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             return response()->json([
                 'success' => false,
@@ -688,39 +719,55 @@ class SubscriptionPlanController extends Controller
     {
         $user = $request->user();
 
+        Log::info("[SubscriptionPlanController] 🔍 Checking payment status - Payment ID: {$id}, User ID: {$user->id}");
+
         $payment = Payment::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
 
         if (!$payment) {
+            Log::warning("[SubscriptionPlanController] ❌ Payment not found - Payment ID: {$id}, User ID: {$user->id}");
             return response()->json([
                 'success' => false,
                 'message' => 'Paiement non trouvé',
             ], 404);
         }
 
+        Log::info("[SubscriptionPlanController] 📋 Payment found - Current status: {$payment->status}");
+
         // Si le paiement est encore pending, vérifier avec FreeMoPay
         if ($payment->status === 'pending' && $payment->provider_reference) {
+            Log::info("[SubscriptionPlanController] ⏳ Payment is pending, checking with FreeMoPay...");
             try {
                 $freemoPayService = new FreeMoPayService();
                 $statusResponse = $freemoPayService->checkPaymentStatus($payment->provider_reference);
 
-                $freemoStatus = $statusResponse['status'] ?? null;
+                $freemoStatus = strtoupper($statusResponse['status'] ?? '');
+                Log::info("[SubscriptionPlanController] 📥 FreeMoPay status: {$freemoStatus}");
 
                 // Mettre à jour le statut local si nécessaire
-                if ($freemoStatus === 'SUCCESS' && $payment->status !== 'completed') {
+                if (in_array($freemoStatus, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED']) && $payment->status !== 'completed') {
+                    Log::info("[SubscriptionPlanController] ✅ Updating payment to completed");
                     $payment->update([
                         'status' => 'completed',
                         'paid_at' => now(),
+                        'payment_provider_response' => $statusResponse,
                     ]);
                 } elseif (in_array($freemoStatus, ['FAILED', 'CANCELLED', 'REJECTED'])) {
-                    $payment->update(['status' => 'failed']);
+                    Log::warning("[SubscriptionPlanController] ❌ Updating payment to failed - Reason: {$freemoStatus}");
+                    $payment->update([
+                        'status' => 'failed',
+                        'failure_reason' => $statusResponse['message'] ?? $freemoStatus,
+                        'payment_provider_response' => $statusResponse,
+                    ]);
                 }
 
             } catch (\Exception $e) {
-                Log::warning("[SubscriptionPlanController] Could not check payment status: " . $e->getMessage());
+                Log::warning("[SubscriptionPlanController] ⚠️  Could not check payment status with FreeMoPay: " . $e->getMessage());
             }
         }
+
+        Log::info("[SubscriptionPlanController] ✓ Returning payment status: {$payment->status}");
 
         return response()->json([
             'success' => true,
@@ -731,7 +778,10 @@ class SubscriptionPlanController extends Controller
                 'amount' => $payment->amount,
                 'status' => $payment->status,
                 'is_completed' => $payment->isCompleted(),
+                'is_failed' => $payment->isFailed(),
+                'is_pending' => $payment->isPending(),
                 'paid_at' => $payment->paid_at?->toIso8601String(),
+                'failure_reason' => $payment->failure_reason,
             ],
         ]);
     }

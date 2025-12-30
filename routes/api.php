@@ -51,13 +51,6 @@ Route::post('/advertisements/{id}/impression', [AdvertisementController::class, 
 Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'recordClick']);
 
 // ============================================
-// WEBHOOKS (Callbacks externes)
-// ============================================
-
-// FreeMoPay payment callback
-Route::post('/webhooks/freemopay', [\App\Http\Controllers\Api\WebhookController::class, 'freemopayCallback']);
-
-// ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
 Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])->group(function () {
