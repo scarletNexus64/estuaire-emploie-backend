@@ -134,11 +134,20 @@ class JobController extends Controller
         $validated['salary_negotiable'] = $request->boolean('salary_negotiable');
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        if ($validated['status'] === 'published' && !$job->published_at) {
+        // Détecter si on passe en statut "published"
+        $wasNotPublished = $job->status !== 'published';
+        $willBePublished = $validated['status'] === 'published';
+
+        if ($willBePublished && !$job->published_at) {
             $validated['published_at'] = now();
         }
 
         $job->update($validated);
+
+        // Si le job vient d'être publié, rediriger vers la page d'envoi de notifications
+        if ($wasNotPublished && $willBePublished) {
+            return redirect()->route('admin.jobs.send-notifications', $job);
+        }
 
         return redirect()
             ->route('admin.jobs.index')
@@ -153,15 +162,128 @@ class JobController extends Controller
             ->with('success', 'Offre supprimée avec succès');
     }
 
-    public function publish(Job $job): RedirectResponse
+    public function publish(Job $job)
     {
         $job->update([
             'status' => 'published',
             'published_at' => now(),
         ]);
 
-        return redirect()->back()
-            ->with('success', 'Offre publiée avec succès');
+        // Rediriger vers la page d'envoi de notifications avec progress bar
+        return redirect()->route('admin.jobs.send-notifications', $job);
+    }
+
+    /**
+     * Affiche la page d'envoi de notifications avec progress bar
+     */
+    public function showSendNotifications(Job $job): View
+    {
+        $job->load(['company', 'location', 'category']);
+
+        // Compter les candidats qui recevront la notification
+        $totalCandidates = \App\Models\User::where('role', 'candidate')
+            ->whereNotNull('fcm_token')
+            ->count();
+
+        return view('admin.jobs.send-notifications', compact('job', 'totalCandidates'));
+    }
+
+    /**
+     * Envoie les notifications par lots (appelé via AJAX)
+     */
+    public function sendNotificationsBatch(Request $request, Job $job)
+    {
+        $validated = $request->validate([
+            'batch' => 'required|integer|min:0',
+            'batch_size' => 'required|integer|min:1|max:100',
+        ]);
+
+        $batchNumber = $validated['batch'];
+        $batchSize = $validated['batch_size'];
+
+        $job->load(['company', 'location', 'category']);
+
+        // Récupérer les candidats pour ce lot
+        $candidates = \App\Models\User::where('role', 'candidate')
+            ->whereNotNull('fcm_token')
+            ->skip($batchNumber * $batchSize)
+            ->take($batchSize)
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'completed' => true,
+                'message' => 'Tous les candidats ont reçu la notification',
+                'sent' => 0,
+                'failed' => 0,
+            ]);
+        }
+
+        $notificationService = app(\App\Services\NotificationService::class);
+
+        $title = "Nouvelle offre : {$job->title}";
+        $message = "{$job->company->name} recrute à {$job->location->name}";
+
+        $sent = 0;
+        $failed = 0;
+        $errors = [];
+
+        foreach ($candidates as $candidate) {
+            $success = $notificationService->sendToUser(
+                $candidate,
+                $title,
+                $message,
+                'job_published',
+                [
+                    'job_id' => $job->id,
+                    'job_title' => $job->title,
+                    'company_name' => $job->company->name,
+                    'location' => $job->location->name,
+                    'category' => $job->category->name ?? null,
+                ]
+            );
+
+            if ($success) {
+                $sent++;
+            } else {
+                $failed++;
+                $errors[] = [
+                    'user_id' => $candidate->id,
+                    'user_name' => $candidate->name,
+                    'error' => 'Échec de l\'envoi',
+                ];
+            }
+        }
+
+        // Calculer la progression
+        $totalCandidates = \App\Models\User::where('role', 'candidate')
+            ->whereNotNull('fcm_token')
+            ->count();
+
+        $processed = ($batchNumber + 1) * $batchSize;
+        $completed = $processed >= $totalCandidates;
+
+        Log::info('Lot de notifications envoyé pour job', [
+            'job_id' => $job->id,
+            'batch' => $batchNumber,
+            'sent' => $sent,
+            'failed' => $failed,
+            'total' => $totalCandidates,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'completed' => $completed,
+            'sent' => $sent,
+            'failed' => $failed,
+            'errors' => $errors,
+            'progress' => [
+                'current' => min($processed, $totalCandidates),
+                'total' => $totalCandidates,
+                'percentage' => min(100, round(($processed / $totalCandidates) * 100, 2)),
+            ],
+        ]);
     }
 
     public function feature(Job $job): RedirectResponse

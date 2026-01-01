@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\Job;
 use App\Models\ViewedContact;
 use App\Services\FirebaseNotificationService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -127,41 +128,29 @@ class ApplicationController extends Controller
                 ]);
             }
 
-            $application->load(['job.company']);
+            $application->load(['job.company', 'user']);
 
             // Envoi de notification à tous les recruteurs de l'entreprise
-            // Le token FCM est enregistré sur l'utilisateur (`users.fcm_token`),
-            // donc on charge la relation `user` puis on utilise `user->fcm_token`.
+            // Utilise le NotificationService pour envoyer ET enregistrer en BDD
             $recruiters = $application->job->company->recruiters()->with('user')->get();
-            $firebase = new FirebaseNotificationService();
+            $notificationService = app(NotificationService::class);
 
             foreach ($recruiters as $recruiter) {
-                $token = $recruiter->user->fcm_token ?? null;
-                if ($token) {
-                    $sent = $firebase->sendToToken(
-                        $token,
+                $recruiterUser = $recruiter->user;
+                if ($recruiterUser) {
+                    $notificationService->sendToUser(
+                        $recruiterUser,
                         "Nouvelle candidature",
                         "{$request->user()->name} a postulé à votre offre: {$application->job->title}",
+                        'application_received',
                         [
                             'job_id' => $application->job->id,
+                            'job_title' => $application->job->title,
                             'applicant_id' => $request->user()->id,
+                            'applicant_name' => $request->user()->name,
                             'application_id' => $application->id,
                         ]
                     );
-
-                    if (!$sent) {
-                        Log::error('Notification FCM non envoyée au recruteur', [
-                            'recruiter_id' => $recruiter->id,
-                            'user_id' => $recruiter->user->id ?? null,
-                            'token' => $token,
-                            'application_id' => $application->id,
-                        ]);
-                    }
-                } else {
-                    Log::info('Aucun token FCM pour ce recruteur', [
-                        'recruiter_id' => $recruiter->id,
-                        'user_id' => $recruiter->user->id ?? null,
-                    ]);
                 }
             }
 

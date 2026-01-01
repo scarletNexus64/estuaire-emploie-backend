@@ -354,6 +354,7 @@ class UserSubscriptionPlan extends Model
     /**
      * Active l'abonnement (définit les dates de début et fin)
      * Initialise les limites cumulées avec les valeurs du plan
+     * ET met à jour le rôle de l'utilisateur en "recruiter"
      */
     public function activate(): void
     {
@@ -372,6 +373,30 @@ class UserSubscriptionPlan extends Model
         $this->contacts_limit_total = $plan->contacts_limit;
         $this->notifications_sent = [];
         $this->save();
+
+        // ⭐ IMPORTANT: Mettre à jour le rôle de l'utilisateur en "recruiter"
+        // Un utilisateur avec un abonnement actif doit automatiquement devenir recruteur
+        $this->updateUserRole();
+    }
+
+    /**
+     * Met à jour le rôle de l'utilisateur en "recruiter" si ce n'est pas déjà le cas
+     */
+    protected function updateUserRole(): void
+    {
+        $user = $this->user;
+
+        if (!$user) {
+            return;
+        }
+
+        // Si l'utilisateur n'est pas déjà recruteur, le mettre à jour
+        if ($user->role !== 'recruiter') {
+            $user->role = 'recruiter';
+            $user->save();
+
+            \Log::info("[UserSubscriptionPlan] User {$user->id} role updated to 'recruiter' after subscription activation");
+        }
     }
 
     /**

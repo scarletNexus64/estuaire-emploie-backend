@@ -9,7 +9,9 @@ use App\Events\TypingEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use App\Models\UserPresence;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -82,6 +84,32 @@ class ChatController extends Controller
 
         // Broadcaster le message avec le bon statut (sent ou delivered)
         broadcast(new MessageSent($message))->toOthers();
+
+        // Envoyer une notification push au destinataire (si non en ligne)
+        if (!$isReceiverOnline) {
+            $receiverId = $conversation->user_one === Auth::id()
+                ? $conversation->user_two
+                : $conversation->user_one;
+
+            $receiver = User::find($receiverId);
+            if ($receiver) {
+                $sender = Auth::user();
+                $notificationService = app(NotificationService::class);
+
+                $notificationService->sendToUser(
+                    $receiver,
+                    "Nouveau message de {$sender->name}",
+                    substr($validated['message'], 0, 100), // Limiter à 100 caractères
+                    'chat_message',
+                    [
+                        'conversation_id' => $conversation->id,
+                        'message_id' => $message->id,
+                        'sender_id' => Auth::id(),
+                        'sender_name' => $sender->name,
+                    ]
+                );
+            }
+        }
 
         return response()->json([
             'id' => $message->id,

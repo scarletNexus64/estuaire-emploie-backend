@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'credentials' => storage_path('firebase/estuaire-emplois-firebase-adminsdk-fbsvc-f136a4ae4a.json'),
+    'credentials' => base_path('firebase/estuaire-emplois-firebase-adminsdk-fbsvc-6c0d8105ad.json'),
 ];

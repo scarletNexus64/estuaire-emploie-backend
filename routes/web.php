@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -45,6 +46,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::middleware('permission:manage_jobs')->group(function () {
         Route::resource('jobs', JobController::class);
         Route::patch('jobs/{job}/publish', [JobController::class, 'publish'])->name('jobs.publish');
+        Route::get('jobs/{job}/send-notifications', [JobController::class, 'showSendNotifications'])->name('jobs.send-notifications');
+        Route::post('jobs/{job}/send-notifications-batch', [JobController::class, 'sendNotificationsBatch'])->name('jobs.send-notifications-batch');
         Route::patch('jobs/{job}/feature', [JobController::class, 'feature'])->name('jobs.feature');
         Route::delete('jobs/bulk-delete', [JobController::class, 'bulkDelete'])->name('jobs.bulk-delete');
     });
@@ -195,5 +198,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
         // Clear cache
         Route::post('/clear-cache', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'clearCache'])->name('clear-cache');
+    });
+
+    // Push Notification Announcements
+    Route::prefix('announcements')->name('announcements.')->group(function () {
+        Route::get('/', [AnnouncementController::class, 'index'])->name('index');
+        Route::post('/send-to-user', [AnnouncementController::class, 'sendToUser'])->name('send-to-user');
+        Route::post('/send-to-all', [AnnouncementController::class, 'sendToAll'])->name('send-to-all');
+        Route::get('/user-count', [AnnouncementController::class, 'getUserCount'])->name('user-count');
     });
 });

@@ -63,6 +63,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::put('/user/role', [AuthController::class, 'updateRole']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::get('/user/statistics', [AuthController::class, 'statistics']);
+    Route::post('/user/sync-role', [AuthController::class, 'syncRoleWithSubscription']);
 
     // ------------------
     // CANDIDATURES (Candidat & Recruteur)

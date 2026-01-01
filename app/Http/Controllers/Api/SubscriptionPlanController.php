@@ -368,6 +368,13 @@ class SubscriptionPlanController extends Controller
                 $existingSubscription->notifications_sent = [];
                 $existingSubscription->save();
 
+                // ⭐ IMPORTANT: Mettre à jour le rôle de l'utilisateur en "recruiter" lors du renouvellement
+                if ($user->role !== 'recruiter') {
+                    $user->role = 'recruiter';
+                    $user->save();
+                    Log::info("[SubscriptionPlanController] User {$user->id} role updated to 'recruiter' after subscription renewal");
+                }
+
                 $existingSubscription->load(['subscriptionPlan', 'payment']);
                 $userSubscription = $existingSubscription;
                 $isRenewal = $allSubscriptions->count() > 0;

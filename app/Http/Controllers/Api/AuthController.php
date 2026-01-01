@@ -61,6 +61,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'phone' => 'nullable|string|max:20',
+            'fcm_token' => 'nullable|string', // Token FCM pour les notifications push
         ]);
 
         $user = User::create([
@@ -69,6 +70,7 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
             'role' => 'candidate',
+            'fcm_token' => $validated['fcm_token'] ?? null, // Enregistrer le token FCM dès l'inscription
         ]);
 
         // Charger les relations du user
@@ -522,5 +524,98 @@ public function login(Request $request)
         return $status === Password::PASSWORD_RESET
             ? response()->json(['message' => 'Mot de passe réinitialisé avec succès'])
             : response()->json(['message' => 'Impossible de réinitialiser le mot de passe'], 500);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/user/sync-role",
+     *     summary="Synchronise le rôle utilisateur avec son abonnement",
+     *     description="Vérifie si l'utilisateur a un abonnement actif et met à jour automatiquement son rôle en conséquence",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Rôle synchronisé avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Rôle synchronisé avec succès"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="user_id", type="integer", example=25),
+     *                 @OA\Property(property="previous_role", type="string", example="candidate"),
+     *                 @OA\Property(property="current_role", type="string", example="recruiter"),
+     *                 @OA\Property(property="has_active_subscription", type="boolean", example=true),
+     *                 @OA\Property(property="role_updated", type="boolean", example=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
+     */
+    public function syncRoleWithSubscription(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        Log::info("[AuthController] 🔄 Synchronisation du rôle pour User #{$user->id}");
+        Log::info("[AuthController] 📋 Rôle actuel: {$user->role}");
+
+        $previousRole = $user->role;
+        $roleUpdated = false;
+
+        // Vérifier si l'utilisateur a un abonnement actif
+        $activeSubscription = $user->activeSubscription();
+        $hasActiveSubscription = $activeSubscription && $activeSubscription->isValid();
+
+        Log::info("[AuthController] 🔍 Abonnement actif: " . ($hasActiveSubscription ? 'OUI' : 'NON'));
+
+        if ($hasActiveSubscription) {
+            // L'utilisateur a un abonnement actif, il doit être recruteur
+            if ($user->role !== 'recruiter') {
+                Log::info("[AuthController] ⚙️  Mise à jour du rôle: {$user->role} → recruiter");
+                $user->role = 'recruiter';
+                $user->save();
+                $roleUpdated = true;
+
+                Log::info("[AuthController] ✅ Rôle mis à jour avec succès");
+            } else {
+                Log::info("[AuthController] ✓ Rôle déjà correct (recruiter)");
+            }
+        } else {
+            // Pas d'abonnement actif
+            // On peut optionnellement repasser en candidat si c'était un recruteur
+            // MAIS on garde le rôle recruteur pour permettre de renouveler
+            Log::info("[AuthController] ℹ️  Pas d'abonnement actif, rôle conservé: {$user->role}");
+        }
+
+        Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+        return response()->json([
+            'success' => true,
+            'message' => $roleUpdated
+                ? 'Rôle synchronisé avec succès'
+                : 'Rôle déjà synchronisé',
+            'data' => [
+                'user_id' => $user->id,
+                'previous_role' => $previousRole,
+                'current_role' => $user->role,
+                'has_active_subscription' => $hasActiveSubscription,
+                'role_updated' => $roleUpdated,
+                'subscription_info' => $hasActiveSubscription ? [
+                    'plan_name' => $activeSubscription->subscriptionPlan->name ?? 'N/A',
+                    'expires_at' => $activeSubscription->expires_at?->toIso8601String(),
+                    'days_remaining' => $activeSubscription->days_remaining ?? 0,
+                ] : null,
+            ],
+            // Retourner aussi l'utilisateur mis à jour pour mettre à jour le storage local
+            'user' => $user,
+        ]);
     }
 }

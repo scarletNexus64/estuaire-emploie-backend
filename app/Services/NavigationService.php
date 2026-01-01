@@ -141,6 +141,12 @@ class NavigationService
                         'permission' => 'manage_admins',
                     ],
                     [
+                        'name' => 'Annonces Push',
+                        'route' => 'admin.announcements.index',
+                        'icon' => 'fas fa-bell',
+                        'permission' => null, // All admins can send announcements
+                    ],
+                    [
                         'name' => 'Paramètres',
                         'route' => 'admin.settings.index',
                         'icon' => 'fas fa-cog',

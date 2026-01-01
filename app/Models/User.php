@@ -97,15 +97,15 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    // public function notifications(): HasMany
-    // {
-    //     return $this->hasMany(Notification::class);
-    // }
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
+    }
 
-    // public function unreadNotifications(): HasMany
-    // {
-    //     return $this->hasMany(Notification::class)->where('is_read', false);
-    // }
+    public function unreadNotifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable')->whereNull('read_at');
+    }
 
     public function isAdmin(): bool
     {
