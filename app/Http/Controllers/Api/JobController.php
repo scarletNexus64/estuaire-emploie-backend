@@ -435,7 +435,8 @@ class JobController extends Controller
 
         $query = Job::where('company_id', $recruiter->company_id)
             ->with(['category', 'location', 'contractType'])
-            ->withCount('applications');
+            ->withCount('applications')
+            ->has('applications', '>=', 1); // Filtre: uniquement les offres avec au moins 1 candidature
 
         // Filtrer par statut si fourni
         if ($request->has('status')) {
@@ -770,9 +771,8 @@ class JobController extends Controller
             ]);
         }
 
-        // Vérifier aussi les candidatures soft deleted
-        $hasApplied = Application::withTrashed()
-            ->where('job_id', $job->id)
+        // Vérifier uniquement les candidatures actives (pas les soft deleted)
+        $hasApplied = Application::where('job_id', $job->id)
             ->where('user_id', Auth::id())
             ->exists();
 

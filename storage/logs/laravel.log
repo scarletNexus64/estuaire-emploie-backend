@@ -6267,3 +6267,469 @@ _token=Ie0Ld7RRdte1ws49gK6e4WtxdxbPbCJwPed0D69q&_method=PUT&title=D%C3%A9veloppe
 [2025-12-30 07:58:21] local.INFO: [SubscriptionPlanController] 📦 Plan: Starter  
 [2025-12-30 07:58:21] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
 [2025-12-30 07:58:21] local.INFO: [SubscriptionPlanController] New subscription created for user 23 - Plan: Starter  
+[2025-12-31 07:26:52] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 22  
+[2025-12-31 07:26:54] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 07:26:54] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 07:27:10] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 07:27:10] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 07:35:51] local.INFO: Sending SMS to 237655314313  
+[2025-12-31 07:35:51] local.DEBUG: Nexah API URL: https://smsvas.com/bulk/public/index.php/api/v1/sendsms  
+[2025-12-31 07:35:51] local.DEBUG: Nexah API payload user: steve.boussa@outlook.com, sender: NGOMA  
+[2025-12-31 07:35:56] local.INFO: Nexah API response: 200  
+[2025-12-31 07:35:56] local.DEBUG: Nexah API response text: {"responsecode":1,"responsedescription":"success","responsemessage":"success","sms":[{"status":"success","smsclientid":"brk.ocm.6954d25cd6ed919ab6007db8","messageid":"brk.ocm.98650e51-42bf-4d96-96b2-8688b5666657","mobileno":"+237655314313","errorcode":null,"errordescription":null,"total_sms_unit":1,"balance":641}]}  
+[2025-12-31 07:36:29] local.INFO: Sending SMS to 237658895572  
+[2025-12-31 07:36:29] local.DEBUG: Nexah API URL: https://smsvas.com/bulk/public/index.php/api/v1/sendsms  
+[2025-12-31 07:36:29] local.DEBUG: Nexah API payload user: steve.boussa@outlook.com, sender: NGOMA  
+[2025-12-31 07:36:32] local.INFO: Nexah API response: 200  
+[2025-12-31 07:36:32] local.DEBUG: Nexah API response text: {"responsecode":1,"responsedescription":"success","responsemessage":"success","sms":[{"status":"success","smsclientid":"brk.ocm.6954d28013f0359d770996f3","messageid":"brk.ocm.26d41e7a-0780-4e72-b6f9-c478dbdc19ee","mobileno":"+237658895572","errorcode":null,"errordescription":null,"total_sms_unit":1,"balance":640}]}  
+[2025-12-31 07:44:29] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 07:44:29] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 07:47:24] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 07:47:24] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 07:51:15] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 07:51:15] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 07:58:02] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:02] local.INFO: │ [SubscriptionPlanController] 📦 Processing payment request     │  
+[2025-12-31 07:58:02] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:02] local.INFO:    👤 User ID: 24  
+[2025-12-31 07:58:02] local.INFO:    📧 Email: steve.junior.boussa.84@gmail.com  
+[2025-12-31 07:58:02] local.INFO:    📋 Plan: Business (ID: 2)  
+[2025-12-31 07:58:02] local.INFO:    💰 Amount: 55.00 XAF  
+[2025-12-31 07:58:02] local.INFO:    📱 Phone: 237658895572  
+[2025-12-31 07:58:02] local.INFO: ╔════════════════════════════════════════════════════════════════════╗  
+[2025-12-31 07:58:02] local.INFO: ║ [FreeMoPay Service] 💳 INITIATING SYNCHRONOUS PAYMENT             ║  
+[2025-12-31 07:58:02] local.INFO: ╚════════════════════════════════════════════════════════════════════╝  
+[2025-12-31 07:58:02] local.INFO:    💰 Amount: 55 XAF  
+[2025-12-31 07:58:02] local.INFO:    📱 Phone: 237658895572  
+[2025-12-31 07:58:02] local.INFO:    📝 Description: Abonnement Business - Estuaire Emploie  
+[2025-12-31 07:58:02] local.INFO:    ✓ Phone normalized: 237658895572  
+[2025-12-31 07:58:02] local.INFO:    ✓ External ID: SUB-24-2-20251231075802  
+[2025-12-31 07:58:02] local.INFO:    ✓ Callback URL: https://api.estuaireemploi.com/api/webhooks/freemopay (note: using polling, callback not required)  
+[2025-12-31 07:58:02] local.INFO:    ✓ Payment record created in database  
+[2025-12-31 07:58:02] local.INFO:    📋 Payment ID: 3  
+[2025-12-31 07:58:02] local.INFO:    📊 Status: pending  
+[2025-12-31 07:58:02] local.INFO:    💳 Payment method: orange_money  
+[2025-12-31 07:58:02] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:58:02] local.INFO: [FreeMoPay API] 🚀 Calling FreeMoPay API to initiate payment...  
+[2025-12-31 07:58:02] local.INFO: [FreeMoPay TokenManager] Generating new access token  
+[2025-12-31 07:58:02] local.INFO: [FreeMoPay TokenManager] Requesting new token from: https://api-v2.freemopay.com/api/v2/payment/token  
+[2025-12-31 07:58:02] local.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment/token  
+[2025-12-31 07:58:02] local.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:02] local.DEBUG: [FreeMoPay] Body: {"appKey":"2366861d-599d-483b-a0cd-3aa59bc9b02d","secretKey":"[HIDDEN]"}  
+[2025-12-31 07:58:05] local.DEBUG: [FreeMoPay] Response 200 in 3.02s  
+[2025-12-31 07:58:05] local.DEBUG: [FreeMoPay] Body: {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2OTNjNjVlMjExNDE4ZDZkYzM3OGUyNjEiLCJpYXQiOjE3NjcxNjc4ODUsImV4cCI6MTc2NzE3MTQ4NX0.yDPEi1-5ARs3QlNoU2GajZmUUOLOJwlHZudkMNEK53o","expires_in":3600}  
+[2025-12-31 07:58:05] local.WARNING: [FreeMoPay] Slow request: 3.02s  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay Client] Status Code: 200  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay Client] Response Headers: {"Date":["Wed, 31 Dec 2025 07:58:05 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["217"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"d9-Ie7gSVwFY263EIi1M3XM18ERE+E\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=pFo5HSUyMwpBF5tbYMTWXlb9wKq5zGnh4N755Q2GvzBCkXw93rdTTsB63GD6yD%2F0NPGxcbIPIHs1v9g758O04z95UeE2nXJJQna98f8E8xLtVENl\"}]}"],"CF-RAY":["9b683ad0fedf4a6e-LHR"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay Client] Response Body (raw): {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2OTNjNjVlMjExNDE4ZDZkYzM3OGUyNjEiLCJpYXQiOjE3NjcxNjc4ODUsImV4cCI6MTc2NzE3MTQ4NX0.yDPEi1-5ARs3QlNoU2GajZmUUOLOJwlHZudkMNEK53o","expires_in":3600}  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay TokenManager] Token generated successfully  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay TokenManager] Token cached for 3000 seconds  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay Service] Calling FreeMoPay API v2  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay Service] URL: https://api-v2.freemopay.com/api/v2/payment  
+[2025-12-31 07:58:05] local.INFO: [FreeMoPay Service] Payload: {"payer":"237658895572","amount":55,"externalId":"SUB-24-2-20251231075802","description":"Abonnement Business - Estuaire Emploie","callback":"https:\/\/api.estuaireemploi.com\/api\/webhooks\/freemopay"}  
+[2025-12-31 07:58:05] local.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment  
+[2025-12-31 07:58:05] local.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:05] local.DEBUG: [FreeMoPay] Body: {"payer":"237658895572","amount":55,"externalId":"SUB-24-2-20251231075802","description":"Abonnement Business - Estuaire Emploie","callback":"https:\/\/api.estuaireemploi.com\/api\/webhooks\/freemopay"}  
+[2025-12-31 07:58:09] local.DEBUG: [FreeMoPay] Response 200 in 4.00s  
+[2025-12-31 07:58:09] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","status":"CREATED","message":"Transaction created"}  
+[2025-12-31 07:58:09] local.WARNING: [FreeMoPay] Slow request: 4.00s  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Client] Status Code: 200  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Client] Response Headers: {"Date":["Wed, 31 Dec 2025 07:58:09 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["103"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"67-skS7dMNcToLcclxIvqZ54VFEAvA\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=wjrhycF8vPNW8%2FSIKc1%2FOLwRhxUjyQmM%2B7p4K8qIRMlqUVL18GKpPpYeYa6ocw7jmOVmgliDlfHU7L30YjxYURtvanwgWwykK0UB%2BqeEvSU5HFvj\"}]}"],"CF-RAY":["9b683ae97d3e418f-LHR"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Client] Response Body (raw): {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","status":"CREATED","message":"Transaction created"}  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Service] FreeMoPay response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","status":"CREATED","message":"Transaction created"}  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay API] ✓ Payment initiated successfully  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay API] 🔖 Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay API] 📱 User should receive payment prompt on phone  
+[2025-12-31 07:58:09] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Polling] 🔄 Starting payment status polling  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Polling] 📋 Payment ID: 3  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Polling] 🔖 Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:09] local.INFO: [FreeMoPay Polling] ⏱️  Polling config: Interval=3s, Timeout=90s, Max attempts=30  
+[2025-12-31 07:58:09] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:58:09] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:09] local.INFO: │ [Polling Attempt #1]  
+[2025-12-31 07:58:09] local.INFO: │ ⏱️  Time elapsed: 0s / 90s (⏳ 90s remaining)  
+[2025-12-31 07:58:09] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:09] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:09] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:09] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:09] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:09] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:12] local.DEBUG: [FreeMoPay] Response 200 in 2.92s  
+[2025-12-31 07:58:12] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"CREATED","reason":null}  
+[2025-12-31 07:58:12] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"CREATED","reason":null}  
+[2025-12-31 07:58:12] local.INFO:    ↳ 📥 Received status: CREATED  
+[2025-12-31 07:58:12] local.INFO:    ↳ ⏳ Payment still CREATED, waiting 3s before next attempt...  
+[2025-12-31 07:58:15] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:15] local.INFO: │ [Polling Attempt #2]  
+[2025-12-31 07:58:15] local.INFO: │ ⏱️  Time elapsed: 6s / 90s (⏳ 84s remaining)  
+[2025-12-31 07:58:15] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:15] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:15] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:15] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:15] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:15] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:19] local.DEBUG: [FreeMoPay] Response 200 in 3.95s  
+[2025-12-31 07:58:19] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"CREATED","reason":null}  
+[2025-12-31 07:58:19] local.WARNING: [FreeMoPay] Slow request: 3.95s  
+[2025-12-31 07:58:19] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"CREATED","reason":null}  
+[2025-12-31 07:58:19] local.INFO:    ↳ 📥 Received status: CREATED  
+[2025-12-31 07:58:19] local.INFO:    ↳ ⏳ Payment still CREATED, waiting 3s before next attempt...  
+[2025-12-31 07:58:22] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:22] local.INFO: │ [Polling Attempt #3]  
+[2025-12-31 07:58:22] local.INFO: │ ⏱️  Time elapsed: 13s / 90s (⏳ 77s remaining)  
+[2025-12-31 07:58:22] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:22] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:22] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:22] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:22] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:22] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:28] local.DEBUG: [FreeMoPay] Response 200 in 6.08s  
+[2025-12-31 07:58:28] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"CREATED","reason":null}  
+[2025-12-31 07:58:28] local.WARNING: [FreeMoPay] Slow request: 6.08s  
+[2025-12-31 07:58:28] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"CREATED","reason":null}  
+[2025-12-31 07:58:28] local.INFO:    ↳ 📥 Received status: CREATED  
+[2025-12-31 07:58:28] local.INFO:    ↳ ⏳ Payment still CREATED, waiting 3s before next attempt...  
+[2025-12-31 07:58:31] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:31] local.INFO: │ [Polling Attempt #4]  
+[2025-12-31 07:58:31] local.INFO: │ ⏱️  Time elapsed: 22s / 90s (⏳ 68s remaining)  
+[2025-12-31 07:58:31] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:31] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:31] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:31] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:31] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:31] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:33] local.DEBUG: [FreeMoPay] Response 200 in 2.02s  
+[2025-12-31 07:58:33] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:33] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:33] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:58:33] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:58:36] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:36] local.INFO: │ [Polling Attempt #5]  
+[2025-12-31 07:58:36] local.INFO: │ ⏱️  Time elapsed: 27s / 90s (⏳ 63s remaining)  
+[2025-12-31 07:58:36] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:36] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:36] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:36] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:36] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:36] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:38] local.DEBUG: [FreeMoPay] Response 200 in 1.89s  
+[2025-12-31 07:58:38] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:38] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:38] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:58:38] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:58:41] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:41] local.INFO: │ [Polling Attempt #6]  
+[2025-12-31 07:58:41] local.INFO: │ ⏱️  Time elapsed: 32s / 90s (⏳ 58s remaining)  
+[2025-12-31 07:58:41] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:41] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:41] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:41] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:41] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:41] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:45] local.DEBUG: [FreeMoPay] Response 200 in 4.20s  
+[2025-12-31 07:58:45] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:45] local.WARNING: [FreeMoPay] Slow request: 4.20s  
+[2025-12-31 07:58:45] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:45] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:58:45] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:58:48] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:48] local.INFO: │ [Polling Attempt #7]  
+[2025-12-31 07:58:48] local.INFO: │ ⏱️  Time elapsed: 39s / 90s (⏳ 51s remaining)  
+[2025-12-31 07:58:48] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:48] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:48] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:48] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:48] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:48] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:58:50] local.DEBUG: [FreeMoPay] Response 200 in 1.80s  
+[2025-12-31 07:58:50] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:50] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:58:50] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:58:50] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:58:53] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:58:53] local.INFO: │ [Polling Attempt #8]  
+[2025-12-31 07:58:53] local.INFO: │ ⏱️  Time elapsed: 44s / 90s (⏳ 46s remaining)  
+[2025-12-31 07:58:53] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:58:53] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:58:53] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:53] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:58:53] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:58:53] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:02] local.DEBUG: [FreeMoPay] Response 200 in 9.08s  
+[2025-12-31 07:59:02] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:02] local.WARNING: [FreeMoPay] Slow request: 9.08s  
+[2025-12-31 07:59:02] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:02] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:02] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:05] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:05] local.INFO: │ [Polling Attempt #9]  
+[2025-12-31 07:59:05] local.INFO: │ ⏱️  Time elapsed: 56s / 90s (⏳ 34s remaining)  
+[2025-12-31 07:59:05] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:05] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:05] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:05] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:05] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:05] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:10] local.DEBUG: [FreeMoPay] Response 200 in 5.14s  
+[2025-12-31 07:59:10] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:10] local.WARNING: [FreeMoPay] Slow request: 5.14s  
+[2025-12-31 07:59:10] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:10] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:10] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:13] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:13] local.INFO: │ [Polling Attempt #10]  
+[2025-12-31 07:59:13] local.INFO: │ ⏱️  Time elapsed: 64s / 90s (⏳ 26s remaining)  
+[2025-12-31 07:59:13] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:13] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:13] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:13] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:13] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:13] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:16] local.DEBUG: [FreeMoPay] Response 200 in 2.77s  
+[2025-12-31 07:59:16] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:16] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:16] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:16] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:19] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:19] local.INFO: │ [Polling Attempt #11]  
+[2025-12-31 07:59:19] local.INFO: │ ⏱️  Time elapsed: 70s / 90s (⏳ 20s remaining)  
+[2025-12-31 07:59:19] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:19] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:19] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:19] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:19] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:19] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:20] local.DEBUG: [FreeMoPay] Response 200 in 1.20s  
+[2025-12-31 07:59:20] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:20] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:20] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:20] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:23] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:23] local.INFO: │ [Polling Attempt #12]  
+[2025-12-31 07:59:23] local.INFO: │ ⏱️  Time elapsed: 74s / 90s (⏳ 16s remaining)  
+[2025-12-31 07:59:23] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:23] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:23] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:23] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:23] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:23] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:25] local.DEBUG: [FreeMoPay] Response 200 in 1.75s  
+[2025-12-31 07:59:25] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:25] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:25] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:25] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:28] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:28] local.INFO: │ [Polling Attempt #13]  
+[2025-12-31 07:59:28] local.INFO: │ ⏱️  Time elapsed: 79s / 90s (⏳ 11s remaining)  
+[2025-12-31 07:59:28] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:28] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:28] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:28] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:28] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:28] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:30] local.DEBUG: [FreeMoPay] Response 200 in 1.94s  
+[2025-12-31 07:59:30] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:30] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:30] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:30] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:33] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:33] local.INFO: │ [Polling Attempt #14]  
+[2025-12-31 07:59:33] local.INFO: │ ⏱️  Time elapsed: 84s / 90s (⏳ 6s remaining)  
+[2025-12-31 07:59:33] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:33] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:33] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:33] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:33] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:33] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:34] local.DEBUG: [FreeMoPay] Response 200 in 0.76s  
+[2025-12-31 07:59:34] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:34] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:34] local.INFO:    ↳ 📥 Received status: PENDING  
+[2025-12-31 07:59:34] local.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2025-12-31 07:59:37] local.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2025-12-31 07:59:37] local.INFO: │ [Polling Attempt #15]  
+[2025-12-31 07:59:37] local.INFO: │ ⏱️  Time elapsed: 88s / 90s (⏳ 2s remaining)  
+[2025-12-31 07:59:37] local.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2025-12-31 07:59:37] local.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2025-12-31 07:59:37] local.DEBUG: [FreeMoPay Service] Checking payment status - Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:37] local.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2025-12-31 07:59:37] local.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:37] local.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2025-12-31 07:59:43] local.DEBUG: [FreeMoPay] Response 200 in 6.28s  
+[2025-12-31 07:59:43] local.DEBUG: [FreeMoPay] Body: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:43] local.WARNING: [FreeMoPay] Slow request: 6.28s  
+[2025-12-31 07:59:43] local.DEBUG: [FreeMoPay Service] Status check response: {"reference":"c8fcd69b-212e-4b9c-a608-c556941bd34f","merchandRef":"SUB-24-2-20251231075802","amount":55,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2025-12-31 07:59:43] local.INFO:    ↳ 📥 Received status: SUCCESS  
+[2025-12-31 07:59:43] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:59:43] local.INFO: [FreeMoPay Polling] ✅ PAYMENT SUCCESS!  
+[2025-12-31 07:59:43] local.INFO: [FreeMoPay Polling] 📋 Payment ID: 3  
+[2025-12-31 07:59:43] local.INFO: [FreeMoPay Polling] 🔖 Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:43] local.INFO: [FreeMoPay Polling] ⏱️  Completed in: 88s after 15 attempts  
+[2025-12-31 07:59:43] local.INFO: [FreeMoPay Polling] 💰 Amount: 55.00 XAF  
+[2025-12-31 07:59:43] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:59:43] local.INFO: ╔════════════════════════════════════════════════════════════════════╗  
+[2025-12-31 07:59:43] local.INFO: ║ [FreeMoPay Service] ✅ PAYMENT COMPLETED SUCCESSFULLY             ║  
+[2025-12-31 07:59:43] local.INFO: ╚════════════════════════════════════════════════════════════════════╝  
+[2025-12-31 07:59:43] local.INFO:    📋 Payment ID: 3  
+[2025-12-31 07:59:43] local.INFO:    📊 Final status: completed  
+[2025-12-31 07:59:43] local.INFO:    💰 Amount: 55.00 XAF  
+[2025-12-31 07:59:43] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:59:43] local.INFO: [SubscriptionPlanController] ✅ Payment process completed!  
+[2025-12-31 07:59:43] local.INFO: [SubscriptionPlanController] 📋 Payment ID: 3  
+[2025-12-31 07:59:43] local.INFO: [SubscriptionPlanController] 📊 Status: completed  
+[2025-12-31 07:59:43] local.INFO: [SubscriptionPlanController] 🔖 Reference: c8fcd69b-212e-4b9c-a608-c556941bd34f  
+[2025-12-31 07:59:43] local.INFO: [SubscriptionPlanController] 📦 Plan: Business  
+[2025-12-31 07:59:43] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2025-12-31 07:59:43] local.INFO: [SubscriptionPlanController] New subscription created for user 24 - Plan: Business  
+[2025-12-31 08:00:24] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:00:24] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:00:30] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:00:30] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:00:52] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:00:52] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:01:04] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:01:04] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:01:25] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 22  
+[2025-12-31 08:01:26] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:01:26] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:07:05] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:07:05] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:10:30] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:10:30] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:20:14] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:20:14] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:20:56] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:20:56] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:26:01] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:26:01] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:29:55] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:29:55] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:38:38] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 22  
+[2025-12-31 08:38:40] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 08:38:40] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:39:12] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 24  
+[2025-12-31 08:39:13] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:39:13] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:39:22] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:39:22] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 08:41:40] local.INFO: Nouvelle candidature pour l'offre ID: 6 par l'utilisateur ID: 24  
+[2025-12-31 08:42:11] local.ERROR: Failed to send FCM notification {"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","title":"Nouvelle candidature","body":"Steve a postulé à votre offre: Developer FullStack","data":{"job_id":6,"applicant_id":24,"application_id":15},"error":"Unable to connect to the API: cURL error 6: Could not resolve host: oauth2.googleapis.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://oauth2.googleapis.com/token"} 
+[2025-12-31 08:42:11] local.ERROR: Notification FCM non envoyée au recruteur {"recruiter_id":6,"user_id":22,"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","application_id":15} 
+[2025-12-31 08:54:07] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 08:54:07] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 09:12:24] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 09:12:24] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 09:14:28] local.INFO: CV supprimé du stockage {"cv_path":"cvs/T1SkyorfIwoKcTrFl19retGgvpzrO40EvgzOYVjM.pdf"} 
+[2025-12-31 09:14:28] local.INFO: Candidature supprimée {"application_id":15,"user_id":24,"job_id":6} 
+[2025-12-31 09:16:12] local.INFO: Nouvelle candidature pour l'offre ID: 8 par l'utilisateur ID: 24  
+[2025-12-31 09:16:18] local.ERROR: Failed to send FCM notification {"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","title":"Nouvelle candidature","body":"Steve a postulé à votre offre: Comptable H/F","data":{"job_id":8,"applicant_id":24,"application_id":16},"error":"invalid_grant"} 
+[2025-12-31 09:16:18] local.ERROR: Notification FCM non envoyée au recruteur {"recruiter_id":6,"user_id":22,"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","application_id":16} 
+[2025-12-31 09:17:12] local.INFO: Nouvelle candidature pour l'offre ID: 2 par l'utilisateur ID: 24  
+[2025-12-31 09:17:12] local.INFO: Aucun token FCM pour ce recruteur {"recruiter_id":2,"user_id":3} 
+[2025-12-31 09:17:53] local.INFO: Nouvelle candidature pour l'offre ID: 5 par l'utilisateur ID: 24  
+[2025-12-31 09:17:53] local.INFO: Aucun token FCM pour ce recruteur {"recruiter_id":1,"user_id":2} 
+[2025-12-31 09:17:53] local.INFO: Aucun token FCM pour ce recruteur {"recruiter_id":5,"user_id":6} 
+[2025-12-31 09:18:02] local.INFO: CV supprimé du stockage {"cv_path":"cvs/Czs3zgY2RkzZGILVfNh91ZJW4ZaP5vVEZjReDnCf.docx"} 
+[2025-12-31 09:18:02] local.INFO: Candidature supprimée {"application_id":18,"user_id":24,"job_id":5} 
+[2025-12-31 09:19:29] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 09:19:29] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 09:20:05] local.INFO: CV supprimé du stockage {"cv_path":"cvs/EriCym4AwARdCyDaA2cCMT36Rs7E1KWrlKJBrmfa.pdf"} 
+[2025-12-31 09:20:05] local.INFO: Candidature supprimée {"application_id":17,"user_id":24,"job_id":2} 
+[2025-12-31 09:20:38] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 22  
+[2025-12-31 09:20:40] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 09:20:40] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 09:25:01] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 24  
+[2025-12-31 09:25:02] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 09:25:02] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 09:25:08] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 09:25:08] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 09:25:36] local.INFO: Nouvelle candidature pour l'offre ID: 7 par l'utilisateur ID: 24  
+[2025-12-31 09:25:37] local.ERROR: Failed to send FCM notification {"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","title":"Nouvelle candidature","body":"Steve a postulé à votre offre: Designer UIX","data":{"job_id":7,"applicant_id":24,"application_id":19},"error":"invalid_grant"} 
+[2025-12-31 09:25:37] local.ERROR: Notification FCM non envoyée au recruteur {"recruiter_id":6,"user_id":22,"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","application_id":19} 
+[2025-12-31 09:34:00] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 09:34:00] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:17:32] local.INFO: CV supprimé du stockage {"cv_path":"cvs/kaxfg2FXVNLXC26m6nMeOsCvK1VASYzmrnB9IzTV.pdf"} 
+[2025-12-31 21:17:32] local.INFO: Candidature supprimée {"application_id":19,"user_id":24,"job_id":7} 
+[2025-12-31 21:24:16] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:24:16] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:25:27] local.INFO: Nouvelle candidature pour l'offre ID: 7 par l'utilisateur ID: 24  
+[2025-12-31 21:25:27] local.ERROR: Erreur lors de la création de la candidature: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '7-24' for key 'applications.applications_job_id_user_id_unique' (Connection: mysql, SQL: insert into `applications` (`job_id`, `user_id`, `cv_path`, `cover_letter`, `portfolio_url`, `status`, `updated_at`, `created_at`) values (7, 24, cvs/SSwvpYUShHD5ViJPaBVAl3fBFhOjahYwc1gmeFeq.pdf, sheyyhihg, ?, pending, 2025-12-31 21:25:27, 2025-12-31 21:25:27))  
+[2025-12-31 21:25:38] local.INFO: Nouvelle candidature pour l'offre ID: 7 par l'utilisateur ID: 24  
+[2025-12-31 21:25:38] local.ERROR: Erreur lors de la création de la candidature: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '7-24' for key 'applications.applications_job_id_user_id_unique' (Connection: mysql, SQL: insert into `applications` (`job_id`, `user_id`, `cv_path`, `cover_letter`, `portfolio_url`, `status`, `updated_at`, `created_at`) values (7, 24, cvs/R3rx4TtvAqDkDLAlDUyEaZwZnUOtPwMdgMfOt8bl.pdf, sheyyhihg, ?, pending, 2025-12-31 21:25:38, 2025-12-31 21:25:38))  
+[2025-12-31 21:25:56] local.INFO: Nouvelle candidature pour l'offre ID: 7 par l'utilisateur ID: 24  
+[2025-12-31 21:25:56] local.ERROR: Erreur lors de la création de la candidature: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '7-24' for key 'applications.applications_job_id_user_id_unique' (Connection: mysql, SQL: insert into `applications` (`job_id`, `user_id`, `cv_path`, `cover_letter`, `portfolio_url`, `status`, `updated_at`, `created_at`) values (7, 24, cvs/bKuCR1i6At0oW3CaPdbZF9Js1bUmX36MoynSewuC.pdf, sheyyhihg, ?, pending, 2025-12-31 21:25:56, 2025-12-31 21:25:56))  
+[2025-12-31 21:30:10] local.INFO: Nouvelle candidature pour l'offre ID: 7 par l'utilisateur ID: 24  
+[2025-12-31 21:30:12] local.ERROR: Failed to send FCM notification {"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","title":"Nouvelle candidature","body":"Steve a postulé à votre offre: Designer UIX","data":{"job_id":7,"applicant_id":24,"application_id":23},"error":"invalid_grant"} 
+[2025-12-31 21:30:12] local.ERROR: Notification FCM non envoyée au recruteur {"recruiter_id":6,"user_id":22,"token":"dn8ca-tMQaG_VzZmMdJxV-:APA91bFzn5YL6H87-o966F5X9exT4hP6FSKJEdICEQOajgsGixSCHi8GV3qUUlMpAsIuebUFkcxYrHQfj97gMDutQuei6XSAhPIs5JK-iL8mrTalzBhhldE","application_id":23} 
+[2025-12-31 21:30:22] local.INFO: CV supprimé du stockage {"cv_path":"cvs/E2RPtjCkRluKNJkSbPSGMjBbPueJC6yDKwr27qL0.pdf"} 
+[2025-12-31 21:30:22] local.INFO: Candidature supprimée {"application_id":23,"user_id":24,"job_id":7} 
+[2025-12-31 21:33:55] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:33:55] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:34:06] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:34:06] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:34:13] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:34:13] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:40:25] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:40:25] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:41:12] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:41:12] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:47:12] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:47:12] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:53:37] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:53:37] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 21:53:45] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 21:53:45] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:01:01] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:01:01] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:03:00] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:03:00] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:06:52] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:06:52] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:37:29] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:37:29] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:39:52] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:39:52] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:40:00] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:40:00] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:44:57] local.INFO: 📋 Loading conversations for user {"user_id":24} 
+[2025-12-31 22:44:57] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:45:26] local.DEBUG: Enregistrement du FCM token pour l'utilisateur: 22  
+[2025-12-31 22:45:28] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 22:45:28] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:50:30] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 22:50:30] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 22:50:35] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 22:50:35] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:05:44] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:05:44] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:06:08] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:06:08] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:09:49] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:09:49] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:14:46] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:14:46] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:21:23] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:21:23] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:26:56] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:26:56] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:34:00] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:34:00] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:38:40] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:38:40] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:39:24] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:39:24] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:50:34] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:50:34] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2025-12-31 23:56:45] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2025-12-31 23:56:45] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-01 00:01:54] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2026-01-01 00:01:54] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-01 00:03:26] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2026-01-01 00:03:26] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-01 00:03:29] local.INFO: 💬 Creating conversation {"user_id":22,"request_data":{"application_id":16,"user_two":24}} 
+[2026-01-01 00:03:29] local.INFO: 💬 Application data {"application_id":16,"applicant_id":24,"job_id":8,"recruiter_id":22,"status":"accepted","current_user":22} 
+[2026-01-01 00:03:29] local.INFO: 💬 ✅ Conversation created successfully {"conversation_id":1,"recruiter_id":22,"applicant_id":24} 
+[2026-01-01 00:03:29] local.INFO: 📋 Loading conversations for user {"user_id":22} 
+[2026-01-01 00:03:29] local.INFO: 📋 Processing conversation {"conversation_id":1,"user_one":22,"user_two":24,"current_user":22,"other_user_id":24,"other_user_name":"Steve","presence_data":{"App\\Models\\UserPresence":{"user_id":24,"online":true,"last_seen":"2025-12-31T22:44:57.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-01 00:03:29] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":1,"user":{"id":24,"name":"Steve","profile_photo":"profile_photos/OY0jXLxFJFBOjWzUN3FIcHTHc2dTUFU7oIpVEF2y.jpg","is_online":true,"last_seen":"2025-12-31 22:44:57"},"last_message":null,"unread_count":0}]} 

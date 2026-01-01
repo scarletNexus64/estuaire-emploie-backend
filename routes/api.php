@@ -75,6 +75,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/my-applications', [ApplicationController::class, 'myApplications']);
     // Détails d'une candidature
     Route::get('/applications/{application}', [ApplicationController::class, 'show']);
+    // Candidat: Supprimer/Annuler une candidature (seulement si status = 'pending')
+    Route::delete('/applications/{application}', [ApplicationController::class, 'destroy']);
 
     // ------------------
     // FAVORIS (Candidat)
