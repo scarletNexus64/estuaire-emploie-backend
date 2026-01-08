@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
+use App\Models\EmailVerification;
 use App\Notifications\RegistedNotification;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -63,13 +64,28 @@ class AuthController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
+        // Vérifier que l'email a été vérifié par OTP
+        $emailVerification = EmailVerification::where('email', $validated['email'])
+            ->where('verified', true)
+            ->first();
+
+        if (!$emailVerification) {
+            return response()->json([
+                'message' => 'Email non vérifié. Veuillez d\'abord vérifier votre email.',
+            ], 403);
+        }
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
             'role' => 'candidate',
+            'email_verified_at' => now(), // Marquer l'email comme vérifié
         ]);
+
+        // Supprimer l'enregistrement de vérification après création du compte
+        $emailVerification->delete();
 
         // Charger les relations du user
         if ($user->isRecruiter()) {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
@@ -25,6 +26,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+
+// Vérification email (OTP)
+Route::post('/email/send-code', [EmailVerificationController::class, 'sendCode']);
+Route::post('/email/verify-code', [EmailVerificationController::class, 'verifyCode']);
 
 // Jobs publics
 Route::get('/jobs', [JobController::class, 'index']);
