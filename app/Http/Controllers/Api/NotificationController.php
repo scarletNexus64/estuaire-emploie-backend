@@ -85,8 +85,12 @@ class NotificationController extends Controller
         }
 
         // Filtrer par statut lu/non lu si fourni
-        if ($request->has('read_at')) {
-            $query->where('read_at', $request->is_read);
+        if ($request->has('is_read')) {
+            if ($request->is_read == 1) {
+                $query->whereNotNull('read_at'); // Lues
+            } else {
+                $query->whereNull('read_at'); // Non lues
+            }
         }
 
         $notifications = $query->orderBy('created_at', 'desc')
@@ -203,7 +207,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        Auth::user()->unreadNotifications->markAsRead();
+        Auth::user()->unreadNotifications->each->markAsRead();
 
         return response()->json([
             'message' => 'Toutes les notifications marquées comme lues',

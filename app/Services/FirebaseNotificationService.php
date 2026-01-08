@@ -45,7 +45,8 @@ class FirebaseNotificationService
                 'error' => $e->getMessage(),
             ]);
 
-            return false;
+            // Re-throw the exception so the caller knows it failed
+            throw $e;
         }
     }
 }

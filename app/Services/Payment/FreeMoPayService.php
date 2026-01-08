@@ -57,21 +57,27 @@ class FreeMoPayService
             throw new \Exception('FreeMoPay service is not configured properly');
         }
 
-        Log::info("[FreeMoPay Service] Initiating SYNCHRONOUS payment - Amount: {$amount}, Phone: {$phoneNumber}");
+        Log::info("╔════════════════════════════════════════════════════════════════════╗");
+        Log::info("║ [FreeMoPay Service] 💳 INITIATING SYNCHRONOUS PAYMENT             ║");
+        Log::info("╚════════════════════════════════════════════════════════════════════╝");
+        Log::info("   💰 Amount: {$amount} XAF");
+        Log::info("   📱 Phone: {$phoneNumber}");
+        Log::info("   📝 Description: {$description}");
 
         // 1. Validate phone number
         $normalizedPhone = $this->normalizePhoneNumber($phoneNumber);
+        Log::info("   ✓ Phone normalized: {$normalizedPhone}");
 
         // 2. Generate external ID if not provided
         if (!$externalId) {
             $externalId = $this->generateExternalId();
         }
         $externalId = $this->ensureUniqueExternalId($externalId);
+        Log::info("   ✓ External ID: {$externalId}");
 
-        // 3. Get callback URL
-        $callbackUrl = $this->config->freemopay_callback_url;
-
-        Log::info("[FreeMoPay Service] Callback URL: {$callbackUrl}, External ID: {$externalId}");
+        // 3. Get callback URL (not used for polling but required by API)
+        $callbackUrl = $this->config->freemopay_callback_url ?? config('app.url') . '/api/webhooks/freemopay';
+        Log::info("   ✓ Callback URL: {$callbackUrl} (note: using polling, callback not required)");
 
         // 4. Create Payment record in database (status: pending)
         $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId, $payable) {
@@ -105,10 +111,16 @@ class FreeMoPayService
             return Payment::create($paymentData);
         });
 
-        Log::info("[FreeMoPay Service] Payment record created - ID: {$payment->id}");
+        Log::info("   ✓ Payment record created in database");
+        Log::info("   📋 Payment ID: {$payment->id}");
+        Log::info("   📊 Status: {$payment->status}");
+        Log::info("   💳 Payment method: {$payment->payment_method}");
 
         // 5. Call FreeMoPay API to initiate payment
         try {
+            Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            Log::info("[FreeMoPay API] 🚀 Calling FreeMoPay API to initiate payment...");
+
             $freemoResponse = $this->callFreeMoPayAPI(
                 $normalizedPhone,
                 $amount,
@@ -120,7 +132,10 @@ class FreeMoPayService
             $reference = $freemoResponse['reference'] ?? null;
 
             if (!$reference) {
-                Log::error("[FreeMoPay Service] No reference in response: " . json_encode($freemoResponse));
+                Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Log::error("[FreeMoPay API] ❌ ERROR - No reference in response");
+                Log::error("[FreeMoPay API] Response: " . json_encode($freemoResponse));
+                Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 $payment->update(['status' => 'failed']);
                 throw new \Exception('No reference in FreeMoPay response');
             }
@@ -130,16 +145,31 @@ class FreeMoPayService
                 'payment_provider_response' => $freemoResponse,
             ]);
 
-            Log::info("[FreeMoPay Service] Payment initiated - Reference: {$reference}");
+            Log::info("[FreeMoPay API] ✓ Payment initiated successfully");
+            Log::info("[FreeMoPay API] 🔖 Reference: {$reference}");
+            Log::info("[FreeMoPay API] 📱 User should receive payment prompt on phone");
 
             // 6. SYNCHRONOUS POLLING: Wait for payment completion
             $finalPayment = $this->waitForPaymentCompletion($payment, $reference);
 
+            Log::info("╔════════════════════════════════════════════════════════════════════╗");
+            Log::info("║ [FreeMoPay Service] ✅ PAYMENT COMPLETED SUCCESSFULLY             ║");
+            Log::info("╚════════════════════════════════════════════════════════════════════╝");
+            Log::info("   📋 Payment ID: {$finalPayment->id}");
+            Log::info("   📊 Final status: {$finalPayment->status}");
+            Log::info("   💰 Amount: {$finalPayment->amount} XAF");
+
             return $finalPayment;
 
         } catch (\Exception $e) {
+            Log::error("╔════════════════════════════════════════════════════════════════════╗");
+            Log::error("║ [FreeMoPay Service] ❌ PAYMENT FAILED                             ║");
+            Log::error("╚════════════════════════════════════════════════════════════════════╝");
+            Log::error("   📋 Payment ID: {$payment->id}");
+            Log::error("   ❌ Error: {$e->getMessage()}");
+            Log::error("   📊 Stack trace: " . $e->getTraceAsString());
+
             $payment->update(['status' => 'failed']);
-            Log::error("[FreeMoPay Service] Payment initiation failed: " . $e->getMessage());
             throw $e;
         }
     }
@@ -154,7 +184,12 @@ class FreeMoPayService
      */
     protected function waitForPaymentCompletion(Payment $payment, string $reference): Payment
     {
-        Log::info("[FreeMoPay Service] Starting polling for reference: {$reference}");
+        Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        Log::info("[FreeMoPay Polling] 🔄 Starting payment status polling");
+        Log::info("[FreeMoPay Polling] 📋 Payment ID: {$payment->id}");
+        Log::info("[FreeMoPay Polling] 🔖 Reference: {$reference}");
+        Log::info("[FreeMoPay Polling] ⏱️  Polling config: Interval={$this->pollingInterval}s, Timeout={$this->pollingTimeout}s, Max attempts={$this->maxPollingAttempts}");
+        Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
         $startTime = time();
         $attempts = 0;
@@ -166,34 +201,58 @@ class FreeMoPayService
         while (true) {
             $attempts++;
             $elapsed = time() - $startTime;
+            $remainingTime = $this->pollingTimeout - $elapsed;
+
+            Log::info("┌─────────────────────────────────────────────────────────────────┐");
+            Log::info("│ [Polling Attempt #{$attempts}]");
+            Log::info("│ ⏱️  Time elapsed: {$elapsed}s / {$this->pollingTimeout}s (⏳ {$remainingTime}s remaining)");
+            Log::info("└─────────────────────────────────────────────────────────────────┘");
 
             // Check timeout
             if ($elapsed >= $this->pollingTimeout) {
-                Log::warning("[FreeMoPay Service] Polling timeout after {$elapsed}s - Reference: {$reference}");
+                Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Log::error("[FreeMoPay Polling] ⏰ TIMEOUT - Polling exceeded maximum time");
+                Log::error("[FreeMoPay Polling] 📋 Payment ID: {$payment->id}");
+                Log::error("[FreeMoPay Polling] 🔖 Reference: {$reference}");
+                Log::error("[FreeMoPay Polling] ⏱️  Elapsed: {$elapsed}s / {$this->pollingTimeout}s");
+                Log::error("[FreeMoPay Polling] 🔄 Total attempts: {$attempts}");
+                Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
                 $payment->update([
                     'status' => 'pending',
-                    'notes' => "Payment timeout after {$elapsed} seconds. Please check status manually.",
+                    'notes' => "Payment polling timeout after {$elapsed}s and {$attempts} attempts. Please verify payment status with provider.",
                 ]);
-                throw new \Exception("Payment timeout. Please check your phone and try again.");
+                throw new \Exception("Le délai d'attente du paiement a expiré. Veuillez vérifier votre téléphone et réessayer.");
             }
 
             // Check max attempts
             if ($attempts > $this->maxPollingAttempts) {
-                Log::warning("[FreeMoPay Service] Max polling attempts ({$this->maxPollingAttempts}) reached - Reference: {$reference}");
+                Log::warning("[FreeMoPay Polling] ⚠️  Max polling attempts ({$this->maxPollingAttempts}) reached - Reference: {$reference}");
                 break;
             }
 
             try {
-                Log::debug("[FreeMoPay Service] Polling attempt {$attempts} - Elapsed: {$elapsed}s");
+                Log::info("   ↳ 📡 Checking payment status with FreeMoPay API...");
 
                 $statusResponse = $this->checkPaymentStatus($reference);
-                $currentStatus = strtoupper($statusResponse['status'] ?? '');
+                $currentStatus = strtoupper($statusResponse['status'] ?? 'UNKNOWN');
+                $message = $statusResponse['message'] ?? 'No message';
 
-                Log::info("[FreeMoPay Service] Poll {$attempts}: Status = {$currentStatus}");
+                Log::info("   ↳ 📥 Received status: {$currentStatus}");
+                if ($message !== 'No message') {
+                    Log::info("   ↳ 💬 Message: {$message}");
+                }
 
                 // Check for SUCCESS
                 if (in_array($currentStatus, $successStatuses)) {
-                    Log::info("[FreeMoPay Service] Payment SUCCESS - Reference: {$reference}");
+                    Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    Log::info("[FreeMoPay Polling] ✅ PAYMENT SUCCESS!");
+                    Log::info("[FreeMoPay Polling] 📋 Payment ID: {$payment->id}");
+                    Log::info("[FreeMoPay Polling] 🔖 Reference: {$reference}");
+                    Log::info("[FreeMoPay Polling] ⏱️  Completed in: {$elapsed}s after {$attempts} attempts");
+                    Log::info("[FreeMoPay Polling] 💰 Amount: {$payment->amount} XAF");
+                    Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
                     $payment->update([
                         'status' => 'completed',
                         'paid_at' => now(),
@@ -204,32 +263,47 @@ class FreeMoPayService
 
                 // Check for FAILED/CANCELLED
                 if (in_array($currentStatus, $failedStatuses)) {
-                    $message = $statusResponse['message'] ?? 'Payment failed or cancelled';
-                    Log::info("[FreeMoPay Service] Payment FAILED - Reference: {$reference}, Reason: {$message}");
+                    Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    Log::error("[FreeMoPay Polling] ❌ PAYMENT FAILED!");
+                    Log::error("[FreeMoPay Polling] 📋 Payment ID: {$payment->id}");
+                    Log::error("[FreeMoPay Polling] 🔖 Reference: {$reference}");
+                    Log::error("[FreeMoPay Polling] ⏱️  Failed after: {$elapsed}s and {$attempts} attempts");
+                    Log::error("[FreeMoPay Polling] 💬 Reason: {$message}");
+                    Log::error("[FreeMoPay Polling] 📊 Status: {$currentStatus}");
+                    Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
                     $payment->update([
                         'status' => 'failed',
                         'failure_reason' => $message,
                         'payment_provider_response' => $statusResponse,
                     ]);
-                    throw new \Exception("Payment failed: {$message}");
+                    throw new \Exception("Le paiement a échoué: {$message}");
                 }
 
                 // Still PENDING/PROCESSING - wait and retry
-                Log::debug("[FreeMoPay Service] Payment still pending, waiting {$this->pollingInterval}s...");
+                Log::info("   ↳ ⏳ Payment still {$currentStatus}, waiting {$this->pollingInterval}s before next attempt...");
                 sleep($this->pollingInterval);
 
             } catch (\Exception $e) {
-                // If it's our own exception (payment failed), rethrow it
-                if (str_starts_with($e->getMessage(), 'Payment failed:') ||
-                    str_starts_with($e->getMessage(), 'Payment timeout')) {
+                // If it's our own exception (payment failed or timeout), rethrow it
+                if (str_starts_with($e->getMessage(), 'Le paiement a échoué:') ||
+                    str_starts_with($e->getMessage(), 'Le délai d\'attente')) {
                     throw $e;
                 }
 
                 // Otherwise, log and continue polling
-                Log::warning("[FreeMoPay Service] Polling error (attempt {$attempts}): " . $e->getMessage());
+                Log::warning("   ↳ ⚠️  Polling error (attempt {$attempts}): " . $e->getMessage());
+                Log::warning("   ↳ 🔄 Continuing to poll...");
                 sleep($this->pollingInterval);
             }
         }
+
+        Log::warning("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        Log::warning("[FreeMoPay Polling] ⚠️  Polling loop exited without terminal status");
+        Log::warning("[FreeMoPay Polling] 📋 Payment ID: {$payment->id}");
+        Log::warning("[FreeMoPay Polling] 🔖 Reference: {$reference}");
+        Log::warning("[FreeMoPay Polling] 🔄 Total attempts: {$attempts}");
+        Log::warning("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
         // If we exit the loop without success/failure, return current state
         return $payment->fresh();

@@ -122,7 +122,8 @@
                     <th>Statut</th>
                     <th>Candidatures</th>
                     <th>Vues</th>
-                    <th>Date</th>
+                    <th>Date limite</th>
+                    <th>Date création</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -160,6 +161,29 @@
                     </td>
                     <td><strong>{{ $job->applications_count }}</strong></td>
                     <td>{{ $job->views_count }}</td>
+                    <td>
+                        @if($job->application_deadline)
+                            @php
+                                $deadline = \Carbon\Carbon::parse($job->application_deadline);
+                                $now = \Carbon\Carbon::now();
+                                $daysRemaining = $now->diffInDays($deadline, false);
+                            @endphp
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <span style="font-weight: 500;">{{ $deadline->format('d/m/Y') }}</span>
+                                @if($daysRemaining < 0)
+                                    <small style="color: var(--danger);">⚠️ Expirée</small>
+                                @elseif($daysRemaining <= 3)
+                                    <small style="color: var(--danger);">🔥 {{ abs($daysRemaining) }} jour(s)</small>
+                                @elseif($daysRemaining <= 7)
+                                    <small style="color: var(--warning);">⏰ {{ $daysRemaining }} jour(s)</small>
+                                @else
+                                    <small style="color: var(--success);">✓ {{ $daysRemaining }} jour(s)</small>
+                                @endif
+                            </div>
+                        @else
+                            <span style="color: var(--secondary);">Non définie</span>
+                        @endif
+                    </td>
                     <td>{{ $job->created_at->format('d/m/Y') }}</td>
                     <td>
                         <div style="display: flex; gap: 0.5rem;">
@@ -210,7 +234,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 3rem; color: var(--secondary);">
+                    <td colspan="10" style="text-align: center; padding: 3rem; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
                         <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucune offre trouvée</p>
                         <p style="margin-bottom: 1.5rem;">Commencez par créer une nouvelle offre d'emploi</p>

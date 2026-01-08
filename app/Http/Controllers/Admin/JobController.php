@@ -167,7 +167,7 @@ class JobController extends Controller
             ->with('success', 'Offre supprimée avec succès');
     }
 
-    public function publish(Job $job): RedirectResponse
+    public function publish(Job $job)
     {
         // Vérifier si le job n'était pas déjà publié
         $wasNotPublished = $job->status !== 'published';

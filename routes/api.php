@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Api\AdvertisementController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
@@ -49,12 +50,10 @@ Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
 Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
 Route::get('/subscription-plans/{id}', [SubscriptionPlanController::class, 'show']);
 
-// ============================================
-// WEBHOOKS (Callbacks externes)
-// ============================================
-
-// FreeMoPay payment callback
-Route::post('/webhooks/freemopay', [\App\Http\Controllers\Api\WebhookController::class, 'freemopayCallback']);
+// Publicités actives (pour les bannières)
+Route::get('/advertisements', [AdvertisementController::class, 'index']);
+Route::post('/advertisements/{id}/impression', [AdvertisementController::class, 'recordImpression']);
+Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'recordClick']);
 
 // ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
@@ -69,6 +68,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::put('/user/role', [AuthController::class, 'updateRole']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::get('/user/statistics', [AuthController::class, 'statistics']);
+    Route::post('/user/sync-role', [AuthController::class, 'syncRoleWithSubscription']);
 
     // ------------------
     // CANDIDATURES (Candidat & Recruteur)
@@ -81,6 +81,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/my-applications', [ApplicationController::class, 'myApplications']);
     // Détails d'une candidature
     Route::get('/applications/{application}', [ApplicationController::class, 'show']);
+    // Candidat: Supprimer/Annuler une candidature (seulement si status = 'pending')
+    Route::delete('/applications/{application}', [ApplicationController::class, 'destroy']);
 
     // ------------------
     // FAVORIS (Candidat)

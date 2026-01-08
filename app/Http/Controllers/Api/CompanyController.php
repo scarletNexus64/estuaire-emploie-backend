@@ -219,14 +219,25 @@ class CompanyController extends Controller
 
         $company = $recruiter->company;
 
+        // Récupérer la liste des offres actives avec le compteur de candidatures
+        // Filtre: uniquement les offres avec au moins 1 candidature
+        $activeJobsList = $company->jobs()
+            ->where('status', 'published')
+            ->withCount('applications')
+            ->has('applications', '>=', 1)
+            ->with(['category', 'location', 'contractType'])
+            ->latest()
+            ->get();
+
         // Charger les statistiques
-        $activeJobs = $company->jobs()->where('status', 'published')->count();
+        $activeJobs = $activeJobsList->count();
         $totalJobs = $company->jobs()->count();
         $totalApplications = $company->jobs()->withCount('applications')->get()->sum('applications_count');
         $totalViews = $company->jobs()->sum('views_count');
 
         return response()->json([
             'data' => $company,
+            'active_jobs' => $activeJobsList,
             'statistics' => [
                 'active_jobs' => $activeJobs,
                 'total_jobs' => $totalJobs,

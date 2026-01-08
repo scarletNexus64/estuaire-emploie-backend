@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\Job;
 use App\Models\ViewedContact;
 use App\Services\FirebaseNotificationService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -65,20 +66,14 @@ class ApplicationController extends Controller
             ], 404);
         }
 
-        // Vérifier si l'utilisateur a déjà postulé (incluant les soft deleted)
+        // Vérifier si l'utilisateur a déjà postulé (incluant les candidatures soft deleted)
         $existingApplication = Application::withTrashed()
             ->where('job_id', $job->id)
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if ($existingApplication) {
-            // Si l'application est soft deleted, on peut la restaurer
-            if ($existingApplication->trashed()) {
-                return response()->json([
-                    'message' => 'Vous avez déjà postulé à cette offre (candidature archivée)',
-                ], 400);
-            }
-
+        // Si une candidature active existe, bloquer
+        if ($existingApplication && !$existingApplication->trashed()) {
             return response()->json([
                 'message' => 'Vous avez déjà postulé à cette offre',
             ], 400);
@@ -99,50 +94,63 @@ class ApplicationController extends Controller
         }
 
         try {
-            $application = Application::create([
-                'job_id' => $job->id,
-                'user_id' => $request->user()->id,
-                'cv_path' => $cvPath,
-                'cover_letter' => $validated['cover_letter'] ?? null,
-                'portfolio_url' => $validated['portfolio_url'] ?? null,
-                'status' => 'pending',
-            ]);
+            // Si une candidature soft deleted existe, la restaurer et la mettre à jour
+            if ($existingApplication && $existingApplication->trashed()) {
+                Log::info('Restauration de la candidature soft deleted ID: ' . $existingApplication->id);
 
-            $application->load(['job.company']);
+                // Supprimer l'ancien CV si différent
+                if ($existingApplication->cv_path && \Storage::disk('public')->exists($existingApplication->cv_path)) {
+                    \Storage::disk('public')->delete($existingApplication->cv_path);
+                }
+
+                // Restaurer et mettre à jour
+                $existingApplication->restore();
+                $existingApplication->update([
+                    'cv_path' => $cvPath,
+                    'cover_letter' => $validated['cover_letter'] ?? null,
+                    'portfolio_url' => $validated['portfolio_url'] ?? null,
+                    'status' => 'pending',
+                    'viewed_at' => null,
+                    'responded_at' => null,
+                    'internal_notes' => null,
+                ]);
+
+                $application = $existingApplication;
+            } else {
+                // Créer une nouvelle candidature
+                $application = Application::create([
+                    'job_id' => $job->id,
+                    'user_id' => $request->user()->id,
+                    'cv_path' => $cvPath,
+                    'cover_letter' => $validated['cover_letter'] ?? null,
+                    'portfolio_url' => $validated['portfolio_url'] ?? null,
+                    'status' => 'pending',
+                ]);
+            }
+
+            $application->load(['job.company', 'user']);
 
             // Envoi de notification à tous les recruteurs de l'entreprise
-            // Le token FCM est enregistré sur l'utilisateur (`users.fcm_token`),
-            // donc on charge la relation `user` puis on utilise `user->fcm_token`.
+            // Utilise le NotificationService pour envoyer ET enregistrer en BDD
             $recruiters = $application->job->company->recruiters()->with('user')->get();
-            $firebase = new FirebaseNotificationService();
+            $notificationService = app(NotificationService::class);
 
             foreach ($recruiters as $recruiter) {
-                $token = $recruiter->user->fcm_token ?? null;
-                if ($token) {
-                    $sent = $firebase->sendToToken(
-                        $token,
+                $recruiterUser = $recruiter->user;
+                if ($recruiterUser) {
+                    $notificationService->sendToUser(
+                        $recruiterUser,
                         "Nouvelle candidature",
                         "{$request->user()->name} a postulé à votre offre: {$application->job->title}",
+                        'application_received',
                         [
                             'job_id' => $application->job->id,
+                            'job_title' => $application->job->title,
                             'applicant_id' => $request->user()->id,
+                            'applicant_name' => $request->user()->name,
                             'application_id' => $application->id,
                         ]
                     );
-
-                    if (!$sent) {
-                        Log::error('Notification FCM non envoyée au recruteur', [
-                            'recruiter_id' => $recruiter->id,
-                            'user_id' => $recruiter->user->id ?? null,
-                            'token' => $token,
-                            'application_id' => $application->id,
-                        ]);
-                    }
-                } else {
-                    Log::info('Aucun token FCM pour ce recruteur', [
-                        'recruiter_id' => $recruiter->id,
-                        'user_id' => $recruiter->user->id ?? null,
-                    ]);
                 }
             }
 
@@ -640,5 +648,85 @@ class ApplicationController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/applications/{id}",
+     *     summary="Supprimer/Annuler une candidature (Candidat)",
+     *     description="Permet au candidat de supprimer sa propre candidature. Seulement possible si le statut est 'pending'.",
+     *     operationId="deleteApplication",
+     *     tags={"Applications"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de la candidature",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Candidature supprimée avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Candidature supprimée avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Non autorisé ou candidature déjà traitée",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Candidature non trouvée")
+     * )
+     */
+    public function destroy(Request $request, Application $application): JsonResponse
+    {
+        // Vérifier que c'est bien le candidat qui a créé cette candidature
+        if ($application->user_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'Non autorisé. Cette candidature ne vous appartient pas.',
+            ], 403);
+        }
+
+        // Vérifier que la candidature est toujours en statut 'pending'
+        // On ne peut pas supprimer une candidature déjà acceptée/rejetée
+        if ($application->status !== 'pending') {
+            return response()->json([
+                'message' => 'Vous ne pouvez supprimer que les candidatures en attente. Cette candidature a déjà été traitée.',
+                'current_status' => $application->status,
+            ], 403);
+        }
+
+        try {
+            // Supprimer le fichier CV du stockage
+            if ($application->cv_path && \Storage::disk('public')->exists($application->cv_path)) {
+                \Storage::disk('public')->delete($application->cv_path);
+                Log::info('CV supprimé du stockage', ['cv_path' => $application->cv_path]);
+            }
+
+            // Supprimer la candidature (soft delete)
+            $application->delete();
+
+            Log::info('Candidature supprimée', [
+                'application_id' => $application->id,
+                'user_id' => $request->user()->id,
+                'job_id' => $application->job_id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Candidature supprimée avec succès',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de la candidature: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de la suppression de la candidature',
+            ], 500);
+        }
     }
 }
