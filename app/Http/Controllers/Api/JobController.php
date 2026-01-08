@@ -511,6 +511,12 @@ class JobController extends Controller
             'new_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
                 $q->where('company_id', $recruiter->company_id);
             })->where('status', 'pending')->count(),
+            'accepted_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->where('status', 'accepted')->count(),
+            'rejected_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->where('status', 'rejected')->count(),
         ];
 
         // Analytics avancées (nécessitent can_see_analytics)
@@ -518,17 +524,18 @@ class JobController extends Controller
         $analytics = null;
 
         if ($canSeeAnalytics) {
+            $totalViews = Job::where('company_id', $recruiter->company_id)->sum('views_count');
+
             $analytics = [
-                'total_views' => Job::where('company_id', $recruiter->company_id)
-                    ->sum('views_count'),
+                'total_views' => $totalViews,
                 'views_this_month' => Job::where('company_id', $recruiter->company_id)
                     ->whereMonth('created_at', now()->month)
                     ->sum('views_count'),
                 'applications_this_month' => Application::whereHas('job', function ($q) use ($recruiter) {
                     $q->where('company_id', $recruiter->company_id);
                 })->whereMonth('created_at', now()->month)->count(),
-                'conversion_rate' => $stats['total_applications'] > 0 && $stats['total_jobs'] > 0
-                    ? round(($stats['total_applications'] / Job::where('company_id', $recruiter->company_id)->sum('views_count')) * 100, 2)
+                'conversion_rate' => $totalViews > 0
+                    ? round(($stats['total_applications'] / $totalViews) * 100, 2)
                     : 0,
             ];
         }
@@ -541,10 +548,11 @@ class JobController extends Controller
             ->limit(5)
             ->get();
 
-        // 5 dernières candidatures reçues (infos limitées sans contact)
+        // 5 dernières candidatures EN ATTENTE uniquement (non traitées)
         $recentApplications = Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
         })
+            ->where('status', 'pending')
             ->with(['user' => function ($q) {
                 $q->select('id', 'name', 'profile_photo', 'experience_level', 'created_at');
             }, 'job'])

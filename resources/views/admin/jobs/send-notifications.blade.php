@@ -51,8 +51,9 @@
                             <div class="col-md-4">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
-                                        <h6 class="text-muted">Total candidats</h6>
-                                        <h3 id="total-count" class="text-primary">{{ $totalCandidates }}</h3>
+                                        <h6 class="text-muted">Total utilisateurs</h6>
+                                        <h3 id="total-count" class="text-primary">{{ $totalUsers }}</h3>
+                                        <small class="text-muted">Candidats & Recruteurs (sauf auteur)</small>
                                     </div>
                                 </div>
                             </div>
@@ -109,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const jobId = {{ $job->id }};
     let totalSent = 0;
     let totalFailed = 0;
-    let totalCandidates = {{ $totalCandidates }};
+    let totalCandidates = {{ $totalUsers }};
 
     function updateProgress(sent, failed, total) {
         const percentage = Math.min(100, Math.round(((sent + failed) / total) * 100));

@@ -46,6 +46,9 @@ class ApplicationController extends Controller
             $validated['internal_notes'] = $request->internal_notes;
         }
 
+        // Charger les relations nécessaires pour la notification
+        $application->load(['user', 'job.company']);
+
         $application->update($validated);
 
         // Marquer comme répondu
@@ -54,8 +57,53 @@ class ApplicationController extends Controller
             $application->save();
         }
 
+        // Envoyer une notification push au candidat
+        try {
+            $notificationService = app(\App\Services\NotificationService::class);
+
+            if ($application->user && $application->user->fcm_token) {
+                $status = $validated['status'];
+
+                if ($status === 'accepted') {
+                    $title = "Candidature acceptée 🎉";
+                    $message = "Félicitations ! Votre candidature pour {$application->job->title} chez {$application->job->company->name} a été acceptée.";
+                    $type = 'application_accepted';
+                } else {
+                    $title = "Candidature non retenue";
+                    $message = "Votre candidature pour {$application->job->title} chez {$application->job->company->name} n'a pas été retenue cette fois.";
+                    $type = 'application_rejected';
+                }
+
+                $notificationService->sendToUser(
+                    $application->user,
+                    $title,
+                    $message,
+                    $type,
+                    [
+                        'application_id' => $application->id,
+                        'job_id' => $application->job->id,
+                        'job_title' => $application->job->title,
+                        'company_name' => $application->job->company->name,
+                        'status' => $status,
+                    ]
+                );
+
+                \Log::info('Notification candidature envoyée', [
+                    'application_id' => $application->id,
+                    'user_id' => $application->user->id,
+                    'status' => $status,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log l'erreur mais ne bloque pas le processus
+            \Log::error('Erreur envoi notification candidature', [
+                'application_id' => $application->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return redirect()->back()
-            ->with('success', 'Statut de la candidature mis à jour');
+            ->with('success', 'Statut de la candidature mis à jour avec succès');
     }
 
     public function bulkDelete(Request $request)

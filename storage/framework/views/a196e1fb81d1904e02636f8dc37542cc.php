@@ -1,14 +1,14 @@
 <div class="tab-pane fade" id="sms" role="tabpanel" aria-labelledby="sms-tab">
     <div class="row">
         <div class="col-lg-8">
-            <form action="{{ route('admin.service-config.update-nexah') }}" method="POST">
-                @csrf
-                @method('PUT')
+            <form action="<?php echo e(route('admin.service-config.update-nexah')); ?>" method="POST">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="nexah_active" name="is_active"
-                               {{ $config?->is_active ? 'checked' : '' }}>
+                               <?php echo e($config?->is_active ? 'checked' : ''); ?>>
                         <label class="form-check-label" for="nexah_active">
                             Service actif
                         </label>
@@ -19,13 +19,27 @@
                     <label for="nexah_base_url" class="form-label">
                         URL de base <span class="text-danger">*</span>
                     </label>
-                    <input type="url" class="form-control @error('nexah_base_url') is-invalid @enderror"
+                    <input type="url" class="form-control <?php $__errorArgs = ['nexah_base_url'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                            id="nexah_base_url" name="nexah_base_url"
-                           value="{{ old('nexah_base_url', $config?->nexah_base_url ?? '') }}"
+                           value="<?php echo e(old('nexah_base_url', $config?->nexah_base_url ?? '')); ?>"
                            placeholder="https://api.nexah.net" required>
-                    @error('nexah_base_url')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <?php $__errorArgs = ['nexah_base_url'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <small class="text-muted">URL de base de l'API Nexah</small>
                 </div>
 
@@ -34,26 +48,54 @@
                         <label for="nexah_send_endpoint" class="form-label">
                             Endpoint d'envoi <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control @error('nexah_send_endpoint') is-invalid @enderror"
+                        <input type="text" class="form-control <?php $__errorArgs = ['nexah_send_endpoint'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                id="nexah_send_endpoint" name="nexah_send_endpoint"
-                               value="{{ old('nexah_send_endpoint', $config?->nexah_send_endpoint ?? '/sms/1/text/single') }}"
+                               value="<?php echo e(old('nexah_send_endpoint', $config?->nexah_send_endpoint ?? '/sms/1/text/single')); ?>"
                                placeholder="/sms/1/text/single" required>
-                        @error('nexah_send_endpoint')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <?php $__errorArgs = ['nexah_send_endpoint'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="nexah_credits_endpoint" class="form-label">
                             Endpoint crédits <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control @error('nexah_credits_endpoint') is-invalid @enderror"
+                        <input type="text" class="form-control <?php $__errorArgs = ['nexah_credits_endpoint'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                id="nexah_credits_endpoint" name="nexah_credits_endpoint"
-                               value="{{ old('nexah_credits_endpoint', $config?->nexah_credits_endpoint ?? '/account/1/balance') }}"
+                               value="<?php echo e(old('nexah_credits_endpoint', $config?->nexah_credits_endpoint ?? '/account/1/balance')); ?>"
                                placeholder="/account/1/balance" required>
-                        @error('nexah_credits_endpoint')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <?php $__errorArgs = ['nexah_credits_endpoint'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
@@ -62,13 +104,27 @@
                         <label for="nexah_user" class="form-label">
                             Utilisateur <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control @error('nexah_user') is-invalid @enderror"
+                        <input type="text" class="form-control <?php $__errorArgs = ['nexah_user'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                id="nexah_user" name="nexah_user"
-                               value="{{ old('nexah_user', $config?->nexah_user ?? '') }}"
+                               value="<?php echo e(old('nexah_user', $config?->nexah_user ?? '')); ?>"
                                placeholder="votre_username" required>
-                        @error('nexah_user')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <?php $__errorArgs = ['nexah_user'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="invalid-feedback"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -76,17 +132,31 @@
                             Mot de passe <span class="text-danger">*</span>
                         </label>
                         <div class="input-group">
-                            <input type="password" class="form-control @error('nexah_password') is-invalid @enderror"
+                            <input type="password" class="form-control <?php $__errorArgs = ['nexah_password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                    id="nexah_password" name="nexah_password"
-                                   value="{{ old('nexah_password', $config?->nexah_password ?? '') }}"
+                                   value="<?php echo e(old('nexah_password', $config?->nexah_password ?? '')); ?>"
                                    placeholder="••••••••" required>
                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('nexah_password')">
                                 <i class="mdi mdi-eye"></i>
                             </button>
                         </div>
-                        @error('nexah_password')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
+                        <?php $__errorArgs = ['nexah_password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
@@ -94,13 +164,27 @@
                     <label for="nexah_sender_id" class="form-label">
                         Sender ID <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control @error('nexah_sender_id') is-invalid @enderror"
+                    <input type="text" class="form-control <?php $__errorArgs = ['nexah_sender_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                            id="nexah_sender_id" name="nexah_sender_id"
-                           value="{{ old('nexah_sender_id', $config?->nexah_sender_id ?? '') }}"
+                           value="<?php echo e(old('nexah_sender_id', $config?->nexah_sender_id ?? '')); ?>"
                            placeholder="ENTREPRISE" required maxlength="11">
-                    @error('nexah_sender_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <?php $__errorArgs = ['nexah_sender_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <div class="invalid-feedback"><?php echo e($message); ?></div>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <small class="text-muted">Nom de l'expéditeur (max 11 caractères alphanumériques)</small>
                 </div>
 
@@ -177,3 +261,4 @@
         </div>
     </div>
 </div>
+<?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/service-config/nexah.blade.php ENDPATH**/ ?>

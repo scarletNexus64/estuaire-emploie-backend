@@ -8,7 +8,7 @@
                 <div class="mb-3">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="freemopay_active" name="is_active"
-                               {{ $config && $config->is_active ? 'checked' : '' }}>
+                               {{ $config?->is_active ? 'checked' : '' }}>
                         <label class="form-check-label" for="freemopay_active">
                             Service actif
                         </label>
@@ -26,7 +26,7 @@
                     </label>
                     <input type="url" class="form-control @error('freemopay_base_url') is-invalid @enderror"
                            id="freemopay_base_url" name="freemopay_base_url"
-                           value="{{ old('freemopay_base_url', $config->freemopay_base_url ?? 'https://api-v2.freemopay.com') }}"
+                           value="{{ old('freemopay_base_url', $config?->freemopay_base_url ?? 'https://api-v2.freemopay.com') }}"
                            placeholder="https://api-v2.freemopay.com" required>
                     @error('freemopay_base_url')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -41,7 +41,7 @@
                         <div class="input-group">
                             <input type="password" class="form-control @error('freemopay_app_key') is-invalid @enderror"
                                    id="freemopay_app_key" name="freemopay_app_key"
-                                   value="{{ old('freemopay_app_key', $config->freemopay_app_key ?? '') }}"
+                                   value="{{ old('freemopay_app_key', $config?->freemopay_app_key ?? '') }}"
                                    placeholder="app_xxxxxxxxxx" required>
                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('freemopay_app_key')">
                                 <i class="mdi mdi-eye"></i>
@@ -59,7 +59,7 @@
                         <div class="input-group">
                             <input type="password" class="form-control @error('freemopay_secret_key') is-invalid @enderror"
                                    id="freemopay_secret_key" name="freemopay_secret_key"
-                                   value="{{ old('freemopay_secret_key', $config->freemopay_secret_key ?? '') }}"
+                                   value="{{ old('freemopay_secret_key', $config?->freemopay_secret_key ?? '') }}"
                                    placeholder="secret_xxxxxxxxxx" required>
                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('freemopay_secret_key')">
                                 <i class="mdi mdi-eye"></i>
@@ -77,7 +77,7 @@
                     </label>
                     <input type="url" class="form-control @error('freemopay_callback_url') is-invalid @enderror"
                            id="freemopay_callback_url" name="freemopay_callback_url"
-                           value="{{ old('freemopay_callback_url', $config->freemopay_callback_url ?? '') }}"
+                           value="{{ old('freemopay_callback_url', $config?->freemopay_callback_url ?? '') }}"
                            placeholder="https://votresite.com/api/webhooks/freemopay" required>
                     @error('freemopay_callback_url')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -96,7 +96,7 @@
                         </label>
                         <input type="number" class="form-control @error('freemopay_init_payment_timeout') is-invalid @enderror"
                                id="freemopay_init_payment_timeout" name="freemopay_init_payment_timeout"
-                               value="{{ old('freemopay_init_payment_timeout', $config->freemopay_init_payment_timeout ?? 5) }}"
+                               value="{{ old('freemopay_init_payment_timeout', $config?->freemopay_init_payment_timeout ?? 5) }}"
                                min="1" max="30" required>
                         @error('freemopay_init_payment_timeout')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -109,7 +109,7 @@
                         </label>
                         <input type="number" class="form-control @error('freemopay_status_check_timeout') is-invalid @enderror"
                                id="freemopay_status_check_timeout" name="freemopay_status_check_timeout"
-                               value="{{ old('freemopay_status_check_timeout', $config->freemopay_status_check_timeout ?? 5) }}"
+                               value="{{ old('freemopay_status_check_timeout', $config?->freemopay_status_check_timeout ?? 5) }}"
                                min="1" max="90" required>
                         @error('freemopay_status_check_timeout')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -122,7 +122,7 @@
                         </label>
                         <input type="number" class="form-control @error('freemopay_token_timeout') is-invalid @enderror"
                                id="freemopay_token_timeout" name="freemopay_token_timeout"
-                               value="{{ old('freemopay_token_timeout', $config->freemopay_token_timeout ?? 10) }}"
+                               value="{{ old('freemopay_token_timeout', $config?->freemopay_token_timeout ?? 10) }}"
                                min="1" max="30" required>
                         @error('freemopay_token_timeout')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -137,7 +137,7 @@
                         </label>
                         <input type="number" class="form-control @error('freemopay_token_cache_duration') is-invalid @enderror"
                                id="freemopay_token_cache_duration" name="freemopay_token_cache_duration"
-                               value="{{ old('freemopay_token_cache_duration', $config->freemopay_token_cache_duration ?? 3000) }}"
+                               value="{{ old('freemopay_token_cache_duration', $config?->freemopay_token_cache_duration ?? 3000) }}"
                                min="60" max="3600" required>
                         @error('freemopay_token_cache_duration')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -151,7 +151,7 @@
                         </label>
                         <input type="number" class="form-control @error('freemopay_max_retries') is-invalid @enderror"
                                id="freemopay_max_retries" name="freemopay_max_retries"
-                               value="{{ old('freemopay_max_retries', $config->freemopay_max_retries ?? 2) }}"
+                               value="{{ old('freemopay_max_retries', $config?->freemopay_max_retries ?? 2) }}"
                                min="0" max="5" required>
                         @error('freemopay_max_retries')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -164,7 +164,7 @@
                         </label>
                         <input type="number" step="0.1" class="form-control @error('freemopay_retry_delay') is-invalid @enderror"
                                id="freemopay_retry_delay" name="freemopay_retry_delay"
-                               value="{{ old('freemopay_retry_delay', $config->freemopay_retry_delay ?? 0.5) }}"
+                               value="{{ old('freemopay_retry_delay', $config?->freemopay_retry_delay ?? 0.5) }}"
                                min="0" max="5" required>
                         @error('freemopay_retry_delay')
                             <div class="invalid-feedback">{{ $message }}</div>

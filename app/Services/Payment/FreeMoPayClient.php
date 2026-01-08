@@ -266,7 +266,19 @@ class FreeMoPayClient
         // If status code indicates error (4xx, 5xx)
         if ($response->failed()) {
             Log::error("[FreeMoPay] API Error {$response->status()}: " . json_encode($data));
-            throw new \Exception("API error: {$response->status()} - " . ($data['message'] ?? 'Unknown error'));
+
+            // Extract error message (handle both string and array formats)
+            $errorMessage = 'Unknown error';
+            if (isset($data['message'])) {
+                if (is_array($data['message'])) {
+                    // If message is an array (e.g., {"en": "...", "fr": "..."}), prefer French
+                    $errorMessage = $data['message']['fr'] ?? $data['message']['en'] ?? json_encode($data['message']);
+                } else {
+                    $errorMessage = $data['message'];
+                }
+            }
+
+            throw new \Exception("API error: {$response->status()} - {$errorMessage}");
         }
 
         return $data;

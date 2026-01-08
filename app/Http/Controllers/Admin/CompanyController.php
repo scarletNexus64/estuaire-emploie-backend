@@ -137,13 +137,73 @@ class CompanyController extends Controller
 
     public function verify(Company $company): RedirectResponse
     {
-        $company->update([
-            'status' => 'verified',
-            'verified_at' => now(),
-        ]);
+        try {
+            $company->update([
+                'status' => 'verified',
+                'verified_at' => now(),
+            ]);
 
-        return redirect()->back()
-            ->with('success', 'Entreprise vérifiée avec succès');
+            // Envoyer une notification push à tous les recruteurs de l'entreprise
+            $company->load('recruiters.user');
+
+            $notificationService = app(\App\Services\NotificationService::class);
+
+            $title = "Entreprise vérifiée";
+            $message = "Félicitations ! Votre entreprise {$company->name} a été vérifiée et approuvée.";
+
+            $sent = 0;
+            $failed = 0;
+
+            foreach ($company->recruiters as $recruiter) {
+                if ($recruiter->user && $recruiter->user->fcm_token) {
+                    try {
+                        $success = $notificationService->sendToUser(
+                            $recruiter->user,
+                            $title,
+                            $message,
+                            'company_verified',
+                            [
+                                'company_id' => $company->id,
+                                'company_name' => $company->name,
+                            ]
+                        );
+
+                        if ($success) {
+                            $sent++;
+                        } else {
+                            $failed++;
+                        }
+                    } catch (\Exception $e) {
+                        $failed++;
+                        \Log::error('Erreur envoi notification vérification entreprise', [
+                            'company_id' => $company->id,
+                            'recruiter_id' => $recruiter->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+
+            $message = 'Entreprise vérifiée avec succès';
+            if ($sent > 0) {
+                $message .= " - {$sent} notification(s) envoyée(s)";
+            }
+            if ($failed > 0) {
+                $message .= " ({$failed} échec(s))";
+            }
+
+            return redirect()->back()
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la vérification d\'entreprise', [
+                'company_id' => $company->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Erreur lors de la vérification: ' . $e->getMessage());
+        }
     }
 
     public function suspend(Company $company): RedirectResponse

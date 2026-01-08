@@ -180,12 +180,15 @@ class JobController extends Controller
     {
         $job->load(['company', 'location', 'category']);
 
-        // Compter les candidats qui recevront la notification
-        $totalCandidates = \App\Models\User::where('role', 'candidate')
+        // Compter TOUS les utilisateurs (candidats + recruteurs) qui recevront la notification, sauf l'auteur
+        $totalUsers = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
             ->whereNotNull('fcm_token')
+            ->when($job->posted_by, function ($query) use ($job) {
+                $query->where('id', '!=', $job->posted_by);
+            })
             ->count();
 
-        return view('admin.jobs.send-notifications', compact('job', 'totalCandidates'));
+        return view('admin.jobs.send-notifications', compact('job', 'totalUsers'));
     }
 
     /**
@@ -203,18 +206,21 @@ class JobController extends Controller
 
         $job->load(['company', 'location', 'category']);
 
-        // Récupérer les candidats pour ce lot
-        $candidates = \App\Models\User::where('role', 'candidate')
+        // Récupérer TOUS les utilisateurs (candidats + recruteurs) pour ce lot, SAUF l'auteur du job
+        $users = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
             ->whereNotNull('fcm_token')
+            ->when($job->posted_by, function ($query) use ($job) {
+                $query->where('id', '!=', $job->posted_by);
+            })
             ->skip($batchNumber * $batchSize)
             ->take($batchSize)
             ->get();
 
-        if ($candidates->isEmpty()) {
+        if ($users->isEmpty()) {
             return response()->json([
                 'success' => true,
                 'completed' => true,
-                'message' => 'Tous les candidats ont reçu la notification',
+                'message' => 'Tous les utilisateurs ont reçu la notification',
                 'sent' => 0,
                 'failed' => 0,
             ]);
@@ -229,47 +235,64 @@ class JobController extends Controller
         $failed = 0;
         $errors = [];
 
-        foreach ($candidates as $candidate) {
-            $success = $notificationService->sendToUser(
-                $candidate,
-                $title,
-                $message,
-                'job_published',
-                [
-                    'job_id' => $job->id,
-                    'job_title' => $job->title,
-                    'company_name' => $job->company->name,
-                    'location' => $job->location->name,
-                    'category' => $job->category->name ?? null,
-                ]
-            );
+        foreach ($users as $user) {
+            try {
+                $success = $notificationService->sendToUser(
+                    $user,
+                    $title,
+                    $message,
+                    'job_published',
+                    [
+                        'job_id' => $job->id,
+                        'job_title' => $job->title,
+                        'company_name' => $job->company->name,
+                        'location' => $job->location->name,
+                        'category' => $job->category->name ?? null,
+                    ]
+                );
 
-            if ($success) {
-                $sent++;
-            } else {
+                if ($success) {
+                    $sent++;
+                } else {
+                    $failed++;
+                    $errors[] = [
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                        'error' => 'Échec de l\'envoi',
+                    ];
+                }
+            } catch (\Exception $e) {
                 $failed++;
                 $errors[] = [
-                    'user_id' => $candidate->id,
-                    'user_name' => $candidate->name,
-                    'error' => 'Échec de l\'envoi',
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'error' => $e->getMessage(),
                 ];
+                \Log::error('Erreur envoi notification job', [
+                    'job_id' => $job->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
 
         // Calculer la progression
-        $totalCandidates = \App\Models\User::where('role', 'candidate')
+        $totalUsers = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
             ->whereNotNull('fcm_token')
+            ->when($job->posted_by, function ($query) use ($job) {
+                $query->where('id', '!=', $job->posted_by);
+            })
             ->count();
 
         $processed = ($batchNumber + 1) * $batchSize;
-        $completed = $processed >= $totalCandidates;
+        $completed = $processed >= $totalUsers;
 
         Log::info('Lot de notifications envoyé pour job', [
             'job_id' => $job->id,
             'batch' => $batchNumber,
             'sent' => $sent,
             'failed' => $failed,
-            'total' => $totalCandidates,
+            'total' => $totalUsers,
         ]);
 
         return response()->json([

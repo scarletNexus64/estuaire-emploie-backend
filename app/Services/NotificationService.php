@@ -140,6 +140,31 @@ class NotificationService
     }
 
     /**
+     * Envoie une notification à tous les utilisateurs (candidats + recruteurs) sauf un
+     *
+     * @param string $title Titre de la notification
+     * @param string $message Message de la notification
+     * @param string $type Type de notification
+     * @param int|null $excludeUserId ID de l'utilisateur à exclure (généralement l'auteur)
+     * @param array $additionalData Données supplémentaires
+     * @return array Résultat de l'envoi
+     */
+    public function sendToAllUsersExcept(string $title, string $message, string $type, ?int $excludeUserId = null, array $additionalData = []): array
+    {
+        $query = User::whereIn('role', ['candidate', 'recruiter'])
+            ->whereNotNull('fcm_token');
+
+        // Exclure un utilisateur spécifique (par exemple l'auteur du job)
+        if ($excludeUserId) {
+            $query->where('id', '!=', $excludeUserId);
+        }
+
+        $users = $query->get();
+
+        return $this->sendToMultipleUsers($users, $title, $message, $type, $additionalData);
+    }
+
+    /**
      * Envoie une notification au recruteur d'un job
      *
      * @param int $jobId ID du job

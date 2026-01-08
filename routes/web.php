@@ -207,4 +207,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/send-to-all', [AnnouncementController::class, 'sendToAll'])->name('send-to-all');
         Route::get('/user-count', [AnnouncementController::class, 'getUserCount'])->name('user-count');
     });
+
+    // FCM Tokens Management
+    Route::prefix('fcm-tokens')->name('fcm-tokens.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FcmTokenController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\FcmTokenController::class, 'show'])->name('show');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\FcmTokenController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-destroy', [\App\Http\Controllers\Admin\FcmTokenController::class, 'bulkDestroy'])->name('bulk-destroy');
+        Route::get('/export/csv', [\App\Http\Controllers\Admin\FcmTokenController::class, 'export'])->name('export');
+    });
 });

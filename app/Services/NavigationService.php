@@ -147,6 +147,12 @@ class NavigationService
                         'permission' => null, // All admins can send announcements
                     ],
                     [
+                        'name' => 'Tokens FCM',
+                        'route' => 'admin.fcm-tokens.index',
+                        'icon' => 'fas fa-bell',
+                        'permission' => null, // All admins can view FCM tokens
+                    ],
+                    [
                         'name' => 'Paramètres',
                         'route' => 'admin.settings.index',
                         'icon' => 'fas fa-cog',
