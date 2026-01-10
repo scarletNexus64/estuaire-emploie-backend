@@ -50,6 +50,12 @@ class ChatController extends Controller
 
     public function send(Request $request)
     {
+        \Log::info('💬 📤 [SEND] Starting message send', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+            'broadcast_connection' => config('broadcasting.default'),
+        ]);
+
         $validated = $request->validate([
             'conversation_id' => 'required|exists:conversations,id',
             'message' => 'required|string|max:5000',
@@ -63,11 +69,24 @@ class ChatController extends Controller
             })
             ->firstOrFail();
 
+        \Log::info('💬 📤 [SEND] Conversation verified', [
+            'conversation_id' => $conversation->id,
+            'user_one' => $conversation->user_one,
+            'user_two' => $conversation->user_two,
+        ]);
+
         $message = Message::create([
             'conversation_id' => $validated['conversation_id'],
             'sender_id' => Auth::id(),
             'message' => $validated['message'],
             'status' => 'sent',
+        ]);
+
+        \Log::info('💬 📤 [SEND] Message created in DB', [
+            'message_id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'sender_id' => $message->sender_id,
+            'status' => $message->status,
         ]);
 
         // Charger la relation user pour le broadcast
@@ -76,39 +95,53 @@ class ChatController extends Controller
         // Vérifier si le destinataire est en ligne AVANT de broadcaster
         $isReceiverOnline = $this->isReceiverOnline($validated['conversation_id']);
 
+        \Log::info('💬 📤 [SEND] Receiver online status', [
+            'conversation_id' => $validated['conversation_id'],
+            'is_receiver_online' => $isReceiverOnline,
+        ]);
+
         if ($isReceiverOnline) {
             // Mettre à jour le statut AVANT de broadcaster
             $message->status = 'delivered';
             $message->save();
+            \Log::info('💬 📤 [SEND] Message status updated to delivered');
         }
 
         // Broadcaster le message avec le bon statut (sent ou delivered)
+        \Log::info('💬 📡 [BROADCAST] Broadcasting message', [
+            'message_id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'channel' => 'private-chat.' . $message->conversation_id,
+            'event' => 'MessageSent',
+            'broadcast_driver' => config('broadcasting.default'),
+        ]);
+
         broadcast(new MessageSent($message))->toOthers();
 
-        // Envoyer une notification push au destinataire (si non en ligne)
-        if (!$isReceiverOnline) {
-            $receiverId = $conversation->user_one === Auth::id()
-                ? $conversation->user_two
-                : $conversation->user_one;
+        \Log::info('💬 📡 [BROADCAST] Broadcast command executed successfully');
 
-            $receiver = User::find($receiverId);
-            if ($receiver) {
-                $sender = Auth::user();
-                $notificationService = app(NotificationService::class);
+        // TOUJOURS envoyer une notification push au destinataire (en ligne ou hors ligne)
+        $receiverId = $conversation->user_one === Auth::id()
+            ? $conversation->user_two
+            : $conversation->user_one;
 
-                $notificationService->sendToUser(
-                    $receiver,
-                    "Nouveau message de {$sender->name}",
-                    substr($validated['message'], 0, 100), // Limiter à 100 caractères
-                    'chat_message',
-                    [
-                        'conversation_id' => $conversation->id,
-                        'message_id' => $message->id,
-                        'sender_id' => Auth::id(),
-                        'sender_name' => $sender->name,
-                    ]
-                );
-            }
+        $receiver = User::find($receiverId);
+        if ($receiver) {
+            $sender = Auth::user();
+            $notificationService = app(NotificationService::class);
+
+            $notificationService->sendToUser(
+                $receiver,
+                "Nouveau message de {$sender->name}",
+                substr($validated['message'], 0, 100), // Limiter à 100 caractères
+                'chat_message',
+                [
+                    'conversation_id' => $conversation->id,
+                    'message_id' => $message->id,
+                    'sender_id' => Auth::id(),
+                    'sender_name' => $sender->name,
+                ]
+            );
         }
 
         return response()->json([
@@ -152,6 +185,11 @@ class ChatController extends Controller
 
     public function typing(Request $request)
     {
+        \Log::info('⌨️  [TYPING] Typing event received', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+        ]);
+
         $validated = $request->validate([
             'conversation_id' => 'required|exists:conversations,id',
         ]);
@@ -164,7 +202,15 @@ class ChatController extends Controller
             })
             ->firstOrFail();
 
+        \Log::info('⌨️  📡 [TYPING] Broadcasting typing event', [
+            'conversation_id' => $validated['conversation_id'],
+            'user_id' => Auth::id(),
+            'channel' => 'private-chat.' . $validated['conversation_id'],
+        ]);
+
         broadcast(new TypingEvent($validated['conversation_id'], Auth::id()));
+
+        \Log::info('⌨️  ✅ [TYPING] Typing event broadcasted');
 
         return response()->json(['success' => true], 200);
     }

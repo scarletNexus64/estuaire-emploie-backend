@@ -2945,3 +2945,567 @@
 [2026-01-08 23:03:33] local.INFO: 💬 Creating conversation {"user_id":27,"request_data":{"application_id":25,"user_two":27}} 
 [2026-01-08 23:03:33] local.INFO: 💬 Application data {"application_id":25,"applicant_id":27,"job_id":15,"recruiter_id":24,"status":"accepted","current_user":27} 
 [2026-01-08 23:03:33] local.WARNING: 💬 Recruiter is not from the same company {"current_user_id":27,"job_company_id":11,"recruiter_company_id":10} 
+[2026-01-09 13:42:10] local.INFO: Admin viewed premium services list {"admin":{"Illuminate\\Database\\Eloquent\\Collection":[{"id":1,"name":"CV Premium","slug":"cv_premium","description":"Mettez en avant votre CV pour augmenter votre visibilité auprès des recruteurs","display_order":1,"price":"1500.00","duration_days":30,"service_type":"cv_premium","features":["CV mis en avant dans les résultats de recherche","Visibilité x3 auprès des recruteurs","Badge \"Profil Premium\" visible","Statistiques de consultation de votre profil"],"is_active":true,"is_popular":true,"color":"#10b981","icon":"✨","created_at":"2025-12-30T02:52:35.000000Z","updated_at":"2025-12-30T02:52:35.000000Z","deleted_at":null},{"id":2,"name":"Badge Profil Vérifié","slug":"verified_badge","description":"Badge de vérification permanent pour renforcer votre crédibilité","display_order":2,"price":"2000.00","duration_days":null,"service_type":"verified_badge","features":["Badge \"Vérifié\" permanent sur votre profil","Augmentation de la confiance des recruteurs","Priorité dans les résultats de recherche"],"is_active":true,"is_popular":false,"color":"#3b82f6","icon":"✅","created_at":"2025-12-30T02:52:35.000000Z","updated_at":"2025-12-30T02:52:35.000000Z","deleted_at":null},{"id":3,"name":"Alertes SMS/WhatsApp","slug":"sms_alerts","description":"Recevez des notifications instantanées sur votre téléphone","display_order":3,"price":"500.00","duration_days":30,"service_type":"sms_alerts","features":["Notifications SMS pour nouvelles offres","Alertes WhatsApp personnalisées","Réponse instantanée des recruteurs","Ne manquez plus aucune opportunité"],"is_active":true,"is_popular":false,"color":"#25D366","icon":"📱","created_at":"2025-12-30T02:52:35.000000Z","updated_at":"2025-12-30T02:52:35.000000Z","deleted_at":null},{"id":4,"name":"Révision CV par Expert","slug":"cv_review","description":"Un expert RH examine votre CV et vous donne des conseils personnalisés","display_order":4,"price":"3000.00","duration_days":null,"service_type":"cv_review","features":["Analyse complète de votre CV","Conseils personnalisés d'un expert RH","Suggestions d'amélioration","Rapport détaillé sous 48h"],"is_active":true,"is_popular":false,"color":"#f59e0b","icon":"📝","created_at":"2025-12-30T02:52:35.000000Z","updated_at":"2025-12-30T02:52:35.000000Z","deleted_at":null},{"id":5,"name":"Coaching Entretien","slug":"interview_coaching","description":"Session de coaching de 30 minutes pour préparer vos entretiens","display_order":5,"price":"5000.00","duration_days":null,"service_type":"interview_coaching","features":["Session vidéo de 30 minutes","Simulation d'entretien","Conseils pratiques et personnalisés","Techniques de réponse aux questions difficiles"],"is_active":true,"is_popular":false,"color":"#8b5cf6","icon":"🎓","created_at":"2025-12-30T02:52:35.000000Z","updated_at":"2025-12-30T02:52:35.000000Z","deleted_at":null}]}} 
+[2026-01-09 19:06:17] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 19:06:17] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-09 19:06:17] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 19:06:17] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 19:06:17] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 19:06:17] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 19:06:18] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 19:06:18] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-09 19:12:46] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 19:12:46] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-09 19:12:46] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 19:12:47] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 19:12:47] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 19:12:47] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 19:12:47] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 19:12:47] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-09 19:13:36] local.INFO: Test not [{"Illuminate\\Pagination\\LengthAwarePaginator":{"current_page":1,"data":[{"id":"1e2358ee-566c-467e-818d-6b08821bdd4e","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Ingenieur des Telecoms","message":"FRAISE SARL recrute à Bafoussam","sent_at":"2026-01-08T21:09:49.468840Z","job_id":15,"job_title":"Ingenieur des Telecoms","company_name":"FRAISE SARL","location":"Bafoussam","category":"Informatique & Tech"},"read_at":null,"created_at":"2026-01-08T21:09:49.000000Z","updated_at":"2026-01-08T21:09:49.000000Z"},{"id":"3c896c00-fcdf-4cb3-b4ed-043403f57b09","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Data Analyst","message":"Playstation LTD recrute à Bafoussam","sent_at":"2026-01-08T20:25:21.816584Z","job_id":14,"job_title":"Data Analyst","company_name":"Playstation LTD","location":"Bafoussam","category":"Informatique & Tech"},"read_at":null,"created_at":"2026-01-08T20:25:21.000000Z","updated_at":"2026-01-08T20:25:21.000000Z"},{"id":"b702061e-44a9-48bb-88f2-3f24f2201f63","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Maintenancier","message":"PIXEL recrute à Bafoussam","sent_at":"2026-01-01T14:29:23.457944Z","job_id":11,"job_title":"Maintenancier","company_name":"PIXEL","location":"Bafoussam","category":"Informatique & Tech"},"read_at":"2026-01-01T14:40:49.000000Z","created_at":"2026-01-01T14:29:23.000000Z","updated_at":"2026-01-01T14:40:49.000000Z"},{"id":"7f474875-09cf-456b-a431-d4cdc06fb491","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Engeni","message":"HIMRA SARL recrute à Bafoussam","sent_at":"2026-01-01T14:07:34.362253Z","job_id":10,"job_title":"Engeni","company_name":"HIMRA SARL","location":"Bafoussam","category":"Santé & Médical"},"read_at":"2026-01-07T21:51:17.000000Z","created_at":"2026-01-01T14:07:34.000000Z","updated_at":"2026-01-07T21:51:17.000000Z"},{"id":"a3740854-7957-4866-ab64-721bedfd48c5","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Engeni","message":"HIMRA SARL recrute à Bafoussam","sent_at":"2026-01-01T14:07:30.773610Z","job_id":10,"job_title":"Engeni","company_name":"HIMRA SARL","location":"Bafoussam","category":"Santé & Médical"},"read_at":"2026-01-07T21:51:17.000000Z","created_at":"2026-01-01T14:07:30.000000Z","updated_at":"2026-01-07T21:51:17.000000Z"},{"id":"1ee6e9f8-bf85-462c-a9e1-603665be2d94","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Engeni","message":"HIMRA SARL recrute à Bafoussam","sent_at":"2026-01-01T14:07:28.731618Z","job_id":10,"job_title":"Engeni","company_name":"HIMRA SARL","location":"Bafoussam","category":"Santé & Médical"},"read_at":"2026-01-07T21:51:17.000000Z","created_at":"2026-01-01T14:07:28.000000Z","updated_at":"2026-01-07T21:51:17.000000Z"},{"id":"102e4c8f-7c66-4193-8226-4d454d3e83dd","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Architecte Cloud","message":"HIMRA SARL recrute à Bafoussam","sent_at":"2026-01-01T14:07:26.227640Z","job_id":9,"job_title":"Architecte Cloud","company_name":"HIMRA SARL","location":"Bafoussam","category":"Ingénierie & Architecture"},"read_at":"2026-01-07T21:51:17.000000Z","created_at":"2026-01-01T14:07:26.000000Z","updated_at":"2026-01-07T21:51:17.000000Z"},{"id":"60476c67-bff1-4e45-8491-afc82c31e724","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":26,"data":{"title":"Nouvelle offre : Engeni","message":"HIMRA SARL recrute à Bafoussam","sent_at":"2026-01-01T14:07:21.449570Z","job_id":10,"job_title":"Engeni","company_name":"HIMRA SARL","location":"Bafoussam","category":"Santé & Médical"},"read_at":"2026-01-07T21:51:17.000000Z","created_at":"2026-01-01T14:07:21.000000Z","updated_at":"2026-01-07T21:51:17.000000Z"}],"first_page_url":"http://192.168.1.149:8000/api/notifications?page=1","from":1,"last_page":1,"last_page_url":"http://192.168.1.149:8000/api/notifications?page=1","links":[{"url":null,"label":"pagination.previous","active":false},{"url":"http://192.168.1.149:8000/api/notifications?page=1","label":"1","active":true},{"url":null,"label":"pagination.next","active":false}],"next_page_url":null,"path":"http://192.168.1.149:8000/api/notifications","per_page":50,"prev_page_url":null,"to":8,"total":8}}] 
+[2026-01-09 19:13:50] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 19:13:50] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-09 20:00:23] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 20:00:24] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-09 20:01:13] local.INFO: Nouvelle candidature pour l'offre ID: 12 par l'utilisateur ID: 27  
+[2026-01-09 20:01:56] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouvelle candidature","body":"Ledou a postulé à votre offre: Admin System","data":{"type":"application_received","sent_at":"2026-01-09T20:01:14.205422Z","job_id":12,"job_title":"Admin System","applicant_id":27,"applicant_name":"Ledou","application_id":27},"error":"cURL error 56: OpenSSL SSL_read: OpenSSL/3.6.0: error:0A000126:SSL routines::unexpected eof while reading, errno 0 (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://oauth2.googleapis.com/token"} 
+[2026-01-09 20:01:56] local.ERROR: Erreur envoi notification {"user_id":26,"type":"application_received","error":"cURL error 56: OpenSSL SSL_read: OpenSSL/3.6.0: error:0A000126:SSL routines::unexpected eof while reading, errno 0 (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://oauth2.googleapis.com/token"} 
+[2026-01-09 20:04:42] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Candidature acceptée 🎉","body":"Félicitations ! Votre candidature pour Admin System chez PIXEL a été acceptée.","data":{"type":"application_accepted","sent_at":"2026-01-09T20:04:09.435022Z","application_id":27,"job_id":12,"job_title":"Admin System","company_name":"PIXEL","status":"accepted"},"result":{"name":"projects/estuaire-emplois/messages/0:1767989082313019%921a81d3921a81d3"}} 
+[2026-01-09 20:04:43] local.INFO: Notification envoyée {"user_id":27,"type":"application_accepted","title":"Candidature acceptée 🎉"} 
+[2026-01-09 20:04:43] local.INFO: Notification candidature envoyée {"application_id":27,"user_id":27,"status":"accepted"} 
+[2026-01-09 20:04:57] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Candidature acceptée 🎉","body":"Félicitations ! Votre candidature pour Admin System chez PIXEL a été acceptée.","data":{"type":"application_accepted","sent_at":"2026-01-09T20:04:48.868086Z","application_id":27,"job_id":12,"job_title":"Admin System","company_name":"PIXEL","status":"accepted"},"result":{"name":"projects/estuaire-emplois/messages/0:1767989098881469%921a81d3921a81d3"}} 
+[2026-01-09 20:04:57] local.INFO: Notification envoyée {"user_id":27,"type":"application_accepted","title":"Candidature acceptée 🎉"} 
+[2026-01-09 20:04:57] local.INFO: Notification candidature envoyée {"application_id":27,"user_id":27,"status":"accepted"} 
+[2026-01-09 20:04:57] local.INFO: Test not [{"Illuminate\\Pagination\\LengthAwarePaginator":{"current_page":1,"data":[{"id":"7717489e-c021-4414-a3a4-83709f08b6cc","type":"application_accepted","notifiable_type":"App\\Models\\User","notifiable_id":27,"data":{"title":"Candidature acceptée 🎉","message":"Félicitations ! Votre candidature pour Admin System chez PIXEL a été acceptée.","sent_at":"2026-01-09T20:04:57.693145Z","application_id":27,"job_id":12,"job_title":"Admin System","company_name":"PIXEL","status":"accepted"},"read_at":null,"created_at":"2026-01-09T20:04:57.000000Z","updated_at":"2026-01-09T20:04:57.000000Z"},{"id":"53e810e5-a9a2-4515-a19b-8bb281162fb3","type":"application_accepted","notifiable_type":"App\\Models\\User","notifiable_id":27,"data":{"title":"Candidature acceptée 🎉","message":"Félicitations ! Votre candidature pour Admin System chez PIXEL a été acceptée.","sent_at":"2026-01-09T20:04:42.890628Z","application_id":27,"job_id":12,"job_title":"Admin System","company_name":"PIXEL","status":"accepted"},"read_at":null,"created_at":"2026-01-09T20:04:42.000000Z","updated_at":"2026-01-09T20:04:42.000000Z"},{"id":"a67b0333-4d36-4e3b-81fb-3d9c5d57a152","type":"job_published","notifiable_type":"App\\Models\\User","notifiable_id":27,"data":{"title":"Nouvelle offre : Ingenieur des Telecoms","message":"FRAISE SARL recrute à Bafoussam","sent_at":"2026-01-08T21:09:49.994026Z","job_id":15,"job_title":"Ingenieur des Telecoms","company_name":"FRAISE SARL","location":"Bafoussam","category":"Informatique & Tech"},"read_at":"2026-01-08T21:10:42.000000Z","created_at":"2026-01-08T21:09:49.000000Z","updated_at":"2026-01-08T21:10:42.000000Z"},{"id":"9cfd6a74-1649-4719-89d4-d84682fd2beb","type":"application_received","notifiable_type":"App\\Models\\User","notifiable_id":27,"data":{"title":"Nouvelle candidature","message":"Steve a postulé à votre offre: Data Analyst","sent_at":"2026-01-08T20:48:03.260389Z","job_id":14,"job_title":"Data Analyst","applicant_id":24,"applicant_name":"Steve","application_id":24},"read_at":null,"created_at":"2026-01-08T20:48:03.000000Z","updated_at":"2026-01-08T20:48:03.000000Z"},{"id":"147dbacb-df96-4d31-9fa5-b6ca225242d1","type":"company_verified","notifiable_type":"App\\Models\\User","notifiable_id":27,"data":{"title":"Entreprise vérifiée","message":"Félicitations ! Votre entreprise Playstation LTD a été vérifiée et approuvée.","sent_at":"2026-01-08T20:19:07.335524Z","company_id":10,"company_name":"Playstation LTD"},"read_at":null,"created_at":"2026-01-08T20:19:07.000000Z","updated_at":"2026-01-08T20:19:07.000000Z"}],"first_page_url":"http://192.168.1.149:8000/api/notifications?page=1","from":1,"last_page":1,"last_page_url":"http://192.168.1.149:8000/api/notifications?page=1","links":[{"url":null,"label":"pagination.previous","active":false},{"url":"http://192.168.1.149:8000/api/notifications?page=1","label":"1","active":true},{"url":null,"label":"pagination.next","active":false}],"next_page_url":null,"path":"http://192.168.1.149:8000/api/notifications","per_page":50,"prev_page_url":null,"to":5,"total":5}}] 
+[2026-01-09 20:04:58] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 20:04:58] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-09 20:05:08] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 20:05:08] local.INFO: ✅ Conversations loaded {"count":0,"data":[]} 
+[2026-01-09 20:05:18] local.INFO: 💬 Creating conversation {"user_id":26,"request_data":{"application_id":27,"user_two":27}} 
+[2026-01-09 20:05:18] local.INFO: 💬 Application data {"application_id":27,"applicant_id":27,"job_id":12,"recruiter_id":26,"status":"accepted","current_user":26} 
+[2026-01-09 20:05:18] local.INFO: 💬 ✅ Conversation created successfully {"conversation_id":2,"recruiter_id":26,"applicant_id":27} 
+[2026-01-09 20:05:18] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 20:05:18] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T20:05:08.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 20:05:18] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 20:05:08"},"last_message":null,"unread_count":0}]} 
+[2026-01-09 20:05:42] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 20:05:42] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":null,"online_value":null,"online_type":"NULL"} 
+[2026-01-09 20:05:42] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":false,"last_seen":null},"last_message":{"message":"yoo","status":"delivered","sent_at":"2026-01-09 20:05:31"},"unread_count":1}]} 
+[2026-01-09 20:05:48] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 20:05:48] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":null,"online_value":null,"online_type":"NULL"} 
+[2026-01-09 20:05:48] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":false,"last_seen":null},"last_message":{"message":"yoo","status":"delivered","sent_at":"2026-01-09 20:05:31"},"unread_count":1}]} 
+[2026-01-09 20:06:20] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"yeah","data":{"type":"chat_message","sent_at":"2026-01-09T20:06:14.363414Z","conversation_id":2,"message_id":3,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-09 20:06:20] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+[2026-01-09 22:21:32] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:21:32] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T20:06:14.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:21:32] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 20:06:14"},"last_message":{"message":"yeah","status":"sent","sent_at":"2026-01-09 20:06:14"},"unread_count":1}]} 
+[2026-01-09 22:32:07] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:32:07] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-09 22:32:07] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 22:32:07] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 22:32:07] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 22:32:07] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:32:07] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 22:32:07] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":null,"online_value":null,"online_type":"NULL"} 
+[2026-01-09 22:32:07] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":false,"last_seen":null},"last_message":{"message":"yeah","status":"sent","sent_at":"2026-01-09 20:06:14"},"unread_count":0}]} 
+[2026-01-09 22:32:11] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:32:11] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-09 22:32:11] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 22:32:11] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 22:32:11] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 22:32:11] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:32:12] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:32:12] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:32:07.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:32:12] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:32:07"},"last_message":{"message":"yeah","status":"sent","sent_at":"2026-01-09 20:06:14"},"unread_count":1}]} 
+[2026-01-09 22:32:18] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:32:18] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:32:07.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:32:18] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:32:07"},"last_message":{"message":"yeah","status":"sent","sent_at":"2026-01-09 20:06:14"},"unread_count":1}]} 
+[2026-01-09 22:32:29] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"yoo","data":{"type":"chat_message","sent_at":"2026-01-09T22:32:27.780433Z","conversation_id":2,"message_id":4,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1767997950026297%921a81d3921a81d3"}} 
+[2026-01-09 22:32:29] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-09 22:32:55] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 22:32:55] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":null,"online_value":null,"online_type":"NULL"} 
+[2026-01-09 22:32:55] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":false,"last_seen":null},"last_message":{"message":"yoo","status":"delivered","sent_at":"2026-01-09 22:32:27"},"unread_count":1}]} 
+[2026-01-09 22:33:15] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"bobooosssss
+s","data":{"type":"chat_message","sent_at":"2026-01-09T22:33:13.120841Z","conversation_id":2,"message_id":5,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-09 22:33:15] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+[2026-01-09 22:41:51] local.ERROR: Failed to listen on "tcp://0.0.0.0:8080": Address already in use (EADDRINUSE) {"exception":"[object] (RuntimeException(code: 48): Failed to listen on \"tcp://0.0.0.0:8080\": Address already in use (EADDRINUSE) at /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/react/socket/src/TcpServer.php:188)
+[stacktrace]
+#0 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/react/socket/src/SocketServer.php(65): React\\Socket\\TcpServer->__construct('tcp://0.0.0.0:8...', Object(React\\EventLoop\\StreamSelectLoop), Array)
+#1 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/reverb/src/Servers/Reverb/Factory.php(61): React\\Socket\\SocketServer->__construct('0.0.0.0:8080', Array, Object(React\\EventLoop\\StreamSelectLoop))
+#2 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/reverb/src/Servers/Reverb/Console/Commands/StartServer.php(58): Laravel\\Reverb\\Servers\\Reverb\\Factory::make('0.0.0.0', '8080', '', '192.168.1.149', 10000, Array, 'pusher', Object(React\\EventLoop\\StreamSelectLoop))
+#3 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Laravel\\Reverb\\Servers\\Reverb\\Console\\Commands\\StartServer->handle()
+#4 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#5 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#6 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#7 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#8 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#9 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(335): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#10 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#11 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#12 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Laravel\\Reverb\\Servers\\Reverb\\Console\\Commands\\StartServer), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#13 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#14 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#15 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#16 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#17 {main}
+"} 
+[2026-01-09 22:42:56] local.ERROR: Failed to listen on "tcp://0.0.0.0:8080": Address already in use (EADDRINUSE) {"exception":"[object] (RuntimeException(code: 48): Failed to listen on \"tcp://0.0.0.0:8080\": Address already in use (EADDRINUSE) at /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/react/socket/src/TcpServer.php:188)
+[stacktrace]
+#0 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/react/socket/src/SocketServer.php(65): React\\Socket\\TcpServer->__construct('tcp://0.0.0.0:8...', Object(React\\EventLoop\\StreamSelectLoop), Array)
+#1 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/reverb/src/Servers/Reverb/Factory.php(61): React\\Socket\\SocketServer->__construct('0.0.0.0:8080', Array, Object(React\\EventLoop\\StreamSelectLoop))
+#2 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/reverb/src/Servers/Reverb/Console/Commands/StartServer.php(58): Laravel\\Reverb\\Servers\\Reverb\\Factory::make('0.0.0.0', '8080', '', '192.168.1.149', 10000, Array, 'pusher', Object(React\\EventLoop\\StreamSelectLoop))
+#3 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Laravel\\Reverb\\Servers\\Reverb\\Console\\Commands\\StartServer->handle()
+#4 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#5 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#6 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#7 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Container/Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#8 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(213): Illuminate\\Container\\Container->call(Array)
+#9 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Command/Command.php(335): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#10 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Console/Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#11 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Application.php(1103): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#12 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Laravel\\Reverb\\Servers\\Reverb\\Console\\Commands\\StartServer), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#13 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/symfony/console/Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#14 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#15 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#16 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/artisan(11): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#17 {main}
+"} 
+[2026-01-09 22:44:11] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:44:11] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-09 22:44:11] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 22:44:11] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 22:44:11] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 22:44:11] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:44:11] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 22:44:11] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":null,"online_value":null,"online_type":"NULL"} 
+[2026-01-09 22:44:11] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":false,"last_seen":null},"last_message":{"message":"bobooosssss
+s","status":"sent","sent_at":"2026-01-09 22:33:13"},"unread_count":0}]} 
+[2026-01-09 22:45:10] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:45:10] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-09 22:45:10] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 22:45:10] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 22:45:10] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 22:45:10] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:45:10] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:45:10] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:44:12.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:45:10] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:44:12"},"last_message":{"message":"bobooosssss
+s","status":"sent","sent_at":"2026-01-09 22:33:13"},"unread_count":1}]} 
+[2026-01-09 22:45:47] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:45:47] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:44:12.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:45:47] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:44:12"},"last_message":{"message":"bobooosssss
+s","status":"sent","sent_at":"2026-01-09 22:33:13"},"unread_count":1}]} 
+[2026-01-09 22:46:03] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"boss","data":{"type":"chat_message","sent_at":"2026-01-09T22:46:01.535026Z","conversation_id":2,"message_id":6,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1767998764101008%921a81d3921a81d3"}} 
+[2026-01-09 22:46:03] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-09 22:46:12] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 22:46:12] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-09T22:46:01.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:46:12] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:46:01"},"last_message":{"message":"boss","status":"delivered","sent_at":"2026-01-09 22:46:01"},"unread_count":1}]} 
+[2026-01-09 22:46:29] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"oui","data":{"type":"chat_message","sent_at":"2026-01-09T22:46:27.210424Z","conversation_id":2,"message_id":7,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-09 22:46:29] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+
+
+[2026-01-09 22:48:34] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"chaud","data":{"type":"chat_message","sent_at":"2026-01-09T22:48:32.117798Z","conversation_id":2,"message_id":8,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1767998914492091%921a81d3921a81d3"}} 
+[2026-01-09 22:48:34] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-09 22:52:10] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:52:10] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-09 22:52:10] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 22:52:10] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 22:52:10] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 22:52:10] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:52:11] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:52:11] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:52:08.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:52:11] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:52:08"},"last_message":{"message":"chaud","status":"delivered","sent_at":"2026-01-09 22:48:32"},"unread_count":1}]} 
+[2026-01-09 22:52:13] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:52:13] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-09 22:52:13] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-09 22:52:13] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-09 22:52:13] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-09 22:52:13] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-09 22:52:13] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 22:52:14] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-09T22:52:11.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:52:14] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:52:11"},"last_message":{"message":"chaud","status":"delivered","sent_at":"2026-01-09 22:48:32"},"unread_count":1}]} 
+[2026-01-09 22:52:19] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-09 22:52:19] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:52:14.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:52:19] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:52:14"},"last_message":{"message":"chaud","status":"delivered","sent_at":"2026-01-09 22:48:32"},"unread_count":1}]} 
+[2026-01-09 22:52:22] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-09 22:52:22] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-09T22:52:19.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-09 22:52:22] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:52:19"},"last_message":{"message":"chaud","status":"delivered","sent_at":"2026-01-09 22:48:32"},"unread_count":1}]} 
+[2026-01-10 03:51:02] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 03:51:02] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-10 03:51:02] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 03:51:02] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 03:51:02] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 03:51:02] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 03:51:03] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 03:51:03] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:52:28.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 03:51:03] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:52:28"},"last_message":{"message":"chaud","status":"read","sent_at":"2026-01-09 22:48:32"},"unread_count":0}]} 
+[2026-01-10 03:51:58] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 03:51:58] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-09T22:52:28.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 03:51:58] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-09 22:52:28"},"last_message":{"message":"chaud","status":"read","sent_at":"2026-01-09 22:48:32"},"unread_count":0}]} 
+[2026-01-10 03:52:27] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 03:52:27] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-10 03:52:27] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 03:52:27] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 03:52:27] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 03:52:27] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 03:52:27] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 03:52:27] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T03:51:58.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 03:52:27] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 03:51:58"},"last_message":{"message":"chaud","status":"read","sent_at":"2026-01-09 22:48:32"},"unread_count":0}]} 
+[2026-01-10 03:53:49] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 03:53:49] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T03:53:38.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 03:53:49] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 03:53:38"},"last_message":{"message":"chaud","status":"read","sent_at":"2026-01-09 22:48:32"},"unread_count":0}]} 
+[2026-01-10 03:54:11] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"bonjour","data":{"type":"chat_message","sent_at":"2026-01-10T03:54:10.016665Z","conversation_id":2,"message_id":9,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768017251533536%921a81d3921a81d3"}} 
+[2026-01-10 03:54:11] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 03:54:50] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"cava ?","data":{"type":"chat_message","sent_at":"2026-01-10T03:54:48.127367Z","conversation_id":2,"message_id":10,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-10 03:54:50] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+[2026-01-10 04:05:22] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:05:22] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-10 04:05:22] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:05:22] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:05:22] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:05:22] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:05:23] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:05:23] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-10T04:05:19.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:05:23] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:05:19"},"last_message":{"message":"cava ?","status":"read","sent_at":"2026-01-10 03:54:48"},"unread_count":0}]} 
+[2026-01-10 04:05:24] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:05:24] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-10 04:05:24] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:05:24] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:05:24] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:05:24] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:05:24] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 04:05:24] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T04:05:23.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:05:24] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:05:23"},"last_message":{"message":"cava ?","status":"read","sent_at":"2026-01-10 03:54:48"},"unread_count":0}]} 
+[2026-01-10 04:05:37] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:05:37] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-10T04:05:26.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:05:37] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:05:26"},"last_message":{"message":"cava ?","status":"read","sent_at":"2026-01-10 03:54:48"},"unread_count":0}]} 
+[2026-01-10 04:05:43] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 04:05:43] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T04:05:37.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:05:43] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:05:37"},"last_message":{"message":"cava ?","status":"read","sent_at":"2026-01-10 03:54:48"},"unread_count":0}]} 
+[2026-01-10 04:05:57] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [26,"2"] 
+[2026-01-10 04:05:57] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:05:57] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [26,"2"] 
+[2026-01-10 04:05:57] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:06:08] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:06:08] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:06:08] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:06:10] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"yooo"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:06:10] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:06:10] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":11,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:06:10] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:06:10] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:06:10] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":11,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:06:10] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":11,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:06:10] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:06:11] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"yooo","data":{"type":"chat_message","sent_at":"2026-01-10T04:06:10.236323Z","conversation_id":2,"message_id":11,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768017971611654%921a81d3921a81d3"}} 
+[2026-01-10 04:06:11] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:06:16] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:06:16] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:06:16] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:06:16] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:06:20] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:06:20] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:06:20] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:06:22] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:06:22] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:06:22] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:06:30] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:06:30] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:06:30] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:06:32] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":27,"request_data":{"conversation_id":2,"message":"ouii comment tu vas ?"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:06:32] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:06:32] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":12,"conversation_id":2,"sender_id":27,"status":"sent"} 
+[2026-01-10 04:06:32] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:06:32] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:06:32] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":12,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:06:32] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":12,"conversation_id":2,"sender_id":27} 
+[2026-01-10 04:06:32] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:06:33] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"ouii comment tu vas ?","data":{"type":"chat_message","sent_at":"2026-01-10T04:06:32.495340Z","conversation_id":2,"message_id":12,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-10 04:06:33] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+[2026-01-10 04:06:57] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:06:57] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:06:57] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:07:00] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:07:00] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:07:00] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:07:06] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"yooouuuuuububububububububububububu"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:07:06] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:07:06] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":13,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:07:06] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:07:06] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:07:06] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":13,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:07:06] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":13,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:07:06] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:07:07] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"yooouuuuuububububububububububububu","data":{"type":"chat_message","sent_at":"2026-01-10T04:07:06.595974Z","conversation_id":2,"message_id":13,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768018027804021%921a81d3921a81d3"}} 
+[2026-01-10 04:07:07] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:12:27] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:12:27] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-10 04:12:27] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:12:27] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:12:27] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:12:27] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:12:27] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:12:27] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-10T04:06:32.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:12:27] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:06:32"},"last_message":{"message":"yooouuuuuububububububububububububu","status":"delivered","sent_at":"2026-01-10 04:07:06"},"unread_count":1}]} 
+[2026-01-10 04:12:31] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:12:31] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-10T04:06:32.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:12:31] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:06:32"},"last_message":{"message":"yooouuuuuububububububububububububu","status":"delivered","sent_at":"2026-01-10 04:07:06"},"unread_count":1}]} 
+[2026-01-10 04:13:49] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:13:49] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:13:50] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:13:50] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:14:46] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:14:46] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:14:47] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:14:47] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:18:43] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:18:43] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-10 04:18:43] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:18:43] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:18:43] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:18:43] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:18:43] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:18:43] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-10T04:18:42.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:18:43] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:18:42"},"last_message":{"message":"yooouuuuuububububububububububububu","status":"read","sent_at":"2026-01-10 04:07:06"},"unread_count":0}]} 
+[2026-01-10 04:18:46] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:18:46] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-10 04:18:46] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:18:46] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:18:46] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:18:46] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:18:46] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 04:18:46] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T04:18:45.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:18:46] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:18:45"},"last_message":{"message":"yooouuuuuububububububububububububu","status":"read","sent_at":"2026-01-10 04:07:06"},"unread_count":0}]} 
+[2026-01-10 04:18:54] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:18:54] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":true,"last_seen":"2026-01-10T04:18:46.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:18:54] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:18:46"},"last_message":{"message":"yooouuuuuububububububububububububu","status":"read","sent_at":"2026-01-10 04:07:06"},"unread_count":0}]} 
+[2026-01-10 04:19:01] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":26,"online":true} 
+[2026-01-10 04:19:01] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:19:01] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":26,"online":true}} 
+[2026-01-10 04:19:01] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":26,"online":true} 
+[2026-01-10 04:19:01] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:19:01] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":26,"online":true}} 
+[2026-01-10 04:19:02] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [26,"2"] 
+[2026-01-10 04:19:02] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:19:02] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [26,"2"] 
+[2026-01-10 04:19:02] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:19:09] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:19:09] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:19:09] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":26} 
+[2026-01-10 04:19:09] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:19:09] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":26}} 
+[2026-01-10 04:19:09] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:19:11] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"bonjour"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:19:11] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:19:11] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":14,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:19:11] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:19:11] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:19:11] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":14,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:19:11] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":14,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:19:11] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:19:11] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":14,"conversation_id":2,"sender_id":26,"sender_name":"jule","message":"bonjour","status":"delivered","created_at":"2026-01-10 04:19:11","updated_at":"2026-01-10 04:19:11"}} 
+[2026-01-10 04:19:11] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:19:12] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"bonjour","data":{"type":"chat_message","sent_at":"2026-01-10T04:19:11.262355Z","conversation_id":2,"message_id":14,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768018752701311%921a81d3921a81d3"}} 
+[2026-01-10 04:19:12] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:19:16] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 04:19:16] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T04:19:11.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:19:16] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:19:11"},"last_message":{"message":"bonjour","status":"delivered","sent_at":"2026-01-10 04:19:11"},"unread_count":1}]} 
+[2026-01-10 04:19:19] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":14,"status":"read"} 
+[2026-01-10 04:19:19] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:19:19] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":14,"status":"read"}} 
+[2026-01-10 04:19:19] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":27,"online":true} 
+[2026-01-10 04:19:19] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:19:19] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":27,"online":true}} 
+[2026-01-10 04:19:20] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":27,"online":true} 
+[2026-01-10 04:19:20] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:19:20] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":27,"online":true}} 
+[2026-01-10 04:19:20] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:19:20] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:19:20] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:19:20] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:19:24] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:19:24] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:19:24] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":27} 
+[2026-01-10 04:19:24] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:19:24] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":27}} 
+[2026-01-10 04:19:24] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:19:46] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:19:46] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:19:46] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":27} 
+[2026-01-10 04:19:46] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:19:46] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":27}} 
+[2026-01-10 04:19:46] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:19:52] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":27,"request_data":{"conversation_id":2,"message":"cava mon chaud?"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:19:52] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:19:52] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":15,"conversation_id":2,"sender_id":27,"status":"sent"} 
+[2026-01-10 04:19:52] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:19:52] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:19:52] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":15,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:19:52] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":15,"conversation_id":2,"sender_id":27} 
+[2026-01-10 04:19:52] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:19:52] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":15,"conversation_id":2,"sender_id":27,"sender_name":"Ledou","message":"cava mon chaud?","status":"delivered","created_at":"2026-01-10 04:19:52","updated_at":"2026-01-10 04:19:52"}} 
+[2026-01-10 04:19:52] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:19:54] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"cava mon chaud?","data":{"type":"chat_message","sent_at":"2026-01-10T04:19:52.802939Z","conversation_id":2,"message_id":15,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-10 04:19:54] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+[2026-01-10 04:19:54] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":15,"status":"read"} 
+[2026-01-10 04:19:54] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:19:54] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":15,"status":"read"}} 
+[2026-01-10 04:19:55] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:19:55] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:19:55] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":27} 
+[2026-01-10 04:19:55] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:19:55] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":27}} 
+[2026-01-10 04:19:55] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:20:00] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:20:00] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:20:00] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":26} 
+[2026-01-10 04:20:00] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:20:00] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":26}} 
+[2026-01-10 04:20:00] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:20:06] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"oui mon chaud cava bien"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:20:06] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:20:06] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":16,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:20:06] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:20:06] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:20:06] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":16,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:20:06] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":16,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:20:06] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:20:06] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":16,"conversation_id":2,"sender_id":26,"sender_name":"jule","message":"oui mon chaud cava bien","status":"delivered","created_at":"2026-01-10 04:20:06","updated_at":"2026-01-10 04:20:06"}} 
+[2026-01-10 04:20:06] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:20:07] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"oui mon chaud cava bien","data":{"type":"chat_message","sent_at":"2026-01-10T04:20:06.335453Z","conversation_id":2,"message_id":16,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768018807595484%921a81d3921a81d3"}} 
+[2026-01-10 04:20:07] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:20:07] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":16,"status":"read"} 
+[2026-01-10 04:20:07] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:20:07] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":16,"status":"read"}} 
+[2026-01-10 04:20:14] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":27,"online":false} 
+[2026-01-10 04:20:14] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:20:14] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":27,"online":false}} 
+[2026-01-10 04:20:16] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:20:16] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:20:16] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":26} 
+[2026-01-10 04:20:16] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:20:16] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":26}} 
+[2026-01-10 04:20:16] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:20:17] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"nice"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:20:17] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:20:17] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":17,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:20:17] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":false} 
+[2026-01-10 04:20:17] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":17,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:20:17] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":17,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:20:17] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:20:17] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":17,"conversation_id":2,"sender_id":26,"sender_name":"jule","message":"nice","status":"sent","created_at":"2026-01-10 04:20:17","updated_at":"2026-01-10 04:20:17"}} 
+[2026-01-10 04:20:17] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:20:18] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"nice","data":{"type":"chat_message","sent_at":"2026-01-10T04:20:17.712404Z","conversation_id":2,"message_id":17,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768018819039313%921a81d3921a81d3"}} 
+[2026-01-10 04:20:18] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:25:20] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:25:20] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #26  
+[2026-01-10 04:25:20] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:25:20] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:25:20] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:25:20] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:25:20] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:25:20] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":false,"last_seen":"2026-01-10T04:25:18.000000Z"}},"online_value":false,"online_type":"boolean"} 
+[2026-01-10 04:25:20] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":false,"last_seen":"2026-01-10 04:25:18"},"last_message":{"message":"nice","status":"sent","sent_at":"2026-01-10 04:20:17"},"unread_count":0}]} 
+[2026-01-10 04:25:24] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:25:24] local.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #27  
+[2026-01-10 04:25:24] local.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-10 04:25:24] local.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-10 04:25:24] local.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-10 04:25:24] local.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-10 04:25:24] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 04:25:24] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T04:25:21.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:25:24] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:25:21"},"last_message":{"message":"nice","status":"sent","sent_at":"2026-01-10 04:20:17"},"unread_count":1}]} 
+[2026-01-10 04:25:51] local.INFO: 📋 Loading conversations for user {"user_id":26} 
+[2026-01-10 04:25:51] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":26,"other_user_id":27,"other_user_name":"Ledou","presence_data":{"App\\Models\\UserPresence":{"user_id":27,"online":false,"last_seen":"2026-01-10T04:25:25.000000Z"}},"online_value":false,"online_type":"boolean"} 
+[2026-01-10 04:25:51] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":27,"name":"Ledou","profile_photo":null,"is_online":false,"last_seen":"2026-01-10 04:25:25"},"last_message":{"message":"nice","status":"sent","sent_at":"2026-01-10 04:20:17"},"unread_count":0}]} 
+[2026-01-10 04:25:54] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":26,"online":true} 
+[2026-01-10 04:25:54] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:25:54] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":26,"online":true}} 
+[2026-01-10 04:25:54] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":26,"online":true} 
+[2026-01-10 04:25:54] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:25:54] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":26,"online":true}} 
+[2026-01-10 04:25:55] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [26,"2"] 
+[2026-01-10 04:25:55] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:25:55] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [26,"2"] 
+[2026-01-10 04:25:55] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:25:57] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:25:57] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:25:57] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":26} 
+[2026-01-10 04:25:57] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:25:57] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":26}} 
+[2026-01-10 04:25:57] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:25:59] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"boss"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:25:59] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:25:59] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":18,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:25:59] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":false} 
+[2026-01-10 04:25:59] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":18,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:25:59] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":18,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:25:59] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:25:59] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":18,"conversation_id":2,"sender_id":26,"sender_name":"jule","message":"boss","status":"sent","created_at":"2026-01-10 04:25:59","updated_at":"2026-01-10 04:25:59"}} 
+[2026-01-10 04:25:59] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:26:04] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"boss","data":{"type":"chat_message","sent_at":"2026-01-10T04:25:59.228684Z","conversation_id":2,"message_id":18,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768019162994889%921a81d3921a81d3"}} 
+[2026-01-10 04:26:04] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:26:06] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":26,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:26:06] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":26,"channel":"private-chat.2"} 
+[2026-01-10 04:26:06] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":26} 
+[2026-01-10 04:26:06] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:26:06] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":26}} 
+[2026-01-10 04:26:06] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:26:07] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":26,"request_data":{"conversation_id":2,"message":"hooo"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:26:07] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:26:07] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":19,"conversation_id":2,"sender_id":26,"status":"sent"} 
+[2026-01-10 04:26:07] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":false} 
+[2026-01-10 04:26:07] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":19,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:26:07] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":19,"conversation_id":2,"sender_id":26} 
+[2026-01-10 04:26:07] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:26:07] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":19,"conversation_id":2,"sender_id":26,"sender_name":"jule","message":"hooo","status":"sent","created_at":"2026-01-10 04:26:07","updated_at":"2026-01-10 04:26:07"}} 
+[2026-01-10 04:26:07] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:26:08] local.INFO: FCM notification sent {"token":"chP06orwRDO28qbFAX57Kp:APA91bGgoTYFrcGh7od6ndYFwgBdIOdUyJxRrtgz2TY6GieAt1mQZVkEZcvZlR5G4zotzCKU_NdEfjI_oESPoSRmTet_0njxVGE-KJFdtcelHuWMuygMkwM","title":"Nouveau message de jule","body":"hooo","data":{"type":"chat_message","sent_at":"2026-01-10T04:26:07.366347Z","conversation_id":2,"message_id":19,"sender_id":26,"sender_name":"jule"},"result":{"name":"projects/estuaire-emplois/messages/0:1768019168941774%921a81d3921a81d3"}} 
+[2026-01-10 04:26:08] local.INFO: Notification envoyée {"user_id":27,"type":"chat_message","title":"Nouveau message de jule"} 
+[2026-01-10 04:26:11] local.INFO: 📋 Loading conversations for user {"user_id":27} 
+[2026-01-10 04:26:11] local.INFO: 📋 Processing conversation {"conversation_id":2,"user_one":26,"user_two":27,"current_user":27,"other_user_id":26,"other_user_name":"jule","presence_data":{"App\\Models\\UserPresence":{"user_id":26,"online":true,"last_seen":"2026-01-10T04:26:07.000000Z"}},"online_value":true,"online_type":"boolean"} 
+[2026-01-10 04:26:11] local.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":2,"user":{"id":26,"name":"jule","profile_photo":null,"is_online":true,"last_seen":"2026-01-10 04:26:07"},"last_message":{"message":"hooo","status":"sent","sent_at":"2026-01-10 04:26:07"},"unread_count":3}]} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":17,"status":"read"} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":17,"status":"read"}} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":18,"status":"read"} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":18,"status":"read"}} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":19,"status":"read"} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:26:14] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":19,"status":"read"}} 
+[2026-01-10 04:26:15] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":27,"online":true} 
+[2026-01-10 04:26:15] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:26:15] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":27,"online":true}} 
+[2026-01-10 04:26:16] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":27,"online":true} 
+[2026-01-10 04:26:16] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:26:16] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":27,"online":true}} 
+[2026-01-10 04:26:16] local.INFO: 🔐 Vérification canal chat pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:26:16] local.INFO: 🔐 Auth result for chat.2: GRANTED  
+[2026-01-10 04:26:17] local.INFO: 🔐 Vérification canal typing pour utilisateur ID:  [27,"2"] 
+[2026-01-10 04:26:17] local.INFO: 🔐 Auth result for typing.2: GRANTED  
+[2026-01-10 04:26:18] local.INFO: ⌨️  [TYPING] Typing event received {"user_id":27,"request_data":{"conversation_id":2}} 
+[2026-01-10 04:26:18] local.INFO: ⌨️  📡 [TYPING] Broadcasting typing event {"conversation_id":2,"user_id":27,"channel":"private-chat.2"} 
+[2026-01-10 04:26:18] local.INFO: ⌨️  [EVENT] TypingEvent constructor called {"conversation_id":2,"user_id":27} 
+[2026-01-10 04:26:18] local.INFO: ⌨️  [EVENT] TypingEvent broadcastOn called {"channel":"private-typing.2","conversation_id":2} 
+[2026-01-10 04:26:18] local.INFO: ⌨️  [EVENT] TypingEvent broadcastWith called {"data":{"conversationId":2,"userId":27}} 
+[2026-01-10 04:26:18] local.INFO: ⌨️  ✅ [TYPING] Typing event broadcasted  
+[2026-01-10 04:26:21] local.INFO: 💬 📤 [SEND] Starting message send {"user_id":27,"request_data":{"conversation_id":2,"message":"ouii"},"broadcast_connection":"reverb"} 
+[2026-01-10 04:26:21] local.INFO: 💬 📤 [SEND] Conversation verified {"conversation_id":2,"user_one":26,"user_two":27} 
+[2026-01-10 04:26:21] local.INFO: 💬 📤 [SEND] Message created in DB {"message_id":20,"conversation_id":2,"sender_id":27,"status":"sent"} 
+[2026-01-10 04:26:21] local.INFO: 💬 📤 [SEND] Receiver online status {"conversation_id":2,"is_receiver_online":true} 
+[2026-01-10 04:26:21] local.INFO: 💬 📤 [SEND] Message status updated to delivered  
+[2026-01-10 04:26:21] local.INFO: 💬 📡 [BROADCAST] Broadcasting message {"message_id":20,"conversation_id":2,"channel":"private-chat.2","event":"MessageSent","broadcast_driver":"reverb"} 
+[2026-01-10 04:26:21] local.INFO: 📡 [EVENT] MessageSent constructor called {"message_id":20,"conversation_id":2,"sender_id":27} 
+[2026-01-10 04:26:21] local.INFO: 📡 [EVENT] MessageSent broadcastOn called {"channel":"private-chat.2","channel_object":"Illuminate\\Broadcasting\\PrivateChannel","conversation_id":2} 
+[2026-01-10 04:26:21] local.INFO: 📡 [EVENT] MessageSent broadcastWith called {"data":{"id":20,"conversation_id":2,"sender_id":27,"sender_name":"Ledou","message":"ouii","status":"delivered","created_at":"2026-01-10 04:26:21","updated_at":"2026-01-10 04:26:21"}} 
+[2026-01-10 04:26:21] local.INFO: 💬 📡 [BROADCAST] Broadcast command executed successfully  
+[2026-01-10 04:26:23] local.ERROR: Failed to send FCM notification {"token":"d9_qV0XgRdeSuQ2ILKksTT:APA91bGg8NOGjdzubAZNIIb9NWLRm3Kr1PQMQ6MZWKil5EBhgbf3REzksytFBEty0EoBQvj1H_HtK29800ScgykM-HeJaNpG7odaA7AWaTR3D6TOfDzhagY","title":"Nouveau message de Ledou","body":"ouii","data":{"type":"chat_message","sent_at":"2026-01-10T04:26:21.650511Z","conversation_id":2,"message_id":20,"sender_id":27,"sender_name":"Ledou"},"error":"Requested entity was not found."} 
+[2026-01-10 04:26:23] local.ERROR: Erreur envoi notification {"user_id":26,"type":"chat_message","error":"Requested entity was not found."} 
+[2026-01-10 04:26:23] local.INFO: ✓ [EVENT] MessageStatusUpdated constructor called {"message_id":20,"status":"read"} 
+[2026-01-10 04:26:23] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastOn called {"channel":"private-chat.2","conversation_id":2} 
+[2026-01-10 04:26:23] local.INFO: ✓ [EVENT] MessageStatusUpdated broadcastWith called {"data":{"message_id":20,"status":"read"}} 
+[2026-01-10 04:26:26] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":26,"online":false} 
+[2026-01-10 04:26:26] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:26:26] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":26,"online":false}} 
+[2026-01-10 04:26:32] local.INFO: 👤 [EVENT] PresenceEvent constructor called {"user_id":27,"online":false} 
+[2026-01-10 04:26:32] local.INFO: 👤 [EVENT] PresenceEvent broadcastOn called {"channel":"presence"} 
+[2026-01-10 04:26:32] local.INFO: 👤 [EVENT] PresenceEvent broadcastWith called {"data":{"userId":27,"online":false}} 

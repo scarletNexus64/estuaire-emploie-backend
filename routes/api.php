@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TestNotificationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
 use App\Models\User;
 use App\Services\FirebaseNotificationService;
 
@@ -183,6 +185,33 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // BROADCASTING AUTH (WebSocket Authentication)
     // ------------------
     Route::post('/broadcasting/auth', function () {
-        return Broadcast::auth(request());
+        \Log::info('🔐 ========== BROADCASTING AUTH REQUEST ==========', [
+            'user_id' => Auth::id(),
+            'socket_id' => request()->input('socket_id'),
+            'channel_name' => request()->input('channel_name'),
+            'request_all' => request()->all(),
+            'headers' => request()->headers->all(),
+        ]);
+
+        try {
+            $result = Broadcast::auth(request());
+
+            \Log::info('🔐 ========== BROADCASTING AUTH SUCCESS ==========', [
+                'user_id' => Auth::id(),
+                'channel_name' => request()->input('channel_name'),
+                'response' => $result,
+            ]);
+
+            return $result;
+        } catch (\Exception $e) {
+            \Log::error('🔐 ========== BROADCASTING AUTH FAILED ==========', [
+                'user_id' => Auth::id(),
+                'channel_name' => request()->input('channel_name'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
+        }
     });
 });

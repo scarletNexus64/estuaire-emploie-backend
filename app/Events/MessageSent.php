@@ -4,21 +4,35 @@ namespace App\Events;
 
 use App\Models\Message;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class MessageSent implements ShouldBroadcast
+class MessageSent implements ShouldBroadcastNow
 {
-    public function __construct(public Message $message) {}
+    public function __construct(public Message $message)
+    {
+        \Log::info('📡 [EVENT] MessageSent constructor called', [
+            'message_id' => $this->message->id,
+            'conversation_id' => $this->message->conversation_id,
+            'sender_id' => $this->message->sender_id,
+        ]);
+    }
 
     public function broadcastOn()
     {
-        // CORRECTION: utiliser "chat" au lieu de "chat"
-        return new PrivateChannel('chat.' . $this->message->conversation_id);
+        $channel = new PrivateChannel('chat.' . $this->message->conversation_id);
+
+        \Log::info('📡 [EVENT] MessageSent broadcastOn called', [
+            'channel' => 'private-chat.' . $this->message->conversation_id,
+            'channel_object' => get_class($channel),
+            'conversation_id' => $this->message->conversation_id,
+        ]);
+
+        return $channel;
     }
 
     public function broadcastWith()
     {
-        return [
+        $data = [
             'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'sender_id' => $this->message->sender_id,
@@ -28,5 +42,11 @@ class MessageSent implements ShouldBroadcast
             'created_at' => $this->message->created_at->toDateTimeString(),
             'updated_at' => $this->message->updated_at->toDateTimeString(),
         ];
+
+        \Log::info('📡 [EVENT] MessageSent broadcastWith called', [
+            'data' => $data,
+        ]);
+
+        return $data;
     }
 }
