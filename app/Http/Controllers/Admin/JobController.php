@@ -302,9 +302,9 @@ class JobController extends Controller
             'failed' => $failed,
             'errors' => $errors,
             'progress' => [
-                'current' => min($processed, $totalCandidates),
-                'total' => $totalCandidates,
-                'percentage' => min(100, round(($processed / $totalCandidates) * 100, 2)),
+                'current' => min($processed, $totalUsers),
+                'total' => $totalUsers,
+                'percentage' => min(100, round(($processed / $totalUsers) * 100, 2)),
             ],
         ]);
     }

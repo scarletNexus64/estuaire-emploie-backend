@@ -230,21 +230,6 @@
             </span>
         </div>
     </div>
-
-    <div class="stat-card" style="border-left: 4px solid #8b5cf6;">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Notifications</div>
-                <div class="stat-value">{{ $stats['total_notifications'] ?? 0 }}</div>
-            </div>
-            <div class="stat-icon">🔔</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend" style="color: #8b5cf6;">
-                {{ $stats['unread_notifications'] ?? 0 }} non lues
-            </span>
-        </div>
-    </div>
 </div>
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">

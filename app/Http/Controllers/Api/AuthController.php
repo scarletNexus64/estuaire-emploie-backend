@@ -457,13 +457,22 @@ public function login(Request $request)
     {
         $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        // Vérifier si l'utilisateur existe
+        $user = User::where('email', $request->email)->first();
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'Lien de réinitialisation envoyé par email'])
-            : response()->json(['message' => 'Impossible d\'envoyer le lien'], 500);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun compte trouvé avec cet email'
+            ], 404);
+        }
+
+        // L'utilisateur existe, on autorise la réinitialisation
+        return response()->json([
+            'success' => true,
+            'message' => 'Email vérifié avec succès',
+            'email' => $request->email
+        ], 200);
     }
 
     /**
@@ -503,27 +512,33 @@ public function login(Request $request)
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'token' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:6|confirmed',
         ]);
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password),
-                ])->setRememberToken(Str::random(60));
+        // Vérifier si l'utilisateur existe
+        $user = User::where('email', $request->email)->first();
 
-                $user->save();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun compte trouvé avec cet email'
+            ], 404);
+        }
 
-                event(new PasswordReset($user));
-            }
-        );
+        // Mettre à jour le mot de passe
+        $user->forceFill([
+            'password' => Hash::make($request->password),
+        ])->setRememberToken(Str::random(60));
 
-        return $status === Password::PASSWORD_RESET
-            ? response()->json(['message' => 'Mot de passe réinitialisé avec succès'])
-            : response()->json(['message' => 'Impossible de réinitialiser le mot de passe'], 500);
+        $user->save();
+
+        event(new PasswordReset($user));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mot de passe réinitialisé avec succès'
+        ], 200);
     }
 
     /**

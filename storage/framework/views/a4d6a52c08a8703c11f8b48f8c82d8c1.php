@@ -255,42 +255,6 @@
             box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
         }
 
-        .notification-btn {
-            position: relative;
-            width: 44px;
-            height: 44px;
-            background: var(--light);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .notification-btn:hover {
-            background: white;
-            border-color: var(--primary);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: var(--danger);
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font-size: 0.65rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            border: 2px solid white;
-        }
-
         .user-menu {
             position: relative;
         }
@@ -1190,13 +1154,6 @@
                     <div class="header-actions">
                         <?php echo $__env->yieldContent('header-actions'); ?>
 
-                        <div class="notification-btn">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            <span class="notification-badge">3</span>
-                        </div>
-
                         <div class="user-menu">
                             <div class="user-profile">
                                 <div class="user-avatar"><?php echo e(strtoupper(substr(auth()->user()->name, 0, 1))); ?></div>
@@ -1261,6 +1218,22 @@
                     </div>
                 <?php endif; ?>
 
+                <?php if($errors->any()): ?>
+                    <div class="alert alert-danger">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                        </svg>
+                        <div style="flex: 1;">
+                            <strong>Erreurs de validation :</strong>
+                            <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li><?php echo e($error); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </ul>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <?php echo $__env->yieldContent('content'); ?>
             </div>
         </main>
@@ -1276,6 +1249,35 @@
     </div>
 
     <script>
+        // Sidebar Scroll Position Manager
+        (function() {
+            const sidebar = document.querySelector('.sidebar');
+            if (!sidebar) return;
+
+            // Restore scroll position on page load
+            const savedScrollPosition = sessionStorage.getItem('sidebarScrollPosition');
+            if (savedScrollPosition) {
+                sidebar.scrollTop = parseInt(savedScrollPosition, 10);
+            }
+
+            // Save scroll position when clicking menu items
+            const menuItems = sidebar.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    sessionStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
+                });
+            });
+
+            // Also save on scroll to handle edge cases
+            let scrollTimeout;
+            sidebar.addEventListener('scroll', function() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    sessionStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
+                }, 100);
+            });
+        })();
+
         // Bulk Actions Manager
         const bulkActions = {
             selectedIds: new Set(),

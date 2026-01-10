@@ -52,6 +52,20 @@ class JobController extends Controller
      *         @OA\Schema(type="string", enum={"junior", "intermediaire", "senior", "expert"})
      *     ),
      *     @OA\Parameter(
+     *         name="min_salary",
+     *         in="query",
+     *         description="Salaire minimum",
+     *         required=false,
+     *         @OA\Schema(type="number")
+     *     ),
+     *     @OA\Parameter(
+     *         name="max_salary",
+     *         in="query",
+     *         description="Salaire maximum",
+     *         required=false,
+     *         @OA\Schema(type="number")
+     *     ),
+     *     @OA\Parameter(
      *         name="search",
      *         in="query",
      *         description="Recherche par mots-clés",
@@ -91,6 +105,21 @@ class JobController extends Controller
             $query->where('experience_level', $request->experience_level);
         }
 
+        // Filtre par fourchette de salaire
+        if ($request->has('min_salary')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('salary_max', '>=', $request->min_salary)
+                    ->orWhereNull('salary_max');
+            });
+        }
+
+        if ($request->has('max_salary')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('salary_min', '<=', $request->max_salary)
+                    ->orWhereNull('salary_min');
+            });
+        }
+
         // Recherche améliorée avec support des accents
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
@@ -117,7 +146,7 @@ class JobController extends Controller
         }
 
         $jobs = $query->latest()
-            ->paginate(20);
+            ->paginate(10);
 
         return response()->json($jobs);
     }
@@ -435,8 +464,7 @@ class JobController extends Controller
 
         $query = Job::where('company_id', $recruiter->company_id)
             ->with(['category', 'location', 'contractType'])
-            ->withCount('applications')
-            ->has('applications', '>=', 1); // Filtre: uniquement les offres avec au moins 1 candidature
+            ->withCount('applications');
 
         // Filtrer par statut si fourni
         if ($request->has('status')) {
@@ -444,7 +472,7 @@ class JobController extends Controller
         }
 
         $jobs = $query->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(10);
 
         return response()->json($jobs);
     }

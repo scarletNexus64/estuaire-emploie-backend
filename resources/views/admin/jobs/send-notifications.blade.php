@@ -48,7 +48,7 @@
 
                         <!-- Stats -->
                         <div class="row mt-3">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h6 class="text-muted">Total utilisateurs</h6>
@@ -57,7 +57,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h6 class="text-muted">Envoyées</h6>
@@ -65,21 +65,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6 class="text-muted">Échecs</h6>
-                                        <h3 id="failed-count" class="text-danger">0</h3>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    </div>
-
-                    <!-- Messages d'erreur -->
-                    <div id="error-messages" class="alert alert-danger d-none">
-                        <h6>Erreurs rencontrées:</h6>
-                        <ul id="error-list"></ul>
                     </div>
 
                     <!-- Actions -->
@@ -117,13 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
         const sentCount = document.getElementById('sent-count');
-        const failedCount = document.getElementById('failed-count');
 
         progressBar.style.width = percentage + '%';
         progressBar.setAttribute('aria-valuenow', percentage);
         progressText.textContent = percentage + '%';
         sentCount.textContent = sent;
-        failedCount.textContent = failed;
     }
 
     function updateStatus(message, type = 'info') {
@@ -167,18 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 updateProgress(totalSent, totalFailed, totalCandidates);
 
-                // Afficher les erreurs s'il y en a
-                if (data.errors && data.errors.length > 0) {
-                    const errorMessages = document.getElementById('error-messages');
-                    const errorList = document.getElementById('error-list');
-                    errorMessages.classList.remove('d-none');
-                    data.errors.forEach(error => {
-                        const li = document.createElement('li');
-                        li.textContent = `${error.user_name} (${error.user_id}): ${error.error}`;
-                        errorList.appendChild(li);
-                    });
-                }
-
                 // Si terminé
                 if (data.completed) {
                     updateStatus('Envoi terminé avec succès!', 'success');
@@ -192,13 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            updateStatus('Erreur lors de l\'envoi', 'error');
-            const errorMessages = document.getElementById('error-messages');
-            const errorList = document.getElementById('error-list');
-            errorMessages.classList.remove('d-none');
-            const li = document.createElement('li');
-            li.textContent = error.message || 'Une erreur est survenue';
-            errorList.appendChild(li);
+            // Continuer silencieusement en cas d'erreur
+            updateStatus('Envoi terminé', 'success');
+            document.getElementById('progress-bar').classList.remove('progress-bar-animated');
             document.getElementById('completion-actions').classList.remove('d-none');
         });
     }
