@@ -25,10 +25,12 @@
                         </p>
                     </div>
 
-                    <!-- Status de l'envoi -->
+                    <!-- Status de l'envoi PUSH -->
                     <div id="sending-status" class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="mb-0">Envoi des notifications push aux candidats</h5>
+                            <h5 class="mb-0">
+                                <i class="fas fa-mobile-alt"></i> Notifications Push
+                            </h5>
                             <span id="status-text" class="badge badge-info">
                                 <i class="fas fa-spinner fa-spin"></i> Préparation...
                             </span>
@@ -46,13 +48,13 @@
                             </div>
                         </div>
 
-                        <!-- Stats -->
+                        <!-- Stats Push -->
                         <div class="row mt-3">
                             <div class="col-md-6">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
-                                        <h6 class="text-muted">Total utilisateurs</h6>
-                                        <h3 id="total-count" class="text-primary">{{ $totalUsers }}</h3>
+                                        <h6 class="text-muted">Total utilisateurs (Push)</h6>
+                                        <h3 id="total-push-count" class="text-primary">{{ $totalPushUsers }}</h3>
                                         <small class="text-muted">Candidats & Recruteurs (sauf auteur)</small>
                                     </div>
                                 </div>
@@ -60,8 +62,53 @@
                             <div class="col-md-6">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
-                                        <h6 class="text-muted">Envoyées</h6>
-                                        <h3 id="sent-count" class="text-success">0</h3>
+                                        <h6 class="text-muted">Push envoyées</h6>
+                                        <h3 id="sent-push-count" class="text-success">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status de l'envoi EMAIL -->
+                    <div id="email-sending-status" class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0">
+                                <i class="fas fa-envelope"></i> Notifications Email
+                            </h5>
+                            <span id="email-status-text" class="badge badge-info">
+                                <i class="fas fa-spinner fa-spin"></i> Préparation...
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar Email -->
+                        <div class="progress" style="height: 30px;">
+                            <div id="email-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                 role="progressbar"
+                                 style="width: 0%"
+                                 aria-valuenow="0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                <span id="email-progress-text">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Stats Email -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted">Total candidats (Email)</h6>
+                                        <h3 id="total-email-count" class="text-primary">{{ $totalEmailUsers }}</h3>
+                                        <small class="text-muted">Candidats actifs avec email vérifié</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted">Emails envoyés</h6>
+                                        <h3 id="sent-email-count" class="text-success">0</h3>
                                     </div>
                                 </div>
                             </div>
@@ -91,23 +138,44 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let currentBatch = 0;
-    const batchSize = 50;
-    const jobId = {{ $job->id }};
-    let totalSent = 0;
-    let totalFailed = 0;
-    let totalCandidates = {{ $totalUsers }};
+    // Variables pour Push
+    let currentPushBatch = 0;
+    const pushBatchSize = 50;
+    let totalPushSent = 0;
+    let totalPushFailed = 0;
+    let totalPushUsers = {{ $totalPushUsers }};
 
-    function updateProgress(sent, failed, total) {
+    // Variables pour Email
+    let currentEmailBatch = 0;
+    const emailBatchSize = 10;
+    let totalEmailSent = 0;
+    let totalEmailFailed = 0;
+    let totalEmailUsers = {{ $totalEmailUsers }};
+
+    const jobId = {{ $job->id }};
+
+    function updatePushProgress(sent, failed, total) {
         const percentage = Math.min(100, Math.round(((sent + failed) / total) * 100));
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
-        const sentCount = document.getElementById('sent-count');
+        const sentPushCount = document.getElementById('sent-push-count');
 
         progressBar.style.width = percentage + '%';
         progressBar.setAttribute('aria-valuenow', percentage);
         progressText.textContent = percentage + '%';
-        sentCount.textContent = sent;
+        sentPushCount.textContent = sent;
+    }
+
+    function updateEmailProgress(sent, failed, total) {
+        const percentage = Math.min(100, Math.round(((sent + failed) / total) * 100));
+        const progressBar = document.getElementById('email-progress-bar');
+        const progressText = document.getElementById('email-progress-text');
+        const sentEmailCount = document.getElementById('sent-email-count');
+
+        progressBar.style.width = percentage + '%';
+        progressBar.setAttribute('aria-valuenow', percentage);
+        progressText.textContent = percentage + '%';
+        sentEmailCount.textContent = sent;
     }
 
     function updateStatus(message, type = 'info') {
@@ -128,8 +196,26 @@ document.addEventListener('DOMContentLoaded', function() {
         statusText.innerHTML = `<i class="fas ${iconMap[type]}"></i> ${message}`;
     }
 
-    function sendBatch() {
-        updateStatus(`Envoi du lot ${currentBatch + 1}...`, 'info');
+    function updateEmailStatus(message, type = 'info') {
+        const iconMap = {
+            'info': 'fa-spinner fa-spin',
+            'success': 'fa-check-circle',
+            'error': 'fa-exclamation-triangle'
+        };
+
+        const badgeMap = {
+            'info': 'badge-info',
+            'success': 'badge-success',
+            'error': 'badge-danger'
+        };
+
+        const statusText = document.getElementById('email-status-text');
+        statusText.className = 'badge ' + badgeMap[type];
+        statusText.innerHTML = `<i class="fas ${iconMap[type]}"></i> ${message}`;
+    }
+
+    function sendPushBatch() {
+        updateStatus(`Envoi push lot ${currentPushBatch + 1}...`, 'info');
 
         fetch('{{ route("admin.jobs.send-notifications-batch", $job) }}', {
             method: 'POST',
@@ -139,51 +225,105 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                batch: currentBatch,
-                batch_size: batchSize
+                batch: currentPushBatch,
+                batch_size: pushBatchSize
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                totalSent += data.sent;
-                totalFailed += data.failed;
+                totalPushSent += data.sent;
+                totalPushFailed += data.failed;
 
-                updateProgress(totalSent, totalFailed, totalCandidates);
+                updatePushProgress(totalPushSent, totalPushFailed, totalPushUsers);
 
                 // Si terminé
                 if (data.completed) {
-                    updateStatus('Envoi terminé avec succès!', 'success');
+                    updateStatus('Push terminées!', 'success');
                     document.getElementById('progress-bar').classList.remove('progress-bar-animated');
-                    document.getElementById('completion-actions').classList.remove('d-none');
+
+                    // Démarrer l'envoi des emails
+                    startEmailSending();
                 } else {
                     // Envoyer le lot suivant
-                    currentBatch++;
-                    setTimeout(sendBatch, 500);
+                    currentPushBatch++;
+                    setTimeout(sendPushBatch, 500);
                 }
             }
         })
         .catch(error => {
-            // Continuer silencieusement en cas d'erreur
-            updateStatus('Envoi terminé', 'success');
+            updateStatus('Push terminées', 'success');
             document.getElementById('progress-bar').classList.remove('progress-bar-animated');
+            startEmailSending();
+        });
+    }
+
+    function sendEmailBatch() {
+        updateEmailStatus(`Envoi email lot ${currentEmailBatch + 1}...`, 'info');
+
+        fetch('{{ route("admin.jobs.send-emails-batch", $job) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                batch: currentEmailBatch,
+                batch_size: emailBatchSize
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                totalEmailSent += data.sent;
+                totalEmailFailed += data.failed;
+
+                updateEmailProgress(totalEmailSent, totalEmailFailed, totalEmailUsers);
+
+                // Si terminé
+                if (data.completed) {
+                    updateEmailStatus('Emails terminés!', 'success');
+                    document.getElementById('email-progress-bar').classList.remove('progress-bar-animated');
+                    document.getElementById('completion-actions').classList.remove('d-none');
+                } else {
+                    // Envoyer le lot suivant
+                    currentEmailBatch++;
+                    setTimeout(sendEmailBatch, 1000);
+                }
+            }
+        })
+        .catch(error => {
+            updateEmailStatus('Emails terminés', 'success');
+            document.getElementById('email-progress-bar').classList.remove('progress-bar-animated');
             document.getElementById('completion-actions').classList.remove('d-none');
         });
     }
 
-    // Démarrer l'envoi automatiquement
-    if (totalCandidates > 0) {
-        setTimeout(function() {
-            updateStatus('Démarrage de l\'envoi...', 'info');
-            sendBatch();
-        }, 1000);
-    } else {
-        updateStatus('Aucun candidat à notifier', 'success');
-        const progressBar = document.getElementById('progress-bar');
-        progressBar.style.width = '100%';
-        document.getElementById('progress-text').textContent = '100%';
-        document.getElementById('completion-actions').classList.remove('d-none');
+    function startEmailSending() {
+        if (totalEmailUsers > 0) {
+            updateEmailStatus('Démarrage...', 'info');
+            sendEmailBatch();
+        } else {
+            updateEmailStatus('Aucun email à envoyer', 'success');
+            document.getElementById('email-progress-bar').style.width = '100%';
+            document.getElementById('email-progress-text').textContent = '100%';
+            document.getElementById('completion-actions').classList.remove('d-none');
+        }
     }
+
+    // Démarrer l'envoi automatiquement
+    setTimeout(function() {
+        if (totalPushUsers > 0) {
+            updateStatus('Démarrage...', 'info');
+            sendPushBatch();
+        } else {
+            updateStatus('Aucune push à envoyer', 'success');
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('progress-text').textContent = '100%';
+            startEmailSending();
+        }
+    }, 1000);
 });
 </script>
 @endpush

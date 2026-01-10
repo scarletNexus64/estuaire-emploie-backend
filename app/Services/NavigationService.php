@@ -76,6 +76,12 @@ class NavigationService
                         'permission' => 'manage_subscriptions',
                     ],
                     [
+                        'name' => 'Attribution Manuelle',
+                        'route' => 'admin.manual-subscriptions.index',
+                        'icon' => 'fas fa-user-shield',
+                        'permission' => 'manage_subscriptions',
+                    ],
+                    [
                         'name' => 'Paiements',
                         'route' => 'admin.payments.index',
                         'icon' => 'fas fa-credit-card',

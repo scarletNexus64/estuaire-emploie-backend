@@ -155,24 +155,31 @@ class CompanyController extends Controller
             $failed = 0;
 
             foreach ($company->recruiters as $recruiter) {
-                if ($recruiter->user && $recruiter->user->fcm_token) {
+                if ($recruiter->user) {
                     try {
-                        $success = $notificationService->sendToUser(
-                            $recruiter->user,
-                            $title,
-                            $message,
-                            'company_verified',
-                            [
-                                'company_id' => $company->id,
-                                'company_name' => $company->name,
-                            ]
-                        );
+                        // 1. Envoyer la notification push
+                        if ($recruiter->user->fcm_token) {
+                            $success = $notificationService->sendToUser(
+                                $recruiter->user,
+                                $title,
+                                $message,
+                                'company_verified',
+                                [
+                                    'company_id' => $company->id,
+                                    'company_name' => $company->name,
+                                ]
+                            );
 
-                        if ($success) {
-                            $sent++;
-                        } else {
-                            $failed++;
+                            if ($success) {
+                                $sent++;
+                            } else {
+                                $failed++;
+                            }
                         }
+
+                        // 2. Envoyer l'email (synchrone)
+                        $recruiter->user->notify(new \App\Notifications\CompanyVerifiedNotification($company));
+
                     } catch (\Exception $e) {
                         $failed++;
                         \Log::error('Erreur envoi notification vérification entreprise', [

@@ -127,6 +127,18 @@ class ConversationController extends Controller
             'applicant_id' => $validated['user_two']
         ]);
 
+        // Incrémenter le compteur de contacts utilisés pour le recruteur
+        $currentUser = Auth::user();
+        $subscription = $currentUser->activeSubscription();
+        if ($subscription) {
+            $subscription->incrementContactsUsed();
+            \Log::info('💬 📊 Contact counter incremented', [
+                'subscription_id' => $subscription->id,
+                'contacts_used' => $subscription->contacts_used,
+                'contacts_limit' => $subscription->getEffectiveContactsLimit(),
+            ]);
+        }
+
         return response()->json([
             'conversation_id' => $conversation->id,
             'message' => 'Conversation created successfully',

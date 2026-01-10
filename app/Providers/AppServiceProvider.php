@@ -23,9 +23,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Enregistrement des événements
-        Event::listen(
-            JobPublished::class,
-            SendJobPublishedNotification::class
-        );
+        // Note: L'envoi d'emails est maintenant géré directement via AJAX dans le dashboard
+        // pour éviter les conflits avec la queue utilisée par Reverb (messagerie)
+        // Event::listen(
+        //     JobPublished::class,
+        //     SendJobPublishedNotification::class
+        // );
     }
 }

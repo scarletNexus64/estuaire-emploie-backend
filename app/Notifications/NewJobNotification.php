@@ -8,9 +8,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewJobNotification extends Notification implements ShouldQueue
+// Note: ShouldQueue est désactivé car l'envoi est géré via AJAX dans le dashboard
+// pour éviter les conflits avec la queue utilisée par Reverb (messagerie)
+class NewJobNotification extends Notification
 {
-    use Queueable;
+    // use Queueable; // Désactivé pour envoi synchrone
 
     protected Job $job;
 
@@ -42,22 +44,26 @@ class NewJobNotification extends Notification implements ShouldQueue
         $locationName = $this->job->location?->name ?? '';
         $contractTypeName = $this->job->contractType?->name ?? '';
 
-        $jobUrl = config('app.frontend_url', config('app.url')) . '/jobs/' . $this->job->id;
-
         return (new MailMessage)
-            ->subject('Nouvelle offre d\'emploi : ' . $this->job->title)
-            ->greeting('Bonjour ' . $notifiable->name . ' !')
-            ->line('Une nouvelle offre d\'emploi vient d\'être publiée sur Estuaire Emploi.')
+            ->subject('Nouvelle opportunité d\'emploi : ' . $this->job->title)
+            ->greeting('Bonjour ' . $notifiable->name . ',')
+            ->line('Une nouvelle opportunité professionnelle correspondant à votre profil vient d\'être publiée sur **Estuaire Emploi**.')
             ->line('')
-            ->line('**' . $this->job->title . '**')
-            ->line('Entreprise : ' . $companyName)
-            ->lineIf($categoryName, 'Catégorie : ' . $categoryName)
-            ->lineIf($locationName, 'Localisation : ' . $locationName)
-            ->lineIf($contractTypeName, 'Type de contrat : ' . $contractTypeName)
-            ->lineIf($this->job->experience_level, 'Niveau d\'expérience : ' . $this->job->experience_level)
+            ->line('### 📋 ' . $this->job->title)
             ->line('')
-            ->action('Voir l\'offre', $jobUrl)
-            ->line('Bonne chance dans vos recherches !');
+            ->line('🏢 **Entreprise** : ' . $companyName)
+            ->lineIf($categoryName, '📂 **Catégorie** : ' . $categoryName)
+            ->lineIf($locationName, '📍 **Localisation** : ' . $locationName)
+            ->lineIf($contractTypeName, '📄 **Type de contrat** : ' . $contractTypeName)
+            ->lineIf($this->job->experience_level, '💼 **Expérience requise** : ' . $this->job->experience_level)
+            ->line('')
+            ->line('📱 **Ouvrez l\'application Estuaire Emploi pour consulter cette offre et postuler directement depuis votre mobile.**')
+            ->line('')
+            ->line('Ne manquez pas cette opportunité ! Les meilleures offres partent vite.')
+            ->line('')
+            ->salutation('Cordialement,
+**L\'équipe ESTUAIRE EMPLOI**
+_Votre partenaire emploi au Congo_');
     }
 
     /**

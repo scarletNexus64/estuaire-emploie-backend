@@ -403,7 +403,8 @@ class UserSubscriptionPlan extends Model
      * Renouvelle/prolonge l'abonnement avec un nouveau plan et paiement
      * - Prolonge la date d'expiration depuis la date actuelle d'expiration (si non expirée)
      *   ou depuis maintenant (si expirée)
-     * - CUMULE les limites du nouveau plan (ne réinitialise pas les compteurs)
+     * - RÉINITIALISE les compteurs jobs_used et contacts_used à 0
+     * - Met à jour les limites avec celles du nouveau plan
      * - Met à jour le plan et le paiement associé
      *
      * @param SubscriptionPlan $newPlan Le nouveau plan d'abonnement
@@ -421,34 +422,33 @@ class UserSubscriptionPlan extends Model
             $renewStartDate = $this->expires_at;
         }
 
-        // Calculer les nouvelles limites cumulées
-        // On ajoute les limites du nouveau plan aux limites existantes
-        $currentJobsLimit = $this->getEffectiveJobsLimit() ?? 0;
-        $currentContactsLimit = $this->getEffectiveContactsLimit() ?? 0;
-
-        // Si le nouveau plan a une limite illimitée (null), on garde illimité
-        // Sinon, on cumule
-        $newJobsLimit = null;
-        if ($newPlan->jobs_limit !== null) {
-            $newJobsLimit = $currentJobsLimit + $newPlan->jobs_limit;
-        }
-
-        $newContactsLimit = null;
-        if ($newPlan->contacts_limit !== null) {
-            $newContactsLimit = $currentContactsLimit + $newPlan->contacts_limit;
-        }
-
         // Mettre à jour l'abonnement
         $this->subscription_plan_id = $newPlan->id;
         $this->payment_id = $newPayment->id;
         $this->starts_at = now(); // La date de début de ce renouvellement
         $this->expires_at = $renewStartDate->copy()->addDays($newPlan->duration_days);
-        // NE PAS réinitialiser les compteurs - garder jobs_used et contacts_used
-        // Cumuler les limites
-        $this->jobs_limit_total = $newJobsLimit;
-        $this->contacts_limit_total = $newContactsLimit;
+
+        // ✅ RÉINITIALISER les compteurs lors du renouvellement
+        $this->jobs_used = 0;
+        $this->contacts_used = 0;
+
+        // Définir les limites avec celles du nouveau plan
+        $this->jobs_limit_total = $newPlan->jobs_limit;
+        $this->contacts_limit_total = $newPlan->contacts_limit;
+
         $this->notifications_sent = []; // Réinitialiser les notifications
         $this->save();
+
+        \Log::info('[UserSubscriptionPlan] Subscription renewed', [
+            'subscription_id' => $this->id,
+            'user_id' => $this->user_id,
+            'new_plan' => $newPlan->name,
+            'expires_at' => $this->expires_at->toDateTimeString(),
+            'jobs_used_reset' => 0,
+            'contacts_used_reset' => 0,
+            'jobs_limit' => $this->jobs_limit_total,
+            'contacts_limit' => $this->contacts_limit_total,
+        ]);
     }
 
     /**

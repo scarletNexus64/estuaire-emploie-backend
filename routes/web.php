@@ -48,6 +48,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('jobs/{job}/publish', [JobController::class, 'publish'])->name('jobs.publish');
         Route::get('jobs/{job}/send-notifications', [JobController::class, 'showSendNotifications'])->name('jobs.send-notifications');
         Route::post('jobs/{job}/send-notifications-batch', [JobController::class, 'sendNotificationsBatch'])->name('jobs.send-notifications-batch');
+        Route::post('jobs/{job}/send-emails-batch', [JobController::class, 'sendEmailsBatch'])->name('jobs.send-emails-batch');
         Route::patch('jobs/{job}/feature', [JobController::class, 'feature'])->name('jobs.feature');
         Route::delete('jobs/bulk-delete', [JobController::class, 'bulkDelete'])->name('jobs.bulk-delete');
     });
@@ -118,6 +119,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{subscription}/cancel', [\App\Http\Controllers\Admin\SubscriptionController::class, 'cancel'])->name('cancel');
         Route::patch('/{subscription}/activate', [\App\Http\Controllers\Admin\SubscriptionController::class, 'activate'])->name('activate');
         Route::delete('/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'destroy'])->name('destroy');
+    });
+
+    // MONÉTISATION - Manual Subscription Assignments
+    Route::middleware('permission:manage_subscriptions')->prefix('manual-subscriptions')->name('manual-subscriptions.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'store'])->name('store');
+        Route::get('/{assignment}', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'show'])->name('show');
     });
 
     // MONÉTISATION - Payments

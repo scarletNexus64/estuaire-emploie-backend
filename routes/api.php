@@ -172,8 +172,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // Liste des conversations
     Route::get('/conversations', [ConversationController::class, 'getConversationsList']);
-    // Créer une nouvelle conversation
-    Route::post('/conversations', [ConversationController::class, 'store']);
+    // Créer une nouvelle conversation (vérifie la limite de contacts du recruteur)
+    Route::post('/conversations', [ConversationController::class, 'store'])
+        ->middleware('subscription:can_contact');
     // Récupérer les messages d'une conversation
     Route::get('/conversations/{conversationId}/messages', [ChatController::class, 'getMessages']);
     // Envoyer un message

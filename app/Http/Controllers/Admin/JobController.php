@@ -177,6 +177,11 @@ class JobController extends Controller
             'published_at' => now(),
         ]);
 
+        // Dispatcher l'événement si le job vient d'être publié
+        if ($wasNotPublished) {
+            JobPublished::dispatch($job);
+        }
+
         // Rediriger vers la page d'envoi de notifications avec progress bar
         return redirect()->route('admin.jobs.send-notifications', $job);
     }
@@ -188,15 +193,21 @@ class JobController extends Controller
     {
         $job->load(['company', 'location', 'category']);
 
-        // Compter TOUS les utilisateurs (candidats + recruteurs) qui recevront la notification, sauf l'auteur
-        $totalUsers = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
+        // Compter les utilisateurs pour les PUSH (candidats + recruteurs) sauf l'auteur
+        $totalPushUsers = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
             ->whereNotNull('fcm_token')
             ->when($job->posted_by, function ($query) use ($job) {
                 $query->where('id', '!=', $job->posted_by);
             })
             ->count();
 
-        return view('admin.jobs.send-notifications', compact('job', 'totalUsers'));
+        // Compter les utilisateurs pour les EMAILS (candidats actifs avec email vérifié)
+        $totalEmailUsers = \App\Models\User::where('role', 'candidate')
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->count();
+
+        return view('admin.jobs.send-notifications', compact('job', 'totalPushUsers', 'totalEmailUsers'));
     }
 
     /**
@@ -296,6 +307,94 @@ class JobController extends Controller
         $completed = $processed >= $totalUsers;
 
         Log::info('Lot de notifications envoyé pour job', [
+            'job_id' => $job->id,
+            'batch' => $batchNumber,
+            'sent' => $sent,
+            'failed' => $failed,
+            'total' => $totalUsers,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'completed' => $completed,
+            'sent' => $sent,
+            'failed' => $failed,
+            'errors' => $errors,
+            'progress' => [
+                'current' => min($processed, $totalUsers),
+                'total' => $totalUsers,
+                'percentage' => min(100, round(($processed / $totalUsers) * 100, 2)),
+            ],
+        ]);
+    }
+
+    /**
+     * Envoie les emails par lots (appelé via AJAX)
+     */
+    public function sendEmailsBatch(Request $request, Job $job)
+    {
+        $validated = $request->validate([
+            'batch' => 'required|integer|min:0',
+            'batch_size' => 'required|integer|min:1|max:50',
+        ]);
+
+        $batchNumber = $validated['batch'];
+        $batchSize = $validated['batch_size'];
+
+        $job->load(['company', 'location', 'category']);
+
+        // Récupérer les candidats actifs avec email vérifié pour ce lot
+        $users = \App\Models\User::where('role', 'candidate')
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->skip($batchNumber * $batchSize)
+            ->take($batchSize)
+            ->get();
+
+        if ($users->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'completed' => true,
+                'message' => 'Tous les emails ont été envoyés',
+                'sent' => 0,
+                'failed' => 0,
+            ]);
+        }
+
+        $sent = 0;
+        $failed = 0;
+        $errors = [];
+
+        // Envoyer les emails directement (sans queue)
+        foreach ($users as $user) {
+            try {
+                $user->notify(new \App\Notifications\NewJobNotification($job));
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'error' => $e->getMessage(),
+                ];
+                \Log::error('Erreur envoi email nouveau job', [
+                    'job_id' => $job->id,
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Calculer la progression
+        $totalUsers = \App\Models\User::where('role', 'candidate')
+            ->where('is_active', true)
+            ->whereNotNull('email_verified_at')
+            ->count();
+
+        $processed = ($batchNumber + 1) * $batchSize;
+        $completed = $processed >= $totalUsers;
+
+        Log::info('Lot d\'emails envoyé pour job', [
             'job_id' => $job->id,
             'batch' => $batchNumber,
             'sent' => $sent,

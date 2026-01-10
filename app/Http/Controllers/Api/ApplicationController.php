@@ -138,6 +138,7 @@ class ApplicationController extends Controller
             foreach ($recruiters as $recruiter) {
                 $recruiterUser = $recruiter->user;
                 if ($recruiterUser) {
+                    // 1. Envoyer la notification push
                     $notificationService->sendToUser(
                         $recruiterUser,
                         "Nouvelle candidature",
@@ -151,6 +152,17 @@ class ApplicationController extends Controller
                             'application_id' => $application->id,
                         ]
                     );
+
+                    // 2. Envoyer l'email (synchrone)
+                    try {
+                        $recruiterUser->notify(new \App\Notifications\NewApplicationReceivedNotification($application));
+                    } catch (\Exception $e) {
+                        \Log::error('Erreur envoi email nouvelle candidature', [
+                            'application_id' => $application->id,
+                            'recruiter_id' => $recruiterUser->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
                 }
             }
 
@@ -450,38 +462,48 @@ class ApplicationController extends Controller
             $application->save();
         }
 
-        // Envoyer une notification push au candidat
+        // Envoyer notification push + email au candidat
         try {
-            $notificationService = app(\App\Services\NotificationService::class);
+            $status = $validated['status'];
 
-            if ($application->user && $application->user->fcm_token) {
-                $status = $validated['status'];
+            if ($application->user) {
+                // 1. Envoyer la notification push
+                if ($application->user->fcm_token) {
+                    $notificationService = app(\App\Services\NotificationService::class);
 
-                if ($status === 'accepted') {
-                    $title = "Candidature acceptée 🎉";
-                    $message = "Félicitations ! Votre candidature pour {$application->job->title} chez {$application->job->company->name} a été acceptée.";
-                    $type = 'application_accepted';
-                } else {
-                    $title = "Candidature non retenue";
-                    $message = "Votre candidature pour {$application->job->title} chez {$application->job->company->name} n'a pas été retenue cette fois.";
-                    $type = 'application_rejected';
+                    if ($status === 'accepted') {
+                        $title = "Candidature acceptée 🎉";
+                        $message = "Félicitations ! Votre candidature pour {$application->job->title} chez {$application->job->company->name} a été acceptée.";
+                        $type = 'application_accepted';
+                    } else {
+                        $title = "Candidature non retenue";
+                        $message = "Votre candidature pour {$application->job->title} chez {$application->job->company->name} n'a pas été retenue cette fois.";
+                        $type = 'application_rejected';
+                    }
+
+                    $notificationService->sendToUser(
+                        $application->user,
+                        $title,
+                        $message,
+                        $type,
+                        [
+                            'application_id' => $application->id,
+                            'job_id' => $application->job->id,
+                            'job_title' => $application->job->title,
+                            'company_name' => $application->job->company->name,
+                            'status' => $status,
+                        ]
+                    );
                 }
 
-                $notificationService->sendToUser(
-                    $application->user,
-                    $title,
-                    $message,
-                    $type,
-                    [
-                        'application_id' => $application->id,
-                        'job_id' => $application->job->id,
-                        'job_title' => $application->job->title,
-                        'company_name' => $application->job->company->name,
-                        'status' => $status,
-                    ]
-                );
+                // 2. Envoyer l'email (synchrone)
+                if ($status === 'accepted') {
+                    $application->user->notify(new \App\Notifications\ApplicationAcceptedNotification($application));
+                } else if ($status === 'rejected') {
+                    $application->user->notify(new \App\Notifications\ApplicationRejectedNotification($application));
+                }
 
-                Log::info('Notification candidature envoyée', [
+                Log::info('Notification + Email candidature envoyés', [
                     'application_id' => $application->id,
                     'user_id' => $application->user->id,
                     'status' => $status,
