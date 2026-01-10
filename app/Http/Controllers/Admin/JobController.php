@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\JobPublished;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\Company;
@@ -89,7 +90,12 @@ class JobController extends Controller
         }
 
         // Création
-        Job::create($validated);
+        $job = Job::create($validated);
+
+        // Dispatcher l'événement si le job est publié
+        if ($job->status === 'published') {
+            JobPublished::dispatch($job);
+        }
 
         return redirect()
             ->route('admin.jobs.index')
@@ -134,19 +140,18 @@ class JobController extends Controller
         $validated['salary_negotiable'] = $request->boolean('salary_negotiable');
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        // Détecter si on passe en statut "published"
+        // Vérifier si le job passe à "published" pour la première fois
         $wasNotPublished = $job->status !== 'published';
-        $willBePublished = $validated['status'] === 'published';
 
-        if ($willBePublished && !$job->published_at) {
+        if ($validated['status'] === 'published' && !$job->published_at) {
             $validated['published_at'] = now();
         }
 
         $job->update($validated);
 
-        // Si le job vient d'être publié, rediriger vers la page d'envoi de notifications
-        if ($wasNotPublished && $willBePublished) {
-            return redirect()->route('admin.jobs.send-notifications', $job);
+        // Dispatcher l'événement si le job vient d'être publié
+        if ($wasNotPublished && $job->status === 'published') {
+            JobPublished::dispatch($job);
         }
 
         return redirect()
@@ -164,6 +169,9 @@ class JobController extends Controller
 
     public function publish(Job $job)
     {
+        // Vérifier si le job n'était pas déjà publié
+        $wasNotPublished = $job->status !== 'published';
+
         $job->update([
             'status' => 'published',
             'published_at' => now(),
