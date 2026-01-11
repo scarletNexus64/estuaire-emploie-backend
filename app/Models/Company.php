@@ -37,6 +37,14 @@ class Company extends Model
     }
 
     /**
+     * Set the email attribute - always store in lowercase
+     */
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = strtolower($value);
+    }
+
+    /**
      * Get the full URL of the company logo
      */
     public function getLogoUrlAttribute(): ?string

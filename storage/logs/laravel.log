@@ -2883,3 +2883,369 @@
 [2026-01-11 04:49:38] production.INFO: 📋 Processing conversation {"conversation_id":5,"user_one":22,"user_two":30,"current_user":22,"other_user_id":30,"other_user_name":"ana","presence_data":{"App\\Models\\UserPresence":{"user_id":30,"online":false,"last_seen":"2026-01-11T04:48:53.000000Z"}},"online_value":false,"online_type":"boolean"} 
 [2026-01-11 04:49:38] production.INFO: 📋 Processing conversation {"conversation_id":1,"user_one":22,"user_two":24,"current_user":22,"other_user_id":24,"other_user_name":"Steve","presence_data":{"App\\Models\\UserPresence":{"user_id":24,"online":true,"last_seen":"2026-01-08T22:58:53.000000Z"}},"online_value":true,"online_type":"boolean"} 
 [2026-01-11 04:49:38] production.INFO: ✅ Conversations loaded {"count":2,"data":[{"conversation_id":5,"user":{"id":30,"name":"ana","profile_photo":null,"is_online":false,"last_seen":"2026-01-11 04:48:53"},"last_message":{"message":"L'entretien c'est 10h GMT","status":"read","sent_at":"2026-01-11 04:48:49"},"unread_count":0},{"conversation_id":1,"user":{"id":24,"name":"Steve","profile_photo":"profile_photos/OY0jXLxFJFBOjWzUN3FIcHTHc2dTUFU7oIpVEF2y.jpg","is_online":true,"last_seen":"2026-01-08 22:58:53"},"last_message":{"message":"j'attendais votre CV Mme","status":"delivered","sent_at":"2026-01-11 04:48:24"},"unread_count":0}]} 
+[2026-01-11 04:50:55] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:50:55] production.INFO: │ [SubscriptionPlanController] 📦 Processing payment request     │  
+[2026-01-11 04:50:55] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:50:55] production.INFO:    👤 User ID: 30  
+[2026-01-11 04:50:55] production.INFO:    📧 Email: ana@gmail.com  
+[2026-01-11 04:50:55] production.INFO:    📋 Plan: Starter (ID: 1)  
+[2026-01-11 04:50:55] production.INFO:    💰 Amount: 50.00 XAF  
+[2026-01-11 04:50:55] production.INFO:    📱 Phone: 237658895572  
+[2026-01-11 04:50:55] production.INFO: ╔════════════════════════════════════════════════════════════════════╗  
+[2026-01-11 04:50:55] production.INFO: ║ [FreeMoPay Service] 💳 INITIATING SYNCHRONOUS PAYMENT             ║  
+[2026-01-11 04:50:55] production.INFO: ╚════════════════════════════════════════════════════════════════════╝  
+[2026-01-11 04:50:55] production.INFO:    💰 Amount: 50 XAF  
+[2026-01-11 04:50:55] production.INFO:    📱 Phone: 237658895572  
+[2026-01-11 04:50:55] production.INFO:    📝 Description: Abonnement Starter - Estuaire Emploie  
+[2026-01-11 04:50:55] production.INFO:    ✓ Phone normalized: 237658895572  
+[2026-01-11 04:50:55] production.INFO:    ✓ External ID: SUB-30-1-20260111045055  
+[2026-01-11 04:50:55] production.INFO:    ✓ Callback URL: https://api.estuaireemploi.com/api/webhooks/freemopay (note: using polling, callback not required)  
+[2026-01-11 04:50:55] production.INFO:    ✓ Payment record created in database  
+[2026-01-11 04:50:55] production.INFO:    📋 Payment ID: 17  
+[2026-01-11 04:50:55] production.INFO:    📊 Status: pending  
+[2026-01-11 04:50:55] production.INFO:    💳 Payment method: orange_money  
+[2026-01-11 04:50:55] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:50:55] production.INFO: [FreeMoPay API] 🚀 Calling FreeMoPay API to initiate payment...  
+[2026-01-11 04:50:55] production.INFO: [FreeMoPay TokenManager] Generating new access token  
+[2026-01-11 04:50:55] production.INFO: [FreeMoPay TokenManager] Requesting new token from: https://api-v2.freemopay.com/api/v2/payment/token  
+[2026-01-11 04:50:55] production.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment/token  
+[2026-01-11 04:50:55] production.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:50:55] production.DEBUG: [FreeMoPay] Body: {"appKey":"8381e965-51e0-42bd-b260-a78d9affa316","secretKey":"[HIDDEN]"}  
+[2026-01-11 04:51:00] production.DEBUG: [FreeMoPay] Response 200 in 4.70s  
+[2026-01-11 04:51:00] production.DEBUG: [FreeMoPay] Body: {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2N2JiMzZhOTQ0MGVkMTgzNzdiMTQ1MTMiLCJpYXQiOjE3NjgxMDcwNjAsImV4cCI6MTc2ODExMDY2MH0.osz7o2sGnLebMVJb2MZ7VObL-rcsGFG3qthlSYcu3rs","expires_in":3600}  
+[2026-01-11 04:51:00] production.WARNING: [FreeMoPay] Slow request: 4.70s  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay Client] Status Code: 200  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay Client] Response Headers: {"Date":["Sun, 11 Jan 2026 04:51:00 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["217"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"d9-YgxDQHchenZOXhd8jMcILOB7EtI\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=YgMb6UqyHEANggkFNBYnGhklTAczGmUUYlDXoLQmCQsSdQvjj9nHGOP4ZOat0i7FUUqemUkrXPwYVzR3U%2Bm8yxNdoDfEVc94NWMxwbyfJf6gs3TQ\"}]}"],"CF-RAY":["9bc1cbe5ea7ddd1b-GIG"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay Client] Response Body (raw): {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2N2JiMzZhOTQ0MGVkMTgzNzdiMTQ1MTMiLCJpYXQiOjE3NjgxMDcwNjAsImV4cCI6MTc2ODExMDY2MH0.osz7o2sGnLebMVJb2MZ7VObL-rcsGFG3qthlSYcu3rs","expires_in":3600}  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay TokenManager] Token generated successfully  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay TokenManager] Token cached for 3000 seconds  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay Service] Calling FreeMoPay API v2  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay Service] URL: https://api-v2.freemopay.com/api/v2/payment  
+[2026-01-11 04:51:00] production.INFO: [FreeMoPay Service] Payload: {"payer":"237658895572","amount":50,"externalId":"SUB-30-1-20260111045055","description":"Abonnement Starter - Estuaire Emploie","callback":"https:\/\/api.estuaireemploi.com\/api\/webhooks\/freemopay"}  
+[2026-01-11 04:51:00] production.DEBUG: [FreeMoPay] POST https://api-v2.freemopay.com/api/v2/payment  
+[2026-01-11 04:51:00] production.DEBUG: [FreeMoPay] Headers: {"Content-Type":"application\/json","Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:51:00] production.DEBUG: [FreeMoPay] Body: {"payer":"237658895572","amount":50,"externalId":"SUB-30-1-20260111045055","description":"Abonnement Starter - Estuaire Emploie","callback":"https:\/\/api.estuaireemploi.com\/api\/webhooks\/freemopay"}  
+[2026-01-11 04:51:04] production.DEBUG: [FreeMoPay] Response 200 in 4.40s  
+[2026-01-11 04:51:04] production.DEBUG: [FreeMoPay] Body: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","status":"CREATED","message":"Transaction created"}  
+[2026-01-11 04:51:04] production.WARNING: [FreeMoPay] Slow request: 4.40s  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Client] Status Code: 200  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Client] Response Headers: {"Date":["Sun, 11 Jan 2026 04:51:05 GMT"],"Content-Type":["application\/json; charset=utf-8"],"Content-Length":["103"],"Connection":["keep-alive"],"Server":["cloudflare"],"Nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"X-Powered-By":["Express"],"Access-Control-Allow-Origin":["*"],"ETag":["W\/\"67-hMS5eRSw3PBdM8q5LHx7G1rbsAw\""],"cf-cache-status":["DYNAMIC"],"Report-To":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https:\/\/a.nel.cloudflare.com\/report\/v4?s=caQ4my%2FpoUMARbqf1%2B47GT2V9mNbwkD6ak2mrQsWi6c%2BysSQt0l04TYYKZ7ggguCUSm9AzsDHyR1Daeb%2B9pZJyiQgUu%2Fb7X1a1phlth2WxRvbQ%3D%3D\"}]}"],"CF-RAY":["9bc1cc01bc2864fc-GIG"],"alt-svc":["h3=\":443\"; ma=86400"]}  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Client] Response Body (raw): {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","status":"CREATED","message":"Transaction created"}  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Service] FreeMoPay response: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","status":"CREATED","message":"Transaction created"}  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay API] ✓ Payment initiated successfully  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay API] 🔖 Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay API] 📱 User should receive payment prompt on phone  
+[2026-01-11 04:51:04] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Polling] 🔄 Starting payment status polling  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Polling] 📋 Payment ID: 17  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Polling] 🔖 Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:04] production.INFO: [FreeMoPay Polling] ⏱️  Polling config: Interval=3s, Timeout=90s, Max attempts=30  
+[2026-01-11 04:51:04] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:51:04] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:51:04] production.INFO: │ [Polling Attempt #1]  
+[2026-01-11 04:51:04] production.INFO: │ ⏱️  Time elapsed: 0s / 90s (⏳ 90s remaining)  
+[2026-01-11 04:51:04] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:51:04] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:51:04] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:04] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:51:04] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:04] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:51:05] production.DEBUG: [FreeMoPay] Response 200 in 0.91s  
+[2026-01-11 04:51:05] production.DEBUG: [FreeMoPay] Body: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"CREATED","reason":null}  
+[2026-01-11 04:51:05] production.DEBUG: [FreeMoPay Service] Status check response: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"CREATED","reason":null}  
+[2026-01-11 04:51:05] production.INFO:    ↳ 📥 Received status: CREATED  
+[2026-01-11 04:51:05] production.INFO:    ↳ ⏳ Payment still CREATED, waiting 3s before next attempt...  
+[2026-01-11 04:51:08] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:51:08] production.INFO: │ [Polling Attempt #2]  
+[2026-01-11 04:51:08] production.INFO: │ ⏱️  Time elapsed: 4s / 90s (⏳ 86s remaining)  
+[2026-01-11 04:51:08] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:51:08] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:51:08] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:08] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:51:08] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:08] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:51:18] production.ERROR: [FreeMoPay] Request error: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:18] production.WARNING:    ↳ ⚠️  Polling error (attempt 2): Request failed: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:18] production.WARNING:    ↳ 🔄 Continuing to poll...  
+[2026-01-11 04:51:21] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:51:21] production.INFO: │ [Polling Attempt #3]  
+[2026-01-11 04:51:21] production.INFO: │ ⏱️  Time elapsed: 17s / 90s (⏳ 73s remaining)  
+[2026-01-11 04:51:21] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:51:21] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:51:21] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:21] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:51:21] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:21] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:51:31] production.ERROR: [FreeMoPay] Request error: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:31] production.WARNING:    ↳ ⚠️  Polling error (attempt 3): Request failed: cURL error 28: Connection timed out after 10001 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:31] production.WARNING:    ↳ 🔄 Continuing to poll...  
+[2026-01-11 04:51:34] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:51:34] production.INFO: │ [Polling Attempt #4]  
+[2026-01-11 04:51:34] production.INFO: │ ⏱️  Time elapsed: 30s / 90s (⏳ 60s remaining)  
+[2026-01-11 04:51:34] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:51:34] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:51:34] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:34] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:51:34] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:34] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:51:44] production.ERROR: [FreeMoPay] Request error: cURL error 28: Connection timed out after 10002 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:44] production.WARNING:    ↳ ⚠️  Polling error (attempt 4): Request failed: cURL error 28: Connection timed out after 10002 milliseconds (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:44] production.WARNING:    ↳ 🔄 Continuing to poll...  
+[2026-01-11 04:51:47] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:51:47] production.INFO: │ [Polling Attempt #5]  
+[2026-01-11 04:51:47] production.INFO: │ ⏱️  Time elapsed: 43s / 90s (⏳ 47s remaining)  
+[2026-01-11 04:51:47] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:51:47] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:51:47] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:47] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:51:47] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:47] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:51:56] production.DEBUG: [FreeMoPay] Response 200 in 9.21s  
+[2026-01-11 04:51:56] production.DEBUG: [FreeMoPay] Body: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:51:56] production.WARNING: [FreeMoPay] Slow request: 9.21s  
+[2026-01-11 04:51:56] production.DEBUG: [FreeMoPay Service] Status check response: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:51:56] production.INFO:    ↳ 📥 Received status: PENDING  
+[2026-01-11 04:51:56] production.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2026-01-11 04:51:59] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:51:59] production.INFO: │ [Polling Attempt #6]  
+[2026-01-11 04:51:59] production.INFO: │ ⏱️  Time elapsed: 55s / 90s (⏳ 35s remaining)  
+[2026-01-11 04:51:59] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:51:59] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:51:59] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:59] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:51:59] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:51:59] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:52:00] production.DEBUG: [FreeMoPay] Response 200 in 0.87s  
+[2026-01-11 04:52:00] production.DEBUG: [FreeMoPay] Body: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:52:00] production.DEBUG: [FreeMoPay Service] Status check response: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:52:00] production.INFO:    ↳ 📥 Received status: PENDING  
+[2026-01-11 04:52:00] production.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2026-01-11 04:52:03] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:52:03] production.INFO: │ [Polling Attempt #7]  
+[2026-01-11 04:52:03] production.INFO: │ ⏱️  Time elapsed: 59s / 90s (⏳ 31s remaining)  
+[2026-01-11 04:52:03] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:52:03] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:52:03] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:52:03] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:52:03] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:52:03] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:52:04] production.DEBUG: [FreeMoPay] Response 200 in 0.85s  
+[2026-01-11 04:52:04] production.DEBUG: [FreeMoPay] Body: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:52:04] production.DEBUG: [FreeMoPay Service] Status check response: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"PENDING","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:52:04] production.INFO:    ↳ 📥 Received status: PENDING  
+[2026-01-11 04:52:04] production.INFO:    ↳ ⏳ Payment still PENDING, waiting 3s before next attempt...  
+[2026-01-11 04:52:07] production.INFO: ┌─────────────────────────────────────────────────────────────────┐  
+[2026-01-11 04:52:07] production.INFO: │ [Polling Attempt #8]  
+[2026-01-11 04:52:07] production.INFO: │ ⏱️  Time elapsed: 63s / 90s (⏳ 27s remaining)  
+[2026-01-11 04:52:07] production.INFO: └─────────────────────────────────────────────────────────────────┘  
+[2026-01-11 04:52:07] production.INFO:    ↳ 📡 Checking payment status with FreeMoPay API...  
+[2026-01-11 04:52:07] production.DEBUG: [FreeMoPay Service] Checking payment status - Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:52:07] production.DEBUG: [FreeMoPay TokenManager] Using cached token  
+[2026-01-11 04:52:07] production.DEBUG: [FreeMoPay] GET https://api-v2.freemopay.com/api/v2/payment/d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:52:07] production.DEBUG: [FreeMoPay] Headers: {"Accept":"application\/json","User-Agent":"Estuaire-Emploie-Backend\/1.0"}  
+[2026-01-11 04:52:13] production.DEBUG: [FreeMoPay] Response 200 in 5.84s  
+[2026-01-11 04:52:13] production.DEBUG: [FreeMoPay] Body: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:52:13] production.WARNING: [FreeMoPay] Slow request: 5.84s  
+[2026-01-11 04:52:13] production.DEBUG: [FreeMoPay Service] Status check response: {"reference":"d2051eed-cfa8-4537-8b42-2c5efd56ee2c","merchandRef":"SUB-30-1-20260111045055","amount":50,"status":"SUCCESS","reason":"paiement en cours de traitement"}  
+[2026-01-11 04:52:13] production.INFO:    ↳ 📥 Received status: SUCCESS  
+[2026-01-11 04:52:13] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:52:13] production.INFO: [FreeMoPay Polling] ✅ PAYMENT SUCCESS!  
+[2026-01-11 04:52:13] production.INFO: [FreeMoPay Polling] 📋 Payment ID: 17  
+[2026-01-11 04:52:13] production.INFO: [FreeMoPay Polling] 🔖 Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:52:13] production.INFO: [FreeMoPay Polling] ⏱️  Completed in: 63s after 8 attempts  
+[2026-01-11 04:52:13] production.INFO: [FreeMoPay Polling] 💰 Amount: 50.00 XAF  
+[2026-01-11 04:52:13] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:52:13] production.INFO: ╔════════════════════════════════════════════════════════════════════╗  
+[2026-01-11 04:52:13] production.INFO: ║ [FreeMoPay Service] ✅ PAYMENT COMPLETED SUCCESSFULLY             ║  
+[2026-01-11 04:52:13] production.INFO: ╚════════════════════════════════════════════════════════════════════╝  
+[2026-01-11 04:52:13] production.INFO:    📋 Payment ID: 17  
+[2026-01-11 04:52:13] production.INFO:    📊 Final status: completed  
+[2026-01-11 04:52:13] production.INFO:    💰 Amount: 50.00 XAF  
+[2026-01-11 04:52:13] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:52:13] production.INFO: [SubscriptionPlanController] ✅ Payment process completed!  
+[2026-01-11 04:52:13] production.INFO: [SubscriptionPlanController] 📋 Payment ID: 17  
+[2026-01-11 04:52:13] production.INFO: [SubscriptionPlanController] 📊 Status: completed  
+[2026-01-11 04:52:13] production.INFO: [SubscriptionPlanController] 🔖 Reference: d2051eed-cfa8-4537-8b42-2c5efd56ee2c  
+[2026-01-11 04:52:13] production.INFO: [SubscriptionPlanController] 📦 Plan: Starter  
+[2026-01-11 04:52:13] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:52:15] production.INFO: [UserSubscriptionPlan] User 30 role updated to 'recruiter' after subscription activation  
+[2026-01-11 04:52:15] production.INFO: [SubscriptionPlanController] New subscription created for user 30 - Plan: Starter  
+[2026-01-11 04:53:54] production.INFO: 📋 Loading conversations for user {"user_id":30} 
+[2026-01-11 04:53:54] production.INFO: 📋 Processing conversation {"conversation_id":5,"user_one":22,"user_two":30,"current_user":30,"other_user_id":22,"other_user_name":"Steve Junior Boussa","presence_data":{"App\\Models\\UserPresence":{"user_id":22,"online":false,"last_seen":"2026-01-11T04:52:59.000000Z"}},"online_value":false,"online_type":"boolean"} 
+[2026-01-11 04:53:54] production.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":5,"user":{"id":22,"name":"Steve Junior Boussa","profile_photo":"profile_photos/2o71elN2w9GbxVd2ndUjeUm2wC1WFazeXuhSz8XC.jpg","is_online":false,"last_seen":"2026-01-11 04:52:59"},"last_message":{"message":"L'entretien c'est 10h GMT","status":"read","sent_at":"2026-01-11 04:48:49"},"unread_count":0}]} 
+[2026-01-11 04:54:46] production.ERROR: Erreur lors de la création d'entreprise {"user_id":30,"error":"SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'jrkira84@gmail.COm' for key 'companies.companies_email_unique' (Connection: mysql, SQL: insert into `companies` (`name`, `email`, `phone`, `description`, `sector`, `address`, `city`, `status`, `country`, `updated_at`, `created_at`) values (FOX SARL, jrkira84@gmail.COm, 658895572, Je fais fans la prestation de service de tout genre, Technologie & IT, Bafoussam, Yaound, Bafoussam, pending, Cameroun, 2026-01-11 04:54:46, 2026-01-11 04:54:46))","trace":"#0 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Connection.php(779): Illuminate\\Database\\Connection->runQueryCallback('insert into `co...', Array, Object(Closure))
+#1 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/MySqlConnection.php(42): Illuminate\\Database\\Connection->run('insert into `co...', Array, Object(Closure))
+#2 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/MySqlProcessor.php(35): Illuminate\\Database\\MySqlConnection->insert('insert into `co...', Array, 'id')
+#3 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3766): Illuminate\\Database\\Query\\Processors\\MySqlProcessor->processInsertGetId(Object(Illuminate\\Database\\Query\\Builder), 'insert into `co...', Array, 'id')
+#4 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(2120): Illuminate\\Database\\Query\\Builder->insertGetId(Array, 'id')
+#5 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1359): Illuminate\\Database\\Eloquent\\Builder->__call('insertGetId', Array)
+#6 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1324): Illuminate\\Database\\Eloquent\\Model->insertAndSetId(Object(Illuminate\\Database\\Eloquent\\Builder), Array)
+#7 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1163): Illuminate\\Database\\Eloquent\\Model->performInsert(Object(Illuminate\\Database\\Eloquent\\Builder))
+#8 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(1128): Illuminate\\Database\\Eloquent\\Model->save()
+#9 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Support/helpers.php(399): Illuminate\\Database\\Eloquent\\Builder->Illuminate\\Database\\Eloquent\\{closure}(Object(App\\Models\\Company))
+#10 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(1127): tap(Object(App\\Models\\Company), Object(Closure))
+#11 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php(23): Illuminate\\Database\\Eloquent\\Builder->create(Array)
+#12 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2372): Illuminate\\Database\\Eloquent\\Model->forwardCallTo(Object(Illuminate\\Database\\Eloquent\\Builder), 'create', Array)
+#13 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2384): Illuminate\\Database\\Eloquent\\Model->__call('create', Array)
+#14 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/app/Http/Controllers/Api/CompanyController.php(153): Illuminate\\Database\\Eloquent\\Model::__callStatic('create', Array)
+#15 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\Api\\CompanyController->store(Object(Illuminate\\Http\\Request))
+#16 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Api\\CompanyController), 'store')
+#17 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
+#18 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
+#19 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#20 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/app/Http/Middleware/UpdateLastSeen.php(23): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#21 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): App\\Http\\Middleware\\UpdateLastSeen->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#22 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#23 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#24 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(64): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#25 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Auth\\Middleware\\Authenticate->handle(Object(Illuminate\\Http\\Request), Object(Closure), 'sanctum')
+#26 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#29 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#30 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#31 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#32 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#33 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#34 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#35 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#37 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#38 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#39 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#40 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#41 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#42 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#43 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#44 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#45 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#46 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#47 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#48 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#49 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#50 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#51 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#52 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#53 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#54 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#55 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/public/index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#56 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('/Users/macbookp...')
+#57 {main}"} 
+[2026-01-11 04:59:14] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 04:59:14] production.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #30  
+[2026-01-11 04:59:14] production.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-11 04:59:14] production.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-11 04:59:14] production.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-11 04:59:14] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 05:00:48] production.ERROR: Call to a member function jobs() on null {"userId":30,"exception":"[object] (Error(code: 0): Call to a member function jobs() on null at /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/app/Http/Controllers/Api/CompanyController.php:265)
+[stacktrace]
+#0 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\Api\\CompanyController->myCompany()
+#1 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Api\\CompanyController), 'myCompany')
+#2 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
+#3 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
+#4 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#5 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/app/Http/Middleware/UpdateLastSeen.php(23): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#6 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): App\\Http\\Middleware\\UpdateLastSeen->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#7 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#8 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#9 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(64): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#10 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Auth\\Middleware\\Authenticate->handle(Object(Illuminate\\Http\\Request), Object(Closure), 'sanctum')
+#11 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#12 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#13 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#14 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#15 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#16 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#17 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#18 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#19 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#20 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#21 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#22 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#23 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#29 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#30 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#31 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#32 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#33 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#34 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#35 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#36 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#37 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#38 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#39 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#40 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/public/index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#41 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('/Users/macbookp...')
+#42 {main}
+"} 
+[2026-01-11 05:03:36] production.INFO: 📲 [SEND-FCM-TOKEN] Réception du FCM token {"user_id":30,"fcm_token":"egR2DncPTpSVfAUX9iVuyh:APA91bF4CHajESWvOHqx3ZWMwTDQ8l6B_FkSC6RrnFkhhUDc3K2dPvGgaSnCY-lSw8CJ_oxPBntVCddzEyzMDmaKwuGm-IXqzzy1VbBFFHJrabmR83qLQl4"} 
+[2026-01-11 05:03:36] production.INFO: ✅ [SEND-FCM-TOKEN] FCM token sauvegardé avec succès {"user_id":30} 
+[2026-01-11 05:03:37] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 05:03:37] production.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #30  
+[2026-01-11 05:03:37] production.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-11 05:03:37] production.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-11 05:03:37] production.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-11 05:03:37] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 05:03:38] production.INFO: 📋 Loading conversations for user {"user_id":30} 
+[2026-01-11 05:03:38] production.INFO: 📋 Processing conversation {"conversation_id":5,"user_one":22,"user_two":30,"current_user":30,"other_user_id":22,"other_user_name":"Steve Junior Boussa","presence_data":{"App\\Models\\UserPresence":{"user_id":22,"online":false,"last_seen":"2026-01-11T04:52:59.000000Z"}},"online_value":false,"online_type":"boolean"} 
+[2026-01-11 05:03:38] production.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":5,"user":{"id":22,"name":"Steve Junior Boussa","profile_photo":"profile_photos/2o71elN2w9GbxVd2ndUjeUm2wC1WFazeXuhSz8XC.jpg","is_online":false,"last_seen":"2026-01-11 04:52:59"},"last_message":{"message":"L'entretien c'est 10h GMT","status":"read","sent_at":"2026-01-11 04:48:49"},"unread_count":0}]} 
+[2026-01-11 05:03:48] production.ERROR: Call to a member function jobs() on null {"userId":30,"exception":"[object] (Error(code: 0): Call to a member function jobs() on null at /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/app/Http/Controllers/Api/CompanyController.php:265)
+[stacktrace]
+#0 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\Api\\CompanyController->myCompany()
+#1 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Api\\CompanyController), 'myCompany')
+#2 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
+#3 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
+#4 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#5 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/app/Http/Middleware/UpdateLastSeen.php(23): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#6 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): App\\Http\\Middleware\\UpdateLastSeen->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#7 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#8 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#9 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(64): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#10 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Auth\\Middleware\\Authenticate->handle(Object(Illuminate\\Http\\Request), Object(Closure), 'sanctum')
+#11 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#12 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#13 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#14 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#15 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#16 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#17 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#18 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#19 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#20 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#21 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#22 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#23 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#29 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#30 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#31 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#32 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#33 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#34 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#35 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#36 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#37 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#38 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#39 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#40 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/public/index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#41 /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('/Users/macbookp...')
+#42 {main}
+"} 
+[2026-01-11 05:03:48] production.INFO: 📋 Loading conversations for user {"user_id":30} 
+[2026-01-11 05:03:48] production.INFO: 📋 Processing conversation {"conversation_id":5,"user_one":22,"user_two":30,"current_user":30,"other_user_id":22,"other_user_name":"Steve Junior Boussa","presence_data":{"App\\Models\\UserPresence":{"user_id":22,"online":false,"last_seen":"2026-01-11T04:52:59.000000Z"}},"online_value":false,"online_type":"boolean"} 
+[2026-01-11 05:03:48] production.INFO: ✅ Conversations loaded {"count":1,"data":[{"conversation_id":5,"user":{"id":22,"name":"Steve Junior Boussa","profile_photo":"profile_photos/2o71elN2w9GbxVd2ndUjeUm2wC1WFazeXuhSz8XC.jpg","is_online":false,"last_seen":"2026-01-11 04:52:59"},"last_message":{"message":"L'entretien c'est 10h GMT","status":"read","sent_at":"2026-01-11 04:48:49"},"unread_count":0}]} 
+[2026-01-11 05:05:46] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  
+[2026-01-11 05:05:46] production.INFO: [AuthController] 🔄 Synchronisation du rôle pour User #30  
+[2026-01-11 05:05:46] production.INFO: [AuthController] 📋 Rôle actuel: recruiter  
+[2026-01-11 05:05:46] production.INFO: [AuthController] 🔍 Abonnement actif: OUI  
+[2026-01-11 05:05:46] production.INFO: [AuthController] ✓ Rôle déjà correct (recruiter)  
+[2026-01-11 05:05:46] production.INFO: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  

@@ -127,7 +127,7 @@ class CompanyController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
+                'email' => 'required|email|max:255|unique:companies,email',
                 'phone' => 'required|string|max:20',
                 'description' => 'required|string',
                 'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
@@ -144,6 +144,9 @@ class CompanyController extends Controller
                     'message' => 'Vous avez déjà une entreprise associée à votre compte',
                 ], 422);
             }
+
+            // Normaliser l'email en minuscules
+            $validated['email'] = strtolower($validated['email']);
 
             // Upload du logo si fourni
             if ($request->hasFile('logo')) {
@@ -175,6 +178,24 @@ class CompanyController extends Controller
                 'message' => 'Erreur de validation',
                 'errors' => $e->errors(),
             ], 422);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Gérer spécifiquement les erreurs de duplication
+            if ($e->getCode() === '23000') {
+                \Log::warning('Tentative de création d\'entreprise avec email existant', [
+                    'user_id' => auth()->id(),
+                    'email' => $request->email,
+                ]);
+
+                return response()->json([
+                    'message' => 'Cet email est déjà utilisé par une autre entreprise',
+                    'errors' => [
+                        'email' => ['Cet email est déjà utilisé par une autre entreprise']
+                    ]
+                ], 422);
+            }
+
+            throw $e;
 
         } catch (\Exception $e) {
             \Log::error('Erreur lors de la création d\'entreprise', [
@@ -330,9 +351,11 @@ class CompanyController extends Controller
                 ], 403);
             }
 
+            $company = $recruiter->company;
+
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
-                'email' => 'sometimes|email|max:255',
+                'email' => 'sometimes|email|max:255|unique:companies,email,'.$company->id,
                 'phone' => 'sometimes|string|max:20',
                 'description' => 'sometimes|string',
                 'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
@@ -342,16 +365,21 @@ class CompanyController extends Controller
                 'website' => 'nullable|url|max:255',
             ]);
 
+            // Normaliser l'email en minuscules si présent
+            if (isset($validated['email'])) {
+                $validated['email'] = strtolower($validated['email']);
+            }
+
             // Upload du nouveau logo si fourni
             if ($request->hasFile('logo')) {
                 // Supprimer l'ancien logo
-                if ($recruiter->company->logo) {
-                    Storage::disk('public')->delete($recruiter->company->logo);
+                if ($company->logo) {
+                    Storage::disk('public')->delete($company->logo);
                 }
                 $validated['logo'] = $request->file('logo')->store('logos', 'public');
             }
 
-            $recruiter->company->update($validated);
+            $company->update($validated);
 
             return response()->json([
                 'message' => 'Entreprise mise à jour avec succès',
