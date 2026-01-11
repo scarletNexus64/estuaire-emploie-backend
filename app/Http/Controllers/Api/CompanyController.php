@@ -124,50 +124,70 @@ class CompanyController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'description' => 'required|string',
-            'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
-            'sector' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'website' => 'nullable|url|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'required|string|max:20',
+                'description' => 'required|string',
+                'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
+                'sector' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:255',
+                'website' => 'nullable|url|max:255',
+            ]);
 
-        // Vérifier si l'utilisateur n'a pas déjà une entreprise
-        $existingRecruiter = Recruiter::where('user_id', auth()->id())->first();
-        if ($existingRecruiter) {
+            // Vérifier si l'utilisateur n'a pas déjà une entreprise
+            $existingRecruiter = Recruiter::where('user_id', auth()->id())->first();
+            if ($existingRecruiter) {
+                return response()->json([
+                    'message' => 'Vous avez déjà une entreprise associée à votre compte',
+                ], 422);
+            }
+
+            // Upload du logo si fourni
+            if ($request->hasFile('logo')) {
+                $validated['logo'] = $request->file('logo')->store('logos', 'public');
+            }
+
+            $company = Company::create(array_merge($validated, [
+                'status' => 'pending', // Admin doit vérifier
+                'country' => 'Cameroun',
+            ]));
+
+            // Créer la relation recruiter
+            Recruiter::create([
+                'user_id' => auth()->id(),
+                'company_id' => $company->id,
+                'position' => 'Directeur',
+                'can_publish' => true,
+                'can_view_applications' => true,
+                'can_modify_company' => true,
+            ]);
+
             return response()->json([
-                'message' => 'Vous avez déjà une entreprise associée à votre compte',
+                'message' => 'Entreprise créée avec succès. En attente de vérification.',
+                'data' => $company,
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors(),
             ], 422);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la création d\'entreprise', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Erreur lors de la création de l\'entreprise',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // Upload du logo si fourni
-        if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo')->store('logos', 'public');
-        }
-
-        $company = Company::create(array_merge($validated, [
-            'status' => 'pending', // Admin doit vérifier
-            'country' => 'Cameroun',
-        ]));
-
-        // Créer la relation recruiter
-        Recruiter::create([
-            'user_id' => auth()->id(),
-            'company_id' => $company->id,
-            'position' => 'Directeur',
-            'can_publish' => true,
-            'can_view_applications' => true,
-            'can_modify_company' => true,
-        ]);
-
-        return response()->json([
-            'message' => 'Entreprise créée avec succès. En attente de vérification.',
-            'data' => $company,
-        ], 201);
     }
 
     /**
@@ -295,46 +315,67 @@ class CompanyController extends Controller
      */
     public function updateMyCompany(Request $request): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        try {
+            $recruiter = auth()->user()->recruiter;
 
-        if (! $recruiter) {
-            return response()->json([
-                'message' => 'Vous n\'avez pas d\'entreprise associée',
-            ], 404);
-        }
-
-        if (! $recruiter->can_modify_company) {
-            return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à modifier cette entreprise',
-            ], 403);
-        }
-
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255',
-            'phone' => 'sometimes|string|max:20',
-            'description' => 'sometimes|string',
-            'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
-            'sector' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'website' => 'nullable|url|max:255',
-        ]);
-
-        // Upload du nouveau logo si fourni
-        if ($request->hasFile('logo')) {
-            // Supprimer l'ancien logo
-            if ($recruiter->company->logo) {
-                Storage::disk('public')->delete($recruiter->company->logo);
+            if (! $recruiter) {
+                return response()->json([
+                    'message' => 'Vous n\'avez pas d\'entreprise associée',
+                ], 404);
             }
-            $validated['logo'] = $request->file('logo')->store('logos', 'public');
+
+            if (! $recruiter->can_modify_company) {
+                return response()->json([
+                    'message' => 'Vous n\'êtes pas autorisé à modifier cette entreprise',
+                ], 403);
+            }
+
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255',
+                'phone' => 'sometimes|string|max:20',
+                'description' => 'sometimes|string',
+                'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
+                'sector' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:255',
+                'website' => 'nullable|url|max:255',
+            ]);
+
+            // Upload du nouveau logo si fourni
+            if ($request->hasFile('logo')) {
+                // Supprimer l'ancien logo
+                if ($recruiter->company->logo) {
+                    Storage::disk('public')->delete($recruiter->company->logo);
+                }
+                $validated['logo'] = $request->file('logo')->store('logos', 'public');
+            }
+
+            $recruiter->company->update($validated);
+
+            return response()->json([
+                'message' => 'Entreprise mise à jour avec succès',
+                'data' => $recruiter->company->fresh(),
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la mise à jour d\'entreprise', [
+                'user_id' => auth()->id(),
+                'company_id' => $recruiter->company->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour de l\'entreprise',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $recruiter->company->update($validated);
-
-        return response()->json([
-            'message' => 'Entreprise mise à jour avec succès',
-            'data' => $recruiter->company->fresh(),
-        ]);
     }
 }

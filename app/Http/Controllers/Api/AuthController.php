@@ -7,7 +7,6 @@ use App\Models\Application;
 use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
-use App\Models\EmailVerification;
 use App\Notifications\RegistedNotification;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -62,30 +61,29 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'phone' => 'nullable|string|max:20',
+            'fcm_token' => 'nullable|string',
         ]);
 
-        // Vérifier que l'email a été vérifié par OTP
-        $emailVerification = EmailVerification::where('email', $validated['email'])
-            ->where('verified', true)
-            ->first();
-
-        if (!$emailVerification) {
-            return response()->json([
-                'message' => 'Email non vérifié. Veuillez d\'abord vérifier votre email.',
-            ], 403);
-        }
+        Log::info('📝 [REGISTER] Nouvelle inscription', [
+            'email' => $validated['email'],
+            'fcm_token_present' => !empty($validated['fcm_token']),
+            'fcm_token' => $validated['fcm_token'] ?? 'N/A'
+        ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
+            'fcm_token' => $validated['fcm_token'] ?? null,
             'role' => 'candidate',
-            'email_verified_at' => now(), // Marquer l'email comme vérifié
+            'email_verified_at' => now(),
         ]);
 
-        // Supprimer l'enregistrement de vérification après création du compte
-        $emailVerification->delete();
+        Log::info('✅ [REGISTER] Utilisateur créé avec succès', [
+            'user_id' => $user->id,
+            'fcm_token_saved' => !empty($user->fcm_token)
+        ]);
 
         // Charger les relations du user
         if ($user->isRecruiter()) {
@@ -144,22 +142,43 @@ public function login(Request $request)
         'fcm_token' => 'nullable|string', // On attend le token ici
     ]);
 
+    Log::info('🔐 [LOGIN] Tentative de connexion', [
+        'email' => $credentials['email'],
+        'fcm_token_present' => !empty($credentials['fcm_token']),
+        'fcm_token' => $credentials['fcm_token'] ?? 'N/A'
+    ]);
+
     // 2. Tenter l'authentification
     if (!Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
+        Log::warning('❌ [LOGIN] Échec de connexion', ['email' => $credentials['email']]);
         return response()->json(['message' => 'Email ou mot de passe incorrect.'], 401);
     }
 
     // 3. L'authentification a réussi, on récupère l'utilisateur
     $user = Auth::user();
 
+    Log::info('✅ [LOGIN] Connexion réussie', [
+        'user_id' => $user->id,
+        'email' => $user->email
+    ]);
+
     // 4. Si un fcm_token a été envoyé, on l'enregistre
     if ($request->filled('fcm_token')) {
-        \Log::debug('Enregistrement du FCM token pour l\'utilisateur: ' . $user->id);
+        Log::info('📲 [LOGIN] Enregistrement du FCM token', [
+            'user_id' => $user->id,
+            'fcm_token' => $request->fcm_token
+        ]);
         try {
             $user->update(['fcm_token' => $request->fcm_token]);
+            Log::info('✅ [LOGIN] FCM token enregistré avec succès', ['user_id' => $user->id]);
         } catch (\Throwable $e) {
-            \Log::error('Erreur en enregistrant le FCM token pour user '. $user->id .': '. $e->getMessage());
+            Log::error('❌ [LOGIN] Erreur enregistrement FCM token', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
         }
+    } else {
+        Log::warning('⚠️ [LOGIN] Aucun FCM token fourni', ['user_id' => $user->id]);
     }
 
     // 5. Créer et renvoyer le token d'API (Sanctum)
@@ -190,7 +209,22 @@ public function login(Request $request)
      */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        Log::info('🚪 [LOGOUT] Déconnexion de l\'utilisateur', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'had_fcm_token' => !empty($user->fcm_token)
+        ]);
+
+        // Effacer le FCM token pour que cet utilisateur ne reçoive plus de notifications
+        $user->fcm_token = null;
+        $user->save();
+
+        Log::info('✅ [LOGOUT] FCM token effacé', ['user_id' => $user->id]);
+
+        // Supprimer le token d'accès Sanctum
+        $user->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Déconnexion réussie',

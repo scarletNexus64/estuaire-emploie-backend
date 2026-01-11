@@ -33,6 +33,14 @@ class NotificationService
         try {
             // 1. Envoyer via FCM si l'utilisateur a un token
             if ($user->fcm_token) {
+                Log::info('📲 [NOTIFICATION] Envoi push à l\'utilisateur', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'type' => $type,
+                    'title' => $title,
+                    'has_fcm_token' => true
+                ]);
+
                 $data = array_merge([
                     'type' => $type,
                     'sent_at' => now()->toISOString(),
@@ -44,6 +52,14 @@ class NotificationService
                     $message,
                     $data
                 );
+
+                Log::info('✅ [NOTIFICATION] Push envoyée avec succès', ['user_id' => $user->id]);
+            } else {
+                Log::info('⚠️ [NOTIFICATION] Utilisateur sans FCM token, push ignorée', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'type' => $type
+                ]);
             }
 
             // 2. Enregistrer dans la base de données
@@ -60,15 +76,14 @@ class NotificationService
                 'read_at' => null,
             ]);
 
-            Log::info('Notification envoyée', [
+            Log::info('✅ [NOTIFICATION] Notification enregistrée en BDD', [
                 'user_id' => $user->id,
                 'type' => $type,
-                'title' => $title,
             ]);
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Erreur envoi notification', [
+            Log::error('❌ [NOTIFICATION] Erreur envoi notification', [
                 'user_id' => $user->id,
                 'type' => $type,
                 'error' => $e->getMessage(),
@@ -132,9 +147,18 @@ class NotificationService
      */
     public function sendToAllCandidates(string $title, string $message, string $type, array $additionalData = []): array
     {
+        $totalCandidates = User::where('role', 'candidate')->count();
         $candidates = User::where('role', 'candidate')
             ->whereNotNull('fcm_token')
             ->get();
+
+        Log::info('📢 [NOTIFICATION] Envoi aux candidats', [
+            'total_candidates' => $totalCandidates,
+            'candidates_with_token' => $candidates->count(),
+            'candidates_without_token' => $totalCandidates - $candidates->count(),
+            'type' => $type,
+            'title' => $title,
+        ]);
 
         return $this->sendToMultipleUsers($candidates, $title, $message, $type, $additionalData);
     }
@@ -151,6 +175,12 @@ class NotificationService
      */
     public function sendToAllUsersExcept(string $title, string $message, string $type, ?int $excludeUserId = null, array $additionalData = []): array
     {
+        $totalUsersQuery = User::whereIn('role', ['candidate', 'recruiter']);
+        if ($excludeUserId) {
+            $totalUsersQuery->where('id', '!=', $excludeUserId);
+        }
+        $totalUsers = $totalUsersQuery->count();
+
         $query = User::whereIn('role', ['candidate', 'recruiter'])
             ->whereNotNull('fcm_token');
 
@@ -160,6 +190,15 @@ class NotificationService
         }
 
         $users = $query->get();
+
+        Log::info('📢 [NOTIFICATION] Envoi à tous les utilisateurs', [
+            'total_users' => $totalUsers,
+            'users_with_token' => $users->count(),
+            'users_without_token' => $totalUsers - $users->count(),
+            'excluded_user_id' => $excludeUserId,
+            'type' => $type,
+            'title' => $title,
+        ]);
 
         return $this->sendToMultipleUsers($users, $title, $message, $type, $additionalData);
     }

@@ -53,8 +53,9 @@ class UserPresence extends Model
      */
     public static function updateLastSeen(int $userId): void
     {
-        self::where('user_id', $userId)->update([
-            'last_seen' => now(),
-        ]);
+        self::updateOrCreate(
+            ['user_id' => $userId],
+            ['last_seen' => now()]
+        );
     }
 }

@@ -46,35 +46,46 @@ class CompanyController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:companies,email',
-            'phone' => 'nullable|string|max:20',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'sector' => 'required|string|max:255',
-            'website' => 'nullable|url',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|in:pending,verified,suspended',
-            'subscription_plan' => 'required|in:free,premium',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'sector' => 'required|string|max:255',
+                'website' => 'nullable|url',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string|max:255',
+                'country' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'status' => 'required|in:pending,verified,suspended',
+                'subscription_plan' => 'required|in:free,premium',
+            ]);
 
-        // Gérer l'upload du logo
-        if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+            // Gérer l'upload du logo
+            if ($request->hasFile('logo')) {
+                $logoPath = $request->file('logo')->store('logos', 'public');
+                $validated['logo'] = $logoPath;
+            }
+
+            if ($validated['status'] === 'verified') {
+                $validated['verified_at'] = now();
+            }
+
+            Company::create($validated);
+
+            return redirect()->route('admin.companies.index')
+                ->with('success', 'Entreprise créée avec succès');
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la création d\'entreprise', [
+                'error' => $e->getMessage(),
+                'request' => $request->except(['logo'])
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erreur lors de la création: ' . $e->getMessage());
         }
-
-        if ($validated['status'] === 'verified') {
-            $validated['verified_at'] = now();
-        }
-
-        Company::create($validated);
-
-        return redirect()->route('admin.companies.index')
-            ->with('success', 'Entreprise créée avec succès');
     }
 
     public function show(Company $company): View
@@ -91,40 +102,52 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:companies,email,' . $company->id,
-            'phone' => 'nullable|string|max:20',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'sector' => 'required|string|max:255',
-            'website' => 'nullable|url',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|in:pending,verified,suspended',
-            'subscription_plan' => 'required|in:free,premium',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'sector' => 'required|string|max:255',
+                'website' => 'nullable|url',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'status' => 'required|in:pending,verified,suspended',
+                'subscription_plan' => 'required|in:free,premium',
+            ]);
 
-        // Gérer l'upload du logo
-        if ($request->hasFile('logo')) {
-            // Supprimer l'ancien logo si existant
-            if ($company->logo && \Storage::disk('public')->exists($company->logo)) {
-                \Storage::disk('public')->delete($company->logo);
+            // Gérer l'upload du logo
+            if ($request->hasFile('logo')) {
+                // Supprimer l'ancien logo si existant
+                if ($company->logo && \Storage::disk('public')->exists($company->logo)) {
+                    \Storage::disk('public')->delete($company->logo);
+                }
+
+                // Sauvegarder le nouveau logo
+                $logoPath = $request->file('logo')->store('logos', 'public');
+                $validated['logo'] = $logoPath;
             }
 
-            // Sauvegarder le nouveau logo
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+            if ($validated['status'] === 'verified' && !$company->verified_at) {
+                $validated['verified_at'] = now();
+            }
+
+            $company->update($validated);
+
+            return redirect()->route('admin.companies.index')
+                ->with('success', 'Entreprise mise à jour avec succès');
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la mise à jour d\'entreprise', [
+                'company_id' => $company->id,
+                'error' => $e->getMessage(),
+                'request' => $request->except(['logo'])
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
         }
-
-        if ($validated['status'] === 'verified' && !$company->verified_at) {
-            $validated['verified_at'] = now();
-        }
-
-        $company->update($validated);
-
-        return redirect()->route('admin.companies.index')
-            ->with('success', 'Entreprise mise à jour avec succès');
     }
 
     public function destroy(Company $company): RedirectResponse
