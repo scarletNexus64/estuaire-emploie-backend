@@ -1,6 +1,6 @@
 # Estuaire Emploie - Backend Laravel
 
-> 🇨🇲 Plateforme de gestion d'emploi pour le Cameroun avec dashboard administrateur et API REST complète.
+> 🇨🇲 Plateforme de gestion d'emploi pour le Cameroun.
 
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://php.net)
