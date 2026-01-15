@@ -681,4 +681,201 @@ public function login(Request $request)
             'user' => $user,
         ]);
     }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/user/account",
+     *     summary="Supprimer le compte utilisateur",
+     *     description="Supprime définitivement le compte de l'utilisateur après validation du mot de passe. Toutes les données associées (entreprise, jobs, candidatures, etc.) seront supprimées en cascade.",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"password"},
+     *             @OA\Property(property="password", type="string", format="password", example="password123", description="Mot de passe actuel pour confirmation")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Compte supprimé avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Compte supprimé avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Mot de passe incorrect",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Mot de passe incorrect")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Erreur de validation"),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur serveur",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Une erreur est survenue lors de la suppression du compte")
+     *         )
+     *     )
+     * )
+     */
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        // Vérifier le mot de passe
+        if (!Hash::check($validated['password'], $user->password)) {
+            Log::warning('🚫 [DELETE ACCOUNT] Mot de passe incorrect', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Mot de passe incorrect',
+            ], 401);
+        }
+
+        Log::info('🗑️ [DELETE ACCOUNT] Début de la suppression du compte', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role,
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            // 1. Supprimer l'entreprise si l'utilisateur est recruiter
+            if ($user->isRecruiter() && $user->recruiter) {
+                $recruiter = $user->recruiter;
+                $company = $recruiter->company;
+
+                if ($company) {
+                    Log::info('🏢 [DELETE ACCOUNT] Suppression de l\'entreprise', [
+                        'company_id' => $company->id,
+                        'company_name' => $company->name,
+                        'recruiters_count' => $company->recruiters()->count(),
+                    ]);
+
+                    // Supprimer tous les jobs de l'entreprise
+                    $company->jobs()->each(function ($job) {
+                        // Supprimer les candidatures liées aux jobs
+                        $job->applications()->forceDelete();
+                        // Supprimer les favoris liés aux jobs
+                        $job->favorites()->detach();
+                        // Supprimer le job
+                        $job->forceDelete();
+                    });
+
+                    // Supprimer tous les recruteurs de l'entreprise
+                    $company->recruiters()->forceDelete();
+
+                    // Supprimer l'entreprise
+                    if ($company->logo) {
+                        Storage::disk('public')->delete($company->logo);
+                    }
+                    $company->forceDelete();
+
+                    Log::info('✅ [DELETE ACCOUNT] Entreprise et données associées supprimées');
+                }
+            }
+
+            // 2. Supprimer les candidatures de l'utilisateur (en tant que candidat)
+            $user->applications()->forceDelete();
+            Log::info('✅ [DELETE ACCOUNT] Candidatures supprimées');
+
+            // 3. Supprimer les jobs postés directement par l'utilisateur (si pas déjà supprimés)
+            $user->postedJobs()->each(function ($job) {
+                $job->applications()->forceDelete();
+                $job->favorites()->detach();
+                $job->forceDelete();
+            });
+            Log::info('✅ [DELETE ACCOUNT] Jobs postés supprimés');
+
+            // 4. Supprimer les favoris
+            $user->favorites()->detach();
+            Log::info('✅ [DELETE ACCOUNT] Favoris supprimés');
+
+            // 5. Supprimer les messages
+            $user->messages()->forceDelete();
+            Log::info('✅ [DELETE ACCOUNT] Messages supprimés');
+
+            // 6. Supprimer les conversations
+            $user->conversationsAsUserOne()->forceDelete();
+            $user->conversationsAsUserTwo()->forceDelete();
+            Log::info('✅ [DELETE ACCOUNT] Conversations supprimées');
+
+            // 7. Supprimer la présence
+            if ($user->presence) {
+                $user->presence()->forceDelete();
+                Log::info('✅ [DELETE ACCOUNT] Présence supprimée');
+            }
+
+            // 8. Supprimer les notifications
+            $user->notifications()->delete();
+            Log::info('✅ [DELETE ACCOUNT] Notifications supprimées');
+
+            // 9. Supprimer les abonnements
+            $user->userSubscriptionPlans()->forceDelete();
+            Log::info('✅ [DELETE ACCOUNT] Abonnements supprimés');
+
+            // 10. Supprimer les contacts vus
+            $user->viewedContacts()->forceDelete();
+            Log::info('✅ [DELETE ACCOUNT] Contacts vus supprimés');
+
+            // 11. Supprimer les fichiers uploadés
+            if ($user->profile_photo) {
+                Storage::disk('public')->delete($user->profile_photo);
+                Log::info('✅ [DELETE ACCOUNT] Photo de profil supprimée');
+            }
+            if ($user->cv_path) {
+                Storage::disk('public')->delete($user->cv_path);
+                Log::info('✅ [DELETE ACCOUNT] CV supprimé');
+            }
+
+            // 12. Supprimer tous les tokens d'accès
+            $user->tokens()->delete();
+            Log::info('✅ [DELETE ACCOUNT] Tokens d\'accès supprimés');
+
+            // 13. Supprimer définitivement l'utilisateur
+            $userId = $user->id;
+            $userEmail = $user->email;
+            $user->forceDelete();
+
+            Log::info('✅ [DELETE ACCOUNT] Compte utilisateur supprimé définitivement', [
+                'user_id' => $userId,
+                'email' => $userEmail,
+            ]);
+
+            \DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Compte supprimé avec succès',
+            ]);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+
+            Log::error('❌ [DELETE ACCOUNT] Erreur lors de la suppression', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la suppression du compte',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
 }
