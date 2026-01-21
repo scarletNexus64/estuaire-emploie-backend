@@ -30,11 +30,11 @@ class AddonServiceConfigSeeder extends Seeder
                 'icon' => '📄',
             ],
             [
-                'name' => 'Boost Annonce (7 jours)',
-                'slug' => 'job_boost_7days',
-                'description' => 'Augmentez la visibilité de votre offre x3 pendant 7 jours',
+                'name' => 'Boost Annonce WhatsApp',
+                'slug' => 'job_boost_whatsapp',
+                'description' => 'Boostez votre annonce sur la plateforme WhatsApp',
                 'display_order' => 2,
-                'price' => 5000.00, // FCFA
+                'price' => 10000.00, // FCFA
                 'duration_days' => 7, // 7 jours
                 'service_type' => 'job_boost',
                 'boost_multiplier' => 3, // Visibilité x3

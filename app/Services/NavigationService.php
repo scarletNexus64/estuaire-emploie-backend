@@ -64,16 +64,16 @@ class NavigationService
                 'section' => 'Monétisation',
                 'items' => [
                     [
-                        'name' => 'Plans d\'abonnement',
-                        'route' => 'admin.subscription-plans.index',
-                        'icon' => 'fas fa-tags',
+                        'name' => 'Plans d\'abonnement Recruteurs',
+                        'route' => 'admin.subscription-plans.recruiters.index',
+                        'icon' => 'fas fa-user-tie',
                         'permission' => 'manage_subscription_plans',
                     ],
                     [
-                        'name' => 'Abonnements',
-                        'route' => 'admin.subscriptions.index',
-                        'icon' => 'fas fa-crown',
-                        'permission' => 'manage_subscriptions',
+                        'name' => 'Plans d\'abonnement Candidats',
+                        'route' => 'admin.subscription-plans.job-seekers.index',
+                        'icon' => 'fas fa-users',
+                        'permission' => 'manage_subscription_plans',
                     ],
                     [
                         'name' => 'Attribution Manuelle',
@@ -88,27 +88,15 @@ class NavigationService
                         'permission' => 'manage_payments',
                     ],
                     [
-                        'name' => 'Services Premium',
-                        'route' => 'admin.premium-services.index',
-                        'icon' => 'fas fa-star',
-                        'permission' => 'manage_premium_services',
+                        'name' => 'Services pour Recruteurs',
+                        'route' => 'admin.recruiter-services.index',
+                        'icon' => 'fas fa-briefcase',
+                        'permission' => 'manage_recruiter_services',
                     ],
                     [
-                        'name' => 'Services Additionnels',
-                        'route' => 'admin.addon-services.index',
-                        'icon' => 'fas fa-puzzle-piece',
-                        'permission' => 'manage_addon_services',
-                    ],
-                    [
-                        'name' => 'CVthèque',
-                        'route' => 'admin.cvtheque.index',
-                        'icon' => 'fas fa-file-pdf',
-                        'permission' => 'manage_cvtheque',
-                    ],
-                    [
-                        'name' => 'Publicités',
+                        'name' => 'Gestion des Espaces Publicitaires',
                         'route' => 'admin.advertisements.index',
-                        'icon' => 'fas fa-ad',
+                        'icon' => 'fas fa-bullhorn',
                         'permission' => 'manage_advertisements',
                     ],
                     [

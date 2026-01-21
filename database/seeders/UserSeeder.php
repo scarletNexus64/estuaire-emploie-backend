@@ -10,16 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin
-        User::create([
-            'name' => 'Admin Estuaire',
-            'email' => 'admin@estuaire-emploie.com',
-            'phone' => '+237 690 000 001',
-            'role' => 'admin',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-            'is_active' => true,
-        ]);
+        // Note: L'admin est créé par SuperAdminSeeder
 
         // Recruteurs
         for ($i = 1; $i <= 5; $i++) {

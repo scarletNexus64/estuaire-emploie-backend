@@ -102,14 +102,24 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('settings/categories/{category}', [SettingsController::class, 'deleteCategory'])->name('settings.categories.delete');
     });
 
-    // MONÉTISATION - Subscription Plans
-    Route::middleware('permission:manage_subscription_plans')->prefix('subscription-plans')->name('subscription-plans.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'store'])->name('store');
-        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'edit'])->name('edit');
-        Route::put('/{plan}', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'update'])->name('update');
-        Route::delete('/{plan}', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'destroy'])->name('destroy');
+    // MONÉTISATION - Subscription Plans Recruteurs
+    Route::middleware('permission:manage_subscription_plans')->prefix('subscription-plans/recruiters')->name('subscription-plans.recruiters.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'store'])->name('store');
+        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'edit'])->name('edit');
+        Route::put('/{plan}', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'update'])->name('update');
+        Route::delete('/{plan}', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'destroy'])->name('destroy');
+    });
+
+    // MONÉTISATION - Subscription Plans Candidats
+    Route::middleware('permission:manage_subscription_plans')->prefix('subscription-plans/job-seekers')->name('subscription-plans.job-seekers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'store'])->name('store');
+        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'edit'])->name('edit');
+        Route::put('/{plan}', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'update'])->name('update');
+        Route::delete('/{plan}', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'destroy'])->name('destroy');
     });
 
     // MONÉTISATION - Subscriptions
@@ -150,16 +160,16 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{service}', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'show'])->name('show');
     });
 
-    // MONÉTISATION - Add-on Services
-    Route::middleware('permission:manage_addon_services')->prefix('addon-services')->name('addon-services.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AddonServiceController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\Admin\AddonServiceController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\Admin\AddonServiceController::class, 'store'])->name('store');
-        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\AddonServiceController::class, 'edit'])->name('edit');
-        Route::put('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'update'])->name('update');
-        Route::delete('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'destroy'])->name('destroy');
-        Route::patch('/{service}/toggle', [\App\Http\Controllers\Admin\AddonServiceController::class, 'toggle'])->name('toggle');
-        Route::get('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'show'])->name('show');
+    // MONÉTISATION - Services pour Recruteurs (anciennement Add-on Services)
+    Route::middleware('permission:manage_recruiter_services')->prefix('recruiter-services')->name('recruiter-services.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'store'])->name('store');
+        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'edit'])->name('edit');
+        Route::put('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'update'])->name('update');
+        Route::delete('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'destroy'])->name('destroy');
+        Route::patch('/{service}/toggle', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'toggle'])->name('toggle');
+        Route::get('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'show'])->name('show');
     });
 
     // MONÉTISATION - CVthèque
