@@ -14,6 +14,9 @@ use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TestNotificationController;
+use App\Http\Controllers\Api\UserRoleController;
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\CurrencyController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -154,6 +157,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // Initier un paiement pour un abonnement
     Route::post('/payments/init', [SubscriptionPlanController::class, 'initPayment']);
+    // Exécuter un paiement PayPal après approbation
+    Route::post('/payments/paypal/execute', [SubscriptionPlanController::class, 'executePayPalPayment']);
     // Vérifier le statut d'un paiement
     Route::get('/payments/{id}/status', [SubscriptionPlanController::class, 'checkPaymentStatus']);
     // Activer un abonnement après paiement
@@ -166,6 +171,46 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/subscription/status', [SubscriptionPlanController::class, 'subscriptionStatus']);
     // Utilisation de l'abonnement (jobs/contacts utilisés, limites)
     Route::get('/subscription/usage', [SubscriptionPlanController::class, 'subscriptionUsage']);
+
+    // ------------------
+    // WALLET (Utilisable dans tous les rôles)
+    // ------------------
+    // Consulter mon solde et statistiques
+    Route::get('/wallet', [WalletController::class, 'index']);
+    // Historique des transactions
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    // Initier une recharge du wallet (FreeMoPay ou PayPal)
+    Route::post('/wallet/recharge', [WalletController::class, 'recharge']);
+    // Vérifier si je peux payer un montant
+    Route::post('/wallet/can-pay', [WalletController::class, 'canPay']);
+    // Payer avec le wallet (abonnements, services)
+    Route::post('/wallet/pay', [WalletController::class, 'pay']);
+
+    // ------------------
+    // DEVISES & CONVERSIONS
+    // ------------------
+    // Liste des devises disponibles (XAF, USD, EUR)
+    Route::get('/currencies', [CurrencyController::class, 'index']);
+    // Tous les taux de change
+    Route::get('/currencies/rates', [CurrencyController::class, 'rates']);
+    // Convertir un montant d'une devise à une autre
+    Route::post('/currencies/convert', [CurrencyController::class, 'convert']);
+    // Mettre à jour ma devise préférée
+    Route::put('/user/currency', [CurrencyController::class, 'updateUserCurrency']);
+
+    // ------------------
+    // RÔLES & FEATURES MULTI-PROFILS
+    // ------------------
+    // Récupérer les rôles disponibles (candidat, recruteur)
+    Route::get('/me/roles', [UserRoleController::class, 'getAvailableRoles']);
+    // Changer de rôle actif (candidat ↔ recruteur)
+    Route::post('/me/switch-role', [UserRoleController::class, 'switchRole']);
+    // Récupérer toutes les features actives
+    Route::get('/me/features', [UserRoleController::class, 'getFeatures']);
+    // Vérifier une feature spécifique
+    Route::get('/me/features/{featureKey}', [UserRoleController::class, 'checkFeature']);
+    // Synchroniser toutes les features
+    Route::post('/me/sync-features', [UserRoleController::class, 'syncFeatures']);
 
 
     // ------------------

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\UserFeatures;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, UserFeatures;
 
     protected $fillable = [
         'name',
@@ -21,6 +22,9 @@ class User extends Authenticatable
         'phone',
         'fcm_token',
         'role',
+        'available_roles',
+        'wallet_balance',
+        'preferred_currency', // XAF, USD, EUR
         'password',
         'profile_photo',
         'bio',
@@ -48,6 +52,8 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'is_super_admin' => 'boolean',
             'permissions' => 'array',
+            'available_roles' => 'array',
+            'wallet_balance' => 'decimal:2',
             'last_login_at' => 'datetime',
         ];
     }
@@ -386,5 +392,29 @@ class User extends Authenticatable
                 'contacts_remaining' => $this->remainingContactsCount(),
             ],
         ];
+    }
+
+    /**
+     * Relation vers les transactions du wallet
+     */
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Retourne le solde du wallet formaté
+     */
+    public function getFormattedWalletBalanceAttribute(): string
+    {
+        return number_format($this->wallet_balance ?? 0, 0, ',', ' ') . ' FCFA';
+    }
+
+    /**
+     * Vérifie si le user a assez d'argent dans son wallet
+     */
+    public function hasWalletBalance(float $amount): bool
+    {
+        return ($this->wallet_balance ?? 0) >= $amount;
     }
 }

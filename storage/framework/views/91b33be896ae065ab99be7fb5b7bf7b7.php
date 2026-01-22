@@ -51,49 +51,17 @@
                     </div>
 
                     <div class="plan-features">
-                        <div class="feature-item">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            <span><strong><?php echo e($plan->jobs_limit ?? 'Illimité'); ?></strong> offres d'emploi</span>
-                        </div>
-                        <div class="feature-item">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            <span><strong><?php echo e($plan->contacts_limit ?? 'Illimité'); ?></strong> contacts candidats</span>
-                        </div>
-                        <?php if($plan->can_access_cvtheque): ?>
-                            <div class="feature-item highlight">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Accès CVthèque</span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if($plan->can_boost_jobs): ?>
-                            <div class="feature-item highlight">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Boost d'annonces</span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if($plan->can_see_analytics): ?>
-                            <div class="feature-item">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Statistiques avancées</span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if($plan->priority_support): ?>
-                            <div class="feature-item">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Support prioritaire</span>
-                            </div>
+                        <?php if($plan->features && is_array($plan->features)): ?>
+                            <?php $__currentLoopData = $plan->features; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $featureKey => $featureEnabled): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if($featureEnabled && isset($availableFeatures[$featureKey])): ?>
+                                    <div class="feature-item">
+                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                        </svg>
+                                        <span><?php echo e($availableFeatures[$featureKey]); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         <?php endif; ?>
                     </div>
 

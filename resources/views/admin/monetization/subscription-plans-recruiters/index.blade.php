@@ -53,49 +53,17 @@
                     </div>
 
                     <div class="plan-features">
-                        <div class="feature-item">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            <span><strong>{{ $plan->jobs_limit ?? 'Illimité' }}</strong> offres d'emploi</span>
-                        </div>
-                        <div class="feature-item">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            <span><strong>{{ $plan->contacts_limit ?? 'Illimité' }}</strong> contacts candidats</span>
-                        </div>
-                        @if($plan->can_access_cvtheque)
-                            <div class="feature-item highlight">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Accès CVthèque</span>
-                            </div>
-                        @endif
-                        @if($plan->can_boost_jobs)
-                            <div class="feature-item highlight">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Boost d'annonces</span>
-                            </div>
-                        @endif
-                        @if($plan->can_see_analytics)
-                            <div class="feature-item">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Statistiques avancées</span>
-                            </div>
-                        @endif
-                        @if($plan->priority_support)
-                            <div class="feature-item">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                </svg>
-                                <span>Support prioritaire</span>
-                            </div>
+                        @if($plan->features && is_array($plan->features))
+                            @foreach($plan->features as $featureKey => $featureEnabled)
+                                @if($featureEnabled && isset($availableFeatures[$featureKey]))
+                                    <div class="feature-item">
+                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                        </svg>
+                                        <span>{{ $availableFeatures[$featureKey] }}</span>
+                                    </div>
+                                @endif
+                            @endforeach
                         @endif
                     </div>
 

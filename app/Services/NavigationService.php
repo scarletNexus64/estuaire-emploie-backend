@@ -88,6 +88,12 @@ class NavigationService
                         'permission' => 'manage_payments',
                     ],
                     [
+                        'name' => 'Wallets',
+                        'route' => 'admin.wallets.index',
+                        'icon' => 'fas fa-wallet',
+                        'permission' => 'manage_payments',
+                    ],
+                    [
                         'name' => 'Services pour Recruteurs',
                         'route' => 'admin.recruiter-services.index',
                         'icon' => 'fas fa-briefcase',

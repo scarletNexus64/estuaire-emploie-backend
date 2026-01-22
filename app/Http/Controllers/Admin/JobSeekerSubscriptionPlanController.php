@@ -9,6 +9,33 @@ use Illuminate\Support\Str;
 
 class JobSeekerSubscriptionPlanController extends Controller
 {
+    /**
+     * Définir toutes les fonctionnalités disponibles pour les plans chercheurs d'emploi
+     */
+    private function getAvailableFeatures(): array
+    {
+        return [
+            'free_cv_creation' => 'Conception gratuite de votre CV',
+            'cv_accessible_recruiters' => 'Votre CV accessible par les recruteurs à l\'échelle nationale et internationale',
+            'free_regional_jobs' => 'De multiples offres d\'emploi de votre région accessibles gratuitement',
+            'free_certifications' => 'Des formations certifiantes internationales gratuites (une attestation ou une certification)',
+            'transformation_program' => 'L\'établissement de votre programme de transformation professionnelle et personnel',
+            'portfolio_creation' => 'Création de votre portfolio',
+            'premium_cv' => 'CV Premium (mise en avant)',
+            'verified_badge' => 'Badge "Profil Vérifié"',
+            'cv_review' => 'Révision CV par expert',
+            'interview_coaching' => 'Coaching entretien',
+            'job_alerts' => 'Alertes emploi SMS/WhatsApp',
+            'immersion_program' => 'Programme d\'immersion professionnelle',
+            'entrepreneurship' => 'Programme en entreprenariat',
+            'international_internship' => 'Stage à l\'international',
+            // Student Pack specific features
+            'past_exam_subjects' => 'Anciens sujets d\'examen',
+            'professional_orientation' => 'Orientation professionnelle (spécialité/métier)',
+            'local_internship' => 'Stage local',
+        ];
+    }
+
     public function index()
     {
         $plans = SubscriptionPlan::jobSeeker()
@@ -16,7 +43,9 @@ class JobSeekerSubscriptionPlanController extends Controller
             ->orderBy('display_order')
             ->get();
 
-        return view('admin.monetization.subscription-plans-job-seekers.index', compact('plans'));
+        $availableFeatures = $this->getAvailableFeatures();
+
+        return view('admin.monetization.subscription-plans-job-seekers.index', compact('plans', 'availableFeatures'));
     }
 
     public function create()
@@ -24,6 +53,7 @@ class JobSeekerSubscriptionPlanController extends Controller
         return view('admin.monetization.subscription-plans-job-seekers.form', [
             'plan' => null,
             'isEdit' => false,
+            'availableFeatures' => $this->getAvailableFeatures(),
         ]);
     }
 
@@ -57,16 +87,10 @@ class JobSeekerSubscriptionPlanController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_popular'] = $request->boolean('is_popular');
 
-        // Gérer les features (JSON)
+        // Gérer les features (JSON avec clés et valeurs)
         $features = [];
-        if ($request->has('features')) {
-            $featuresArray = explode("\n", $request->input('features'));
-            foreach ($featuresArray as $feature) {
-                $feature = trim($feature);
-                if (!empty($feature)) {
-                    $features[] = $feature;
-                }
-            }
+        foreach ($this->getAvailableFeatures() as $key => $label) {
+            $features[$key] = $request->boolean('feature_' . $key);
         }
         $validated['features'] = $features;
 
@@ -83,6 +107,7 @@ class JobSeekerSubscriptionPlanController extends Controller
         return view('admin.monetization.subscription-plans-job-seekers.form', [
             'plan' => $plan,
             'isEdit' => true,
+            'availableFeatures' => $this->getAvailableFeatures(),
         ]);
     }
 
@@ -109,16 +134,10 @@ class JobSeekerSubscriptionPlanController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_popular'] = $request->boolean('is_popular');
 
-        // Gérer les features (JSON)
+        // Gérer les features (JSON avec clés et valeurs)
         $features = [];
-        if ($request->has('features')) {
-            $featuresArray = explode("\n", $request->input('features'));
-            foreach ($featuresArray as $feature) {
-                $feature = trim($feature);
-                if (!empty($feature)) {
-                    $features[] = $feature;
-                }
-            }
+        foreach ($this->getAvailableFeatures() as $key => $label) {
+            $features[$key] = $request->boolean('feature_' . $key);
         }
         $validated['features'] = $features;
 

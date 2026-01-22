@@ -92,6 +92,16 @@
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="paypal-tab" data-bs-toggle="tab" href="#paypal" role="tab" aria-controls="paypal" aria-selected="false">
+                                <i class="mdi mdi-paypal"></i> PayPal
+                                <?php if($paypalConfig && $paypalConfig->isConfigured()): ?>
+                                    <span class="badge bg-success ms-1">Configuré</span>
+                                <?php else: ?>
+                                    <span class="badge bg-warning ms-1">Non configuré</span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <a class="nav-link" id="preferences-tab" data-bs-toggle="tab" href="#preferences" role="tab" aria-controls="preferences" aria-selected="false">
                                 <i class="mdi mdi-cog"></i> Préférences
                             </a>
@@ -107,6 +117,9 @@
 
                         
                         <?php echo $__env->make('admin.service-config.freemopay', ['config' => $freemopayConfig], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+                        
+                        <?php echo $__env->make('admin.service-config.paypal', ['config' => $paypalConfig], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
                         
                         <?php echo $__env->make('admin.service-config.preferences', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>

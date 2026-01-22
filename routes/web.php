@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -148,6 +149,18 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{payment}/refund', [\App\Http\Controllers\Admin\PaymentController::class, 'refund'])->name('refund');
     });
 
+    // MONÉTISATION - Wallets
+    Route::middleware('permission:manage_payments')->prefix('wallets')->name('wallets.')->group(function () {
+        Route::get('/', [WalletController::class, 'index'])->name('index');
+        Route::get('/transactions', [WalletController::class, 'transactions'])->name('transactions');
+        Route::get('/{user}', [WalletController::class, 'show'])->name('show');
+        Route::get('/{user}/adjust', [WalletController::class, 'adjustForm'])->name('adjust');
+        Route::post('/{user}/adjust', [WalletController::class, 'adjust'])->name('adjust.submit');
+        Route::get('/{user}/bonus', [WalletController::class, 'bonusForm'])->name('bonus');
+        Route::post('/{user}/bonus', [WalletController::class, 'bonus'])->name('bonus.submit');
+        Route::post('/transactions/{transaction}/refund', [WalletController::class, 'refund'])->name('refund');
+    });
+
     // MONÉTISATION - Premium Services
     Route::middleware('permission:manage_premium_services')->prefix('premium-services')->name('premium-services.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'index'])->name('index');
@@ -204,12 +217,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateWhatsApp'])->name('update-whatsapp');
         Route::put('/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNexah'])->name('update-nexah');
         Route::put('/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateFreeMoPay'])->name('update-freemopay');
+        Route::put('/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updatePayPal'])->name('update-paypal');
         Route::put('/preferences', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNotificationPreferences'])->name('update-preferences');
 
         // Test connections
         Route::post('/test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testWhatsApp'])->name('test-whatsapp');
         Route::post('/test/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testNexah'])->name('test-nexah');
         Route::post('/test/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testFreeMoPay'])->name('test-freemopay');
+        Route::post('/test/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testPayPal'])->name('test-paypal');
 
         // Send actual test messages
         Route::post('/send-test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'sendTestWhatsApp'])->name('send-test-whatsapp');

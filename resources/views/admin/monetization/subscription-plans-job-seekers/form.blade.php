@@ -65,97 +65,25 @@
                 </div>
             </div>
 
-            <!-- Quotas Configurables -->
+            <!-- Fonctionnalités Incluses dans le Plan -->
             <div class="card" style="margin-top: 1.5rem;">
                 <div class="card-header">
-                    <h3 class="card-title">Quotas Mensuels</h3>
+                    <h3 class="card-title">Fonctionnalités Incluses dans le Plan</h3>
                     <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
-                        Laissez vide pour "Illimité"
+                        Cochez les fonctionnalités à inclure dans ce plan d'abonnement
                     </p>
                 </div>
                 <div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Nombre d'offres d'emploi</label>
-                            <input type="number" name="jobs_limit" class="form-control @error('jobs_limit') is-invalid @enderror"
-                                   value="{{ old('jobs_limit', $plan->jobs_limit ?? '') }}" min="1" placeholder="Illimité">
-                            @error('jobs_limit')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Nombre de contacts candidats</label>
-                            <input type="number" name="contacts_limit" class="form-control @error('contacts_limit') is-invalid @enderror"
-                                   value="{{ old('contacts_limit', $plan->contacts_limit ?? '') }}" min="1" placeholder="Illimité">
-                            @error('contacts_limit')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fonctionnalités -->
-            <div class="card" style="margin-top: 1.5rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Fonctionnalités Incluses</h3>
-                </div>
-                <div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-check-box">
-                            <input type="checkbox" name="can_access_cvtheque" id="can_access_cvtheque" value="1"
-                                   {{ old('can_access_cvtheque', $plan->can_access_cvtheque ?? false) ? 'checked' : '' }}>
-                            <label for="can_access_cvtheque">
-                                <strong>Accès CVthèque</strong>
-                                <small>Recherche dans la base de CV</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="can_boost_jobs" id="can_boost_jobs" value="1"
-                                   {{ old('can_boost_jobs', $plan->can_boost_jobs ?? false) ? 'checked' : '' }}>
-                            <label for="can_boost_jobs">
-                                <strong>Boost d'annonces</strong>
-                                <small>Mettre en avant les offres</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="can_see_analytics" id="can_see_analytics" value="1"
-                                   {{ old('can_see_analytics', $plan->can_see_analytics ?? false) ? 'checked' : '' }}>
-                            <label for="can_see_analytics">
-                                <strong>Statistiques avancées</strong>
-                                <small>Analytics et rapports</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="priority_support" id="priority_support" value="1"
-                                   {{ old('priority_support', $plan->priority_support ?? false) ? 'checked' : '' }}>
-                            <label for="priority_support">
-                                <strong>Support prioritaire</strong>
-                                <small>Assistance rapide</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="featured_company_badge" id="featured_company_badge" value="1"
-                                   {{ old('featured_company_badge', $plan->featured_company_badge ?? false) ? 'checked' : '' }}>
-                            <label for="featured_company_badge">
-                                <strong>Badge Entreprise Premium</strong>
-                                <small>Badge visible sur profil</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="custom_company_page" id="custom_company_page" value="1"
-                                   {{ old('custom_company_page', $plan->custom_company_page ?? false) ? 'checked' : '' }}>
-                            <label for="custom_company_page">
-                                <strong>Page Entreprise Personnalisée</strong>
-                                <small>Branding et customisation</small>
-                            </label>
-                        </div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;">
+                        @foreach($availableFeatures as $key => $label)
+                            <div class="form-check-box">
+                                <input type="checkbox" name="feature_{{ $key }}" id="feature_{{ $key }}" value="1"
+                                       {{ old('feature_' . $key, isset($plan->features[$key]) ? $plan->features[$key] : false) ? 'checked' : '' }}>
+                                <label for="feature_{{ $key }}">
+                                    <strong>{{ $label }}</strong>
+                                </label>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>

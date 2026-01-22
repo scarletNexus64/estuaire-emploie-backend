@@ -96,10 +96,36 @@
                 </div>
             </div>
 
-            <!-- Fonctionnalités -->
+            <!-- Fonctionnalités Incluses dans le Plan -->
             <div class="card" style="margin-top: 1.5rem;">
                 <div class="card-header">
-                    <h3 class="card-title">Fonctionnalités Incluses</h3>
+                    <h3 class="card-title">Fonctionnalités Incluses dans le Plan</h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
+                        Cochez les fonctionnalités à inclure dans ce plan d'abonnement
+                    </p>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;">
+                        @foreach($availableFeatures as $key => $label)
+                            <div class="form-check-box">
+                                <input type="checkbox" name="feature_{{ $key }}" id="feature_{{ $key }}" value="1"
+                                       {{ old('feature_' . $key, isset($plan->features[$key]) ? $plan->features[$key] : false) ? 'checked' : '' }}>
+                                <label for="feature_{{ $key }}">
+                                    <strong>{{ $label }}</strong>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fonctionnalités Système (Pour la Logique Backend) -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Fonctionnalités Système</h3>
+                    <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
+                        Options techniques pour le fonctionnement du système
+                    </p>
                 </div>
                 <div class="card-body">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">

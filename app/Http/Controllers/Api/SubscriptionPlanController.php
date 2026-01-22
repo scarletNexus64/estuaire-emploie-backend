@@ -24,8 +24,14 @@ class SubscriptionPlanController extends Controller
      * @OA\Get(
      *     path="/api/subscription-plans",
      *     summary="Liste des plans d'abonnement disponibles",
-     *     description="Récupère tous les plans d'abonnement actifs pour les recruteurs",
+     *     description="Récupère tous les plans d'abonnement actifs (recruteurs et chercheurs d'emploi)",
      *     tags={"Subscription Plans"},
+     *     @OA\Parameter(
+     *         name="plan_type",
+     *         in="query",
+     *         description="Type de plan (recruiter, job_seeker, ou all)",
+     *         @OA\Schema(type="string", enum={"recruiter", "job_seeker", "all"}, default="all")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Liste des plans d'abonnement",
@@ -34,59 +40,91 @@ class SubscriptionPlanController extends Controller
      *             @OA\Property(property="message", type="string", example="Plans d'abonnement récupérés avec succès"),
      *             @OA\Property(
      *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="STARTER"),
-     *                     @OA\Property(property="slug", type="string", example="starter"),
-     *                     @OA\Property(property="description", type="string", example="Idéal pour débuter"),
-     *                     @OA\Property(property="price", type="number", format="float", example=15000.00),
-     *                     @OA\Property(property="duration_days", type="integer", example=30),
-     *                     @OA\Property(property="jobs_limit", type="integer", nullable=true, example=3),
-     *                     @OA\Property(property="contacts_limit", type="integer", nullable=true, example=10),
-     *                     @OA\Property(property="can_access_cvtheque", type="boolean", example=false),
-     *                     @OA\Property(property="can_boost_jobs", type="boolean", example=false),
-     *                     @OA\Property(property="can_see_analytics", type="boolean", example=false),
-     *                     @OA\Property(property="priority_support", type="boolean", example=false),
-     *                     @OA\Property(property="is_popular", type="boolean", example=false),
-     *                     @OA\Property(property="color", type="string", nullable=true, example="#667eea"),
-     *                     @OA\Property(property="icon", type="string", nullable=true, example="rocket")
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="recruiter_plans",
+     *                     type="array",
+     *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="job_seeker_plans",
+     *                     type="array",
+     *                     @OA\Items(type="object")
      *                 )
      *             )
      *         )
      *     )
      * )
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $plans = SubscriptionPlan::active()
-            ->ordered()
-            ->get([
-                'id',
-                'name',
-                'slug',
-                'description',
-                'price',
-                'duration_days',
-                'jobs_limit',
-                'contacts_limit',
-                'can_access_cvtheque',
-                'can_boost_jobs',
-                'can_see_analytics',
-                'priority_support',
-                'featured_company_badge',
-                'custom_company_page',
-                'features',
-                'is_popular',
-                'color',
-                'icon',
+        $planType = $request->query('plan_type', 'all');
+
+        $query = SubscriptionPlan::active()->ordered();
+
+        if ($planType === 'recruiter') {
+            $plans = $query->recruiter()->get($this->getPlanFields());
+            return response()->json([
+                'success' => true,
+                'message' => 'Plans d\'abonnement recruteurs récupérés avec succès',
+                'data' => $plans,
             ]);
+        } elseif ($planType === 'job_seeker') {
+            $plans = $query->jobSeeker()->get($this->getPlanFields());
+            return response()->json([
+                'success' => true,
+                'message' => 'Plans d\'abonnement chercheurs d\'emploi récupérés avec succès',
+                'data' => $plans,
+            ]);
+        }
+
+        // Return both types
+        $recruiterPlans = SubscriptionPlan::active()
+            ->recruiter()
+            ->ordered()
+            ->get($this->getPlanFields());
+
+        $jobSeekerPlans = SubscriptionPlan::active()
+            ->jobSeeker()
+            ->ordered()
+            ->get($this->getPlanFields());
 
         return response()->json([
             'success' => true,
             'message' => 'Plans d\'abonnement récupérés avec succès',
-            'data' => $plans,
+            'data' => [
+                'recruiter_plans' => $recruiterPlans,
+                'job_seeker_plans' => $jobSeekerPlans,
+            ],
         ]);
+    }
+
+    /**
+     * Get the fields to retrieve for subscription plans
+     */
+    private function getPlanFields(): array
+    {
+        return [
+            'id',
+            'name',
+            'slug',
+            'plan_type',
+            'description',
+            'price',
+            'duration_days',
+            'jobs_limit',
+            'contacts_limit',
+            'can_access_cvtheque',
+            'can_boost_jobs',
+            'can_see_analytics',
+            'priority_support',
+            'featured_company_badge',
+            'custom_company_page',
+            'features',
+            'is_popular',
+            'color',
+            'icon',
+        ];
     }
 
     /**
@@ -375,6 +413,9 @@ class SubscriptionPlanController extends Controller
                     Log::info("[SubscriptionPlanController] User {$user->id} role updated to 'recruiter' after subscription renewal");
                 }
 
+                // 🎯 Synchroniser les features depuis le plan
+                $user->syncFeaturesFromSubscription('recruiter');
+
                 $existingSubscription->load(['subscriptionPlan', 'payment']);
                 $userSubscription = $existingSubscription;
                 $isRenewal = $allSubscriptions->count() > 0;
@@ -399,6 +440,10 @@ class SubscriptionPlanController extends Controller
                 // Charger les relations et activer l'abonnement (définit dates et compteurs)
                 $userSubscription->load(['subscriptionPlan', 'payment']);
                 $userSubscription->activate();
+
+                // 🎯 Synchroniser les features depuis le plan
+                $user->refresh(); // Recharger pour avoir le rôle à jour
+                $user->syncFeaturesFromSubscription('recruiter');
 
                 Log::info("[SubscriptionPlanController] New subscription created for user {$user->id} - Plan: {$plan->name}");
             }
@@ -532,13 +577,13 @@ class SubscriptionPlanController extends Controller
      * @OA\Post(
      *     path="/api/payments/init",
      *     summary="Initier un paiement pour un abonnement",
-     *     description="Initie un paiement FreeMoPay pour souscrire à un plan d'abonnement",
+     *     description="Initie un paiement FreeMoPay ou PayPal pour souscrire à un plan d'abonnement",
      *     tags={"Subscription Plans"},
      *     security={{"sanctum": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"subscription_plan_id", "phone_number"},
+     *             required={"subscription_plan_id", "payment_method"},
      *             @OA\Property(
      *                 property="subscription_plan_id",
      *                 type="integer",
@@ -546,9 +591,16 @@ class SubscriptionPlanController extends Controller
      *                 example=1
      *             ),
      *             @OA\Property(
+     *                 property="payment_method",
+     *                 type="string",
+     *                 description="Méthode de paiement (freemopay ou paypal)",
+     *                 enum={"freemopay", "paypal"},
+     *                 example="freemopay"
+     *             ),
+     *             @OA\Property(
      *                 property="phone_number",
      *                 type="string",
-     *                 description="Numéro de téléphone pour le paiement (format: 237XXXXXXXXX)",
+     *                 description="Numéro de téléphone pour le paiement FreeMoPay (format: 237XXXXXXXXX) - Requis uniquement pour FreeMoPay",
      *                 example="237658895572"
      *             )
      *         )
@@ -597,11 +649,13 @@ class SubscriptionPlanController extends Controller
     {
         $request->validate([
             'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
-            'phone_number' => 'required|string|min:12|max:15',
+            'payment_method' => 'required|in:freemopay,paypal',
+            'phone_number' => 'required_if:payment_method,freemopay|string|min:12|max:15',
         ]);
 
         $user = $request->user();
         $subscriptionPlanId = $request->subscription_plan_id;
+        $paymentMethod = $request->payment_method;
         $phoneNumber = $request->phone_number;
 
         // Vérifier que le plan existe et est actif
@@ -621,55 +675,100 @@ class SubscriptionPlanController extends Controller
             Log::info("   📧 Email: {$user->email}");
             Log::info("   📋 Plan: {$plan->name} (ID: {$plan->id})");
             Log::info("   💰 Amount: {$plan->price} XAF");
-            Log::info("   📱 Phone: {$phoneNumber}");
-
-            // Initialiser le service de paiement
-            $freemoPayService = new FreeMoPayService();
+            Log::info("   💳 Payment Method: {$paymentMethod}");
+            if ($phoneNumber) {
+                Log::info("   📱 Phone: {$phoneNumber}");
+            }
 
             // Description du paiement
             $description = "Abonnement {$plan->name} - Estuaire Emploie";
+            $externalId = "SUB-{$user->id}-{$plan->id}-" . now()->format('YmdHis');
 
-            // Initier le paiement (passer le plan comme payable)
-            // IMPORTANT: Cette méthode est SYNCHRONE et attend la confirmation du paiement
-            $payment = $freemoPayService->initPayment(
-                $user,
-                $plan->price,
-                $phoneNumber,
-                $description,
-                "SUB-{$user->id}-{$plan->id}-" . now()->format('YmdHis'),
-                $plan  // payable
-            );
+            // Initialiser le service de paiement selon la méthode choisie
+            if ($paymentMethod === 'paypal') {
+                $paypalService = new \App\Services\Payment\PayPalService();
 
-            Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            Log::info("[SubscriptionPlanController] ✅ Payment process completed!");
-            Log::info("[SubscriptionPlanController] 📋 Payment ID: {$payment->id}");
-            Log::info("[SubscriptionPlanController] 📊 Status: {$payment->status}");
-            Log::info("[SubscriptionPlanController] 🔖 Reference: {$payment->provider_reference}");
-            Log::info("[SubscriptionPlanController] 📦 Plan: {$plan->name}");
-            Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                // Initier le paiement PayPal
+                $payment = $paypalService->initPayment(
+                    $user,
+                    $plan->price,
+                    $description,
+                    $externalId,
+                    $plan
+                );
 
-            $responseData = [
-                'payment_id' => $payment->id,
-                'reference' => $payment->provider_reference,
-                'external_id' => $payment->external_id,
-                'amount' => $payment->amount,
-                'status' => $payment->status,
-                'is_completed' => $payment->isCompleted(),
-                'paid_at' => $payment->paid_at?->toIso8601String(),
-                'subscription_plan_id' => $plan->id,
-                'plan_name' => $plan->name,
-            ];
+                // Pour PayPal, récupérer l'URL d'approbation
+                $approvalUrl = $payment->payment_provider_response['approval_url'] ?? null;
 
-            // Message de réponse selon le statut
-            $message = $payment->isCompleted()
-                ? 'Paiement effectué avec succès! Vous pouvez maintenant activer votre abonnement.'
-                : 'Paiement en cours de traitement.';
+                Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Log::info("[SubscriptionPlanController] ✅ PayPal payment initiated!");
+                Log::info("[SubscriptionPlanController] 📋 Payment ID: {$payment->id}");
+                Log::info("[SubscriptionPlanController] 📊 Status: {$payment->status}");
+                Log::info("[SubscriptionPlanController] 🔗 Approval URL: {$approvalUrl}");
+                Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'data' => $responseData,
-            ]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Paiement PayPal initié avec succès. Veuillez compléter le paiement via le lien.',
+                    'data' => [
+                        'payment_id' => $payment->id,
+                        'reference' => $payment->provider_reference,
+                        'external_id' => $payment->external_id,
+                        'amount' => $payment->amount,
+                        'status' => $payment->status,
+                        'approval_url' => $approvalUrl,
+                        'subscription_plan_id' => $plan->id,
+                        'plan_name' => $plan->name,
+                        'payment_method' => 'paypal',
+                    ],
+                ]);
+
+            } else {
+                // FreeMoPay (méthode par défaut)
+                $freemoPayService = new FreeMoPayService();
+
+                // Initier le paiement (passer le plan comme payable)
+                // IMPORTANT: Cette méthode est SYNCHRONE et attend la confirmation du paiement
+                $payment = $freemoPayService->initPayment(
+                    $user,
+                    $plan->price,
+                    $phoneNumber,
+                    $description,
+                    $externalId,
+                    $plan
+                );
+
+                Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                Log::info("[SubscriptionPlanController] ✅ FreeMoPay payment process completed!");
+                Log::info("[SubscriptionPlanController] 📋 Payment ID: {$payment->id}");
+                Log::info("[SubscriptionPlanController] 📊 Status: {$payment->status}");
+                Log::info("[SubscriptionPlanController] 🔖 Reference: {$payment->provider_reference}");
+                Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+                $responseData = [
+                    'payment_id' => $payment->id,
+                    'reference' => $payment->provider_reference,
+                    'external_id' => $payment->external_id,
+                    'amount' => $payment->amount,
+                    'status' => $payment->status,
+                    'is_completed' => $payment->isCompleted(),
+                    'paid_at' => $payment->paid_at?->toIso8601String(),
+                    'subscription_plan_id' => $plan->id,
+                    'plan_name' => $plan->name,
+                    'payment_method' => 'freemopay',
+                ];
+
+                // Message de réponse selon le statut
+                $message = $payment->isCompleted()
+                    ? 'Paiement effectué avec succès! Vous pouvez maintenant activer votre abonnement.'
+                    : 'Paiement en cours de traitement.';
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'data' => $responseData,
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -964,6 +1063,125 @@ class SubscriptionPlanController extends Controller
                 'slug' => $plan->slug,
             ],
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/payments/paypal/execute",
+     *     summary="Exécuter un paiement PayPal après approbation",
+     *     description="Complète un paiement PayPal après que l'utilisateur ait approuvé la transaction",
+     *     tags={"Subscription Plans"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"payment_id", "paypal_payment_id", "payer_id"},
+     *             @OA\Property(
+     *                 property="payment_id",
+     *                 type="integer",
+     *                 description="ID du paiement local",
+     *                 example=123
+     *             ),
+     *             @OA\Property(
+     *                 property="paypal_payment_id",
+     *                 type="string",
+     *                 description="ID du paiement PayPal",
+     *                 example="PAYID-M123456"
+     *             ),
+     *             @OA\Property(
+     *                 property="payer_id",
+     *                 type="string",
+     *                 description="ID du payeur PayPal",
+     *                 example="PAYER123456"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paiement exécuté avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Paiement PayPal complété avec succès"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function executePayPalPayment(Request $request): JsonResponse
+    {
+        $request->validate([
+            'payment_id' => 'required|integer|exists:payments,id',
+            'paypal_payment_id' => 'required|string',
+            'payer_id' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        // Récupérer le paiement local
+        $payment = Payment::where('id', $request->payment_id)
+            ->where('user_id', $user->id)
+            ->where('provider', 'paypal')
+            ->first();
+
+        if (!$payment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Paiement non trouvé',
+            ], 404);
+        }
+
+        if ($payment->isCompleted()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Paiement déjà complété',
+                'data' => [
+                    'payment_id' => $payment->id,
+                    'status' => $payment->status,
+                    'paid_at' => $payment->paid_at?->toIso8601String(),
+                ],
+            ]);
+        }
+
+        try {
+            $paypalService = new \App\Services\Payment\PayPalService();
+
+            // Exécuter le paiement
+            $payment = $paypalService->executePayment(
+                $request->paypal_payment_id,
+                $request->payer_id,
+                $payment
+            );
+
+            if ($payment->isCompleted()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Paiement PayPal complété avec succès! Vous pouvez maintenant activer votre abonnement.',
+                    'data' => [
+                        'payment_id' => $payment->id,
+                        'status' => $payment->status,
+                        'paid_at' => $payment->paid_at?->toIso8601String(),
+                        'amount' => $payment->amount,
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Le paiement n\'a pas été approuvé',
+                'data' => [
+                    'payment_id' => $payment->id,
+                    'status' => $payment->status,
+                ],
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error("[SubscriptionPlanController] ❌ PayPal payment execution failed: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'exécution du paiement: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

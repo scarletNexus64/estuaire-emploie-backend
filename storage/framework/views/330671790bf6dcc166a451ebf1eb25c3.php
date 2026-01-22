@@ -2,11 +2,11 @@
 <?php $__env->startSection('page-title', $isEdit ? 'Modifier le Plan d\'Abonnement' : 'Créer un Plan d\'Abonnement'); ?>
 
 <?php $__env->startSection('breadcrumbs'); ?>
-    <span>/ <a href="<?php echo e(route('admin.subscription-plans.recruiters.index')); ?>">Plans & Tarifs</a> / <?php echo e($isEdit ? 'Modifier' : 'Créer'); ?></span>
+    <span>/ <a href="<?php echo e(route('admin.subscription-plans.job-seekers.index')); ?>">Plans & Tarifs</a> / <?php echo e($isEdit ? 'Modifier' : 'Créer'); ?></span>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
-<form action="<?php echo e($isEdit ? route('admin.subscription-plans.recruiters.update', $plan->id) : route('admin.subscription-plans.recruiters.store')); ?>" method="POST">
+<form action="<?php echo e($isEdit ? route('admin.subscription-plans.job-seekers.update', $plan->id) : route('admin.subscription-plans.job-seekers.store')); ?>" method="POST">
     <?php echo csrf_field(); ?>
     <?php if($isEdit): ?>
         <?php echo method_field('PUT'); ?>
@@ -119,65 +119,6 @@ unset($__errorArgs, $__bag); ?>
                 </div>
             </div>
 
-            <!-- Quotas Configurables -->
-            <div class="card" style="margin-top: 1.5rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Quotas Mensuels</h3>
-                    <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
-                        Laissez vide pour "Illimité"
-                    </p>
-                </div>
-                <div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Nombre d'offres d'emploi</label>
-                            <input type="number" name="jobs_limit" class="form-control <?php $__errorArgs = ['jobs_limit'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                   value="<?php echo e(old('jobs_limit', $plan->jobs_limit ?? '')); ?>" min="1" placeholder="Illimité">
-                            <?php $__errorArgs = ['jobs_limit'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                                <div class="invalid-feedback"><?php echo e($message); ?></div>
-                            <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Nombre de contacts candidats</label>
-                            <input type="number" name="contacts_limit" class="form-control <?php $__errorArgs = ['contacts_limit'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                   value="<?php echo e(old('contacts_limit', $plan->contacts_limit ?? '')); ?>" min="1" placeholder="Illimité">
-                            <?php $__errorArgs = ['contacts_limit'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                                <div class="invalid-feedback"><?php echo e($message); ?></div>
-                            <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Fonctionnalités Incluses dans le Plan -->
             <div class="card" style="margin-top: 1.5rem;">
                 <div class="card-header">
@@ -197,73 +138,6 @@ unset($__errorArgs, $__bag); ?>
                                 </label>
                             </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fonctionnalités Système (Pour la Logique Backend) -->
-            <div class="card" style="margin-top: 1.5rem;">
-                <div class="card-header">
-                    <h3 class="card-title">Fonctionnalités Système</h3>
-                    <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
-                        Options techniques pour le fonctionnement du système
-                    </p>
-                </div>
-                <div class="card-body">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-check-box">
-                            <input type="checkbox" name="can_access_cvtheque" id="can_access_cvtheque" value="1"
-                                   <?php echo e(old('can_access_cvtheque', $plan->can_access_cvtheque ?? false) ? 'checked' : ''); ?>>
-                            <label for="can_access_cvtheque">
-                                <strong>Accès CVthèque</strong>
-                                <small>Recherche dans la base de CV</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="can_boost_jobs" id="can_boost_jobs" value="1"
-                                   <?php echo e(old('can_boost_jobs', $plan->can_boost_jobs ?? false) ? 'checked' : ''); ?>>
-                            <label for="can_boost_jobs">
-                                <strong>Boost d'annonces</strong>
-                                <small>Mettre en avant les offres</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="can_see_analytics" id="can_see_analytics" value="1"
-                                   <?php echo e(old('can_see_analytics', $plan->can_see_analytics ?? false) ? 'checked' : ''); ?>>
-                            <label for="can_see_analytics">
-                                <strong>Statistiques avancées</strong>
-                                <small>Analytics et rapports</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="priority_support" id="priority_support" value="1"
-                                   <?php echo e(old('priority_support', $plan->priority_support ?? false) ? 'checked' : ''); ?>>
-                            <label for="priority_support">
-                                <strong>Support prioritaire</strong>
-                                <small>Assistance rapide</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="featured_company_badge" id="featured_company_badge" value="1"
-                                   <?php echo e(old('featured_company_badge', $plan->featured_company_badge ?? false) ? 'checked' : ''); ?>>
-                            <label for="featured_company_badge">
-                                <strong>Badge Entreprise Premium</strong>
-                                <small>Badge visible sur profil</small>
-                            </label>
-                        </div>
-
-                        <div class="form-check-box">
-                            <input type="checkbox" name="custom_company_page" id="custom_company_page" value="1"
-                                   <?php echo e(old('custom_company_page', $plan->custom_company_page ?? false) ? 'checked' : ''); ?>>
-                            <label for="custom_company_page">
-                                <strong>Page Entreprise Personnalisée</strong>
-                                <small>Branding et customisation</small>
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -385,7 +259,7 @@ unset($__errorArgs, $__bag); ?>
                         <?php echo e($isEdit ? 'Mettre à Jour' : 'Créer le Plan'); ?>
 
                     </button>
-                    <a href="<?php echo e(route('admin.subscription-plans.recruiters.index')); ?>" class="btn btn-secondary">
+                    <a href="<?php echo e(route('admin.subscription-plans.job-seekers.index')); ?>" class="btn btn-secondary">
                         Annuler
                     </a>
                 </div>
@@ -450,4 +324,4 @@ document.querySelector('input[type="color"]').addEventListener('input', function
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/monetization/subscription-plans-recruiters/form.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/monetization/subscription-plans-job-seekers/form.blade.php ENDPATH**/ ?>

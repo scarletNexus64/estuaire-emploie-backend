@@ -39,6 +39,14 @@ class ServiceConfiguration extends Model
         'freemopay_max_retries',
         'freemopay_retry_delay',
 
+        // PayPal
+        'paypal_mode',
+        'paypal_client_id',
+        'paypal_client_secret',
+        'paypal_currency',
+        'paypal_return_url',
+        'paypal_cancel_url',
+
         // Preferences
         'default_notification_channel',
     ];
@@ -94,6 +102,14 @@ class ServiceConfiguration extends Model
     }
 
     /**
+     * Get PayPal configuration
+     */
+    public static function getPayPalConfig(): ?self
+    {
+        return self::getConfig('paypal');
+    }
+
+    /**
      * Get default notification channel
      */
     public static function getDefaultNotificationChannel(): string
@@ -122,6 +138,7 @@ class ServiceConfiguration extends Model
             Cache::forget('service_config_whatsapp');
             Cache::forget('service_config_nexah_sms');
             Cache::forget('service_config_freemopay');
+            Cache::forget('service_config_paypal');
             Cache::forget('service_config_notification_preferences');
             Cache::forget('default_notification_channel');
         }
@@ -226,6 +243,45 @@ class ServiceConfiguration extends Model
     }
 
     /**
+     * Validate PayPal configuration
+     */
+    public function validatePayPalConfig(): array
+    {
+        $errors = [];
+
+        if (empty($this->paypal_client_id)) {
+            $errors[] = 'PayPal Client ID is required';
+        }
+
+        if (empty($this->paypal_client_secret)) {
+            $errors[] = 'PayPal Client Secret is required';
+        }
+
+        if (empty($this->paypal_mode) || !in_array($this->paypal_mode, ['sandbox', 'live'])) {
+            $errors[] = 'PayPal Mode must be either "sandbox" or "live"';
+        }
+
+        if (empty($this->paypal_return_url)) {
+            $errors[] = 'PayPal Return URL is required';
+        }
+
+        if (empty($this->paypal_cancel_url)) {
+            $errors[] = 'PayPal Cancel URL is required';
+        }
+
+        // Validate URL formats
+        if ($this->paypal_return_url && !filter_var($this->paypal_return_url, FILTER_VALIDATE_URL)) {
+            $errors[] = 'PayPal Return URL must be a valid URL';
+        }
+
+        if ($this->paypal_cancel_url && !filter_var($this->paypal_cancel_url, FILTER_VALIDATE_URL)) {
+            $errors[] = 'PayPal Cancel URL must be a valid URL';
+        }
+
+        return $errors;
+    }
+
+    /**
      * Check if service is properly configured and active
      */
     public function isConfigured(): bool
@@ -238,6 +294,7 @@ class ServiceConfiguration extends Model
             'whatsapp' => $this->validateWhatsAppConfig(),
             'nexah_sms' => $this->validateNexahConfig(),
             'freemopay' => $this->validateFreeMoPayConfig(),
+            'paypal' => $this->validatePayPalConfig(),
             default => [],
         };
 
