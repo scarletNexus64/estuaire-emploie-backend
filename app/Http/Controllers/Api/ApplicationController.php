@@ -8,6 +8,7 @@ use App\Models\Job;
 use App\Models\ViewedContact;
 use App\Services\FirebaseNotificationService;
 use App\Services\NotificationService;
+use App\Services\Recruiter\RecruiterServicePurchaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -85,6 +86,7 @@ class ApplicationController extends Controller
             'cv' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
             'cover_letter' => 'nullable|string',
             'portfolio_url' => 'nullable|url',
+            'portfolio_id' => 'nullable|exists:portfolios,id',
         ]);
 
         // Upload du CV
@@ -109,6 +111,7 @@ class ApplicationController extends Controller
                     'cv_path' => $cvPath,
                     'cover_letter' => $validated['cover_letter'] ?? null,
                     'portfolio_url' => $validated['portfolio_url'] ?? null,
+                    'portfolio_id' => $validated['portfolio_id'] ?? null,
                     'status' => 'pending',
                     'viewed_at' => null,
                     'responded_at' => null,
@@ -124,11 +127,12 @@ class ApplicationController extends Controller
                     'cv_path' => $cvPath,
                     'cover_letter' => $validated['cover_letter'] ?? null,
                     'portfolio_url' => $validated['portfolio_url'] ?? null,
+                    'portfolio_id' => $validated['portfolio_id'] ?? null,
                     'status' => 'pending',
                 ]);
             }
 
-            $application->load(['job.company', 'user']);
+            $application->load(['job.company', 'user', 'portfolio']);
 
             // Envoi de notification à tous les recruteurs de l'entreprise
             // Utilise le NotificationService pour envoyer ET enregistrer en BDD
@@ -241,7 +245,7 @@ class ApplicationController extends Controller
      */
     public function myApplications(Request $request): JsonResponse
     {
-        $query = Application::with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation'])
+        $query = Application::with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation', 'portfolio'])
             ->where('user_id', $request->user()->id);
 
         if ($request->has('status')) {
@@ -285,7 +289,7 @@ class ApplicationController extends Controller
             ], 403);
         }
 
-        $application->load(['job.company', 'job.category', 'job.location']);
+        $application->load(['job.company', 'job.category', 'job.location', 'portfolio']);
 
         return response()->json([
             'data' => $application,
@@ -353,7 +357,7 @@ class ApplicationController extends Controller
 
         $query = Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
-        })->with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation']);
+        })->with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation', 'portfolio']);
 
         // Charger les infos utilisateur de base (sans contact sensible)
         $query->with(['user' => function ($q) {
@@ -372,6 +376,33 @@ class ApplicationController extends Controller
 
         $applications = $query->orderBy('created_at', 'desc')
             ->paginate(20);
+
+        // Check access to full candidate info (if recruiter purchased candidate_contact service)
+        $purchaseService = app(RecruiterServicePurchaseService::class);
+        $company = $recruiter->company;
+
+        // Transform applications to add access info
+        $applications->getCollection()->transform(function ($application) use ($company, $purchaseService) {
+            $hasFullAccess = $purchaseService->hasAccessToCandidateContact($company, $application->user);
+
+            // If has access, load full user info
+            if ($hasFullAccess) {
+                $application->load(['user' => function ($q) {
+                    $q->select('id', 'name', 'email', 'phone', 'profile_photo', 'experience_level', 'skills', 'created_at');
+                }]);
+                $application->has_full_access = true;
+            } else {
+                $application->has_full_access = false;
+            }
+
+            // Add diploma verification status
+            $application->diploma_verification_requested = $purchaseService->hasRequestedDiplomaVerification($company, $application->user);
+
+            // Add test results if any
+            $application->load(['testResults.test:id,title,passing_score']);
+
+            return $application;
+        });
 
         // Ajouter les infos d'abonnement dans la réponse
         $response = $applications->toArray();

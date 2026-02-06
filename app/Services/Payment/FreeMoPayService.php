@@ -17,8 +17,8 @@ class FreeMoPayService
 
     // Polling configuration
     protected int $pollingInterval = 3;      // seconds between each status check
-    protected int $pollingTimeout = 90;      // max seconds to wait for payment completion
-    protected int $maxPollingAttempts = 30;  // max number of polling attempts
+    protected int $pollingTimeout = 300;     // max seconds to wait for payment completion (5 minutes)
+    protected int $maxPollingAttempts = 100; // max number of polling attempts
 
     public function __construct()
     {
@@ -38,10 +38,11 @@ class FreeMoPayService
      *
      * @param User|Company $payer The entity making the payment
      * @param float $amount Payment amount
-     * @param string $phoneNumber Payer's phone number (237XXXXXXXXX)
+     * @param string $phoneNumber Payer's phone number (237XXXXXXXXX or XXXXXXXXX)
      * @param string $description Payment description
      * @param string|null $externalId Optional external ID
      * @param \Illuminate\Database\Eloquent\Model|null $payable The payable entity (e.g., SubscriptionPlan)
+     * @param string|null $paymentType Type of payment (e.g., 'subscription', 'wallet_recharge')
      * @return Payment
      * @throws \Exception
      */
@@ -51,7 +52,8 @@ class FreeMoPayService
         string $phoneNumber,
         string $description,
         ?string $externalId = null,
-        $payable = null
+        $payable = null,
+        ?string $paymentType = null
     ): Payment {
         if (!$this->config || !$this->config->isConfigured()) {
             throw new \Exception('FreeMoPay service is not configured properly');
@@ -80,7 +82,7 @@ class FreeMoPayService
         Log::info("   ✓ Callback URL: {$callbackUrl} (note: using polling, callback not required)");
 
         // 4. Create Payment record in database (status: pending)
-        $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId, $payable) {
+        $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId, $payable, $paymentType) {
             // Déterminer la méthode de paiement en fonction du préfixe téléphone
             $paymentMethod = $this->detectPaymentMethod($normalizedPhone);
 
@@ -94,6 +96,8 @@ class FreeMoPayService
                 'status' => 'pending',
                 'provider' => 'freemopay',
                 'payment_method' => $paymentMethod,
+                'payment_type' => $paymentType,
+                'currency' => 'XAF',
             ];
 
             if ($payer instanceof Company) {
@@ -437,14 +441,20 @@ class FreeMoPayService
         // Remove +, spaces, dashes
         $cleaned = preg_replace('/[\s\-+]/', '', $phone);
 
-        // Check if starts with 237 (Cameroon) or 243 (RDC)
+        // If phone doesn't start with 237 or 243, assume it's a Cameroon number and add 237
         if (!str_starts_with($cleaned, '237') && !str_starts_with($cleaned, '243')) {
-            throw new \Exception("Phone number must start with 237 (Cameroon) or 243 (RDC): {$phone}");
+            // Check if it's a valid Cameroon mobile number (9 digits starting with 6)
+            if (strlen($cleaned) === 9 && str_starts_with($cleaned, '6')) {
+                $cleaned = '237' . $cleaned;
+                Log::info("[FreeMoPay Service] 📱 Auto-normalized phone: Added 237 prefix");
+            } else {
+                throw new \Exception("Invalid phone number format. Expected 237XXXXXXXXX (Cameroon) or 243XXXXXXXXX (RDC), or 9-digit Cameroon number starting with 6: {$phone}");
+            }
         }
 
         // Check length (12 digits expected)
         if (strlen($cleaned) !== 12 || !ctype_digit($cleaned)) {
-            throw new \Exception("Invalid phone format. Expected 12 digits (237XXXXXXXXX): {$phone}");
+            throw new \Exception("Invalid phone format. Expected 12 digits (237XXXXXXXXX or 243XXXXXXXXX): {$phone}");
         }
 
         return $cleaned;

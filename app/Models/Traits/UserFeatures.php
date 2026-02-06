@@ -254,17 +254,40 @@ trait UserFeatures
             $subscription = $this->activeSubscription();
             $expiresAt = $subscription?->expires_at;
 
-            // Features du plan recruteur
+            // 🎯 Synchroniser TOUTES les features du JSON plan.features
+            if ($plan->features && is_array($plan->features)) {
+                foreach ($plan->features as $featureKey => $enabled) {
+                    // Activer seulement si enabled === true ou 1
+                    if ($enabled === true || $enabled === 1) {
+                        $this->grantFeature(
+                            $featureKey,
+                            "subscription_plan:{$plan->id}",
+                            $expiresAt,
+                            null,
+                            ['plan_name' => $plan->name],
+                            'recruiter'
+                        );
+                    }
+                }
+
+                Log::info("[UserFeatures] JSON features synced from subscription", [
+                    'user_id' => $this->id,
+                    'plan' => $plan->name,
+                    'features_count' => count(array_filter($plan->features)),
+                ]);
+            }
+
+            // 🎯 Synchroniser les champs booléens du plan (pour compatibilité)
             if ($plan->can_access_cvtheque) {
-                $this->grantFeature('access_cvtheque', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
+                $this->grantFeature('can_access_cvtheque', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
             }
 
             if ($plan->can_boost_jobs) {
-                $this->grantFeature('boost_jobs', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
+                $this->grantFeature('can_boost_jobs', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
             }
 
             if ($plan->can_see_analytics) {
-                $this->grantFeature('see_analytics', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
+                $this->grantFeature('can_see_analytics', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
             }
 
             if ($plan->priority_support) {
@@ -279,9 +302,6 @@ trait UserFeatures
                 $this->grantFeature('custom_company_page', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
             }
 
-            // Push notifications (tous les plans recruteurs l'ont)
-            $this->grantFeature('push_notifications', "subscription_plan:{$plan->id}", $expiresAt, null, [], 'recruiter');
-
             // Ajouter le rôle recruiter s'il ne l'a pas déjà
             $this->addAvailableRole('recruiter');
 
@@ -293,11 +313,55 @@ trait UserFeatures
 
         // Pour un candidat
         if ($role === 'candidate') {
-            // TODO: Synchroniser les features candidat depuis les premium services
-            // Exemple: cv_premium, verified_badge, sms_alerts
-            // Ces features viennent de la table user_premium_services
+            // Récupérer l'abonnement candidat actif
+            $subscription = $this->activeSubscription();
 
+            if (!$subscription) {
+                // Pas d'abonnement, pas de features spéciales
+                $this->addAvailableRole('candidate');
+                return;
+            }
+
+            $plan = $subscription->subscriptionPlan;
+
+            // Vérifier que c'est bien un plan job_seeker
+            if (!$plan || $plan->plan_type !== 'job_seeker') {
+                $this->addAvailableRole('candidate');
+                return;
+            }
+
+            $expiresAt = $subscription->expires_at;
+
+            // 🎯 Synchroniser TOUTES les features du JSON plan.features
+            if ($plan->features && is_array($plan->features)) {
+                foreach ($plan->features as $featureKey => $enabled) {
+                    // Activer seulement si enabled === true ou 1
+                    if ($enabled === true || $enabled === 1) {
+                        $this->grantFeature(
+                            $featureKey,
+                            "subscription_plan:{$plan->id}",
+                            $expiresAt,
+                            null,
+                            ['plan_name' => $plan->name],
+                            'candidate'
+                        );
+                    }
+                }
+
+                Log::info("[UserFeatures] Candidate features synced from subscription", [
+                    'user_id' => $this->id,
+                    'plan' => $plan->name,
+                    'features_count' => count(array_filter($plan->features)),
+                ]);
+            }
+
+            // Ajouter le rôle candidate s'il ne l'a pas déjà
             $this->addAvailableRole('candidate');
+
+            Log::info("[UserFeatures] Candidate features synced from subscription for user {$this->id}", [
+                'plan' => $plan->name,
+                'expires_at' => $expiresAt?->toIso8601String(),
+            ]);
         }
     }
 

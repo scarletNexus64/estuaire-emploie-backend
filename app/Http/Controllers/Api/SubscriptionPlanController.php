@@ -338,6 +338,10 @@ class SubscriptionPlanController extends Controller
         try {
             DB::beginTransaction();
 
+            // ✅ Ajouter le rôle aux rôles disponibles SANS changer le rôle actif
+            // Cela permet à l'utilisateur de rester dans son contexte actuel (home ou dashboard)
+            $targetRole = $this->addRoleToAvailableRoles($user, $plan);
+
             // Récupérer TOUS les abonnements de l'utilisateur pour calculer les cumuls
             $allSubscriptions = UserSubscriptionPlan::where('user_id', $user->id)
                 ->with('subscriptionPlan')
@@ -406,15 +410,12 @@ class SubscriptionPlanController extends Controller
                 $existingSubscription->notifications_sent = [];
                 $existingSubscription->save();
 
-                // ⭐ IMPORTANT: Mettre à jour le rôle de l'utilisateur en "recruiter" lors du renouvellement
-                if ($user->role !== 'recruiter') {
-                    $user->role = 'recruiter';
-                    $user->save();
-                    Log::info("[SubscriptionPlanController] User {$user->id} role updated to 'recruiter' after subscription renewal");
-                }
+                // ℹ️ Note: Le rôle a été ajouté aux rôles disponibles mais le rôle actif reste inchangé
+                // L'utilisateur reste dans son contexte actuel (home ou dashboard)
 
-                // 🎯 Synchroniser les features depuis le plan
-                $user->syncFeaturesFromSubscription('recruiter');
+                // 🎯 Synchroniser les features depuis le plan selon le type
+                $roleToSync = $plan->plan_type === 'job_seeker' ? 'candidate' : 'recruiter';
+                $user->syncFeaturesFromSubscription($roleToSync);
 
                 $existingSubscription->load(['subscriptionPlan', 'payment']);
                 $userSubscription = $existingSubscription;
@@ -439,14 +440,35 @@ class SubscriptionPlanController extends Controller
 
                 // Charger les relations et activer l'abonnement (définit dates et compteurs)
                 $userSubscription->load(['subscriptionPlan', 'payment']);
-                $userSubscription->activate();
 
-                // 🎯 Synchroniser les features depuis le plan
-                $user->refresh(); // Recharger pour avoir le rôle à jour
-                $user->syncFeaturesFromSubscription('recruiter');
+                // Définir manuellement les dates et compteurs selon le type
+                if ($plan->plan_type === 'job_seeker') {
+                    // Pour les candidats, définir manuellement les dates car activate() est pour les recruteurs
+                    $userSubscription->starts_at = now();
+                    $userSubscription->expires_at = now()->addDays($plan->duration_days);
+                    $userSubscription->jobs_used = 0;
+                    $userSubscription->contacts_used = 0;
+                    $userSubscription->notifications_sent = [];
+                    $userSubscription->save();
+                } else {
+                    // Pour les recruteurs, utiliser la méthode activate()
+                    $userSubscription->activate();
+                }
+
+                // ℹ️ Note: Le rôle a été ajouté aux rôles disponibles mais le rôle actif reste inchangé
+                // L'utilisateur reste dans son contexte actuel (home ou dashboard)
+
+                // 🎯 Synchroniser les features depuis le plan selon le type
+                // ⚠️ Ne PAS refresh avant le commit, sinon on perd les modifs de available_roles !
+                $roleToSync = $plan->plan_type === 'job_seeker' ? 'candidate' : 'recruiter';
+                $user->syncFeaturesFromSubscription($roleToSync);
 
                 Log::info("[SubscriptionPlanController] New subscription created for user {$user->id} - Plan: {$plan->name}");
             }
+
+            // 💾 Sauvegarder les modifications de l'utilisateur (available_roles) AVANT le commit
+            $user->save();
+            Log::info("[SubscriptionPlanController] User data saved with available_roles: " . json_encode($user->available_roles));
 
             DB::commit();
 
@@ -458,6 +480,11 @@ class SubscriptionPlanController extends Controller
                 'success' => true,
                 'message' => $message,
                 'is_renewal' => $isRenewal,
+                'user_context' => [
+                    'current_role' => $user->role,
+                    'available_roles' => $user->getAvailableRoles(),
+                    'role_added' => $targetRole,
+                ],
                 'data' => $this->formatSubscriptionResponse($userSubscription),
             ]);
 
@@ -735,7 +762,8 @@ class SubscriptionPlanController extends Controller
                     $phoneNumber,
                     $description,
                     $externalId,
-                    $plan
+                    $plan,
+                    'subscription'
                 );
 
                 Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -1185,6 +1213,42 @@ class SubscriptionPlanController extends Controller
     }
 
     /**
+     * Ajoute un rôle aux rôles disponibles de l'utilisateur dans une transaction
+     * SANS changer le rôle actif (pour préserver le contexte de navigation)
+     *
+     * @param User $user L'utilisateur (dans le contexte de la transaction)
+     * @param SubscriptionPlan $plan Le plan souscrit
+     * @return string Le rôle qui a été ajouté
+     */
+    private function addRoleToAvailableRoles($user, SubscriptionPlan $plan): string
+    {
+        $targetRole = $plan->plan_type === 'job_seeker' ? 'candidate' : 'recruiter';
+
+        // Initialiser available_roles si null ou vide
+        $availableRoles = $user->available_roles ?? [$user->role];
+
+        // S'assurer que le rôle actif est dans la liste
+        if (!in_array($user->role, $availableRoles)) {
+            $availableRoles[] = $user->role;
+        }
+
+        // Ajouter le nouveau rôle s'il n'existe pas déjà
+        if (!in_array($targetRole, $availableRoles)) {
+            $availableRoles[] = $targetRole;
+            $user->available_roles = $availableRoles;
+            // Important : ne PAS appeler $user->save() ici, la transaction le fera
+
+            Log::info("[SubscriptionPlanController] 🎯 Role '{$targetRole}' staged to be added to available_roles for user {$user->id}");
+            Log::info("[SubscriptionPlanController]    Current role: '{$user->role}' (will remain unchanged)");
+            Log::info("[SubscriptionPlanController]    Available roles after commit: " . json_encode($availableRoles));
+        } else {
+            Log::info("[SubscriptionPlanController] ℹ️  Role '{$targetRole}' already in available_roles for user {$user->id}");
+        }
+
+        return $targetRole;
+    }
+
+    /**
      * Formate la réponse d'un abonnement
      */
     private function formatSubscriptionResponse(UserSubscriptionPlan $subscription): array
@@ -1201,6 +1265,7 @@ class SubscriptionPlanController extends Controller
                 'id' => $subscription->subscriptionPlan->id,
                 'name' => $subscription->subscriptionPlan->name,
                 'slug' => $subscription->subscriptionPlan->slug,
+                'plan_type' => $subscription->subscriptionPlan->plan_type,
                 'description' => $subscription->subscriptionPlan->description,
                 'price' => $subscription->subscriptionPlan->price,
                 'duration_days' => $subscription->subscriptionPlan->duration_days,
@@ -1239,5 +1304,203 @@ class SubscriptionPlanController extends Controller
             'days_remaining' => max(0, $daysRemaining ?? 0),
             'created_at' => $subscription->created_at?->toIso8601String() ?? '-',
         ];
+    }
+
+    /**
+     * Payer un abonnement avec le wallet
+     * Crée un paiement, débite le wallet et active automatiquement l'abonnement
+     *
+     * POST /api/subscriptions/pay-with-wallet
+     */
+    public function payWithWallet(Request $request): JsonResponse
+    {
+        $request->validate([
+            'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
+        ]);
+
+        $user = $request->user();
+        $subscriptionPlanId = $request->subscription_plan_id;
+
+        // Vérifier que le plan existe et est actif
+        $plan = SubscriptionPlan::active()->find($subscriptionPlanId);
+        if (!$plan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plan d\'abonnement non trouvé ou inactif',
+            ], 404);
+        }
+
+        // Le paiement wallet est disponible pour tous les types de plans
+        // (recruteurs ET candidats)
+
+        // Vérifier le solde wallet
+        $walletBalance = $user->wallet_balance ?? 0;
+        if ($walletBalance < $plan->price) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solde insuffisant',
+                'required_amount' => $plan->price,
+                'current_balance' => $walletBalance,
+                'missing_amount' => $plan->price - $walletBalance,
+            ], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // ✅ Ajouter le rôle aux rôles disponibles SANS changer le rôle actif
+            // Cela permet à l'utilisateur de rester dans son contexte actuel (home ou dashboard)
+            $targetRole = $this->addRoleToAvailableRoles($user, $plan);
+
+            // Créer le paiement avec status "completed"
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'amount' => $plan->price,
+                'fees' => 0,
+                'total' => $plan->price,
+                'payment_method' => 'wallet',
+                'payment_type' => 'subscription',
+                'status' => 'completed',
+                'provider' => 'wallet',
+                'provider_reference' => 'WALLET-SUB-' . strtoupper(uniqid()),
+                'external_id' => 'SUB-' . $user->id . '-' . $plan->id . '-' . now()->format('YmdHis'),
+                'description' => "Abonnement {$plan->name} - Estuaire Emploie",
+                'currency' => 'XAF',
+                'paid_at' => now(),
+                'metadata' => [
+                    'subscription_plan_id' => $plan->id,
+                    'subscription_plan_name' => $plan->name,
+                    'payment_source' => 'wallet',
+                ],
+            ]);
+
+            // Débiter le wallet
+            $walletService = app(\App\Services\WalletService::class);
+            $walletService->debit(
+                $user,
+                $plan->price,
+                "Abonnement {$plan->name}",
+                'subscription',
+                $plan->id,
+                ['payment_id' => $payment->id]
+            );
+
+            // Activer l'abonnement (logique similaire à activate())
+            // Récupérer tous les abonnements pour calculer les cumuls
+            $allSubscriptions = UserSubscriptionPlan::where('user_id', $user->id)
+                ->with('subscriptionPlan')
+                ->orderBy('id')
+                ->get();
+
+            // Calculer les compteurs cumulés
+            $totalJobsUsed = $allSubscriptions->sum('jobs_used');
+            $totalContactsUsed = $allSubscriptions->sum('contacts_used');
+
+            // Calculer les limites cumulées
+            $totalJobsLimit = 0;
+            $totalContactsLimit = 0;
+            $hasUnlimitedJobs = false;
+            $hasUnlimitedContacts = false;
+
+            foreach ($allSubscriptions as $sub) {
+                $subPlan = $sub->subscriptionPlan;
+                if ($subPlan) {
+                    if ($subPlan->jobs_limit === null) {
+                        $hasUnlimitedJobs = true;
+                    } else {
+                        $totalJobsLimit += $sub->jobs_limit_total ?? $subPlan->jobs_limit;
+                    }
+                    if ($subPlan->contacts_limit === null) {
+                        $hasUnlimitedContacts = true;
+                    } else {
+                        $totalContactsLimit += $sub->contacts_limit_total ?? $subPlan->contacts_limit;
+                    }
+                }
+            }
+
+            // Ajouter les limites du nouveau plan
+            if ($plan->jobs_limit === null) {
+                $hasUnlimitedJobs = true;
+            } else {
+                $totalJobsLimit += $plan->jobs_limit;
+            }
+            if ($plan->contacts_limit === null) {
+                $hasUnlimitedContacts = true;
+            } else {
+                $totalContactsLimit += $plan->contacts_limit;
+            }
+
+            // Vérifier si c'est un renouvellement
+            $isRenewal = $allSubscriptions->count() > 0;
+
+            // Créer la nouvelle souscription
+            $startsAt = now();
+            $endsAt = now()->addDays($plan->duration_days);
+
+            $subscription = UserSubscriptionPlan::create([
+                'user_id' => $user->id,
+                'subscription_plan_id' => $plan->id,
+                'payment_id' => $payment->id,
+                'starts_at' => $startsAt,
+                'expires_at' => $endsAt,  // ✅ Utiliser expires_at au lieu de ends_at
+                'jobs_used' => $totalJobsUsed,
+                'contacts_used' => $totalContactsUsed,
+                'jobs_limit_total' => $hasUnlimitedJobs ? null : $totalJobsLimit,
+                'contacts_limit_total' => $hasUnlimitedContacts ? null : $totalContactsLimit,
+            ]);
+
+            // ℹ️ Note: Le rôle a été ajouté aux rôles disponibles mais le rôle actif reste inchangé
+            // L'utilisateur reste dans son contexte actuel (home ou dashboard)
+
+            // 💾 Sauvegarder les modifications de l'utilisateur (available_roles) AVANT le commit
+            $user->save();
+            Log::info("[SubscriptionPlanController] User data saved with available_roles: " . json_encode($user->available_roles));
+
+            DB::commit();
+
+            // 🎯 Synchroniser les features depuis le plan (après le commit)
+            // ✅ Maintenant on peut refresh sans perdre les modifications
+            $user->refresh();
+            $roleToSync = $plan->plan_type === 'job_seeker' ? 'candidate' : 'recruiter';
+            $user->syncFeaturesFromSubscription($roleToSync);
+
+            Log::info('[SubscriptionPlanController] Wallet payment successful and features synced', [
+                'user_id' => $user->id,
+                'plan' => $plan->name,
+                'is_renewal' => $isRenewal,
+                'target_role' => $roleToSync,
+                'current_active_role' => $user->role,
+            ]);
+
+            $message = $isRenewal
+                ? "Abonnement {$plan->name} renouvelé avec succès !"
+                : "Abonnement {$plan->name} activé avec succès !";
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'is_renewal' => $isRenewal,
+                'user_context' => [
+                    'current_role' => $user->role,
+                    'available_roles' => $user->getAvailableRoles(),
+                    'role_added' => $roleToSync,
+                ],
+                'data' => $this->formatSubscriptionResponse($subscription),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('[SubscriptionPlanController] Error paying with wallet', [
+                'user_id' => $user->id,
+                'plan_id' => $subscriptionPlanId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
     }
 }

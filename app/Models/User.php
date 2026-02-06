@@ -63,6 +63,11 @@ class User extends Authenticatable
         return $this->hasOne(Recruiter::class);
     }
 
+    public function portfolio(): HasOne
+    {
+        return $this->hasOne(Portfolio::class);
+    }
+
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
@@ -163,14 +168,24 @@ class User extends Authenticatable
 
     /**
      * Récupère l'abonnement actif de l'utilisateur (le plus récent avec paiement complété)
+     * @param string|null $forRole Filtre par rôle (candidate ou recruiter). Si null, retourne n'importe quel abonnement actif.
      */
-    public function activeSubscription(): ?UserSubscriptionPlan
+    public function activeSubscription(?string $forRole = null): ?UserSubscriptionPlan
     {
-        return $this->userSubscriptionPlans()
+        $query = $this->userSubscriptionPlans()
             ->active()
             ->with(['subscriptionPlan', 'payment'])
-            ->latest()
-            ->first();
+            ->latest();
+
+        // 🎯 Filtrer par type de plan selon le rôle demandé
+        if ($forRole) {
+            $planType = $forRole === 'candidate' ? 'job_seeker' : 'recruiter';
+            $query->whereHas('subscriptionPlan', function($q) use ($planType) {
+                $q->where('plan_type', $planType);
+            });
+        }
+
+        return $query->first();
     }
 
     /**
@@ -350,39 +365,134 @@ class User extends Authenticatable
     }
 
     /**
+     * Vérifie si le candidat est en mode preview (sans abonnement actif)
+     * Pour les candidats job_seeker uniquement
+     */
+    public function isCandidateInPreviewMode(): bool
+    {
+        // Vérifier si l'utilisateur est candidat
+        if ($this->role !== 'candidate') {
+            return false;
+        }
+
+        // 🔥 NOUVEAU : On filtre directement par rôle 'candidate' pour récupérer uniquement l'abonnement job_seeker
+        $subscription = $this->activeSubscription('candidate');
+
+        // Si pas d'abonnement job_seeker ou invalide = mode preview
+        if (!$subscription || !$subscription->isValid()) {
+            return true;
+        }
+
+        return false; // A un abonnement candidat valide = pas en preview
+    }
+
+    /**
+     * Vérifie si le candidat a accès à une fonctionnalité spécifique
+     */
+    public function candidateHasFeature(string $featureKey): bool
+    {
+        // Si en mode preview, aucune feature payante
+        if ($this->isCandidateInPreviewMode()) {
+            return false;
+        }
+
+        // Vérifier si la feature est active
+        return $this->hasFeature($featureKey, 'candidate');
+    }
+
+    /**
+     * Vérifie si le candidat peut accéder à la recherche avancée
+     */
+    public function canAccessAdvancedSearch(): bool
+    {
+        // Si en mode preview, pas d'accès à la recherche avancée
+        if ($this->isCandidateInPreviewMode()) {
+            return false;
+        }
+
+        return $this->candidateHasFeature('free_regional_jobs');
+    }
+
+    /**
+     * Vérifie si le candidat peut utiliser les templates de CV/lettre
+     */
+    public function canUseCVTemplates(): bool
+    {
+        // Si en mode preview, pas d'accès aux templates
+        if ($this->isCandidateInPreviewMode()) {
+            return false;
+        }
+
+        return $this->candidateHasFeature('free_cv_creation');
+    }
+
+    /**
+     * Vérifie si le candidat peut accéder aux formations
+     */
+    public function canAccessCertifications(): bool
+    {
+        // Si en mode preview, pas d'accès aux formations
+        if ($this->isCandidateInPreviewMode()) {
+            return false;
+        }
+
+        return $this->candidateHasFeature('free_certifications');
+    }
+
+    /**
      * Retourne les infos de l'abonnement actuel pour l'API
+     * 🎯 IMPORTANT: Filtre automatiquement par le rôle actuel de l'utilisateur
      */
     public function getSubscriptionInfo(): array
     {
-        $subscription = $this->activeSubscription();
-        $plan = $subscription?->subscriptionPlan;
+        // 🔥 FORCE REFRESH: Invalider le cache des relations pour avoir les données les plus récentes
+        // Ceci est crucial après un paiement pour éviter de retourner des données en cache
+        $this->unsetRelation('userSubscriptionPlans');
 
+        // 🎯 NOUVEAU : Récupérer les DEUX abonnements (candidat ET recruteur) si disponibles
+        $recruiterSubscription = $this->activeSubscription('recruiter');
+        $candidateSubscription = $this->activeSubscription('candidate');
+
+        $currentRoleSubscription = $this->activeSubscription($this->role);
+        $plan = $currentRoleSubscription?->subscriptionPlan;
+
+        $isCandidate = $this->role === 'candidate';
+        $isRecruiter = $this->role === 'recruiter';
+
+        // Si aucun abonnement pour le rôle actuel
         if (!$plan) {
             return [
                 'has_subscription' => false,
+                'is_candidate_in_preview_mode' => $isCandidate,
                 'plan' => null,
                 'limits' => null,
                 'usage' => null,
+                'candidate_features' => null,
+                // 🎯 Ajouter les abonnements alternatifs
+                'recruiter_subscription' => $recruiterSubscription ? $this->formatSubscriptionForApi($recruiterSubscription) : null,
+                'candidate_subscription' => $candidateSubscription ? $this->formatSubscriptionForApi($candidateSubscription) : null,
             ];
         }
 
         return [
             'has_subscription' => true,
+            'is_candidate_in_preview_mode' => $isCandidate && $this->isCandidateInPreviewMode(),
             'plan' => [
                 'id' => $plan->id,
                 'name' => $plan->name,
                 'slug' => $plan->slug,
+                'plan_type' => $plan->plan_type,
             ],
-            'expires_at' => $subscription->end_date?->toIso8601String(),
-            'is_expired' => $subscription->isExpired(),
-            'limits' => [
+            'expires_at' => $currentRoleSubscription->end_date?->toIso8601String(),
+            'is_expired' => $currentRoleSubscription->isExpired(),
+            'limits' => $isRecruiter ? [
                 'jobs_limit' => $plan->jobs_limit,
                 'contacts_limit' => $plan->contacts_limit,
                 'can_boost_jobs' => $plan->can_boost_jobs,
                 'can_see_analytics' => $plan->can_see_analytics,
                 'can_access_cvtheque' => $plan->can_access_cvtheque,
-            ],
-            'usage' => [
+            ] : null,
+            'usage' => $isRecruiter ? [
                 'jobs_used' => $this->postedJobs()->whereIn('status', ['published', 'pending'])->count(),
                 'jobs_remaining' => $this->remainingJobsCount(),
                 'contacts_used_this_month' => $this->viewedContacts()
@@ -390,7 +500,38 @@ class User extends Authenticatable
                     ->whereYear('created_at', now()->year)
                     ->count(),
                 'contacts_remaining' => $this->remainingContactsCount(),
+            ] : null,
+            'candidate_features' => $isCandidate ? [
+                'can_access_advanced_search' => $this->canAccessAdvancedSearch(),
+                'can_use_cv_templates' => $this->canUseCVTemplates(),
+                'can_access_certifications' => $this->canAccessCertifications(),
+                'has_free_regional_jobs' => $this->candidateHasFeature('free_regional_jobs'),
+                'cv_accessible_by_recruiters' => $this->candidateHasFeature('cv_accessible_recruiters'),
+            ] : null,
+            // 🎯 Ajouter les deux abonnements pour permettre au frontend de choisir
+            'recruiter_subscription' => $recruiterSubscription ? $this->formatSubscriptionForApi($recruiterSubscription) : null,
+            'candidate_subscription' => $candidateSubscription ? $this->formatSubscriptionForApi($candidateSubscription) : null,
+        ];
+    }
+
+    /**
+     * Formate un abonnement pour l'API
+     */
+    private function formatSubscriptionForApi($subscription): array
+    {
+        $plan = $subscription->subscriptionPlan;
+
+        return [
+            'id' => $subscription->id,
+            'plan' => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'slug' => $plan->slug,
+                'plan_type' => $plan->plan_type,
             ],
+            'expires_at' => $subscription->end_date?->toIso8601String(),
+            'is_expired' => $subscription->isExpired(),
+            'is_valid' => $subscription->isValid(),
         ];
     }
 

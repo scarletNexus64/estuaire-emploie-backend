@@ -45,7 +45,43 @@
                     <p style="white-space: pre-wrap;">{{ $application->cover_letter ?? 'Aucune lettre de motivation fournie' }}</p>
 
                     @if($application->portfolio_url)
-                        <p><strong>Portfolio:</strong> <a href="{{ $application->portfolio_url }}" target="_blank">{{ $application->portfolio_url }}</a></p>
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Portfolio (Lien externe)</h4>
+                        <p>
+                            <a href="{{ $application->portfolio_url }}" target="_blank" class="btn btn-secondary"
+                               style="display: inline-block; padding: 0.5rem 1rem; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                                <i class="fas fa-external-link-alt"></i> Ouvrir le portfolio externe
+                            </a>
+                        </p>
+                        <p style="word-break: break-all; color: #6c757d; font-size: 0.875rem;">{{ $application->portfolio_url }}</p>
+                    @endif
+
+                    @if($application->portfolio)
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Portfolio attaché</h4>
+                        <div style="border: 1px solid #dee2e6; border-radius: 4px; padding: 1rem; background-color: #f8f9fa;">
+                            <p><strong>Titre:</strong> {{ $application->portfolio->title ?? 'Portfolio' }}</p>
+                            @if($application->portfolio->bio)
+                                <p><strong>Bio:</strong> {{ $application->portfolio->bio }}</p>
+                            @endif
+                            <p><strong>Visibilité:</strong> {{ $application->portfolio->is_public ? 'Public' : 'Privé' }}</p>
+                            @if($application->portfolio->view_count)
+                                <p><strong>Vues:</strong> {{ $application->portfolio->view_count }}</p>
+                            @endif
+                            <p>
+                                <a href="{{ route('admin.portfolios.show', $application->portfolio) }}"
+                                   class="btn btn-primary"
+                                   style="display: inline-block; padding: 0.5rem 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin-right: 0.5rem;">
+                                    <i class="fas fa-eye"></i> Voir le portfolio complet
+                                </a>
+                                @if($application->portfolio->is_public)
+                                    <a href="{{ url('/portfolio/' . $application->portfolio->slug) }}"
+                                       target="_blank"
+                                       class="btn btn-secondary"
+                                       style="display: inline-block; padding: 0.5rem 1rem; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                                        <i class="fas fa-external-link-alt"></i> Vue publique
+                                    </a>
+                                @endif
+                            </p>
+                        </div>
                     @endif
                 </div>
 
@@ -81,6 +117,74 @@
                             <p><strong>Répondu le:</strong> {{ $application->responded_at->format('d/m/Y H:i') }}</p>
                         @endif
                     </div>
+
+                    <!-- Diploma Verification Section -->
+                    <div style="margin-top: 2rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: 4px; background-color: #f8f9fa;">
+                        <h4 style="margin-bottom: 1rem; font-weight: 600;">🎓 Vérification de Diplômes</h4>
+
+                        @if($application->diploma_verified)
+                            <div style="padding: 1rem; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 1rem;">
+                                <p style="margin: 0; color: #155724;">
+                                    <strong>✅ Diplôme vérifié</strong>
+                                </p>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #155724;">
+                                    Vérifié le: {{ $application->diploma_verified_at->format('d/m/Y H:i') }}
+                                    @if($application->diplomaVerifier)
+                                        <br>Par: {{ $application->diplomaVerifier->name }}
+                                    @endif
+                                </p>
+                                @if($application->diploma_verification_notes)
+                                    <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #155724;">
+                                        <strong>Notes:</strong> {{ $application->diploma_verification_notes }}
+                                    </p>
+                                @endif
+                            </div>
+                        @else
+                            <form action="{{ route('admin.applications.verify-diploma', $application) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="form-group">
+                                    <label class="form-label">Notes de vérification (optionnel)</label>
+                                    <textarea name="verification_notes" class="form-control" rows="3" placeholder="Ajouter des notes sur la vérification..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Marquer comme vérifié
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+
+                    <!-- Test Results Section -->
+                    @if($application->testResults && $application->testResults->count() > 0)
+                        <div style="margin-top: 2rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: 4px; background-color: #f8f9fa;">
+                            <h4 style="margin-bottom: 1rem; font-weight: 600;">📊 Résultats des Tests</h4>
+
+                            @foreach($application->testResults as $result)
+                                <div style="padding: 1rem; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 1rem;">
+                                    <h5 style="margin: 0 0 0.5rem 0;">{{ $result->test->title }}</h5>
+                                    <p style="margin: 0;">
+                                        <strong>Score:</strong> {{ $result->score }}%
+                                        @if($result->passed)
+                                            <span style="color: #28a745;">✅ Réussi</span>
+                                        @else
+                                            <span style="color: #dc3545;">❌ Échoué</span>
+                                        @endif
+                                    </p>
+                                    <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #6c757d;">
+                                        Score minimal: {{ $result->test->passing_score }}%
+                                        @if($result->completed_at)
+                                            | Complété le: {{ $result->completed_at->format('d/m/Y H:i') }}
+                                        @endif
+                                        @if($result->duration_seconds)
+                                            | Durée: {{ gmdate('i:s', $result->duration_seconds) }}
+                                        @endif
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

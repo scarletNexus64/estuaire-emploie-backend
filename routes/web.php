@@ -13,11 +13,22 @@ use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\WalletController;
+use App\Http\Controllers\Admin\ProgramController;
+use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
+use App\Http\Controllers\Admin\SkillTestController;
+use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
 });
+
+// Payment Callback Routes (Public - No Auth Required)
+Route::get('/payment/success', [\App\Http\Controllers\PaymentCallbackController::class, 'success'])->name('payment.success');
+Route::get('/payment/cancel', [\App\Http\Controllers\PaymentCallbackController::class, 'cancel'])->name('payment.cancel');
+
+// Public Portfolio View
+Route::get('/portfolio/{slug}', [PortfolioViewController::class, 'show'])->name('portfolio.show');
 
 // Admin Auth Routes (Guest only)
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -59,6 +70,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('applications', [ApplicationController::class, 'index'])->name('applications.index');
         Route::get('applications/{application}', [ApplicationController::class, 'show'])->name('applications.show');
         Route::patch('applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
+        Route::patch('applications/{application}/verify-diploma', [ApplicationController::class, 'verifyDiploma'])->name('applications.verify-diploma');
         Route::delete('applications/bulk-delete', [ApplicationController::class, 'bulkDelete'])->name('applications.bulk-delete');
     });
 
@@ -90,6 +102,33 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // Sections Management
     Route::middleware('permission:manage_sections')->group(function () {
         Route::resource('sections', SectionController::class);
+    });
+
+    // Programs Management
+    Route::middleware('permission:manage_settings')->group(function () {
+        Route::resource('programs', ProgramController::class);
+        Route::get('programs/{program}/manage-steps', [ProgramController::class, 'manageSteps'])->name('programs.manage-steps');
+        Route::get('programs/{program}/steps/{step}', [ProgramController::class, 'getStep'])->name('programs.get-step');
+        Route::post('programs/{program}/steps', [ProgramController::class, 'storeStep'])->name('programs.store-step');
+        Route::put('programs/{program}/steps/{step}', [ProgramController::class, 'updateStep'])->name('programs.update-step');
+        Route::delete('programs/{program}/steps/{step}', [ProgramController::class, 'destroyStep'])->name('programs.destroy-step');
+    });
+
+    // Portfolios Management
+    Route::middleware('permission:manage_users')->prefix('portfolios')->name('portfolios.')->group(function () {
+        Route::get('/', [AdminPortfolioController::class, 'index'])->name('index');
+        Route::get('/{portfolio}', [AdminPortfolioController::class, 'show'])->name('show');
+        Route::delete('/{portfolio}', [AdminPortfolioController::class, 'destroy'])->name('destroy');
+        Route::patch('/{portfolio}/toggle-visibility', [AdminPortfolioController::class, 'toggleVisibility'])->name('toggle-visibility');
+        Route::delete('/bulk-delete', [AdminPortfolioController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/export/csv', [AdminPortfolioController::class, 'export'])->name('export');
+    });
+
+    // Skill Tests Management
+    Route::middleware('permission:manage_applications')->prefix('skill-tests')->name('skill-tests.')->group(function () {
+        Route::get('/', [SkillTestController::class, 'index'])->name('index');
+        Route::get('/{id}', [SkillTestController::class, 'show'])->name('show');
+        Route::delete('/{id}', [SkillTestController::class, 'destroy'])->name('destroy');
     });
 
     // Settings
@@ -249,5 +288,15 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Admin\FcmTokenController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-destroy', [\App\Http\Controllers\Admin\FcmTokenController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/export/csv', [\App\Http\Controllers\Admin\FcmTokenController::class, 'export'])->name('export');
+    });
+
+    // Bank Account Management (Platform Withdrawals)
+    Route::middleware('permission:manage_payments')->prefix('bank-account')->name('bank-account.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\BankAccountController::class, 'index'])->name('index');
+        Route::post('/verify-pin', [\App\Http\Controllers\Admin\BankAccountController::class, 'verifyPin'])->name('verify-pin');
+        Route::get('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'showWithdrawalForm'])->name('withdrawal');
+        Route::post('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'initiateWithdrawal'])->name('initiate-withdrawal');
+        Route::get('/withdrawal/{id}/status', [\App\Http\Controllers\Admin\BankAccountController::class, 'checkWithdrawalStatus'])->name('withdrawal-status');
+        Route::get('/history', [\App\Http\Controllers\Admin\BankAccountController::class, 'history'])->name('history');
     });
 });

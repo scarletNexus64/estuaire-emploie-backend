@@ -22,6 +22,8 @@ class Payment extends Model
         'fees',
         'total',
         'payment_method',
+        'payment_type',
+        'currency',
         'provider',
         'transaction_reference',
         'external_id',
@@ -35,6 +37,7 @@ class Payment extends Model
         'notes',
         'description',
         'failure_reason',
+        'metadata',
     ];
 
     protected function casts(): array
@@ -44,6 +47,7 @@ class Payment extends Model
             'fees' => 'decimal:2',
             'total' => 'decimal:2',
             'payment_provider_response' => 'array',
+            'metadata' => 'array',
             'paid_at' => 'datetime',
             'refunded_at' => 'datetime',
             'cancelled_at' => 'datetime',

@@ -9,6 +9,11 @@
     <!-- Material Design Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    @stack('styles')
+
     <style>
         * {
             margin: 0;
@@ -600,6 +605,66 @@
         .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); }
         .badge-secondary { background: rgba(100, 116, 139, 0.15); color: var(--secondary); }
 
+        .bg-primary { background-color: var(--primary) !important; }
+        .bg-success { background-color: var(--success) !important; }
+        .bg-warning { background-color: var(--warning) !important; }
+        .bg-danger { background-color: var(--danger) !important; }
+        .bg-info { background-color: var(--info) !important; }
+
+        .text-white { color: white !important; }
+        .text-white-50 { color: rgba(255, 255, 255, 0.5) !important; }
+
+        .py-4 { padding-top: 2rem; padding-bottom: 2rem; }
+        .py-5 { padding-top: 3rem; padding-bottom: 3rem; }
+        .px-5 { padding-left: 3rem; padding-right: 3rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+
+        .fs-1 { font-size: 2.5rem; }
+        .fs-3 { font-size: 1.75rem; }
+
+        .shadow-lg { box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important; }
+
+        .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+        .col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+        .col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+        .col-md-3 { flex: 0 0 25%; max-width: 25%; }
+
+        .input-group-text {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--dark);
+            background-color: var(--light);
+            border: 2px solid var(--border);
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .input-group-lg .form-control {
+            padding: 1rem 1.25rem;
+            font-size: 1.125rem;
+        }
+
+        .input-group-lg .input-group-text {
+            padding: 1rem 1.25rem;
+            font-size: 1.125rem;
+        }
+
+        .btn-lg {
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+        }
+
+        .d-grid {
+            display: grid;
+        }
+
+        .g-3 {
+            gap: 1rem;
+        }
+
         /* Table */
         .table-responsive {
             overflow-x: auto;
@@ -1090,6 +1155,7 @@
                         'fas fa-crown' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>',
                         'fas fa-credit-card' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>',
                         'fas fa-wallet' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>',
+                        'fas fa-university' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>',
                         'fas fa-star' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>',
                         'fas fa-puzzle-piece' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>',
                         'fas fa-file-pdf' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',

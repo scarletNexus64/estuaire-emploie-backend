@@ -17,6 +17,10 @@ use App\Http\Controllers\Api\TestNotificationController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\CurrencyController;
+use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ProgramController;
+use App\Http\Controllers\Api\RecruiterServicePurchaseController;
+use App\Http\Controllers\Api\RecruiterSkillTestController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -74,7 +78,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::get('/user/statistics', [AuthController::class, 'statistics']);
     Route::post('/user/sync-role', [AuthController::class, 'syncRoleWithSubscription']);
+    Route::post('/auth/switch-role', [AuthController::class, 'switchRole']); // ⭐ Nouveau: Changer de rôle (candidat <-> recruteur)
     Route::delete('/user/account', [AuthController::class, 'deleteAccount']);
+    Route::get('/me/subscription-status', [AuthController::class, 'getSubscriptionStatus']); // ⭐ Statut d'abonnement (candidat + recruteur)
 
     // ------------------
     // CANDIDATURES (Candidat & Recruteur)
@@ -143,6 +149,48 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/applications/{application}/contact-status', [ApplicationController::class, 'contactStatus']);
 
     // ------------------
+    // RECRUTEUR - SERVICES ADDITIONNELS (Achat via Wallet)
+    // ------------------
+    // Acheter l'accès aux coordonnées d'un candidat
+    Route::post('/recruiter/services/purchase/candidate-contact', [RecruiterServicePurchaseController::class, 'purchaseCandidateContact'])
+        ->middleware('subscription:valid');
+    // Acheter la vérification de diplômes
+    Route::post('/recruiter/services/purchase/diploma-verification', [RecruiterServicePurchaseController::class, 'purchaseDiplomaVerification'])
+        ->middleware('subscription:valid');
+    // Acheter l'accès aux tests de compétences
+    Route::post('/recruiter/services/purchase/skills-test', [RecruiterServicePurchaseController::class, 'purchaseSkillsTest'])
+        ->middleware('subscription:valid');
+    // Vérifier les accès aux services
+    Route::get('/recruiter/services/access-status', [RecruiterServicePurchaseController::class, 'checkAccessStatus']);
+
+    // ------------------
+    // RECRUTEUR - TESTS DE COMPÉTENCES (CRUD)
+    // ------------------
+    // Lister mes tests
+    Route::get('/recruiter/skill-tests', [RecruiterSkillTestController::class, 'index'])
+        ->middleware('subscription:valid');
+    // Détails d'un test
+    Route::get('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'show'])
+        ->middleware('subscription:valid');
+    // Créer un test
+    Route::post('/recruiter/skill-tests', [RecruiterSkillTestController::class, 'store'])
+        ->middleware('subscription:valid');
+    // Mettre à jour un test
+    Route::put('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'update'])
+        ->middleware('subscription:valid');
+    // Supprimer un test
+    Route::delete('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'destroy'])
+        ->middleware('subscription:valid');
+
+    // ------------------
+    // CANDIDAT - TESTS DE COMPÉTENCES (Passer un test)
+    // ------------------
+    // Récupérer un test pour le passer
+    Route::get('/candidate/skill-tests/{testId}', [RecruiterSkillTestController::class, 'getTestForCandidate']);
+    // Soumettre les résultats d'un test
+    Route::post('/candidate/skill-tests/{testId}/submit', [RecruiterSkillTestController::class, 'submitTestResults']);
+
+    // ------------------
     // RECRUTEUR - GESTION DE L'ENTREPRISE
     // ------------------
     // Créer une entreprise
@@ -163,6 +211,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/payments/{id}/status', [SubscriptionPlanController::class, 'checkPaymentStatus']);
     // Activer un abonnement après paiement
     Route::post('/subscriptions/activate', [SubscriptionPlanController::class, 'activate']);
+    // Payer un abonnement avec le wallet et activer automatiquement
+    Route::post('/subscriptions/pay-with-wallet', [SubscriptionPlanController::class, 'payWithWallet']);
     // Mon abonnement actif
     Route::get('/my-subscription', [SubscriptionPlanController::class, 'mySubscription']);
     // Historique de mes abonnements
@@ -181,6 +231,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
     // Initier une recharge du wallet (FreeMoPay ou PayPal)
     Route::post('/wallet/recharge', [WalletController::class, 'recharge']);
+    // Exécuter un paiement PayPal après approbation
+    Route::post('/wallet/paypal/execute', [WalletController::class, 'executePayPalPayment']);
+    // Créer un ordre PayPal natif (pour paiement frontend)
+    Route::post('/wallet/paypal/create-native-order', [WalletController::class, 'createNativePayPalOrder']);
+    // Capturer un ordre PayPal natif après paiement
+    Route::post('/wallet/paypal/capture-native-order', [WalletController::class, 'captureNativePayPalOrder']);
+    // Vérifier le statut d'un paiement de recharge
+    Route::get('/wallet/payment-status/{paymentId}', [WalletController::class, 'checkPaymentStatus']);
     // Vérifier si je peux payer un montant
     Route::post('/wallet/can-pay', [WalletController::class, 'canPay']);
     // Payer avec le wallet (abonnements, services)
@@ -234,6 +292,36 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::post('/presence/offline', [ChatController::class, 'offline']);
 
     // ------------------
+    // PORTFOLIO (Candidat OR/DIAMANT)
+    // ------------------
+    // Récupérer mon portfolio
+    Route::get('/portfolio', [PortfolioController::class, 'show']);
+    // Créer mon portfolio - réservé OR/DIAMANT
+    Route::post('/portfolio', [PortfolioController::class, 'store'])
+        ->middleware(\App\Http\Middleware\CheckPortfolioAccess::class);
+    // Mettre à jour mon portfolio - réservé OR/DIAMANT
+    Route::put('/portfolio', [PortfolioController::class, 'update'])
+        ->middleware(\App\Http\Middleware\CheckPortfolioAccess::class);
+    // Supprimer mon portfolio
+    Route::delete('/portfolio', [PortfolioController::class, 'destroy']);
+    // Basculer la visibilité (public/privé)
+    Route::patch('/portfolio/toggle-visibility', [PortfolioController::class, 'toggleVisibility']);
+    // Statistiques de mon portfolio
+    Route::get('/portfolio/stats', [PortfolioController::class, 'stats']);
+    // Récupérer un portfolio par slug (public, mais avec auth pour tracking)
+    Route::get('/portfolio/by-slug/{slug}', [PortfolioController::class, 'showBySlug']);
+
+    // ------------------
+    // PROGRAMMES (Candidat C2 OR / C3 DIAMANT)
+    // ------------------
+    // Liste des programmes avec informations d'accès
+    Route::get('/programs', [ProgramController::class, 'index']);
+    // Vérifier l'accès aux programmes
+    Route::get('/programs/check-access', [ProgramController::class, 'checkAccess']);
+    // Détails d'un programme avec ses étapes (nécessite l'accès)
+    Route::get('/programs/{program}', [ProgramController::class, 'show']);
+
+    // ------------------
     // BROADCASTING AUTH (WebSocket Authentication)
     // ------------------
     Route::post('/broadcasting/auth', function () {
@@ -267,3 +355,15 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
         }
     });
 });
+
+// ============================================
+// WEBHOOKS
+// ============================================
+Route::post('/webhooks/freemopay', function (\Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Log::info('[FreeMoPay Webhook] Received callback', [
+        'headers' => $request->headers->all(),
+        'body' => $request->all(),
+    ]);
+
+    return response()->json(['status' => 'received'], 200);
+})->name('api.webhooks.freemopay');

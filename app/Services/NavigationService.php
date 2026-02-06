@@ -47,9 +47,21 @@ class NavigationService
                         'permission' => 'manage_applications',
                     ],
                     [
+                        'name' => 'Tests de Compétences',
+                        'route' => 'admin.skill-tests.index',
+                        'icon' => 'fas fa-clipboard-check',
+                        'permission' => 'manage_applications',
+                    ],
+                    [
                         'name' => 'Candidats',
                         'route' => 'admin.users.index',
                         'icon' => 'fas fa-users',
+                        'permission' => 'manage_users',
+                    ],
+                    [
+                        'name' => 'Portfolios',
+                        'route' => 'admin.portfolios.index',
+                        'icon' => 'fas fa-id-card',
                         'permission' => 'manage_users',
                     ],
                     [
@@ -57,6 +69,17 @@ class NavigationService
                         'route' => 'admin.recruiters.index',
                         'icon' => 'fas fa-user-tie',
                         'permission' => 'manage_recruiters',
+                    ],
+                ],
+            ],
+            [
+                'section' => 'Programmes de Formation',
+                'items' => [
+                    [
+                        'name' => 'Programmes',
+                        'route' => 'admin.programs.index',
+                        'icon' => 'fas fa-book',
+                        'permission' => 'manage_settings',
                     ],
                 ],
             ],
@@ -91,6 +114,12 @@ class NavigationService
                         'name' => 'Wallets',
                         'route' => 'admin.wallets.index',
                         'icon' => 'fas fa-wallet',
+                        'permission' => 'manage_payments',
+                    ],
+                    [
+                        'name' => 'Compte Bancaire',
+                        'route' => 'admin.bank-account.index',
+                        'icon' => 'fas fa-university',
                         'permission' => 'manage_payments',
                     ],
                     [

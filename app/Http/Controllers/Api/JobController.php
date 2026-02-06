@@ -145,10 +145,44 @@ class JobController extends Controller
             });
         }
 
+        // Limitation pour les candidats en mode preview
+        $user = Auth::user();
+        $previewLimit = null;
+
+        if ($user && $user->isCandidate() && $user->isCandidateInPreviewMode()) {
+            // Les candidats sans abonnement ne voient que 5 offres
+            $previewLimit = 5;
+            Log::info("[JobController] Candidate in preview mode - limiting to {$previewLimit} jobs", [
+                'user_id' => $user->id,
+            ]);
+        }
+
+        // Appliquer la limite si nécessaire
+        if ($previewLimit !== null) {
+            $jobs = $query->latest()
+                ->limit($previewLimit)
+                ->get();
+
+            // Retourner au format paginé pour cohérence avec l'API
+            return response()->json([
+                'data' => $jobs,
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => $previewLimit,
+                'total' => $previewLimit,
+                'is_preview_mode' => true,
+                'message' => 'Souscrivez à un forfait pour accéder à toutes les offres d\'emploi',
+            ]);
+        }
+
+        // Utilisateurs avec abonnement ou recruteurs : accès complet
         $jobs = $query->latest()
             ->paginate(10);
 
-        return response()->json($jobs);
+        $response = $jobs->toArray();
+        $response['is_preview_mode'] = false;
+
+        return response()->json($response);
     }
 
     /**
