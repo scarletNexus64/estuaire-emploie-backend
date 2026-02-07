@@ -64,10 +64,57 @@ class RecruiterServicePurchaseService
             ];
         }
 
-        return $this->processPurchase($user, $company, $service, [
+        $result = $this->processPurchase($user, $company, $service, [
             'related_user_id' => $application->user_id,
             'related_job_id' => $application->job_id,
         ]);
+
+        // Send notification to admins if purchase successful
+        if ($result['success']) {
+            $this->notifyAdminsOfVerificationRequest($application, $company);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Notify admins of new diploma verification request
+     */
+    protected function notifyAdminsOfVerificationRequest(Application $application, Company $company): void
+    {
+        try {
+            // Get all admin users
+            $admins = User::where('role', 'admin')->get();
+            $notificationService = app(\App\Services\NotificationService::class);
+
+            foreach ($admins as $admin) {
+                $notificationService->sendToUser(
+                    $admin,
+                    "Nouvelle demande de vérification de diplôme",
+                    "{$company->name} demande la vérification du diplôme pour le candidat {$application->user->name}",
+                    'diploma_verification_request',
+                    [
+                        'application_id' => $application->id,
+                        'candidate_id' => $application->user_id,
+                        'candidate_name' => $application->user->name,
+                        'company_id' => $company->id,
+                        'company_name' => $company->name,
+                        'job_id' => $application->job_id,
+                        'job_title' => $application->job->title,
+                    ]
+                );
+            }
+
+            Log::info("[Diploma Verification] Admins notified of verification request", [
+                'application_id' => $application->id,
+                'company_id' => $company->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("[Diploma Verification] Failed to notify admins", [
+                'application_id' => $application->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

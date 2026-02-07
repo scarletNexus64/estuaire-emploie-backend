@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') - Estuaire Emploie Admin</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo $__env->yieldContent('title', 'Dashboard'); ?> - Estuaire Emploie Admin</title>
 
     <!-- Material Design Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
@@ -12,7 +12,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 
     <style>
         * {
@@ -1123,7 +1123,7 @@
         }
     </style>
 
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body>
     <div class="container">
@@ -1140,7 +1140,7 @@
             </div>
 
             <nav class="sidebar-menu">
-                @php
+                <?php
                     $menuItems = \App\Services\NavigationService::getFilteredMenuItems(auth()->user());
 
                     // SVG Icons mapping
@@ -1168,39 +1168,41 @@
                         'fas fa-cog' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
                         'fas fa-wrench' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
                     ];
-                @endphp
+                ?>
 
-                @foreach($menuItems as $section)
+                <?php $__currentLoopData = $menuItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="menu-section">
-                        <div class="menu-section-title">{{ $section['section'] }}</div>
-                        @foreach($section['items'] as $item)
-                            <a href="{{ isset($item['url']) ? $item['url'] : route($item['route']) }}"
-                               class="menu-item {{ isset($item['route']) && (request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route']))) ? 'active' : '' }}"
-                               @if(isset($item['external']) && $item['external']) target="_blank" @endif>
+                        <div class="menu-section-title"><?php echo e($section['section']); ?></div>
+                        <?php $__currentLoopData = $section['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <a href="<?php echo e(isset($item['url']) ? $item['url'] : route($item['route'])); ?>"
+                               class="menu-item <?php echo e(isset($item['route']) && (request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route']))) ? 'active' : ''); ?>"
+                               <?php if(isset($item['external']) && $item['external']): ?> target="_blank" <?php endif; ?>>
                                 <svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    {!! $iconSvgs[$item['icon']] ?? $iconSvgs['fas fa-cog'] !!}
+                                    <?php echo $iconSvgs[$item['icon']] ?? $iconSvgs['fas fa-cog']; ?>
+
                                 </svg>
-                                {{ $item['name'] }}
+                                <?php echo e($item['name']); ?>
 
-                                {{-- Special badges for specific items --}}
-                                @if(isset($item['route']) && $item['route'] === 'admin.applications.index' && isset($pendingApplications) && $pendingApplications > 0)
-                                    <span class="menu-badge">{{ $pendingApplications }}</span>
-                                @endif
 
-                                @if(isset($item['route']) && $item['route'] === 'admin.subscriptions.index' && class_exists('\App\Models\Subscription'))
-                                    @php $activeSubscriptions = \App\Models\Subscription::where('status', 'active')->count(); @endphp
-                                    @if($activeSubscriptions > 0)
-                                        <span class="menu-badge" style="background: #10b981;">{{ $activeSubscriptions }}</span>
-                                    @endif
-                                @endif
+                                
+                                <?php if(isset($item['route']) && $item['route'] === 'admin.applications.index' && isset($pendingApplications) && $pendingApplications > 0): ?>
+                                    <span class="menu-badge"><?php echo e($pendingApplications); ?></span>
+                                <?php endif; ?>
 
-                                @if(isset($item['external']) && $item['external'] && isset($item['url']) && $item['url'] === '/api/documentation')
+                                <?php if(isset($item['route']) && $item['route'] === 'admin.subscriptions.index' && class_exists('\App\Models\Subscription')): ?>
+                                    <?php $activeSubscriptions = \App\Models\Subscription::where('status', 'active')->count(); ?>
+                                    <?php if($activeSubscriptions > 0): ?>
+                                        <span class="menu-badge" style="background: #10b981;"><?php echo e($activeSubscriptions); ?></span>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+
+                                <?php if(isset($item['external']) && $item['external'] && isset($item['url']) && $item['url'] === '/api/documentation'): ?>
                                     <span class="menu-badge" style="background: #10b981;">Swagger</span>
-                                @endif
+                                <?php endif; ?>
                             </a>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </nav>
         </aside>
 
@@ -1210,43 +1212,44 @@
             <header class="header">
                 <div class="header-content">
                     <div class="header-left">
-                        <h2>@yield('page-title', 'Tableau de bord')</h2>
+                        <h2><?php echo $__env->yieldContent('page-title', 'Tableau de bord'); ?></h2>
                         <div class="breadcrumb">
-                            <a href="{{ route('admin.dashboard') }}">Accueil</a>
-                            @yield('breadcrumbs')
+                            <a href="<?php echo e(route('admin.dashboard')); ?>">Accueil</a>
+                            <?php echo $__env->yieldContent('breadcrumbs'); ?>
                         </div>
                     </div>
                     <div class="header-actions">
-                        @yield('header-actions')
+                        <?php echo $__env->yieldContent('header-actions'); ?>
 
                         <!-- Notification Bell for Diploma Verifications -->
-                        @php
+                        <?php
                             $pendingVerifications = \App\Models\Application::whereHas('user', function($q) {
                                 $q->whereIn('id', \App\Models\CompanyAddonService::whereHas('config', function($query) {
                                     $query->where('service_type', 'diploma_verification');
                                 })->where('is_active', true)->pluck('related_user_id'));
                             })->where('diploma_verified', false)->count();
-                        @endphp
+                        ?>
 
                         <div class="notification-bell" style="position: relative; margin-right: 1rem;">
-                            <a href="{{ route('admin.dashboard') }}" style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: var(--light); border-radius: 50%; transition: all 0.3s; text-decoration: none; border: 2px solid transparent;">
+                            <a href="<?php echo e(route('admin.dashboard')); ?>" style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: var(--light); border-radius: 50%; transition: all 0.3s; text-decoration: none; border: 2px solid transparent;">
                                 <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--dark);">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                 </svg>
-                                @if($pendingVerifications > 0)
+                                <?php if($pendingVerifications > 0): ?>
                                     <span style="position: absolute; top: -4px; right: -4px; background: #9333ea; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4); animation: pulse 2s ease-in-out infinite;">
-                                        {{ $pendingVerifications > 9 ? '9+' : $pendingVerifications }}
+                                        <?php echo e($pendingVerifications > 9 ? '9+' : $pendingVerifications); ?>
+
                                     </span>
-                                @endif
+                                <?php endif; ?>
                             </a>
                         </div>
 
                         <div class="user-menu">
                             <div class="user-profile">
-                                <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                                <div class="user-avatar"><?php echo e(strtoupper(substr(auth()->user()->name, 0, 1))); ?></div>
                                 <div class="user-info">
-                                    <span class="user-name">{{ auth()->user()->name }}</span>
-                                    <span class="user-role">{{ ucfirst(auth()->user()->role) }}</span>
+                                    <span class="user-name"><?php echo e(auth()->user()->name); ?></span>
+                                    <span class="user-role"><?php echo e(ucfirst(auth()->user()->role)); ?></span>
                                 </div>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -1254,13 +1257,13 @@
                             </div>
 
                             <div class="dropdown-menu">
-                                <a href="{{ route('admin.profile') }}" class="dropdown-item">
+                                <a href="<?php echo e(route('admin.profile')); ?>" class="dropdown-item">
                                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                     Mon Profil
                                 </a>
-                                <a href="{{ route('admin.settings.index') }}" class="dropdown-item">
+                                <a href="<?php echo e(route('admin.settings.index')); ?>" class="dropdown-item">
                                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -1268,8 +1271,8 @@
                                     Paramètres
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <form method="POST" action="{{ route('admin.logout') }}">
-                                    @csrf
+                                <form method="POST" action="<?php echo e(route('admin.logout')); ?>">
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit" class="dropdown-item logout" style="width: 100%; background: none; border: none; cursor: pointer; text-align: left;">
                                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -1285,25 +1288,27 @@
 
             <!-- Content -->
             <div class="content">
-                @if(session('success'))
+                <?php if(session('success')): ?>
                     <div class="alert alert-success">
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                         </svg>
-                        {{ session('success') }}
-                    </div>
-                @endif
+                        <?php echo e(session('success')); ?>
 
-                @if(session('error'))
+                    </div>
+                <?php endif; ?>
+
+                <?php if(session('error')): ?>
                     <div class="alert alert-danger">
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
                         </svg>
-                        {{ session('error') }}
-                    </div>
-                @endif
+                        <?php echo e(session('error')); ?>
 
-                @if($errors->any())
+                    </div>
+                <?php endif; ?>
+
+                <?php if($errors->any()): ?>
                     <div class="alert alert-danger">
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
@@ -1311,15 +1316,15 @@
                         <div style="flex: 1;">
                             <strong>Erreurs de validation :</strong>
                             <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
+                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li><?php echo e($error); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                @yield('content')
+                <?php echo $__env->yieldContent('content'); ?>
             </div>
         </main>
     </div>
@@ -1522,6 +1527,7 @@
         });
     </script>
 
-    @stack('scripts')
+    <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html>
+<?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/layouts/app.blade.php ENDPATH**/ ?>

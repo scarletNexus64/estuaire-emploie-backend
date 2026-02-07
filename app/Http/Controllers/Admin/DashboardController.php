@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Company;
+use App\Models\CompanyAddonService;
 use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
@@ -15,6 +16,17 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
+        // Count pending diploma verifications (purchased but not verified yet)
+        // Get all diploma verification service purchases that are active
+        $diplomaServiceIds = CompanyAddonService::whereHas('config', function ($query) {
+            $query->where('service_type', 'diploma_verification');
+        })->where('is_active', true)->pluck('related_user_id');
+
+        // Count applications where diploma verification was purchased but not verified yet
+        $pendingDiplomaVerifications = Application::whereIn('user_id', $diplomaServiceIds)
+            ->where('diploma_verified', false)
+            ->count();
+
         $stats = [
             'total_companies' => Company::count(),
             'pending_companies' => Company::where('status', 'pending')->count(),
@@ -28,6 +40,7 @@ class DashboardController extends Controller
             'total_favorites' => Favorite::count(),
             'total_notifications' => DatabaseNotification::count(),
             'unread_notifications' => DatabaseNotification::whereNull('read_at')->count(),
+            'pending_diploma_verifications' => $pendingDiplomaVerifications,
         ];
 
         $recentJobs = Job::with(['company', 'category', 'applications'])
@@ -45,11 +58,20 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Get pending diploma verification applications
+        $pendingDiplomaApplications = Application::with(['user', 'job.company'])
+            ->whereIn('user_id', $diplomaServiceIds)
+            ->where('diploma_verified', false)
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return view('admin.dashboard.index', compact(
             'stats',
             'recentJobs',
             'recentApplications',
-            'pendingCompanies'
+            'pendingCompanies',
+            'pendingDiplomaApplications'
         ));
     }
 }

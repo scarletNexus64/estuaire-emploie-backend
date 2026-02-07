@@ -1,9 +1,7 @@
-@extends('admin.layouts.app')
+<?php $__env->startSection('title', 'Dashboard'); ?>
+<?php $__env->startSection('page-title', 'Tableau de bord'); ?>
 
-@section('title', 'Dashboard')
-@section('page-title', 'Tableau de bord')
-
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     @keyframes fadeInUp {
         from {
@@ -121,24 +119,24 @@
         animation: pulse 2s ease-in-out infinite;
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <!-- Welcome Banner -->
 <div class="dashboard-welcome">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-            <h1>Bienvenue, {{ auth()->user()->name }} 👋</h1>
+            <h1>Bienvenue, <?php echo e(auth()->user()->name); ?> 👋</h1>
             <p>Voici un aperçu de votre plateforme aujourd'hui</p>
         </div>
         <div style="display: flex; gap: 1rem;">
-            <a href="{{ route('admin.jobs.create') }}" class="quick-action">
+            <a href="<?php echo e(route('admin.jobs.create')); ?>" class="quick-action">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Nouvelle Offre
             </a>
-            <a href="{{ route('admin.companies.create') }}" class="quick-action">
+            <a href="<?php echo e(route('admin.companies.create')); ?>" class="quick-action">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
@@ -154,7 +152,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Total Entreprises</div>
-                <div class="stat-value">{{ $stats['total_companies'] }}</div>
+                <div class="stat-value"><?php echo e($stats['total_companies']); ?></div>
             </div>
             <div class="stat-icon">🏢</div>
         </div>
@@ -163,7 +161,7 @@
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"/>
                 </svg>
-                +{{ $stats['pending_companies'] }} en attente
+                +<?php echo e($stats['pending_companies']); ?> en attente
             </span>
         </div>
     </div>
@@ -172,7 +170,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Offres d'emploi</div>
-                <div class="stat-value">{{ $stats['total_jobs'] }}</div>
+                <div class="stat-value"><?php echo e($stats['total_jobs']); ?></div>
             </div>
             <div class="stat-icon">💼</div>
         </div>
@@ -181,7 +179,7 @@
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"/>
                 </svg>
-                {{ $stats['published_jobs'] }} publiées
+                <?php echo e($stats['published_jobs']); ?> publiées
             </span>
         </div>
     </div>
@@ -190,13 +188,13 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Candidatures</div>
-                <div class="stat-value">{{ $stats['total_applications'] }}</div>
+                <div class="stat-value"><?php echo e($stats['total_applications']); ?></div>
             </div>
             <div class="stat-icon">📝</div>
         </div>
         <div class="stat-footer">
             <span class="stat-trend">
-                {{ $stats['pending_applications'] }} en attente
+                <?php echo e($stats['pending_applications']); ?> en attente
             </span>
         </div>
     </div>
@@ -205,13 +203,13 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Candidats</div>
-                <div class="stat-value">{{ $stats['total_candidates'] ?? $stats['total_users'] ?? 0 }}</div>
+                <div class="stat-value"><?php echo e($stats['total_candidates'] ?? $stats['total_users'] ?? 0); ?></div>
             </div>
             <div class="stat-icon">👥</div>
         </div>
         <div class="stat-footer">
             <span class="stat-trend">
-                {{ $stats['total_recruiters'] ?? 0 }} recruteurs
+                <?php echo e($stats['total_recruiters'] ?? 0); ?> recruteurs
             </span>
         </div>
     </div>
@@ -220,7 +218,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Favoris</div>
-                <div class="stat-value">{{ $stats['total_favorites'] ?? 0 }}</div>
+                <div class="stat-value"><?php echo e($stats['total_favorites'] ?? 0); ?></div>
             </div>
             <div class="stat-icon">❤️</div>
         </div>
@@ -235,59 +233,62 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Vérifications Diplômes</div>
-                <div class="stat-value">{{ $stats['pending_diploma_verifications'] ?? 0 }}</div>
+                <div class="stat-value"><?php echo e($stats['pending_diploma_verifications'] ?? 0); ?></div>
             </div>
             <div class="stat-icon">🎓</div>
         </div>
         <div class="stat-footer">
             <span class="stat-trend" style="color: #9333ea;">
-                @if($stats['pending_diploma_verifications'] > 0)
+                <?php if($stats['pending_diploma_verifications'] > 0): ?>
                     <span style="position: relative; display: inline-flex; align-items: center;">
                         <span class="activity-indicator" style="background: #9333ea; margin-right: 0.5rem;"></span>
-                        {{ $stats['pending_diploma_verifications'] }} en attente
+                        <?php echo e($stats['pending_diploma_verifications']); ?> en attente
                     </span>
-                @else
+                <?php else: ?>
                     Aucune demande
-                @endif
+                <?php endif; ?>
             </span>
         </div>
     </div>
 </div>
 
 <!-- Pending Diploma Verifications Section -->
-@if($stats['pending_diploma_verifications'] > 0)
+<?php if($stats['pending_diploma_verifications'] > 0): ?>
 <div class="card" style="background: linear-gradient(135deg, #f3e7ff 0%, #fef3c7 100%); border-left: 4px solid #9333ea; margin-bottom: 1.5rem;">
     <div class="card-header" style="background: transparent;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <h3 class="card-title" style="color: #7c3aed;">
                 🔔 Vérifications de Diplômes en Attente
             </h3>
-            <span class="badge badge-warning" style="background: #9333ea;">{{ $stats['pending_diploma_verifications'] }}</span>
+            <span class="badge badge-warning" style="background: #9333ea;"><?php echo e($stats['pending_diploma_verifications']); ?></span>
         </div>
-        <a href="{{ route('admin.applications.index') }}" class="btn btn-sm" style="background: #9333ea; color: white;">Voir tout</a>
+        <a href="<?php echo e(route('admin.applications.index')); ?>" class="btn btn-sm" style="background: #9333ea; color: white;">Voir tout</a>
     </div>
 
     <div style="display: grid; gap: 1rem; padding: 1.5rem;">
-        @foreach($pendingDiplomaApplications as $application)
+        <?php $__currentLoopData = $pendingDiplomaApplications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $application): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div style="background: white; padding: 1.25rem; border-radius: 12px; border-left: 3px solid #9333ea; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.1);">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                 <div style="flex: 1;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <strong style="color: var(--dark); font-size: 1.125rem;">{{ $application->user?->name ?? 'N/A' }}</strong>
+                        <strong style="color: var(--dark); font-size: 1.125rem;"><?php echo e($application->user?->name ?? 'N/A'); ?></strong>
                         <span class="activity-indicator" style="background: #9333ea;"></span>
                     </div>
                     <p style="font-size: 0.875rem; color: var(--secondary); margin-bottom: 0.5rem;">
-                        📧 {{ $application->user?->email ?? 'N/A' }}
+                        📧 <?php echo e($application->user?->email ?? 'N/A'); ?>
+
                     </p>
                     <p style="font-size: 0.875rem; color: var(--dark);">
-                        <strong>Poste:</strong> {{ $application->job?->title ?? 'N/A' }}<br>
-                        <strong>Entreprise:</strong> {{ $application->job?->company?->name ?? 'N/A' }}
+                        <strong>Poste:</strong> <?php echo e($application->job?->title ?? 'N/A'); ?><br>
+                        <strong>Entreprise:</strong> <?php echo e($application->job?->company?->name ?? 'N/A'); ?>
+
                     </p>
                     <p style="font-size: 0.75rem; color: var(--secondary); margin-top: 0.5rem;">
-                        Candidature du {{ $application->created_at->format('d/m/Y à H:i') }}
+                        Candidature du <?php echo e($application->created_at->format('d/m/Y à H:i')); ?>
+
                     </p>
                 </div>
-                <a href="{{ route('admin.applications.show', $application) }}" class="btn btn-sm" style="background: #9333ea; color: white; white-space: nowrap;">
+                <a href="<?php echo e(route('admin.applications.show', $application)); ?>" class="btn btn-sm" style="background: #9333ea; color: white; white-space: nowrap;">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -295,17 +296,17 @@
                 </a>
             </div>
         </div>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </div>
-@endif
+<?php endif; ?>
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
     <!-- Recent Jobs -->
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Offres d'emploi récentes</h3>
-            <a href="{{ route('admin.jobs.index') }}" class="btn btn-sm btn-primary">Voir tout</a>
+            <a href="<?php echo e(route('admin.jobs.index')); ?>" class="btn btn-sm btn-primary">Voir tout</a>
         </div>
 
         <div class="table-responsive">
@@ -321,31 +322,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($recentJobs as $job)
+                    <?php $__empty_1 = true; $__currentLoopData = $recentJobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr>
                         <td>
-                            <strong>{{ $job->title }}</strong>
+                            <strong><?php echo e($job->title); ?></strong>
                             <br>
-                            <small style="color: var(--secondary);">{{ $job->category?->name ?? 'N/A' }}</small>
+                            <small style="color: var(--secondary);"><?php echo e($job->category?->name ?? 'N/A'); ?></small>
                         </td>
-                        <td>{{ $job->company?->name ?? 'N/A' }}</td>
+                        <td><?php echo e($job->company?->name ?? 'N/A'); ?></td>
                         <td>
-                            @if($job->status === 'published')
+                            <?php if($job->status === 'published'): ?>
                                 <span class="badge badge-success">Publié</span>
-                            @elseif($job->status === 'pending')
+                            <?php elseif($job->status === 'pending'): ?>
                                 <span class="badge badge-warning">En attente</span>
-                            @elseif($job->status === 'closed')
+                            <?php elseif($job->status === 'closed'): ?>
                                 <span class="badge badge-danger">Fermé</span>
-                            @else
-                                <span class="badge badge-secondary">{{ ucfirst($job->status) }}</span>
-                            @endif
+                            <?php else: ?>
+                                <span class="badge badge-secondary"><?php echo e(ucfirst($job->status)); ?></span>
+                            <?php endif; ?>
                         </td>
                         <td>
-                            <strong>{{ $job->applications_count }}</strong> candidature(s)
+                            <strong><?php echo e($job->applications_count); ?></strong> candidature(s)
                         </td>
-                        <td>{{ $job->created_at->format('d/m/Y') }}</td>
+                        <td><?php echo e($job->created_at->format('d/m/Y')); ?></td>
                         <td>
-                            <a href="{{ route('admin.jobs.show', $job) }}" class="btn btn-sm btn-primary">
+                            <a href="<?php echo e(route('admin.jobs.show', $job)); ?>" class="btn btn-sm btn-primary">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -353,13 +354,13 @@
                             </a>
                         </td>
                     </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 2rem; color: var(--secondary);">
                             Aucune offre d'emploi pour le moment
                         </td>
                     </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -369,22 +370,23 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Entreprises en attente</h3>
-            <span class="badge badge-warning">{{ $pendingCompanies->count() }}</span>
+            <span class="badge badge-warning"><?php echo e($pendingCompanies->count()); ?></span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 1rem;">
-            @forelse($pendingCompanies as $company)
+            <?php $__empty_1 = true; $__currentLoopData = $pendingCompanies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $company): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <div style="padding: 1rem; background: var(--light); border-radius: 10px; border-left: 3px solid var(--warning);">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                    <strong style="color: var(--dark);">{{ $company->name }}</strong>
+                    <strong style="color: var(--dark);"><?php echo e($company->name); ?></strong>
                     <span class="badge badge-warning">En attente</span>
                 </div>
                 <p style="font-size: 0.875rem; color: var(--secondary); margin-bottom: 0.75rem;">
-                    {{ Str::limit($company->description, 60) }}
+                    <?php echo e(Str::limit($company->description, 60)); ?>
+
                 </p>
-                <form method="POST" action="{{ route('admin.companies.verify', $company) }}" style="display: inline;">
-                    @csrf
-                    @method('PATCH')
+                <form method="POST" action="<?php echo e(route('admin.companies.verify', $company)); ?>" style="display: inline;">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('PATCH'); ?>
                     <button type="submit" class="btn btn-sm btn-success">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -392,15 +394,15 @@
                         Approuver
                     </button>
                 </form>
-                <a href="{{ route('admin.companies.show', $company) }}" class="btn btn-sm btn-primary">
+                <a href="<?php echo e(route('admin.companies.show', $company)); ?>" class="btn btn-sm btn-primary">
                     Voir
                 </a>
             </div>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
             <p style="text-align: center; color: var(--secondary); padding: 2rem;">
                 Aucune entreprise en attente
             </p>
-            @endforelse
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -409,7 +411,7 @@
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Candidatures récentes</h3>
-        <a href="{{ route('admin.applications.index') }}" class="btn btn-sm btn-primary">Voir tout</a>
+        <a href="<?php echo e(route('admin.applications.index')); ?>" class="btn btn-sm btn-primary">Voir tout</a>
     </div>
 
     <div class="table-responsive">
@@ -425,33 +427,33 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($recentApplications as $application)
+                <?php $__empty_1 = true; $__currentLoopData = $recentApplications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $application): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <tr>
                     <td>
-                        <strong>{{ $application->user?->name ?? 'N/A' }}</strong>
+                        <strong><?php echo e($application->user?->name ?? 'N/A'); ?></strong>
                         <br>
-                        <small style="color: var(--secondary);">{{ $application->user?->email ?? 'N/A' }}</small>
+                        <small style="color: var(--secondary);"><?php echo e($application->user?->email ?? 'N/A'); ?></small>
                     </td>
-                    <td>{{ $application->job?->title ?? 'N/A' }}</td>
-                    <td>{{ $application->job?->company?->name ?? 'N/A' }}</td>
+                    <td><?php echo e($application->job?->title ?? 'N/A'); ?></td>
+                    <td><?php echo e($application->job?->company?->name ?? 'N/A'); ?></td>
                     <td>
-                        @if($application->status === 'pending')
+                        <?php if($application->status === 'pending'): ?>
                             <span class="badge badge-warning">En attente</span>
-                        @elseif($application->status === 'viewed')
+                        <?php elseif($application->status === 'viewed'): ?>
                             <span class="badge badge-info">Vue</span>
-                        @elseif($application->status === 'shortlisted')
+                        <?php elseif($application->status === 'shortlisted'): ?>
                             <span class="badge badge-success">Présélectionné</span>
-                        @elseif($application->status === 'rejected')
+                        <?php elseif($application->status === 'rejected'): ?>
                             <span class="badge badge-danger">Rejetée</span>
-                        @elseif($application->status === 'accepted')
+                        <?php elseif($application->status === 'accepted'): ?>
                             <span class="badge badge-success">Acceptée</span>
-                        @else
-                            <span class="badge badge-secondary">{{ ucfirst($application->status) }}</span>
-                        @endif
+                        <?php else: ?>
+                            <span class="badge badge-secondary"><?php echo e(ucfirst($application->status)); ?></span>
+                        <?php endif; ?>
                     </td>
-                    <td>{{ $application->created_at->format('d/m/Y H:i') }}</td>
+                    <td><?php echo e($application->created_at->format('d/m/Y H:i')); ?></td>
                     <td>
-                        <a href="{{ route('admin.applications.show', $application) }}" class="btn btn-sm btn-primary">
+                        <a href="<?php echo e(route('admin.applications.show', $application)); ?>" class="btn btn-sm btn-primary">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -459,15 +461,17 @@
                         </a>
                     </td>
                 </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 2rem; color: var(--secondary);">
                         Aucune candidature pour le moment
                     </td>
                 </tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/dashboard/index.blade.php ENDPATH**/ ?>

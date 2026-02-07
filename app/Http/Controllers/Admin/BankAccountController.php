@@ -33,89 +33,56 @@ class BankAccountController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
-        // Calculate total revenue from PLATFORM EARNINGS ONLY
-        // Exclut les recharges wallet (argent des utilisateurs)
-        // Inclut: subscriptions, commissions, et autres revenus
-        $totalRevenue = Payment::where('status', 'completed')
-            ->where(function($query) {
-                $query->whereNotIn('payment_type', ['wallet_recharge'])
-                      ->orWhereNull('payment_type');
-            })
-            ->sum('amount');
-
-        // Calculate total withdrawn by platform
-        $totalWithdrawn = PlatformWithdrawal::where('status', 'completed')
-            ->sum('amount_requested');
-
-        // Calculate available balance (only credits - withdrawals)
-        $availableBalance = $totalRevenue - $totalWithdrawn;
-
-        // Get recent withdrawals
-        $recentWithdrawals = PlatformWithdrawal::with('admin')
-            ->latest()
-            ->take(10)
+        // Get PayPal transactions
+        $paypalTransactions = Payment::where('status', 'completed')
+            ->where('provider', 'paypal')
+            ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($withdrawal) {
+            ->map(function ($payment) {
                 return [
-                    'id' => $withdrawal->id,
-                    'amount' => (float) $withdrawal->amount_requested,
-                    'amount_sent' => (float) $withdrawal->amount_sent,
-                    'status' => $withdrawal->status,
-                    'payment_method' => $withdrawal->payment_method,
-                    'payment_account' => substr($withdrawal->payment_account, 0, 6) . '***',
-                    'admin_name' => $withdrawal->admin?->name ?? 'N/A',
-                    'created_at' => $withdrawal->created_at->format('d/m/Y H:i'),
+                    'id' => $payment->id,
+                    'amount' => (float) $payment->amount,
+                    'payment_type' => $payment->payment_type,
+                    'transaction_reference' => $payment->transaction_reference,
+                    'user_name' => $payment->user?->name ?? 'N/A',
+                    'created_at' => $payment->created_at->format('d/m/Y H:i'),
                 ];
             });
 
-        // Get withdrawal statistics
-        $stats = [
-            'total_revenue' => (float) $totalRevenue,
-            'total_withdrawn' => (float) $totalWithdrawn,
-            'available_balance' => (float) $availableBalance,
-            'pending_withdrawals' => PlatformWithdrawal::where('status', 'pending')->count(),
-            'completed_withdrawals' => PlatformWithdrawal::where('status', 'completed')->count(),
-            'failed_withdrawals' => PlatformWithdrawal::where('status', 'failed')->count(),
-        ];
-
-        // Revenue breakdown by type
-        $revenueBreakdown = Payment::where('status', 'completed')
-            ->selectRaw('payment_type, SUM(amount) as total, COUNT(*) as count')
-            ->groupBy('payment_type')
+        // Get FreeMoPay transactions
+        $freemopayTransactions = Payment::where('status', 'completed')
+            ->where('provider', 'freemopay')
+            ->orderBy('created_at', 'desc')
             ->get()
-            ->mapWithKeys(function ($item) {
-                $type = $item->payment_type ?: 'other';
-                return [$type => [
-                    'total' => (float) $item->total,
-                    'count' => $item->count,
-                ]];
+            ->map(function ($payment) {
+                return [
+                    'id' => $payment->id,
+                    'amount' => (float) $payment->amount,
+                    'payment_type' => $payment->payment_type,
+                    'transaction_reference' => $payment->transaction_reference,
+                    'user_name' => $payment->user?->name ?? 'N/A',
+                    'created_at' => $payment->created_at->format('d/m/Y H:i'),
+                ];
             });
 
-        // Last 7 days revenue trend
-        $revenueTrend = Payment::where('status', 'completed')
-            ->where(function($query) {
-                $query->whereNotIn('payment_type', ['wallet_recharge'])
-                      ->orWhereNull('payment_type');
-            })
-            ->where('created_at', '>=', now()->subDays(7))
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // Calculate totals
+        $paypalTotal = Payment::where('status', 'completed')
+            ->where('provider', 'paypal')
+            ->sum('amount');
 
-        // Monthly statistics (last 6 months)
-        $monthlyStats = Payment::where('status', 'completed')
-            ->where(function($query) {
-                $query->whereNotIn('payment_type', ['wallet_recharge'])
-                      ->orWhereNull('payment_type');
-            })
-            ->where('created_at', '>=', now()->subMonths(6))
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount) as total')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        $freemopayTotal = Payment::where('status', 'completed')
+            ->where('provider', 'freemopay')
+            ->sum('amount');
 
-        return view('admin.bank-account.index', compact('stats', 'recentWithdrawals', 'revenueBreakdown', 'revenueTrend', 'monthlyStats'));
+        $grandTotal = $paypalTotal + $freemopayTotal;
+
+        return view('admin.bank-account.index', compact(
+            'paypalTransactions',
+            'freemopayTransactions',
+            'paypalTotal',
+            'freemopayTotal',
+            'grandTotal'
+        ));
     }
 
     /**

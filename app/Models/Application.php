@@ -107,6 +107,53 @@ class Application extends Model
             'diploma_verified_by' => $adminId,
             'diploma_verification_notes' => $notes,
         ]);
+
+        // Send notification to recruiters of the company
+        $this->notifyRecruitersOfVerification();
+    }
+
+    /**
+     * Notify recruiters that diploma verification is complete
+     */
+    protected function notifyRecruitersOfVerification(): void
+    {
+        try {
+            $this->load(['job.company.recruiters.user', 'user']);
+            $notificationService = app(\App\Services\NotificationService::class);
+
+            $recruiters = $this->job->company->recruiters;
+
+            foreach ($recruiters as $recruiter) {
+                $recruiterUser = $recruiter->user;
+                if ($recruiterUser) {
+                    $notificationService->sendToUser(
+                        $recruiterUser,
+                        "Vérification de diplôme complétée",
+                        "Le diplôme de {$this->user->name} a été vérifié pour l'offre: {$this->job->title}",
+                        'diploma_verification_completed',
+                        [
+                            'application_id' => $this->id,
+                            'candidate_id' => $this->user_id,
+                            'candidate_name' => $this->user->name,
+                            'job_id' => $this->job_id,
+                            'job_title' => $this->job->title,
+                            'diploma_verified' => $this->diploma_verified,
+                            'verification_notes' => $this->diploma_verification_notes,
+                        ]
+                    );
+                }
+            }
+
+            \Log::info("[Diploma Verification] Recruiters notified of completed verification", [
+                'application_id' => $this->id,
+                'company_id' => $this->job->company_id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("[Diploma Verification] Failed to notify recruiters", [
+                'application_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
