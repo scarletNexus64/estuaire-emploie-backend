@@ -87,6 +87,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // Candidat: Postuler à une offre
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'apply']);
+    // Candidat: Postuler à une offre avec test de compétences obligatoire
+    Route::post('/jobs/{job}/apply-with-test', [ApplicationController::class, 'applyWithTest']);
     // Candidat: Statistiques de mes candidatures
     Route::get('/my-applications/stats', [ApplicationController::class, 'myApplicationsStats']);
     // Candidat: Mes candidatures
@@ -177,6 +179,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
         ->middleware('subscription:valid');
     // Mettre à jour un test
     Route::put('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'update'])
+        ->middleware('subscription:valid');
+    // Publier/activer un test (nécessite paiement)
+    Route::post('/recruiter/skill-tests/{id}/publish', [RecruiterSkillTestController::class, 'publish'])
         ->middleware('subscription:valid');
     // Supprimer un test
     Route::delete('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'destroy'])

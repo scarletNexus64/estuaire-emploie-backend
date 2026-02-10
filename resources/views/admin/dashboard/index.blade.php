@@ -1,473 +1,548 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Dashboard')
-@section('page-title', 'Tableau de bord')
+@section('title', 'Tableau de bord')
+
+@section('breadcrumb')
+    <a href="{{ route('admin.dashboard') }}" class="text-gray-600 hover:text-gray-900">Accueil</a>
+    <span class="text-gray-400">/</span>
+    <span class="text-gray-900 font-medium">Dashboard</span>
+@endsection
+
+@section('header-actions')
+    <a href="{{ route('admin.jobs.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-tertiary text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium">
+        <i class="mdi mdi-plus-circle"></i>
+        Nouvelle offre
+    </a>
+@endsection
 
 @push('styles')
-<style>
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes pulse {
-        0%, 100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.8;
-        }
-    }
-
-    .dashboard-welcome {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        padding: 2.5rem;
-        margin-bottom: 2rem;
-        color: white;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        animation: fadeInUp 0.6s ease-out;
-    }
-
-    .dashboard-welcome h1 {
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
-    }
-
-    .dashboard-welcome p {
-        font-size: 1.125rem;
-        opacity: 0.95;
-    }
-
-    .stats-grid {
-        animation: fadeInUp 0.6s ease-out 0.1s both;
-    }
-
-    .stat-card {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .stat-card:hover::after {
-        opacity: 1;
-    }
-
-    .stat-value {
-        background: linear-gradient(135deg, var(--dark) 0%, #4a5568 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .stat-icon {
-        position: relative;
-        z-index: 1;
-        transition: transform 0.3s;
-    }
-
-    .stat-card:hover .stat-icon {
-        transform: scale(1.15) rotate(5deg);
-    }
-
-    .card {
-        animation: fadeInUp 0.6s ease-out 0.2s both;
-    }
-
-    .quick-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        background: white;
-        border-radius: 12px;
-        text-decoration: none;
-        color: var(--dark);
-        font-weight: 600;
-        transition: all 0.3s;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .quick-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        color: var(--primary);
-    }
-
-    .activity-indicator {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background: var(--success);
-        border-radius: 50%;
-        animation: pulse 2s ease-in-out infinite;
-    }
-</style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 @endpush
 
 @section('content')
-<!-- Welcome Banner -->
-<div class="dashboard-welcome">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h1>Bienvenue, {{ auth()->user()->name }} 👋</h1>
-            <p>Voici un aperçu de votre plateforme aujourd'hui</p>
-        </div>
-        <div style="display: flex; gap: 1rem;">
-            <a href="{{ route('admin.jobs.create') }}" class="quick-action">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Nouvelle Offre
-            </a>
-            <a href="{{ route('admin.companies.create') }}" class="quick-action">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
-                Nouvelle Entreprise
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Total Entreprises</div>
-                <div class="stat-value">{{ $stats['total_companies'] }}</div>
-            </div>
-            <div class="stat-icon">🏢</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend up">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"/>
-                </svg>
-                +{{ $stats['pending_companies'] }} en attente
-            </span>
-        </div>
-    </div>
-
-    <div class="stat-card success">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Offres d'emploi</div>
-                <div class="stat-value">{{ $stats['total_jobs'] }}</div>
-            </div>
-            <div class="stat-icon">💼</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend up">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"/>
-                </svg>
-                {{ $stats['published_jobs'] }} publiées
-            </span>
-        </div>
-    </div>
-
-    <div class="stat-card warning">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Candidatures</div>
-                <div class="stat-value">{{ $stats['total_applications'] }}</div>
-            </div>
-            <div class="stat-icon">📝</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend">
-                {{ $stats['pending_applications'] }} en attente
-            </span>
-        </div>
-    </div>
-
-    <div class="stat-card danger">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Candidats</div>
-                <div class="stat-value">{{ $stats['total_candidates'] ?? $stats['total_users'] ?? 0 }}</div>
-            </div>
-            <div class="stat-icon">👥</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend">
-                {{ $stats['total_recruiters'] ?? 0 }} recruteurs
-            </span>
-        </div>
-    </div>
-
-    <div class="stat-card" style="border-left: 4px solid #ec4899;">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Favoris</div>
-                <div class="stat-value">{{ $stats['total_favorites'] ?? 0 }}</div>
-            </div>
-            <div class="stat-icon">❤️</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend">
-                Jobs sauvegardés
-            </span>
-        </div>
-    </div>
-
-    <div class="stat-card" style="border-left: 4px solid #9333ea; position: relative;">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Vérifications Diplômes</div>
-                <div class="stat-value">{{ $stats['pending_diploma_verifications'] ?? 0 }}</div>
-            </div>
-            <div class="stat-icon">🎓</div>
-        </div>
-        <div class="stat-footer">
-            <span class="stat-trend" style="color: #9333ea;">
-                @if($stats['pending_diploma_verifications'] > 0)
-                    <span style="position: relative; display: inline-flex; align-items: center;">
-                        <span class="activity-indicator" style="background: #9333ea; margin-right: 0.5rem;"></span>
-                        {{ $stats['pending_diploma_verifications'] }} en attente
-                    </span>
-                @else
-                    Aucune demande
-                @endif
-            </span>
-        </div>
-    </div>
-</div>
-
-<!-- Pending Diploma Verifications Section -->
-@if($stats['pending_diploma_verifications'] > 0)
-<div class="card" style="background: linear-gradient(135deg, #f3e7ff 0%, #fef3c7 100%); border-left: 4px solid #9333ea; margin-bottom: 1.5rem;">
-    <div class="card-header" style="background: transparent;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <h3 class="card-title" style="color: #7c3aed;">
-                🔔 Vérifications de Diplômes en Attente
-            </h3>
-            <span class="badge badge-warning" style="background: #9333ea;">{{ $stats['pending_diploma_verifications'] }}</span>
-        </div>
-        <a href="{{ route('admin.applications.index') }}" class="btn btn-sm" style="background: #9333ea; color: white;">Voir tout</a>
-    </div>
-
-    <div style="display: grid; gap: 1rem; padding: 1.5rem;">
-        @foreach($pendingDiplomaApplications as $application)
-        <div style="background: white; padding: 1.25rem; border-radius: 12px; border-left: 3px solid #9333ea; box-shadow: 0 2px 8px rgba(147, 51, 234, 0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <strong style="color: var(--dark); font-size: 1.125rem;">{{ $application->user?->name ?? 'N/A' }}</strong>
-                        <span class="activity-indicator" style="background: #9333ea;"></span>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Card: Total Companies -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-office-building text-2xl text-primary"></i>
                     </div>
-                    <p style="font-size: 0.875rem; color: var(--secondary); margin-bottom: 0.5rem;">
-                        📧 {{ $application->user?->email ?? 'N/A' }}
-                    </p>
-                    <p style="font-size: 0.875rem; color: var(--dark);">
-                        <strong>Poste:</strong> {{ $application->job?->title ?? 'N/A' }}<br>
-                        <strong>Entreprise:</strong> {{ $application->job?->company?->name ?? 'N/A' }}
-                    </p>
-                    <p style="font-size: 0.75rem; color: var(--secondary); margin-top: 0.5rem;">
-                        Candidature du {{ $application->created_at->format('d/m/Y à H:i') }}
-                    </p>
+                    @if($stats['pending_companies'] > 0)
+                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
+                            {{ $stats['pending_companies'] }} en attente
+                        </span>
+                    @endif
                 </div>
-                <a href="{{ route('admin.applications.show', $application) }}" class="btn btn-sm" style="background: #9333ea; color: white; white-space: nowrap;">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline-block; vertical-align: middle;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Vérifier
+                <h3 class="text-gray-600 text-sm font-medium mb-1">Entreprises</h3>
+                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_companies']) }}</p>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
+                <a href="{{ route('admin.companies.index') }}" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">
+                    Voir tout
+                    <i class="mdi mdi-arrow-right text-sm"></i>
                 </a>
             </div>
         </div>
-        @endforeach
-    </div>
-</div>
-@endif
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-    <!-- Recent Jobs -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Offres d'emploi récentes</h3>
-            <a href="{{ route('admin.jobs.index') }}" class="btn btn-sm btn-primary">Voir tout</a>
-        </div>
-
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Titre</th>
-                        <th>Entreprise</th>
-                        <th>Statut</th>
-                        <th>Candidatures</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($recentJobs as $job)
-                    <tr>
-                        <td>
-                            <strong>{{ $job->title }}</strong>
-                            <br>
-                            <small style="color: var(--secondary);">{{ $job->category?->name ?? 'N/A' }}</small>
-                        </td>
-                        <td>{{ $job->company?->name ?? 'N/A' }}</td>
-                        <td>
-                            @if($job->status === 'published')
-                                <span class="badge badge-success">Publié</span>
-                            @elseif($job->status === 'pending')
-                                <span class="badge badge-warning">En attente</span>
-                            @elseif($job->status === 'closed')
-                                <span class="badge badge-danger">Fermé</span>
-                            @else
-                                <span class="badge badge-secondary">{{ ucfirst($job->status) }}</span>
-                            @endif
-                        </td>
-                        <td>
-                            <strong>{{ $job->applications_count }}</strong> candidature(s)
-                        </td>
-                        <td>{{ $job->created_at->format('d/m/Y') }}</td>
-                        <td>
-                            <a href="{{ route('admin.jobs.show', $job) }}" class="btn btn-sm btn-primary">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--secondary);">
-                            Aucune offre d'emploi pour le moment
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Pending Companies -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Entreprises en attente</h3>
-            <span class="badge badge-warning">{{ $pendingCompanies->count() }}</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-            @forelse($pendingCompanies as $company)
-            <div style="padding: 1rem; background: var(--light); border-radius: 10px; border-left: 3px solid var(--warning);">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                    <strong style="color: var(--dark);">{{ $company->name }}</strong>
-                    <span class="badge badge-warning">En attente</span>
+        <!-- Card: Total Jobs -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-secondary/10 to-secondary/20 rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-briefcase text-2xl text-secondary"></i>
+                    </div>
+                    @if($stats['pending_jobs'] > 0)
+                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
+                            {{ $stats['pending_jobs'] }} en attente
+                        </span>
+                    @endif
                 </div>
-                <p style="font-size: 0.875rem; color: var(--secondary); margin-bottom: 0.75rem;">
-                    {{ Str::limit($company->description, 60) }}
+                <h3 class="text-gray-600 text-sm font-medium mb-1">Offres d'emploi</h3>
+                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_jobs']) }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ number_format($stats['published_jobs']) }} publiées</p>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
+                <a href="{{ route('admin.jobs.index') }}" class="text-sm text-secondary hover:text-secondary-dark font-medium flex items-center gap-1">
+                    Voir tout
+                    <i class="mdi mdi-arrow-right text-sm"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Card: Applications -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-tertiary/10 to-tertiary/20 rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-file-document-multiple text-2xl text-tertiary"></i>
+                    </div>
+                    @if($stats['pending_applications'] > 0)
+                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
+                            {{ $stats['pending_applications'] }} nouvelles
+                        </span>
+                    @endif
+                </div>
+                <h3 class="text-gray-600 text-sm font-medium mb-1">Candidatures</h3>
+                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_applications']) }}</p>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
+                <a href="{{ route('admin.applications.index') }}" class="text-sm text-tertiary hover:text-tertiary-dark font-medium flex items-center gap-1">
+                    Voir tout
+                    <i class="mdi mdi-arrow-right text-sm"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Card: Users -->
+        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500/10 to-green-500/20 rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-account-group text-2xl text-green-600"></i>
+                    </div>
+                </div>
+                <h3 class="text-gray-600 text-sm font-medium mb-1">Utilisateurs</h3>
+                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_candidates'] + $stats['total_recruiters']) }}</p>
+                <p class="text-xs text-gray-500 mt-1">
+                    {{ number_format($stats['total_candidates']) }} candidats · {{ number_format($stats['total_recruiters']) }} recruteurs
                 </p>
-                <form method="POST" action="{{ route('admin.companies.verify', $company) }}" style="display: inline;">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="btn btn-sm btn-success">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Approuver
-                    </button>
-                </form>
-                <a href="{{ route('admin.companies.show', $company) }}" class="btn btn-sm btn-primary">
-                    Voir
+            </div>
+            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
+                <a href="{{ route('admin.users.index') }}" class="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1">
+                    Voir tout
+                    <i class="mdi mdi-arrow-right text-sm"></i>
                 </a>
             </div>
-            @empty
-            <p style="text-align: center; color: var(--secondary); padding: 2rem;">
-                Aucune entreprise en attente
-            </p>
-            @endforelse
         </div>
     </div>
-</div>
 
-<!-- Recent Applications -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Candidatures récentes</h3>
-        <a href="{{ route('admin.applications.index') }}" class="btn btn-sm btn-primary">Voir tout</a>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Applications by Status Chart (Doughnut) -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Statut des candidatures</h3>
+                <i class="mdi mdi-chart-donut text-2xl text-gray-400"></i>
+            </div>
+            <div class="h-64 flex items-center justify-center">
+                <canvas id="applicationsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Jobs by Status Chart (Bar) -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Statut des offres</h3>
+                <i class="mdi mdi-chart-bar text-2xl text-gray-400"></i>
+            </div>
+            <div class="h-64">
+                <canvas id="jobsChart"></canvas>
+            </div>
+        </div>
     </div>
 
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th>Candidat</th>
-                    <th>Offre</th>
-                    <th>Entreprise</th>
-                    <th>Statut</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($recentApplications as $application)
-                <tr>
-                    <td>
-                        <strong>{{ $application->user?->name ?? 'N/A' }}</strong>
-                        <br>
-                        <small style="color: var(--secondary);">{{ $application->user?->email ?? 'N/A' }}</small>
-                    </td>
-                    <td>{{ $application->job?->title ?? 'N/A' }}</td>
-                    <td>{{ $application->job?->company?->name ?? 'N/A' }}</td>
-                    <td>
-                        @if($application->status === 'pending')
-                            <span class="badge badge-warning">En attente</span>
-                        @elseif($application->status === 'viewed')
-                            <span class="badge badge-info">Vue</span>
-                        @elseif($application->status === 'shortlisted')
-                            <span class="badge badge-success">Présélectionné</span>
-                        @elseif($application->status === 'rejected')
-                            <span class="badge badge-danger">Rejetée</span>
-                        @elseif($application->status === 'accepted')
-                            <span class="badge badge-success">Acceptée</span>
-                        @else
-                            <span class="badge badge-secondary">{{ ucfirst($application->status) }}</span>
-                        @endif
-                    </td>
-                    <td>{{ $application->created_at->format('d/m/Y H:i') }}</td>
-                    <td>
-                        <a href="{{ route('admin.applications.show', $application) }}" class="btn btn-sm btn-primary">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                        </a>
-                    </td>
-                </tr>
+    <!-- Users Chart (Line) -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Répartition des utilisateurs</h3>
+            <i class="mdi mdi-chart-line text-2xl text-gray-400"></i>
+        </div>
+        <div class="h-80">
+            <canvas id="usersChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Jobs -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i class="mdi mdi-briefcase-clock text-xl text-primary"></i>
+                    Offres récentes
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @forelse($recentJobs->take(5) as $job)
+                    <a href="{{ route('admin.jobs.show', $job) }}" class="block px-6 py-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-semibold text-gray-900 truncate">{{ $job->title }}</h4>
+                                <p class="text-xs text-gray-600 mt-1">{{ $job->company->name ?? 'N/A' }}</p>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <span class="inline-flex items-center gap-1 text-xs text-gray-500">
+                                        <i class="mdi mdi-map-marker text-sm"></i>
+                                        {{ is_object($job->location) ? $job->location->name : ($job->location ?? 'Non spécifié') }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 text-xs text-gray-500">
+                                        <i class="mdi mdi-briefcase-account text-sm"></i>
+                                        {{ $job->applications_count ?? 0 }} candidatures
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                @if($job->status === 'published')
+                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        <i class="mdi mdi-check-circle text-sm"></i>
+                                        Publié
+                                    </span>
+                                @elseif($job->status === 'pending')
+                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        <i class="mdi mdi-clock-outline text-sm"></i>
+                                        En attente
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        {{ ucfirst($job->status) }}
+                                    </span>
+                                @endif
+                                <span class="text-xs text-gray-400">{{ $job->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                    </a>
                 @empty
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--secondary);">
-                        Aucune candidature pour le moment
-                    </td>
-                </tr>
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        <i class="mdi mdi-briefcase-off text-4xl mb-2"></i>
+                        <p>Aucune offre récente</p>
+                    </div>
                 @endforelse
-            </tbody>
-        </table>
+            </div>
+            @if($recentJobs->count() > 0)
+                <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                    <a href="{{ route('admin.jobs.index') }}" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center justify-center gap-1">
+                        Voir toutes les offres
+                        <i class="mdi mdi-arrow-right text-sm"></i>
+                    </a>
+                </div>
+            @endif
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i class="mdi mdi-file-document-multiple-outline text-xl text-secondary"></i>
+                    Candidatures récentes
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @forelse($recentApplications->take(5) as $application)
+                    <a href="{{ route('admin.applications.show', $application) }}" class="block px-6 py-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-secondary to-tertiary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                        {{ substr($application->user->name ?? 'U', 0, 1) }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-semibold text-gray-900 truncate">{{ $application->user->name ?? 'N/A' }}</h4>
+                                        <p class="text-xs text-gray-600 truncate">{{ $application->job->title ?? 'N/A' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                @if($application->status === 'accepted')
+                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        <i class="mdi mdi-check text-sm"></i>
+                                        Accepté
+                                    </span>
+                                @elseif($application->status === 'pending')
+                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        <i class="mdi mdi-clock text-sm"></i>
+                                        En attente
+                                    </span>
+                                @elseif($application->status === 'rejected')
+                                    <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        <i class="mdi mdi-close text-sm"></i>
+                                        Rejeté
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        {{ ucfirst($application->status) }}
+                                    </span>
+                                @endif
+                                <span class="text-xs text-gray-400">{{ $application->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        <i class="mdi mdi-file-document-off text-4xl mb-2"></i>
+                        <p>Aucune candidature récente</p>
+                    </div>
+                @endforelse
+            </div>
+            @if($recentApplications->count() > 0)
+                <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                    <a href="{{ route('admin.applications.index') }}" class="text-sm text-secondary hover:text-secondary-dark font-medium flex items-center justify-center gap-1">
+                        Voir toutes les candidatures
+                        <i class="mdi mdi-arrow-right text-sm"></i>
+                    </a>
+                </div>
+            @endif
+        </div>
     </div>
-</div>
+
+    @if($pendingCompanies->count() > 0 || $stats['pending_diploma_verifications'] > 0)
+        <!-- Pending Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            @if($pendingCompanies->count() > 0)
+                <!-- Pending Companies -->
+                <div class="bg-orange-50 border border-orange-200 rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-orange-900 mb-4 flex items-center gap-2">
+                        <i class="mdi mdi-alert-circle text-2xl"></i>
+                        Entreprises en attente de validation
+                    </h3>
+                    <div class="space-y-3">
+                        @foreach($pendingCompanies as $company)
+                            <a href="{{ route('admin.companies.show', $company) }}" class="block bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">{{ $company->name }}</h4>
+                                        <p class="text-sm text-gray-600">{{ $company->created_at->diffForHumans() }}</p>
+                                    </div>
+                                    <i class="mdi mdi-chevron-right text-2xl text-gray-400"></i>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if($stats['pending_diploma_verifications'] > 0)
+                <!-- Pending Diploma Verifications -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                    <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                        <i class="mdi mdi-certificate text-2xl"></i>
+                        Vérifications de diplômes en attente
+                        <span class="ml-auto bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            {{ $stats['pending_diploma_verifications'] }}
+                        </span>
+                    </h3>
+                    <div class="space-y-3">
+                        @foreach($pendingDiplomaApplications as $application)
+                            <div class="block bg-white rounded-lg p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">{{ $application->user->name }}</h4>
+                                        <p class="text-sm text-gray-600">{{ $application->job->title ?? 'N/A' }}</p>
+                                    </div>
+                                    <a href="{{ route('admin.applications.show', $application) }}" class="text-blue-600 hover:text-blue-700">
+                                        <i class="mdi mdi-chevron-right text-2xl"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
 @endsection
+
+@push('scripts')
+    <script>
+        // Chart.js Global Configuration
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        Chart.defaults.color = '#6B7280';
+
+        // Applications Doughnut Chart
+        const applicationsCtx = document.getElementById('applicationsChart').getContext('2d');
+        new Chart(applicationsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['En attente', 'Acceptées', 'Rejetées'],
+                datasets: [{
+                    data: [
+                        {{ $stats['pending_applications'] }},
+                        {{ $stats['total_applications'] - $stats['pending_applications'] }},
+                        0 // You can add rejected count if available
+                    ],
+                    backgroundColor: [
+                        '#F59E0B', // Orange
+                        '#10B981', // Green
+                        '#EF4444'  // Red
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.parsed || 0;
+                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = ((value / total) * 100).toFixed(1);
+                                return ` ${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Jobs Bar Chart
+        const jobsCtx = document.getElementById('jobsChart').getContext('2d');
+        new Chart(jobsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Publiées', 'En attente', 'Expirées', 'Brouillons'],
+                datasets: [{
+                    label: 'Nombre d\'offres',
+                    data: [
+                        {{ $stats['published_jobs'] }},
+                        {{ $stats['pending_jobs'] }},
+                        {{ $stats['total_jobs'] - $stats['published_jobs'] - $stats['pending_jobs'] }},
+                        0 // Add draft count if available
+                    ],
+                    backgroundColor: [
+                        '#0091D5', // Blue
+                        '#F59E0B', // Orange
+                        '#6B7280', // Gray
+                        '#E5E7EB'  // Light Gray
+                    ],
+                    borderRadius: 8,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: '#F3F4F6'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Users Line Chart
+        const usersCtx = document.getElementById('usersChart').getContext('2d');
+        new Chart(usersCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Candidats', 'Recruteurs'],
+                datasets: [{
+                    label: 'Nombre d\'utilisateurs',
+                    data: [
+                        {{ $stats['total_candidates'] }},
+                        {{ $stats['total_recruiters'] }}
+                    ],
+                    backgroundColor: [
+                        'rgba(227, 30, 36, 0.8)',  // Primary Red
+                        'rgba(123, 31, 162, 0.8)'  // Tertiary Purple
+                    ],
+                    borderColor: [
+                        '#E31E24',
+                        '#7B1FA2'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 60
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 10,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: '#F3F4F6'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+@endpush

@@ -27,15 +27,16 @@ class RecruiterSkillTestController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $recruiter = $user->recruiter;
 
-        if (!$user->company) {
+        if (!$recruiter) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise',
+                'message' => 'Vous devez être un recruteur',
             ], 403);
         }
 
-        $tests = RecruiterSkillTest::where('company_id', $user->company->id)
+        $tests = RecruiterSkillTest::where('company_id', $recruiter->company_id)
             ->with(['job:id,title', 'results'])
             ->withCount('results')
             ->orderBy('created_at', 'desc')
@@ -69,15 +70,16 @@ class RecruiterSkillTestController extends Controller
     public function show($id)
     {
         $user = Auth::user();
+        $recruiter = $user->recruiter;
 
-        if (!$user->company) {
+        if (!$recruiter) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise',
+                'message' => 'Vous devez être un recruteur',
             ], 403);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $user->company->id)
+        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
             ->with(['job:id,title', 'results.application.user'])
             ->findOrFail($id);
 
@@ -110,25 +112,18 @@ class RecruiterSkillTestController extends Controller
     }
 
     /**
-     * Create a new skill test
+     * Create a new skill test (as draft)
      * POST /api/recruiter/skill-tests
      */
     public function store(Request $request)
     {
         $user = Auth::user();
+        $recruiter = $user->recruiter;
 
-        if (!$user->company) {
+        if (!$recruiter) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise',
-            ], 403);
-        }
-
-        // Check if company has skills test access
-        if (!$this->purchaseService->hasSkillsTestAccess($user->company)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vous devez acheter l\'accès aux tests de compétences pour créer un test',
+                'message' => 'Vous devez être un recruteur',
             ], 403);
         }
 
@@ -138,7 +133,7 @@ class RecruiterSkillTestController extends Controller
             'job_id' => 'nullable|exists:jobs,id',
             'questions' => 'required|array|min:1',
             'questions.*.question' => 'required|string',
-            'questions.*.type' => 'required|in:multiple_choice,text,code',
+            'questions.*.type' => 'required|in:multiple_choice',
             'questions.*.options' => 'required_if:questions.*.type,multiple_choice|array',
             'questions.*.correct_answer' => 'required',
             'duration_minutes' => 'nullable|integer|min:5|max:180',
@@ -148,7 +143,7 @@ class RecruiterSkillTestController extends Controller
         // Verify job belongs to company if provided
         if ($request->job_id) {
             $job = \App\Models\Job::where('id', $request->job_id)
-                ->where('company_id', $user->company->id)
+                ->where('company_id', $recruiter->company_id)
                 ->first();
 
             if (!$job) {
@@ -159,22 +154,72 @@ class RecruiterSkillTestController extends Controller
             }
         }
 
+        // Create test as draft (is_active = false) - no payment required yet
         $test = RecruiterSkillTest::create([
-            'company_id' => $user->company->id,
+            'company_id' => $recruiter->company_id,
             'job_id' => $request->job_id,
             'title' => $request->title,
             'description' => $request->description,
             'questions' => $request->questions,
             'duration_minutes' => $request->duration_minutes,
             'passing_score' => $request->passing_score,
-            'is_active' => true,
+            'is_active' => false, // Draft mode by default
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Test créé avec succès',
+            'message' => 'Test créé en brouillon avec succès',
             'test' => $test,
         ], 201);
+    }
+
+    /**
+     * Publish/activate a test (requires payment)
+     * POST /api/recruiter/skill-tests/{id}/publish
+     */
+    public function publish(Request $request, $id)
+    {
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
+
+        if (!$recruiter) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous devez être un recruteur',
+            ], 403);
+        }
+
+        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
+            ->findOrFail($id);
+
+        // Check if already active
+        if ($test->is_active) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Le test est déjà actif',
+                'test' => $test,
+            ]);
+        }
+
+        // Check if company has skills test access (payment required)
+        $company = \App\Models\Company::find($recruiter->company_id);
+        if (!$this->purchaseService->hasSkillsTestAccess($company)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous devez acheter l\'accès aux tests de compétences pour publier ce test',
+                'requires_payment' => true,
+                'price' => 2000, // From AddonServiceConfigSeeder
+            ], 403);
+        }
+
+        // Activate the test
+        $test->update(['is_active' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Test publié avec succès',
+            'test' => $test->fresh(),
+        ]);
     }
 
     /**
@@ -183,17 +228,50 @@ class RecruiterSkillTestController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = Auth::user();
+        \Log::info('========== UPDATE TEST CALLED ==========', [
+            'test_id' => $id,
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+        ]);
 
-        if (!$user->company) {
+        $user = Auth::user();
+        $recruiter = $user->recruiter;
+
+        \Log::info('User & Recruiter check', [
+            'user_id' => $user->id ?? null,
+            'recruiter_id' => $recruiter->id ?? null,
+            'company_id' => $recruiter->company_id ?? null,
+        ]);
+
+        if (!$recruiter) {
+            \Log::warning('UPDATE FAILED: User is not a recruiter');
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise',
+                'message' => 'Vous devez être un recruteur',
             ], 403);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $user->company->id)
+        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
             ->findOrFail($id);
+
+        \Log::info('Test found', [
+            'test_id' => $test->id,
+            'current_title' => $test->title,
+            'current_questions_count' => count($test->questions),
+        ]);
+
+        \Log::info('📤 UPDATE TEST REQUEST', [
+            'test_id' => $id,
+            'request_data_keys' => array_keys($request->all()),
+            'has_questions' => $request->has('questions'),
+            'questions_count' => $request->has('questions') ? count($request->questions) : 0,
+        ]);
+
+        if ($request->has('questions') && !empty($request->questions)) {
+            \Log::info('📋 Questions données:', [
+                'first_question' => $request->questions[0] ?? null,
+            ]);
+        }
 
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -201,7 +279,7 @@ class RecruiterSkillTestController extends Controller
             'job_id' => 'nullable|exists:jobs,id',
             'questions' => 'sometimes|required|array|min:1',
             'questions.*.question' => 'required|string',
-            'questions.*.type' => 'required|in:multiple_choice,text,code',
+            'questions.*.type' => 'required|in:multiple_choice',
             'questions.*.options' => 'required_if:questions.*.type,multiple_choice|array',
             'questions.*.correct_answer' => 'required',
             'duration_minutes' => 'nullable|integer|min:5|max:180',
@@ -212,7 +290,7 @@ class RecruiterSkillTestController extends Controller
         // Verify job belongs to company if provided
         if ($request->has('job_id') && $request->job_id) {
             $job = \App\Models\Job::where('id', $request->job_id)
-                ->where('company_id', $user->company->id)
+                ->where('company_id', $recruiter->company_id)
                 ->first();
 
             if (!$job) {
@@ -223,7 +301,7 @@ class RecruiterSkillTestController extends Controller
             }
         }
 
-        $test->update($request->only([
+        $dataToUpdate = $request->only([
             'title',
             'description',
             'job_id',
@@ -231,12 +309,29 @@ class RecruiterSkillTestController extends Controller
             'duration_minutes',
             'passing_score',
             'is_active',
-        ]));
+        ]);
+
+        \Log::info('💾 Données à mettre à jour:', [
+            'data_keys' => array_keys($dataToUpdate),
+            'has_questions' => isset($dataToUpdate['questions']),
+            'questions_count' => isset($dataToUpdate['questions']) ? count($dataToUpdate['questions']) : 0,
+        ]);
+
+        $test->update($dataToUpdate);
+
+        $freshTest = $test->fresh();
+
+        \Log::info('✅ Test mis à jour:', [
+            'test_id' => $freshTest->id,
+            'title' => $freshTest->title,
+            'questions_count' => count($freshTest->questions),
+            'first_question' => $freshTest->questions[0] ?? null,
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Test mis à jour avec succès',
-            'test' => $test->fresh(),
+            'test' => $freshTest,
         ]);
     }
 
@@ -247,15 +342,16 @@ class RecruiterSkillTestController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
+        $recruiter = $user->recruiter;
 
-        if (!$user->company) {
+        if (!$recruiter) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise',
+                'message' => 'Vous devez être un recruteur',
             ], 403);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $user->company->id)
+        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
             ->findOrFail($id);
 
         $test->delete();
@@ -357,22 +453,8 @@ class RecruiterSkillTestController extends Controller
 
             if ($userAnswer !== null && $correctAnswer !== null) {
                 // For multiple choice, compare directly
-                if ($question['type'] === 'multiple_choice') {
-                    if ($userAnswer === $correctAnswer) {
-                        $correctAnswers++;
-                    }
-                }
-                // For text/code, check if it matches (case-insensitive for text)
-                else if ($question['type'] === 'text') {
-                    if (strtolower(trim($userAnswer)) === strtolower(trim($correctAnswer))) {
-                        $correctAnswers++;
-                    }
-                }
-                // For code, exact match required
-                else if ($question['type'] === 'code') {
-                    if (trim($userAnswer) === trim($correctAnswer)) {
-                        $correctAnswers++;
-                    }
+                if ($userAnswer === $correctAnswer) {
+                    $correctAnswers++;
                 }
             }
         }

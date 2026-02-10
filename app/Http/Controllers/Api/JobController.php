@@ -85,7 +85,19 @@ class JobController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Job::with(['company', 'category', 'location', 'contractType'])
+        $query = Job::with([
+                'company',
+                'category',
+                'location',
+                'contractType',
+                'skillTests' => function ($query) {
+                    $query->where('is_active', true)
+                          ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score');
+                }
+            ])
+            ->withCount(['skillTests' => function ($query) {
+                $query->where('is_active', true);
+            }])
             ->where('status', 'published');
 
         // Filtres de base
@@ -250,7 +262,17 @@ class JobController extends Controller
     {
         $job->incrementViews();
 
-        $job->load(['company', 'category', 'location', 'contractType', 'postedBy']);
+        $job->load([
+            'company',
+            'category',
+            'location',
+            'contractType',
+            'postedBy',
+            'skillTests' => function ($query) {
+                $query->where('is_active', true)
+                      ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score');
+            }
+        ]);
 
         return response()->json([
             'data' => $job,
@@ -432,7 +454,17 @@ class JobController extends Controller
             ], 403);
         }
 
-        $job = Job::with(['company', 'category', 'location', 'contractType', 'postedBy'])
+        $job = Job::with([
+                'company',
+                'category',
+                'location',
+                'contractType',
+                'postedBy',
+                'skillTests' => function ($query) {
+                    $query->where('is_active', true)
+                          ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score');
+                }
+            ])
             ->withCount('applications')
             ->find($id);
 
@@ -497,7 +529,10 @@ class JobController extends Controller
         }
 
         $query = Job::where('company_id', $recruiter->company_id)
-            ->with(['category', 'location', 'contractType'])
+            ->with(['category', 'location', 'contractType', 'skillTests' => function ($query) {
+                $query->where('is_active', true)
+                      ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score', 'is_active');
+            }])
             ->withCount('applications');
 
         // Filtrer par statut si fourni

@@ -183,6 +183,266 @@ class ApplicationController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/jobs/{id}/apply-with-test",
+     *     summary="Postuler à une offre avec test de compétences obligatoire",
+     *     description="Permet à un candidat de postuler avec CV et résultats de test en une seule requête atomique",
+     *     tags={"Applications"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID de l'offre",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"cv", "test_id", "test_answers", "test_started_at"},
+     *                 @OA\Property(property="cv", type="string", format="binary", description="Fichier CV (PDF, DOC, DOCX - max 5MB)"),
+     *                 @OA\Property(property="cover_letter", type="string", description="Lettre de motivation"),
+     *                 @OA\Property(property="portfolio_url", type="string", description="URL du portfolio"),
+     *                 @OA\Property(property="portfolio_id", type="integer", description="ID du portfolio"),
+     *                 @OA\Property(property="test_id", type="integer", description="ID du test de compétences"),
+     *                 @OA\Property(property="test_answers", type="array", @OA\Items(type="string"), description="Réponses du candidat (ex: ['A', 'B', 'C'])"),
+     *                 @OA\Property(property="test_started_at", type="string", format="date-time", description="Date/heure de début du test")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Candidature soumise avec succès avec test réussi",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(property="test_result", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Test échoué - score insuffisant",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Score insuffisant pour postuler"),
+     *             @OA\Property(property="test_failed", type="boolean", example=true),
+     *             @OA\Property(property="score", type="integer"),
+     *             @OA\Property(property="passing_score", type="integer")
+     *         )
+     *     )
+     * )
+     */
+    public function applyWithTest(Request $request, Job $job): JsonResponse
+    {
+        if ($job->status !== 'published') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cette offre n\'est plus disponible',
+            ], 404);
+        }
+
+        // Vérifier si l'utilisateur a déjà postulé
+        $existingApplication = Application::withTrashed()
+            ->where('job_id', $job->id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if ($existingApplication && !$existingApplication->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous avez déjà postulé à cette offre',
+            ], 400);
+        }
+
+        Log::info('Nouvelle candidature avec test pour l\'offre ID: ' . $job->id);
+
+        $validated = $request->validate([
+            'cv' => 'required|file|mimes:pdf,doc,docx|max:5120',
+            'cover_letter' => 'nullable|string',
+            'portfolio_url' => 'nullable|url',
+            'portfolio_id' => 'nullable|exists:portfolios,id',
+            'test_id' => 'required|exists:recruiter_skill_tests,id',
+            'test_answers' => 'required|array',
+            'test_started_at' => 'required|date',
+        ]);
+
+        // Charger le test
+        $test = \App\Models\RecruiterSkillTest::where('is_active', true)
+            ->where('job_id', $job->id)
+            ->findOrFail($validated['test_id']);
+
+        // Calculer le score
+        $score = $this->calculateTestScore($test->questions, $validated['test_answers']);
+        $passed = $score >= $test->passing_score;
+
+        // Si le test est échoué, ne pas créer l'application
+        if (!$passed) {
+            Log::info('Test échoué - candidature refusée', [
+                'user_id' => $request->user()->id,
+                'job_id' => $job->id,
+                'score' => $score,
+                'passing_score' => $test->passing_score,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Score insuffisant pour postuler à cette offre',
+                'test_failed' => true,
+                'score' => $score,
+                'passing_score' => $test->passing_score,
+            ], 400);
+        }
+
+        // Upload du CV
+        $cvPath = null;
+        if ($request->hasFile('cv')) {
+            $cvPath = $request->file('cv')->store('cvs', 'public');
+        }
+
+        try {
+            \DB::beginTransaction();
+
+            // Si une candidature soft deleted existe, la restaurer
+            if ($existingApplication && $existingApplication->trashed()) {
+                Log::info('Restauration de la candidature soft deleted ID: ' . $existingApplication->id);
+
+                if ($existingApplication->cv_path && \Storage::disk('public')->exists($existingApplication->cv_path)) {
+                    \Storage::disk('public')->delete($existingApplication->cv_path);
+                }
+
+                $existingApplication->restore();
+                $existingApplication->update([
+                    'cv_path' => $cvPath,
+                    'cover_letter' => $validated['cover_letter'] ?? null,
+                    'portfolio_url' => $validated['portfolio_url'] ?? null,
+                    'portfolio_id' => $validated['portfolio_id'] ?? null,
+                    'status' => 'pending',
+                    'viewed_at' => null,
+                    'responded_at' => null,
+                    'internal_notes' => null,
+                ]);
+
+                $application = $existingApplication;
+            } else {
+                // Créer la candidature
+                $application = Application::create([
+                    'job_id' => $job->id,
+                    'user_id' => $request->user()->id,
+                    'cv_path' => $cvPath,
+                    'cover_letter' => $validated['cover_letter'] ?? null,
+                    'portfolio_url' => $validated['portfolio_url'] ?? null,
+                    'portfolio_id' => $validated['portfolio_id'] ?? null,
+                    'status' => 'pending',
+                ]);
+            }
+
+            // Créer le résultat du test
+            $testResult = \App\Models\ApplicationTestResult::create([
+                'application_id' => $application->id,
+                'recruiter_skill_test_id' => $test->id,
+                'answers' => $validated['test_answers'],
+                'score' => $score,
+                'passed' => true, // Forcément true car on ne crée l'application que si réussi
+                'started_at' => $validated['test_started_at'],
+                'completed_at' => now(),
+                'duration_seconds' => now()->diffInSeconds($validated['test_started_at']),
+            ]);
+
+            // Incrémenter l'usage du test
+            $test->increment('times_used');
+
+            $application->load(['job.company', 'user', 'portfolio', 'testResults']);
+
+            // Envoi de notifications aux recruteurs
+            $recruiters = $application->job->company->recruiters()->with('user')->get();
+            $notificationService = app(\App\Services\NotificationService::class);
+
+            foreach ($recruiters as $recruiter) {
+                $recruiterUser = $recruiter->user;
+                if ($recruiterUser) {
+                    $notificationService->sendToUser(
+                        $recruiterUser,
+                        "Nouvelle candidature qualifiée",
+                        "{$request->user()->name} a postulé avec succès (test réussi: {$score}/{$test->passing_score}) à votre offre: {$application->job->title}",
+                        'application_received',
+                        [
+                            'job_id' => $application->job->id,
+                            'job_title' => $application->job->title,
+                            'applicant_id' => $request->user()->id,
+                            'applicant_name' => $request->user()->name,
+                            'application_id' => $application->id,
+                            'test_score' => $score,
+                            'test_passed' => true,
+                        ]
+                    );
+
+                    try {
+                        $recruiterUser->notify(new \App\Notifications\NewApplicationReceivedNotification($application));
+                    } catch (\Exception $e) {
+                        \Log::error('Erreur envoi email', ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Candidature soumise avec succès',
+                'data' => $application,
+                'test_result' => [
+                    'score' => $score,
+                    'passed' => true,
+                    'passing_score' => $test->passing_score,
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            Log::error('Erreur lors de la candidature avec test: ' . $e->getMessage());
+
+            // Supprimer le CV uploadé en cas d'erreur
+            if ($cvPath && \Storage::disk('public')->exists($cvPath)) {
+                \Storage::disk('public')->delete($cvPath);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la soumission de la candidature',
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculer le score d'un test
+     */
+    protected function calculateTestScore(array $questions, array $answers): int
+    {
+        $totalQuestions = count($questions);
+        if ($totalQuestions === 0) {
+            return 0;
+        }
+
+        $correctAnswers = 0;
+
+        foreach ($questions as $index => $question) {
+            $userAnswer = $answers[$index] ?? null;
+            $correctAnswer = $question['correct_answer'] ?? null;
+
+            if ($userAnswer !== null && $correctAnswer !== null) {
+                if ($userAnswer === $correctAnswer) {
+                    $correctAnswers++;
+                }
+            }
+        }
+
+        return (int) (($correctAnswers / $totalQuestions) * 100);
+    }
+
+    /**
      * @OA\Get(
      *     path="/api/my-applications/stats",
      *     summary="Statistiques de mes candidatures",
