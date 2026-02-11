@@ -44,37 +44,67 @@ class SettingsController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:category,location,contract_type',
+            'id' => 'nullable|integer',
         ]);
 
         $slug = Str::slug($validated['name']);
+        $isUpdate = $request->has('id') && $request->id;
 
         switch ($validated['type']) {
             case 'category':
-                Category::create([
-                    'name' => $validated['name'],
-                    'slug' => $slug,
-                    'description' => $validated['description'] ?? null,
-                ]);
+                if ($isUpdate) {
+                    $category = Category::findOrFail($request->id);
+                    $category->update([
+                        'name' => $validated['name'],
+                        'slug' => $slug,
+                        'description' => $validated['description'] ?? null,
+                    ]);
+                } else {
+                    Category::create([
+                        'name' => $validated['name'],
+                        'slug' => $slug,
+                        'description' => $validated['description'] ?? null,
+                    ]);
+                }
                 break;
 
             case 'location':
-                Location::create([
-                    'name' => $validated['name'],
-                    'slug' => $slug,
-                    'country' => $request->country ?? 'Cameroun',
-                ]);
+                if ($isUpdate) {
+                    $location = Location::findOrFail($request->id);
+                    $location->update([
+                        'name' => $validated['name'],
+                        'slug' => $slug,
+                        'country' => $request->country ?? 'Cameroun',
+                    ]);
+                } else {
+                    Location::create([
+                        'name' => $validated['name'],
+                        'slug' => $slug,
+                        'country' => $request->country ?? 'Cameroun',
+                    ]);
+                }
                 break;
 
             case 'contract_type':
-                ContractType::create([
-                    'name' => $validated['name'],
-                    'slug' => $slug,
-                ]);
+                if ($isUpdate) {
+                    $contractType = ContractType::findOrFail($request->id);
+                    $contractType->update([
+                        'name' => $validated['name'],
+                        'slug' => $slug,
+                    ]);
+                } else {
+                    ContractType::create([
+                        'name' => $validated['name'],
+                        'slug' => $slug,
+                    ]);
+                }
                 break;
         }
 
+        $message = $isUpdate ? 'Élément modifié avec succès' : 'Élément ajouté avec succès';
+
         return redirect()->back()
-            ->with('success', 'Élément ajouté avec succès');
+            ->with('success', $message);
     }
 
     public function deleteCategory(Request $request, $id): RedirectResponse

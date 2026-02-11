@@ -29,10 +29,32 @@ class ApplicationController extends Controller
 
     public function show(Application $application): View
     {
-        $application->load(['job.company', 'user']);
+        $application->load([
+            'job.company',
+            'user',
+            'portfolio',
+            'diplomaVerifier',
+            'testResults.test'
+        ]);
         $application->markAsViewed();
 
         return view('admin.applications.show', compact('application'));
+    }
+
+    public function verifyDiploma(Request $request, Application $application): RedirectResponse
+    {
+        $validated = $request->validate([
+            'verification_notes' => 'nullable|string',
+        ]);
+
+        $application->markDiplomaAsVerified(
+            auth()->id(),
+            $validated['verification_notes'] ?? null
+        );
+
+        return redirect()
+            ->route('admin.applications.show', $application)
+            ->with('success', 'Diplôme marqué comme vérifié avec succès');
     }
 
     public function updateStatus(Request $request, Application $application): RedirectResponse

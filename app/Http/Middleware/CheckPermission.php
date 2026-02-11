@@ -20,12 +20,24 @@ class CheckPermission
 
         // If user is not authenticated, redirect to login
         if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Veuillez vous connecter.'
+                ], 401);
+            }
             return redirect()->route('admin.login')->with('error', 'Veuillez vous connecter.');
         }
 
         // Check if user is admin or recruiter
         if (!$user->isAdmin() && !$user->isRecruiter()) {
             auth()->logout();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Accès non autorisé.'
+                ], 403);
+            }
             return redirect()->route('admin.login')->with('error', 'Accès non autorisé.');
         }
 

@@ -11,7 +11,8 @@
         "laravel/framework": "^11.0",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.2",
-        "laravel/tinker": "^2.9"
+        "laravel/tinker": "^2.9",
+        "paypal/rest-api-sdk-php": "^1.6"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",
@@ -41,8 +42,12 @@
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
         ],
+        "post-install-cmd": [
+            "bash scripts/patch-paypal-sdk.sh"
+        ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "bash scripts/patch-paypal-sdk.sh"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

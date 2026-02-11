@@ -23,11 +23,13 @@ class ServiceConfigController extends Controller
         $whatsappConfig = ServiceConfiguration::getWhatsAppConfig();
         $nexahConfig = ServiceConfiguration::getNexahConfig();
         $freemopayConfig = ServiceConfiguration::getFreeMoPayConfig();
+        $paypalConfig = ServiceConfiguration::getPayPalConfig();
 
         return view('admin.service-config.index', compact(
             'whatsappConfig',
             'nexahConfig',
-            'freemopayConfig'
+            'freemopayConfig',
+            'paypalConfig'
         ));
     }
 
@@ -195,6 +197,59 @@ class ServiceConfigController extends Controller
 
             return redirect()->back()
                 ->with('success', 'Configuration FreeMoPay mise à jour avec succès!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update PayPal configuration
+     */
+    public function updatePayPal(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'paypal_mode' => 'required|in:sandbox,live',
+            'paypal_client_id' => 'required|string|min:5',
+            'paypal_client_secret' => 'required|string|min:5',
+            'paypal_currency' => 'required|string|size:3',
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Erreurs de validation: ' . implode(' | ', $errors));
+        }
+
+        try {
+            $config = ServiceConfiguration::updateOrCreate(
+                ['service_type' => 'paypal'],
+                [
+                    'paypal_mode' => $request->paypal_mode,
+                    'paypal_client_id' => $request->paypal_client_id,
+                    'paypal_client_secret' => $request->paypal_client_secret,
+                    'paypal_currency' => strtoupper($request->paypal_currency),
+                    'paypal_return_url' => config('app.frontend_url') . '/payment/success',
+                    'paypal_cancel_url' => config('app.frontend_url') . '/payment/cancel',
+                    'is_active' => $request->has('is_active'),
+                ]
+            );
+
+            // Clear cache
+            ServiceConfiguration::clearCache('paypal');
+
+            // Validate configuration
+            $errors = $config->validatePayPalConfig();
+            if (!empty($errors)) {
+                return redirect()->back()
+                    ->with('warning', 'Configuration sauvegardée avec des avertissements: ' . implode(', ', $errors));
+            }
+
+            return redirect()->back()
+                ->with('success', 'Configuration PayPal mise à jour avec succès!');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage())
@@ -553,6 +608,26 @@ class ServiceConfigController extends Controller
                 'message' => 'Erreur: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Test PayPal connection
+     */
+    public function testPayPal()
+    {
+        $config = ServiceConfiguration::getPayPalConfig();
+
+        if (!$config || !$config->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Configuration PayPal invalide ou incomplète'
+            ], 400);
+        }
+
+        $paypalService = new \App\Services\Payment\PayPalService();
+        $result = $paypalService->testConnection();
+
+        return response()->json($result, $result['success'] ? 200 : 400);
     }
 
     /**

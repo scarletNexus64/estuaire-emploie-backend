@@ -22,6 +22,8 @@ class Company extends Model
         'address',
         'city',
         'country',
+        'latitude',
+        'longitude',
         'status',
         'subscription_plan',
         'verified_at',
@@ -33,6 +35,8 @@ class Company extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'latitude' => 'decimal:8',
+            'longitude' => 'decimal:8',
         ];
     }
 
@@ -98,5 +102,79 @@ class Company extends Model
     public function isPremium(): bool
     {
         return $this->subscription_plan === 'premium';
+    }
+
+    /**
+     * Vérifie si l'entreprise a des coordonnées géographiques
+     */
+    public function hasGeolocation(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    /**
+     * Retourne les coordonnées géographiques sous forme de tableau
+     */
+    public function getCoordinates(): ?array
+    {
+        if (!$this->hasGeolocation()) {
+            return null;
+        }
+
+        return [
+            'latitude' => (float) $this->latitude,
+            'longitude' => (float) $this->longitude,
+        ];
+    }
+
+    /**
+     * Définit les coordonnées géographiques
+     */
+    public function setCoordinates(float $latitude, float $longitude): void
+    {
+        $this->latitude = $latitude;
+        $this->longitude = $longitude;
+        $this->save();
+    }
+
+    /**
+     * Calcule la distance (en km) entre cette entreprise et des coordonnées données
+     * Utilise la formule de Haversine
+     */
+    public function distanceTo(float $latitude, float $longitude): ?float
+    {
+        if (!$this->hasGeolocation()) {
+            return null;
+        }
+
+        $earthRadius = 6371; // Rayon de la Terre en km
+
+        $latFrom = deg2rad((float) $this->latitude);
+        $lonFrom = deg2rad((float) $this->longitude);
+        $latTo = deg2rad($latitude);
+        $lonTo = deg2rad($longitude);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(
+            pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
+        ));
+
+        return $angle * $earthRadius;
+    }
+
+    /**
+     * Scope pour filtrer les entreprises à proximité d'une position
+     */
+    public function scopeNearby($query, float $latitude, float $longitude, float $radiusKm = 10)
+    {
+        // Utiliser une approximation simple pour filtrer (peut être amélioré avec des requêtes spatiales)
+        return $query->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->selectRaw('*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance', [$latitude, $longitude, $latitude])
+            ->having('distance', '<=', $radiusKm)
+            ->orderBy('distance');
     }
 }

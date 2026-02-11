@@ -103,6 +103,13 @@ return [
             'category' => 'Monétisation',
         ],
 
+        // Gestion des services pour recruteurs
+        'manage_recruiter_services' => [
+            'name' => 'Gérer les services pour recruteurs',
+            'description' => 'Configurer et gérer les services à la carte pour recruteurs',
+            'category' => 'Monétisation',
+        ],
+
         // Gestion de la CVthèque
         'manage_cvtheque' => [
             'name' => 'Gérer la CVthèque',

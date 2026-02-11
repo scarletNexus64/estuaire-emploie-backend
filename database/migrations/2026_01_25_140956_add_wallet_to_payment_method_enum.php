@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Modifier l'enum payment_method pour ajouter wallet
+        DB::statement("ALTER TABLE payments MODIFY COLUMN payment_method ENUM('mtn_money', 'orange_money', 'card', 'bank_transfer', 'cash', 'free', 'paypal', 'freemopay', 'wallet') NOT NULL");
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Restaurer l'enum sans wallet
+        DB::statement("ALTER TABLE payments MODIFY COLUMN payment_method ENUM('mtn_money', 'orange_money', 'card', 'bank_transfer', 'cash', 'free', 'paypal', 'freemopay') NOT NULL");
+    }
+};

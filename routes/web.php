@@ -12,11 +12,24 @@ use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\WalletController;
+use App\Http\Controllers\Admin\ProgramController;
+use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
+use App\Http\Controllers\Admin\SkillTestController;
+use App\Http\Controllers\Admin\MaintenanceModeController;
+use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
 });
+
+// Payment Callback Routes (Public - No Auth Required)
+Route::get('/payment/success', [\App\Http\Controllers\PaymentCallbackController::class, 'success'])->name('payment.success');
+Route::get('/payment/cancel', [\App\Http\Controllers\PaymentCallbackController::class, 'cancel'])->name('payment.cancel');
+
+// Public Portfolio View
+Route::get('/portfolio/{slug}', [PortfolioViewController::class, 'show'])->name('portfolio.show');
 
 // Admin Auth Routes (Guest only)
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -58,6 +71,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('applications', [ApplicationController::class, 'index'])->name('applications.index');
         Route::get('applications/{application}', [ApplicationController::class, 'show'])->name('applications.show');
         Route::patch('applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
+        Route::patch('applications/{application}/verify-diploma', [ApplicationController::class, 'verifyDiploma'])->name('applications.verify-diploma');
         Route::delete('applications/bulk-delete', [ApplicationController::class, 'bulkDelete'])->name('applications.bulk-delete');
     });
 
@@ -91,6 +105,33 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::resource('sections', SectionController::class);
     });
 
+    // Programs Management
+    Route::middleware('permission:manage_settings')->group(function () {
+        Route::resource('programs', ProgramController::class);
+        Route::get('programs/{program}/manage-steps', [ProgramController::class, 'manageSteps'])->name('programs.manage-steps');
+        Route::get('programs/{program}/steps/{step}', [ProgramController::class, 'getStep'])->name('programs.get-step');
+        Route::post('programs/{program}/steps', [ProgramController::class, 'storeStep'])->name('programs.store-step');
+        Route::put('programs/{program}/steps/{step}', [ProgramController::class, 'updateStep'])->name('programs.update-step');
+        Route::delete('programs/{program}/steps/{step}', [ProgramController::class, 'destroyStep'])->name('programs.destroy-step');
+    });
+
+    // Portfolios Management
+    Route::middleware('permission:manage_users')->prefix('portfolios')->name('portfolios.')->group(function () {
+        Route::get('/', [AdminPortfolioController::class, 'index'])->name('index');
+        Route::get('/{portfolio}', [AdminPortfolioController::class, 'show'])->name('show');
+        Route::delete('/{portfolio}', [AdminPortfolioController::class, 'destroy'])->name('destroy');
+        Route::patch('/{portfolio}/toggle-visibility', [AdminPortfolioController::class, 'toggleVisibility'])->name('toggle-visibility');
+        Route::delete('/bulk-delete', [AdminPortfolioController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/export/csv', [AdminPortfolioController::class, 'export'])->name('export');
+    });
+
+    // Skill Tests Management
+    Route::middleware('permission:manage_applications')->prefix('skill-tests')->name('skill-tests.')->group(function () {
+        Route::get('/', [SkillTestController::class, 'index'])->name('index');
+        Route::get('/{id}', [SkillTestController::class, 'show'])->name('show');
+        Route::delete('/{id}', [SkillTestController::class, 'destroy'])->name('destroy');
+    });
+
     // Settings
     Route::middleware('permission:manage_settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -102,14 +143,24 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('settings/categories/{category}', [SettingsController::class, 'deleteCategory'])->name('settings.categories.delete');
     });
 
-    // MONÉTISATION - Subscription Plans
-    Route::middleware('permission:manage_subscription_plans')->prefix('subscription-plans')->name('subscription-plans.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'store'])->name('store');
-        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'edit'])->name('edit');
-        Route::put('/{plan}', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'update'])->name('update');
-        Route::delete('/{plan}', [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'destroy'])->name('destroy');
+    // MONÉTISATION - Subscription Plans Recruteurs
+    Route::middleware('permission:manage_subscription_plans')->prefix('subscription-plans/recruiters')->name('subscription-plans.recruiters.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'store'])->name('store');
+        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'edit'])->name('edit');
+        Route::put('/{plan}', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'update'])->name('update');
+        Route::delete('/{plan}', [\App\Http\Controllers\Admin\RecruiterSubscriptionPlanController::class, 'destroy'])->name('destroy');
+    });
+
+    // MONÉTISATION - Subscription Plans Candidats
+    Route::middleware('permission:manage_subscription_plans')->prefix('subscription-plans/job-seekers')->name('subscription-plans.job-seekers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'store'])->name('store');
+        Route::get('/{plan}/edit', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'edit'])->name('edit');
+        Route::put('/{plan}', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'update'])->name('update');
+        Route::delete('/{plan}', [\App\Http\Controllers\Admin\JobSeekerSubscriptionPlanController::class, 'destroy'])->name('destroy');
     });
 
     // MONÉTISATION - Subscriptions
@@ -138,6 +189,18 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{payment}/refund', [\App\Http\Controllers\Admin\PaymentController::class, 'refund'])->name('refund');
     });
 
+    // MONÉTISATION - Wallets
+    Route::middleware('permission:manage_payments')->prefix('wallets')->name('wallets.')->group(function () {
+        Route::get('/', [WalletController::class, 'index'])->name('index');
+        Route::get('/transactions', [WalletController::class, 'transactions'])->name('transactions');
+        Route::get('/{user}', [WalletController::class, 'show'])->name('show');
+        Route::get('/{user}/adjust', [WalletController::class, 'adjustForm'])->name('adjust');
+        Route::post('/{user}/adjust', [WalletController::class, 'adjust'])->name('adjust.submit');
+        Route::get('/{user}/bonus', [WalletController::class, 'bonusForm'])->name('bonus');
+        Route::post('/{user}/bonus', [WalletController::class, 'bonus'])->name('bonus.submit');
+        Route::post('/transactions/{transaction}/refund', [WalletController::class, 'refund'])->name('refund');
+    });
+
     // MONÉTISATION - Premium Services
     Route::middleware('permission:manage_premium_services')->prefix('premium-services')->name('premium-services.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'index'])->name('index');
@@ -150,16 +213,29 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{service}', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'show'])->name('show');
     });
 
-    // MONÉTISATION - Add-on Services
-    Route::middleware('permission:manage_addon_services')->prefix('addon-services')->name('addon-services.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AddonServiceController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Http\Controllers\Admin\AddonServiceController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\Admin\AddonServiceController::class, 'store'])->name('store');
-        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\AddonServiceController::class, 'edit'])->name('edit');
-        Route::put('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'update'])->name('update');
-        Route::delete('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'destroy'])->name('destroy');
-        Route::patch('/{service}/toggle', [\App\Http\Controllers\Admin\AddonServiceController::class, 'toggle'])->name('toggle');
-        Route::get('/{service}', [\App\Http\Controllers\Admin\AddonServiceController::class, 'show'])->name('show');
+    // MONÉTISATION - Services pour Recruteurs (anciennement Add-on Services)
+    Route::middleware('permission:manage_recruiter_services')->prefix('recruiter-services')->name('recruiter-services.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'store'])->name('store');
+        Route::get('/{service}/edit', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'edit'])->name('edit');
+        Route::put('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'update'])->name('update');
+        Route::delete('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'destroy'])->name('destroy');
+        Route::patch('/{service}/toggle', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'toggle'])->name('toggle');
+        Route::get('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'show'])->name('show');
+    });
+
+    // MODE ÉTUDIANT - Épreuves d'examen
+    Route::middleware('permission:manage_premium_services')->prefix('exam-papers')->name('exam-papers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ExamPaperController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ExamPaperController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ExamPaperController::class, 'store'])->name('store');
+        Route::get('/{examPaper}/edit', [\App\Http\Controllers\Admin\ExamPaperController::class, 'edit'])->name('edit');
+        Route::put('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'update'])->name('update');
+        Route::delete('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'destroy'])->name('destroy');
+        Route::patch('/{examPaper}/toggle', [\App\Http\Controllers\Admin\ExamPaperController::class, 'toggle'])->name('toggle');
+        Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
+        Route::get('/{examPaper}/download', [\App\Http\Controllers\Admin\ExamPaperController::class, 'download'])->name('download');
     });
 
     // MONÉTISATION - CVthèque
@@ -194,12 +270,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateWhatsApp'])->name('update-whatsapp');
         Route::put('/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNexah'])->name('update-nexah');
         Route::put('/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateFreeMoPay'])->name('update-freemopay');
+        Route::put('/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updatePayPal'])->name('update-paypal');
         Route::put('/preferences', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNotificationPreferences'])->name('update-preferences');
 
         // Test connections
         Route::post('/test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testWhatsApp'])->name('test-whatsapp');
         Route::post('/test/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testNexah'])->name('test-nexah');
         Route::post('/test/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testFreeMoPay'])->name('test-freemopay');
+        Route::post('/test/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testPayPal'])->name('test-paypal');
 
         // Send actual test messages
         Route::post('/send-test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'sendTestWhatsApp'])->name('send-test-whatsapp');
@@ -224,5 +302,21 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Admin\FcmTokenController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-destroy', [\App\Http\Controllers\Admin\FcmTokenController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/export/csv', [\App\Http\Controllers\Admin\FcmTokenController::class, 'export'])->name('export');
+    });
+
+    // Bank Account Management (Platform Withdrawals)
+    Route::middleware('permission:manage_payments')->prefix('bank-account')->name('bank-account.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\BankAccountController::class, 'index'])->name('index');
+        Route::post('/verify-pin', [\App\Http\Controllers\Admin\BankAccountController::class, 'verifyPin'])->name('verify-pin');
+        Route::get('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'showWithdrawalForm'])->name('withdrawal');
+        Route::post('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'initiateWithdrawal'])->name('initiate-withdrawal');
+        Route::get('/withdrawal/{id}/status', [\App\Http\Controllers\Admin\BankAccountController::class, 'checkWithdrawalStatus'])->name('withdrawal-status');
+        Route::get('/history', [\App\Http\Controllers\Admin\BankAccountController::class, 'history'])->name('history');
+    });
+
+    // Maintenance Mode Management
+    Route::middleware('permission:manage_settings')->prefix('maintenance')->name('maintenance.')->group(function () {
+        Route::get('/', [MaintenanceModeController::class, 'index'])->name('index');
+        Route::post('/toggle', [MaintenanceModeController::class, 'toggle'])->name('toggle');
     });
 });

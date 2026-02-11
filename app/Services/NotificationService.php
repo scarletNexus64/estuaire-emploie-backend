@@ -30,6 +30,8 @@ class NotificationService
      */
     public function sendToUser(User $user, string $title, string $message, string $type, array $additionalData = []): bool
     {
+        $fcmSent = false;
+
         try {
             // 1. Envoyer via FCM si l'utilisateur a un token
             if ($user->fcm_token) {
@@ -46,14 +48,33 @@ class NotificationService
                     'sent_at' => now()->toISOString(),
                 ], $additionalData);
 
-                $this->firebaseService->sendToToken(
-                    $user->fcm_token,
-                    $title,
-                    $message,
-                    $data
-                );
+                try {
+                    $this->firebaseService->sendToToken(
+                        $user->fcm_token,
+                        $title,
+                        $message,
+                        $data
+                    );
 
-                Log::info('✅ [NOTIFICATION] Push envoyée avec succès', ['user_id' => $user->id]);
+                    Log::info('✅ [NOTIFICATION] Push envoyée avec succès', ['user_id' => $user->id]);
+                    $fcmSent = true;
+                } catch (\Exception $fcmError) {
+                    Log::error('❌ [NOTIFICATION] Erreur envoi FCM', [
+                        'user_id' => $user->id,
+                        'error' => $fcmError->getMessage(),
+                    ]);
+
+                    // Si le token est invalide, le supprimer de la BDD
+                    if (str_contains($fcmError->getMessage(), 'Requested entity was not found') ||
+                        str_contains($fcmError->getMessage(), 'registration token is not valid') ||
+                        str_contains($fcmError->getMessage(), 'Invalid registration')) {
+                        Log::warning('⚠️ [NOTIFICATION] Token FCM invalide supprimé', [
+                            'user_id' => $user->id,
+                            'old_token' => $user->fcm_token
+                        ]);
+                        $user->update(['fcm_token' => null]);
+                    }
+                }
             } else {
                 Log::info('⚠️ [NOTIFICATION] Utilisateur sans FCM token, push ignorée', [
                     'user_id' => $user->id,
@@ -62,7 +83,7 @@ class NotificationService
                 ]);
             }
 
-            // 2. Enregistrer dans la base de données
+            // 2. Enregistrer dans la base de données (TOUJOURS, même si FCM échoue)
             Notification::create([
                 'type' => $type,
                 'notifiable_type' => User::class,
@@ -79,11 +100,12 @@ class NotificationService
             Log::info('✅ [NOTIFICATION] Notification enregistrée en BDD', [
                 'user_id' => $user->id,
                 'type' => $type,
+                'fcm_sent' => $fcmSent,
             ]);
 
             return true;
         } catch (\Exception $e) {
-            Log::error('❌ [NOTIFICATION] Erreur envoi notification', [
+            Log::error('❌ [NOTIFICATION] Erreur enregistrement notification', [
                 'user_id' => $user->id,
                 'type' => $type,
                 'error' => $e->getMessage(),

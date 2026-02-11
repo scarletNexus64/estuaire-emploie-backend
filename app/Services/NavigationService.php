@@ -47,9 +47,21 @@ class NavigationService
                         'permission' => 'manage_applications',
                     ],
                     [
+                        'name' => 'Tests de Compétences',
+                        'route' => 'admin.skill-tests.index',
+                        'icon' => 'fas fa-clipboard-check',
+                        'permission' => 'manage_applications',
+                    ],
+                    [
                         'name' => 'Candidats',
                         'route' => 'admin.users.index',
                         'icon' => 'fas fa-users',
+                        'permission' => 'manage_users',
+                    ],
+                    [
+                        'name' => 'Portfolios',
+                        'route' => 'admin.portfolios.index',
+                        'icon' => 'fas fa-id-card',
                         'permission' => 'manage_users',
                     ],
                     [
@@ -61,19 +73,30 @@ class NavigationService
                 ],
             ],
             [
+                'section' => 'Programmes de Formation',
+                'items' => [
+                    [
+                        'name' => 'Programmes',
+                        'route' => 'admin.programs.index',
+                        'icon' => 'fas fa-book',
+                        'permission' => 'manage_settings',
+                    ],
+                ],
+            ],
+            [
                 'section' => 'Monétisation',
                 'items' => [
                     [
-                        'name' => 'Plans d\'abonnement',
-                        'route' => 'admin.subscription-plans.index',
-                        'icon' => 'fas fa-tags',
+                        'name' => 'Plans d\'abonnement Recruteurs',
+                        'route' => 'admin.subscription-plans.recruiters.index',
+                        'icon' => 'fas fa-user-tie',
                         'permission' => 'manage_subscription_plans',
                     ],
                     [
-                        'name' => 'Abonnements',
-                        'route' => 'admin.subscriptions.index',
-                        'icon' => 'fas fa-crown',
-                        'permission' => 'manage_subscriptions',
+                        'name' => 'Plans d\'abonnement Candidats',
+                        'route' => 'admin.subscription-plans.job-seekers.index',
+                        'icon' => 'fas fa-users',
+                        'permission' => 'manage_subscription_plans',
                     ],
                     [
                         'name' => 'Attribution Manuelle',
@@ -88,27 +111,39 @@ class NavigationService
                         'permission' => 'manage_payments',
                     ],
                     [
-                        'name' => 'Services Premium',
+                        'name' => 'Wallets',
+                        'route' => 'admin.wallets.index',
+                        'icon' => 'fas fa-wallet',
+                        'permission' => 'manage_payments',
+                    ],
+                    [
+                        'name' => 'Compte Bancaire',
+                        'route' => 'admin.bank-account.index',
+                        'icon' => 'fas fa-university',
+                        'permission' => 'manage_payments',
+                    ],
+                    [
+                        'name' => 'Services pour Recruteurs',
+                        'route' => 'admin.recruiter-services.index',
+                        'icon' => 'fas fa-briefcase',
+                        'permission' => 'manage_recruiter_services',
+                    ],
+                    [
+                        'name' => 'Services pour Candidats',
                         'route' => 'admin.premium-services.index',
-                        'icon' => 'fas fa-star',
+                        'icon' => 'fas fa-user-graduate',
                         'permission' => 'manage_premium_services',
                     ],
                     [
-                        'name' => 'Services Additionnels',
-                        'route' => 'admin.addon-services.index',
-                        'icon' => 'fas fa-puzzle-piece',
-                        'permission' => 'manage_addon_services',
-                    ],
-                    [
-                        'name' => 'CVthèque',
-                        'route' => 'admin.cvtheque.index',
+                        'name' => 'Épreuves d\'Examen (Mode Étudiant)',
+                        'route' => 'admin.exam-papers.index',
                         'icon' => 'fas fa-file-pdf',
-                        'permission' => 'manage_cvtheque',
+                        'permission' => 'manage_premium_services',
                     ],
                     [
-                        'name' => 'Publicités',
+                        'name' => 'Gestion des Espaces Publicitaires',
                         'route' => 'admin.advertisements.index',
-                        'icon' => 'fas fa-ad',
+                        'icon' => 'fas fa-bullhorn',
                         'permission' => 'manage_advertisements',
                     ],
                     [
@@ -135,12 +170,6 @@ class NavigationService
                 'section' => 'Administration',
                 'items' => [
                     [
-                        'name' => 'Sections',
-                        'route' => 'admin.sections.index',
-                        'icon' => 'fas fa-list',
-                        'permission' => 'manage_sections',
-                    ],
-                    [
                         'name' => 'Administrateurs',
                         'route' => 'admin.admins.index',
                         'icon' => 'fas fa-user-shield',
@@ -157,6 +186,12 @@ class NavigationService
                         'route' => 'admin.fcm-tokens.index',
                         'icon' => 'fas fa-bell',
                         'permission' => null, // All admins can view FCM tokens
+                    ],
+                    [
+                        'name' => 'Mode Maintenance',
+                        'route' => 'admin.maintenance.index',
+                        'icon' => 'fas fa-wrench',
+                        'permission' => 'manage_settings',
                     ],
                     [
                         'name' => 'Paramètres',

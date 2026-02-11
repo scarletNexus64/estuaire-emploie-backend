@@ -87,6 +87,11 @@ class Job extends Model
         return $this->hasMany(Favorite::class);
     }
 
+    public function skillTests(): HasMany
+    {
+        return $this->hasMany(RecruiterSkillTest::class);
+    }
+
     public function isPublished(): bool
     {
         return $this->status === 'published';

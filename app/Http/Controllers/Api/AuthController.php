@@ -77,6 +77,7 @@ class AuthController extends Controller
             'phone' => $validated['phone'] ?? null,
             'fcm_token' => $validated['fcm_token'] ?? null,
             'role' => 'candidate',
+            'available_roles' => ['candidate'], // ✅ Initialiser avec le rôle par défaut
             'email_verified_at' => now(),
         ]);
 
@@ -135,27 +136,40 @@ class AuthController extends Controller
 
 public function login(Request $request)
 {
-    // 1. Valider les données entrantes, y compris le fcm_token optionnel
+    // 1. Valider les données entrantes
     $credentials = $request->validate([
-        'email' => 'required|email',
+        'identifier' => 'required|string', // Email ou téléphone
         'password' => 'required',
-        'fcm_token' => 'nullable|string', // On attend le token ici
+        'fcm_token' => 'nullable|string',
     ]);
+
+    $identifier = $credentials['identifier'];
 
     Log::info('🔐 [LOGIN] Tentative de connexion', [
-        'email' => $credentials['email'],
+        'identifier' => $identifier,
         'fcm_token_present' => !empty($credentials['fcm_token']),
-        'fcm_token' => $credentials['fcm_token'] ?? 'N/A'
     ]);
 
-    // 2. Tenter l'authentification
-    if (!Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
-        Log::warning('❌ [LOGIN] Échec de connexion', ['email' => $credentials['email']]);
-        return response()->json(['message' => 'Email ou mot de passe incorrect.'], 401);
+    // 2. Déterminer si c'est un email ou un téléphone
+    $user = null;
+    if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+        // C'est un email
+        Log::info('📧 [LOGIN] Connexion par email');
+        $user = User::where('email', $identifier)->first();
+    } else {
+        // C'est un téléphone (nettoyer les espaces et caractères spéciaux)
+        $cleanPhone = preg_replace('/[^0-9+]/', '', $identifier);
+        Log::info('📱 [LOGIN] Connexion par téléphone', ['clean_phone' => $cleanPhone]);
+        $user = User::where('phone', $cleanPhone)
+                    ->orWhere('phone', $identifier)
+                    ->first();
     }
 
-    // 3. L'authentification a réussi, on récupère l'utilisateur
-    $user = Auth::user();
+    // 3. Vérifier si l'utilisateur existe et le mot de passe est correct
+    if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        Log::warning('❌ [LOGIN] Échec de connexion', ['identifier' => $identifier]);
+        return response()->json(['message' => 'Identifiant ou mot de passe incorrect.'], 401);
+    }
 
     Log::info('✅ [LOGIN] Connexion réussie', [
         'user_id' => $user->id,
@@ -181,13 +195,21 @@ public function login(Request $request)
         Log::warning('⚠️ [LOGIN] Aucun FCM token fourni', ['user_id' => $user->id]);
     }
 
-    // 5. Créer et renvoyer le token d'API (Sanctum)
+    // 5. Charger les relations nécessaires
+    if ($user->isRecruiter()) {
+        $user->load(['recruiter.company']);
+    }
+    $user->load(['unreadNotifications']);
+    $user->applications_count = $user->applications()->count();
+    $user->favorites_count = $user->favorites()->count();
+
+    // 6. Créer et renvoyer le token d'API (Sanctum)
     $token = $user->createToken('auth-token-mobile')->plainTextToken;
 
     return response()->json([
         'message' => 'Connexion réussie',
         'token' => $token,
-        'user' => $user, // Renvoyer aussi les infos de l'utilisateur
+        'user' => $user,
     ]);
 }
 
@@ -228,6 +250,97 @@ public function login(Request $request)
 
         return response()->json([
             'message' => 'Déconnexion réussie',
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/auth/switch-role",
+     *     summary="Changer le rôle de l'utilisateur (candidat <-> recruteur)",
+     *     tags={"Authentication"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"role"},
+     *             @OA\Property(property="role", type="string", enum={"candidate", "recruiter"}, example="recruiter")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Rôle changé avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Rôle changé avec succès"),
+     *             @OA\Property(property="user", type="object"),
+     *             @OA\Property(property="previous_role", type="string"),
+     *             @OA\Property(property="new_role", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Rôle invalide"),
+     *     @OA\Response(response=401, description="Non authentifié")
+     * )
+     */
+    public function switchRole(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Valider le nouveau rôle
+        $validated = $request->validate([
+            'role' => 'required|string|in:candidate,recruiter',
+        ]);
+
+        $previousRole = $user->role;
+        $newRole = $validated['role'];
+
+        Log::info('🔄 [SWITCH_ROLE] Changement de rôle demandé', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'previous_role' => $previousRole,
+            'new_role' => $newRole,
+        ]);
+
+        // Vérifier si le rôle est déjà le même
+        if ($previousRole === $newRole) {
+            Log::info('ℹ️ [SWITCH_ROLE] Rôle identique, aucun changement', [
+                'user_id' => $user->id,
+                'role' => $newRole,
+            ]);
+
+            return response()->json([
+                'message' => 'Vous êtes déjà en mode ' . ($newRole === 'recruiter' ? 'recruteur' : 'candidat'),
+                'user' => $user,
+                'previous_role' => $previousRole,
+                'new_role' => $newRole,
+                'changed' => false,
+            ]);
+        }
+
+        // Mettre à jour le rôle dans la base de données
+        $user->role = $newRole;
+        $user->save();
+
+        // Recharger les relations si nécessaire
+        if ($user->isRecruiter()) {
+            $user->load(['recruiter.company']);
+        }
+        $user->load(['unreadNotifications']);
+
+        // Ajouter les compteurs
+        $user->applications_count = $user->applications()->count();
+        $user->favorites_count = $user->favorites()->count();
+
+        Log::info('✅ [SWITCH_ROLE] Rôle changé avec succès', [
+            'user_id' => $user->id,
+            'previous_role' => $previousRole,
+            'new_role' => $newRole,
+        ]);
+
+        return response()->json([
+            'message' => 'Rôle changé avec succès',
+            'user' => $user,
+            'previous_role' => $previousRole,
+            'new_role' => $newRole,
+            'changed' => true,
         ]);
     }
 
@@ -633,14 +746,15 @@ public function login(Request $request)
         $previousRole = $user->role;
         $roleUpdated = false;
 
-        // Vérifier si l'utilisateur a un abonnement actif
-        $activeSubscription = $user->activeSubscription();
-        $hasActiveSubscription = $activeSubscription && $activeSubscription->isValid();
+        // 🎯 Vérifier si l'utilisateur a un abonnement recruteur actif
+        // (On ne change le rôle que si l'utilisateur a un abonnement RECRUTEUR, pas candidat)
+        $activeSubscription = $user->activeSubscription('recruiter');
+        $hasRecruiterSubscription = $activeSubscription && $activeSubscription->isValid();
 
-        Log::info("[AuthController] 🔍 Abonnement actif: " . ($hasActiveSubscription ? 'OUI' : 'NON'));
+        Log::info("[AuthController] 🔍 Abonnement recruteur actif: " . ($hasRecruiterSubscription ? 'OUI' : 'NON'));
 
-        if ($hasActiveSubscription) {
-            // L'utilisateur a un abonnement actif, il doit être recruteur
+        if ($hasRecruiterSubscription) {
+            // L'utilisateur a un abonnement recruteur actif, il doit être recruteur
             if ($user->role !== 'recruiter') {
                 Log::info("[AuthController] ⚙️  Mise à jour du rôle: {$user->role} → recruiter");
                 $user->role = 'recruiter';
@@ -669,9 +783,9 @@ public function login(Request $request)
                 'user_id' => $user->id,
                 'previous_role' => $previousRole,
                 'current_role' => $user->role,
-                'has_active_subscription' => $hasActiveSubscription,
+                'has_active_subscription' => $hasRecruiterSubscription,
                 'role_updated' => $roleUpdated,
-                'subscription_info' => $hasActiveSubscription ? [
+                'subscription_info' => $hasRecruiterSubscription ? [
                     'plan_name' => $activeSubscription->subscriptionPlan->name ?? 'N/A',
                     'expires_at' => $activeSubscription->expires_at?->toIso8601String(),
                     'days_remaining' => $activeSubscription->days_remaining ?? 0,
@@ -877,5 +991,38 @@ public function login(Request $request)
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/me/subscription-status",
+     *     summary="Récupérer le statut d'abonnement complet de l'utilisateur",
+     *     description="Retourne le statut d'abonnement incluant preview mode pour les candidats, limites pour les recruteurs",
+     *     tags={"Auth"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut d'abonnement récupéré avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function getSubscriptionStatus(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // 🔥 CRITICAL: Rafraîchir TOUTE l'instance User depuis la DB
+        // pour éviter les données en cache (role, wallet_balance, etc.)
+        // Cette instance a été chargée au début de la requête par Sanctum
+        // et peut contenir des valeurs obsolètes après un paiement/role change
+        $user->refresh();
+
+        return response()->json([
+            'success' => true,
+            'data' => $user->getSubscriptionInfo(),
+        ]);
     }
 }

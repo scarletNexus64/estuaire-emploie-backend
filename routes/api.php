@@ -14,6 +14,15 @@ use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\TestNotificationController;
+use App\Http\Controllers\Api\UserRoleController;
+use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\CurrencyController;
+use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ProgramController;
+use App\Http\Controllers\Api\RecruiterServicePurchaseController;
+use App\Http\Controllers\Api\RecruiterSkillTestController;
+use App\Http\Controllers\Api\CandidatePremiumServiceController;
+use App\Http\Controllers\Api\ExamPaperApiController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -33,6 +42,9 @@ Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 // Vérification email (OTP)
 Route::post('/email/send-code', [EmailVerificationController::class, 'sendCode']);
 Route::post('/email/verify-code', [EmailVerificationController::class, 'verifyCode']);
+
+// Maintenance Mode Status
+Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeController::class, 'status']);
 
 // Jobs publics
 Route::get('/jobs', [JobController::class, 'index']);
@@ -71,13 +83,17 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
     Route::get('/user/statistics', [AuthController::class, 'statistics']);
     Route::post('/user/sync-role', [AuthController::class, 'syncRoleWithSubscription']);
+    Route::post('/auth/switch-role', [AuthController::class, 'switchRole']); // ⭐ Nouveau: Changer de rôle (candidat <-> recruteur)
     Route::delete('/user/account', [AuthController::class, 'deleteAccount']);
+    Route::get('/me/subscription-status', [AuthController::class, 'getSubscriptionStatus']); // ⭐ Statut d'abonnement (candidat + recruteur)
 
     // ------------------
     // CANDIDATURES (Candidat & Recruteur)
     // ------------------
     // Candidat: Postuler à une offre
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'apply']);
+    // Candidat: Postuler à une offre avec test de compétences obligatoire
+    Route::post('/jobs/{job}/apply-with-test', [ApplicationController::class, 'applyWithTest']);
     // Candidat: Statistiques de mes candidatures
     Route::get('/my-applications/stats', [ApplicationController::class, 'myApplicationsStats']);
     // Candidat: Mes candidatures
@@ -140,6 +156,83 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/applications/{application}/contact-status', [ApplicationController::class, 'contactStatus']);
 
     // ------------------
+    // RECRUTEUR - SERVICES ADDITIONNELS (Achat via Wallet)
+    // ------------------
+    // Acheter l'accès aux coordonnées d'un candidat
+    Route::post('/recruiter/services/purchase/candidate-contact', [RecruiterServicePurchaseController::class, 'purchaseCandidateContact'])
+        ->middleware('subscription:valid');
+    // Acheter la vérification de diplômes
+    Route::post('/recruiter/services/purchase/diploma-verification', [RecruiterServicePurchaseController::class, 'purchaseDiplomaVerification'])
+        ->middleware('subscription:valid');
+    // Acheter l'accès aux tests de compétences
+    Route::post('/recruiter/services/purchase/skills-test', [RecruiterServicePurchaseController::class, 'purchaseSkillsTest'])
+        ->middleware('subscription:valid');
+    // Vérifier les accès aux services
+    Route::get('/recruiter/services/access-status', [RecruiterServicePurchaseController::class, 'checkAccessStatus']);
+
+    // ------------------
+    // CANDIDAT - SERVICES PREMIUM (Mode Étudiant, CV Premium, etc.)
+    // ------------------
+    // Liste des services premium disponibles
+    Route::get('/candidate/premium-services', [CandidatePremiumServiceController::class, 'index']);
+    // Détails d'un service spécifique
+    Route::get('/candidate/premium-services/{slug}', [CandidatePremiumServiceController::class, 'show']);
+    // Acheter un service premium avec le wallet
+    Route::post('/candidate/premium-services/purchase', [CandidatePremiumServiceController::class, 'purchase']);
+    // Liste de mes services actifs
+    Route::get('/candidate/premium-services/my-services', [CandidatePremiumServiceController::class, 'myServices']);
+    // Vérifier l'accès à un service spécifique
+    Route::get('/candidate/premium-services/check-access/{slug}', [CandidatePremiumServiceController::class, 'checkAccess']);
+
+    // ------------------
+    // MODE ÉTUDIANT - ÉPREUVES D'EXAMEN (Réservé aux étudiants)
+    // ------------------
+    // Liste des épreuves disponibles (filtres: specialty, subject, level, is_correction, year, search)
+    Route::get('/exam-papers', [ExamPaperApiController::class, 'index']);
+    // Filtres disponibles (spécialités, matières, niveaux, années)
+    Route::get('/exam-papers/filters', [ExamPaperApiController::class, 'filters']);
+    // Statistiques des épreuves
+    Route::get('/exam-papers/stats', [ExamPaperApiController::class, 'stats']);
+    // Détails d'une épreuve
+    Route::get('/exam-papers/{id}', [ExamPaperApiController::class, 'show']);
+    // Visualiser le PDF (retourne l'URL)
+    Route::get('/exam-papers/{id}/view', [ExamPaperApiController::class, 'viewPdf']);
+    // Télécharger le PDF
+    Route::get('/exam-papers/{id}/download', [ExamPaperApiController::class, 'download']);
+
+    // ------------------
+    // RECRUTEUR - TESTS DE COMPÉTENCES (CRUD)
+    // ------------------
+    // Lister mes tests
+    Route::get('/recruiter/skill-tests', [RecruiterSkillTestController::class, 'index'])
+        ->middleware('subscription:valid');
+    // Détails d'un test
+    Route::get('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'show'])
+        ->middleware('subscription:valid');
+    // Créer un test
+    Route::post('/recruiter/skill-tests', [RecruiterSkillTestController::class, 'store'])
+        ->middleware('subscription:valid');
+    // Mettre à jour un test
+    Route::put('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'update'])
+        ->middleware('subscription:valid');
+    // Publier/activer un test (nécessite paiement)
+    Route::post('/recruiter/skill-tests/{id}/publish', [RecruiterSkillTestController::class, 'publish'])
+        ->middleware('subscription:valid');
+    // Supprimer un test
+    Route::delete('/recruiter/skill-tests/{id}', [RecruiterSkillTestController::class, 'destroy'])
+        ->middleware('subscription:valid');
+
+    // ------------------
+    // CANDIDAT - TESTS DE COMPÉTENCES (Passer un test)
+    // ------------------
+    // Récupérer un test pour le passer
+    Route::get('/candidate/skill-tests/{testId}', [RecruiterSkillTestController::class, 'getTestForCandidate']);
+    // Calculer le score AVANT de postuler (sans application_id) - pour sauvegarder dans local storage
+    Route::post('/candidate/skill-tests/{testId}/calculate-score', [RecruiterSkillTestController::class, 'calculateScoreOnly']);
+    // Soumettre les résultats d'un test
+    Route::post('/candidate/skill-tests/{testId}/submit', [RecruiterSkillTestController::class, 'submitTestResults']);
+
+    // ------------------
     // RECRUTEUR - GESTION DE L'ENTREPRISE
     // ------------------
     // Créer une entreprise
@@ -154,10 +247,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // Initier un paiement pour un abonnement
     Route::post('/payments/init', [SubscriptionPlanController::class, 'initPayment']);
+    // Exécuter un paiement PayPal après approbation
+    Route::post('/payments/paypal/execute', [SubscriptionPlanController::class, 'executePayPalPayment']);
     // Vérifier le statut d'un paiement
     Route::get('/payments/{id}/status', [SubscriptionPlanController::class, 'checkPaymentStatus']);
     // Activer un abonnement après paiement
     Route::post('/subscriptions/activate', [SubscriptionPlanController::class, 'activate']);
+    // Payer un abonnement avec le wallet et activer automatiquement
+    Route::post('/subscriptions/pay-with-wallet', [SubscriptionPlanController::class, 'payWithWallet']);
     // Mon abonnement actif
     Route::get('/my-subscription', [SubscriptionPlanController::class, 'mySubscription']);
     // Historique de mes abonnements
@@ -166,6 +263,54 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/subscription/status', [SubscriptionPlanController::class, 'subscriptionStatus']);
     // Utilisation de l'abonnement (jobs/contacts utilisés, limites)
     Route::get('/subscription/usage', [SubscriptionPlanController::class, 'subscriptionUsage']);
+
+    // ------------------
+    // WALLET (Utilisable dans tous les rôles)
+    // ------------------
+    // Consulter mon solde et statistiques
+    Route::get('/wallet', [WalletController::class, 'index']);
+    // Historique des transactions
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    // Initier une recharge du wallet (FreeMoPay ou PayPal)
+    Route::post('/wallet/recharge', [WalletController::class, 'recharge']);
+    // Exécuter un paiement PayPal après approbation
+    Route::post('/wallet/paypal/execute', [WalletController::class, 'executePayPalPayment']);
+    // Créer un ordre PayPal natif (pour paiement frontend)
+    Route::post('/wallet/paypal/create-native-order', [WalletController::class, 'createNativePayPalOrder']);
+    // Capturer un ordre PayPal natif après paiement
+    Route::post('/wallet/paypal/capture-native-order', [WalletController::class, 'captureNativePayPalOrder']);
+    // Vérifier le statut d'un paiement de recharge
+    Route::get('/wallet/payment-status/{paymentId}', [WalletController::class, 'checkPaymentStatus']);
+    // Vérifier si je peux payer un montant
+    Route::post('/wallet/can-pay', [WalletController::class, 'canPay']);
+    // Payer avec le wallet (abonnements, services)
+    Route::post('/wallet/pay', [WalletController::class, 'pay']);
+
+    // ------------------
+    // DEVISES & CONVERSIONS
+    // ------------------
+    // Liste des devises disponibles (XAF, USD, EUR)
+    Route::get('/currencies', [CurrencyController::class, 'index']);
+    // Tous les taux de change
+    Route::get('/currencies/rates', [CurrencyController::class, 'rates']);
+    // Convertir un montant d'une devise à une autre
+    Route::post('/currencies/convert', [CurrencyController::class, 'convert']);
+    // Mettre à jour ma devise préférée
+    Route::put('/user/currency', [CurrencyController::class, 'updateUserCurrency']);
+
+    // ------------------
+    // RÔLES & FEATURES MULTI-PROFILS
+    // ------------------
+    // Récupérer les rôles disponibles (candidat, recruteur)
+    Route::get('/me/roles', [UserRoleController::class, 'getAvailableRoles']);
+    // Changer de rôle actif (candidat ↔ recruteur)
+    Route::post('/me/switch-role', [UserRoleController::class, 'switchRole']);
+    // Récupérer toutes les features actives
+    Route::get('/me/features', [UserRoleController::class, 'getFeatures']);
+    // Vérifier une feature spécifique
+    Route::get('/me/features/{featureKey}', [UserRoleController::class, 'checkFeature']);
+    // Synchroniser toutes les features
+    Route::post('/me/sync-features', [UserRoleController::class, 'syncFeatures']);
 
 
     // ------------------
@@ -187,6 +332,36 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // Statut de présence
     Route::post('/presence/online', [ChatController::class, 'online']);
     Route::post('/presence/offline', [ChatController::class, 'offline']);
+
+    // ------------------
+    // PORTFOLIO (Candidat OR/DIAMANT)
+    // ------------------
+    // Récupérer mon portfolio
+    Route::get('/portfolio', [PortfolioController::class, 'show']);
+    // Créer mon portfolio - réservé OR/DIAMANT
+    Route::post('/portfolio', [PortfolioController::class, 'store'])
+        ->middleware(\App\Http\Middleware\CheckPortfolioAccess::class);
+    // Mettre à jour mon portfolio - réservé OR/DIAMANT
+    Route::put('/portfolio', [PortfolioController::class, 'update'])
+        ->middleware(\App\Http\Middleware\CheckPortfolioAccess::class);
+    // Supprimer mon portfolio
+    Route::delete('/portfolio', [PortfolioController::class, 'destroy']);
+    // Basculer la visibilité (public/privé)
+    Route::patch('/portfolio/toggle-visibility', [PortfolioController::class, 'toggleVisibility']);
+    // Statistiques de mon portfolio
+    Route::get('/portfolio/stats', [PortfolioController::class, 'stats']);
+    // Récupérer un portfolio par slug (public, mais avec auth pour tracking)
+    Route::get('/portfolio/by-slug/{slug}', [PortfolioController::class, 'showBySlug']);
+
+    // ------------------
+    // PROGRAMMES (Candidat C2 OR / C3 DIAMANT)
+    // ------------------
+    // Liste des programmes avec informations d'accès
+    Route::get('/programs', [ProgramController::class, 'index']);
+    // Vérifier l'accès aux programmes
+    Route::get('/programs/check-access', [ProgramController::class, 'checkAccess']);
+    // Détails d'un programme avec ses étapes (nécessite l'accès)
+    Route::get('/programs/{program}', [ProgramController::class, 'show']);
 
     // ------------------
     // BROADCASTING AUTH (WebSocket Authentication)
@@ -222,3 +397,15 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
         }
     });
 });
+
+// ============================================
+// WEBHOOKS
+// ============================================
+Route::post('/webhooks/freemopay', function (\Illuminate\Http\Request $request) {
+    \Illuminate\Support\Facades\Log::info('[FreeMoPay Webhook] Received callback', [
+        'headers' => $request->headers->all(),
+        'body' => $request->all(),
+    ]);
+
+    return response()->json(['status' => 'received'], 200);
+})->name('api.webhooks.freemopay');

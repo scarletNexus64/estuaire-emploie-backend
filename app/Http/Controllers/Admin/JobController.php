@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Events\JobPublished;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendJobPublishedNotification;
 use App\Models\Job;
 use App\Models\Company;
 use App\Models\Category;
@@ -177,13 +178,16 @@ class JobController extends Controller
             'published_at' => now(),
         ]);
 
-        // Dispatcher l'événement si le job vient d'être publié
+        // Dispatcher le job asynchrone pour envoyer les notifications en arrière-plan
         if ($wasNotPublished) {
-            JobPublished::dispatch($job);
+            SendJobPublishedNotification::dispatch($job);
+
+            return redirect()->route('admin.jobs.index')
+                ->with('success', 'Offre publiée avec succès ! Les notifications sont en cours d\'envoi en arrière-plan.');
         }
 
-        // Rediriger vers la page d'envoi de notifications avec progress bar
-        return redirect()->route('admin.jobs.send-notifications', $job);
+        return redirect()->route('admin.jobs.index')
+            ->with('info', 'Cette offre était déjà publiée.');
     }
 
     /**

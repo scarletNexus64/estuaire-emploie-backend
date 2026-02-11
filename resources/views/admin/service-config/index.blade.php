@@ -91,6 +91,16 @@
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="paypal-tab" data-bs-toggle="tab" href="#paypal" role="tab" aria-controls="paypal" aria-selected="false">
+                                <i class="mdi mdi-paypal"></i> PayPal
+                                @if($paypalConfig && $paypalConfig->isConfigured())
+                                    <span class="badge bg-success ms-1">Configuré</span>
+                                @else
+                                    <span class="badge bg-warning ms-1">Non configuré</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <a class="nav-link" id="preferences-tab" data-bs-toggle="tab" href="#preferences" role="tab" aria-controls="preferences" aria-selected="false">
                                 <i class="mdi mdi-cog"></i> Préférences
                             </a>
@@ -106,6 +116,9 @@
 
                         {{-- Payment Tab --}}
                         @include('admin.service-config.freemopay', ['config' => $freemopayConfig])
+
+                        {{-- PayPal Tab --}}
+                        @include('admin.service-config.paypal', ['config' => $paypalConfig])
 
                         {{-- Preferences Tab --}}
                         @include('admin.service-config.preferences')

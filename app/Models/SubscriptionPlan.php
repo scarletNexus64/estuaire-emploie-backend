@@ -15,6 +15,7 @@ class SubscriptionPlan extends Model
     protected $fillable = [
         'name',
         'slug',
+        'plan_type',
         'description',
         'display_order',
         'price',
@@ -115,5 +116,21 @@ class SubscriptionPlan extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('display_order');
+    }
+
+    /**
+     * Scope pour les forfaits recruteurs uniquement
+     */
+    public function scopeRecruiter($query)
+    {
+        return $query->where('plan_type', 'recruiter');
+    }
+
+    /**
+     * Scope pour les forfaits chercheurs d'emploi uniquement
+     */
+    public function scopeJobSeeker($query)
+    {
+        return $query->where('plan_type', 'job_seeker');
     }
 }

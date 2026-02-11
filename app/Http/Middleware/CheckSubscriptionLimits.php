@@ -46,8 +46,9 @@ class CheckSubscriptionLimits
             ], 403);
         }
 
-        // Récupérer l'abonnement actif
-        $subscription = $user->activeSubscription();
+        // 🎯 Récupérer uniquement l'abonnement recruteur (pas candidat)
+        // Filtrer par le rôle actif de l'utilisateur
+        $subscription = $user->activeSubscription($user->role);
 
         if (!$subscription) {
             return response()->json([
