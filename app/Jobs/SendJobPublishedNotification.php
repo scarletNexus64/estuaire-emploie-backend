@@ -37,6 +37,9 @@ class SendJobPublishedNotification implements ShouldQueue
     public function __construct(Job $jobOffer)
     {
         $this->jobOffer = $jobOffer;
+
+        // Définir la connexion de queue (séparée de 'default' pour éviter les conflits avec Reverb)
+        $this->onConnection('notifications');
     }
 
     /**

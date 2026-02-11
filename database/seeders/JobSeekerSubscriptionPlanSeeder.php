@@ -124,47 +124,6 @@ class JobSeekerSubscriptionPlanSeeder extends Seeder
                 'color' => '#E5E4E2',
                 'icon' => '💎',
             ],
-            [
-                'name' => 'PACK ÉTUDIANT',
-                'slug' => 'pack-etudiant',
-                'plan_type' => 'job_seeker',
-                'description' => '2 000 FCFA/Mois',
-                'display_order' => 4,
-                'price' => 2000.00,
-                'duration_days' => 30,
-                'jobs_limit' => null,
-                'contacts_limit' => null,
-                'can_access_cvtheque' => null,
-                'can_boost_jobs' => null,
-                'can_see_analytics' => null,
-                'priority_support' => null,
-                'featured_company_badge' => null,
-                'custom_company_page' => null,
-                'features' => [
-                    'free_cv_creation' => true,
-                    'cv_accessible_recruiters' => true,
-                    'free_regional_jobs' => true,
-                    'free_certifications' => true,
-                    'transformation_program' => false,
-                    'portfolio_creation' => false,
-                    'premium_cv' => false,
-                    'verified_badge' => false,
-                    'cv_review' => false,
-                    'interview_coaching' => false,
-                    'job_alerts' => false,
-                    'immersion_program' => false,
-                    'entrepreneurship' => false,
-                    'international_internship' => false,
-                    // Student Pack specific features
-                    'past_exam_subjects' => true,
-                    'professional_orientation' => true,
-                    'local_internship' => true,
-                ],
-                'is_active' => true,
-                'is_popular' => false,
-                'color' => '#6366F1',
-                'icon' => '🎓',
-            ],
         ];
 
         foreach ($plans as $plan) {
@@ -174,6 +133,6 @@ class JobSeekerSubscriptionPlanSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ 4 forfaits chercheurs d\'emploi créés avec succès (SILVER, GOLD, PLATINUM, PACK ÉTUDIANT) !');
+        $this->command->info('✅ 3 forfaits chercheurs d\'emploi créés avec succès (SILVER, GOLD, PLATINUM) !');
     }
 }

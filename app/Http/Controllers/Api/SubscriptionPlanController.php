@@ -539,7 +539,10 @@ class SubscriptionPlanController extends Controller
     public function mySubscription(Request $request): JsonResponse
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription();
+
+        // 🎯 Filtrer par le rôle actif de l'utilisateur pour récupérer uniquement
+        // l'abonnement correspondant (recruteur ou candidat)
+        $subscription = $user->activeSubscription($user->role);
 
         if (!$subscription) {
             return response()->json([
@@ -954,7 +957,10 @@ class SubscriptionPlanController extends Controller
     public function subscriptionStatus(Request $request): JsonResponse
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription();
+
+        // 🎯 Filtrer par le rôle actif de l'utilisateur pour récupérer uniquement
+        // l'abonnement correspondant (recruteur ou candidat)
+        $subscription = $user->activeSubscription($user->role);
 
         if (!$subscription) {
             return response()->json([
@@ -1049,7 +1055,10 @@ class SubscriptionPlanController extends Controller
     public function subscriptionUsage(Request $request): JsonResponse
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription();
+
+        // 🎯 Filtrer par le rôle actif de l'utilisateur pour récupérer uniquement
+        // l'abonnement correspondant (recruteur ou candidat)
+        $subscription = $user->activeSubscription($user->role);
 
         if (!$subscription) {
             return response()->json([

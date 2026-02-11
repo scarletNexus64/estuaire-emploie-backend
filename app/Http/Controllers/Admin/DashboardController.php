@@ -16,15 +16,9 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        // Count pending diploma verifications (purchased but not verified yet)
-        // Get all diploma verification service purchases that are active
-        $diplomaServiceIds = CompanyAddonService::whereHas('config', function ($query) {
-            $query->where('service_type', 'diploma_verification');
-        })->where('is_active', true)->pluck('related_user_id');
-
-        // Count applications where diploma verification was purchased but not verified yet
-        $pendingDiplomaVerifications = Application::whereIn('user_id', $diplomaServiceIds)
-            ->where('diploma_verified', false)
+        // Count pending diploma verifications from notifications
+        $pendingDiplomaVerifications = DatabaseNotification::whereNull('read_at')
+            ->where('type', 'diploma_verification_request')
             ->count();
 
         $stats = [
@@ -58,13 +52,34 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Get pending diploma verification applications
-        $pendingDiplomaApplications = Application::with(['user', 'job.company'])
-            ->whereIn('user_id', $diplomaServiceIds)
-            ->where('diploma_verified', false)
+        // Get pending diploma verification requests from notifications
+        $pendingDiplomaNotifications = DatabaseNotification::whereNull('read_at')
+            ->where('type', 'diploma_verification_request')
             ->latest()
             ->limit(5)
             ->get();
+
+        // Transform notifications into application-like objects for the view
+        $pendingDiplomaApplications = $pendingDiplomaNotifications->map(function ($notification) {
+            $data = $notification->data;
+            return (object) [
+                'id' => $data['application_id'] ?? null,
+                'user' => (object) [
+                    'id' => $data['candidate_id'] ?? null,
+                    'name' => $data['candidate_name'] ?? 'N/A',
+                ],
+                'job' => (object) [
+                    'id' => $data['job_id'] ?? null,
+                    'title' => $data['job_title'] ?? 'N/A',
+                    'company' => (object) [
+                        'id' => $data['company_id'] ?? null,
+                        'name' => $data['company_name'] ?? 'N/A',
+                    ],
+                ],
+                'notification_id' => $notification->id,
+                'created_at' => $notification->created_at,
+            ];
+        });
 
         return view('admin.dashboard.index', compact(
             'stats',

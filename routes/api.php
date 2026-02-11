@@ -21,6 +21,8 @@ use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\RecruiterServicePurchaseController;
 use App\Http\Controllers\Api\RecruiterSkillTestController;
+use App\Http\Controllers\Api\CandidatePremiumServiceController;
+use App\Http\Controllers\Api\ExamPaperApiController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -40,6 +42,9 @@ Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 // Vérification email (OTP)
 Route::post('/email/send-code', [EmailVerificationController::class, 'sendCode']);
 Route::post('/email/verify-code', [EmailVerificationController::class, 'verifyCode']);
+
+// Maintenance Mode Status
+Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeController::class, 'status']);
 
 // Jobs publics
 Route::get('/jobs', [JobController::class, 'index']);
@@ -166,6 +171,36 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/recruiter/services/access-status', [RecruiterServicePurchaseController::class, 'checkAccessStatus']);
 
     // ------------------
+    // CANDIDAT - SERVICES PREMIUM (Mode Étudiant, CV Premium, etc.)
+    // ------------------
+    // Liste des services premium disponibles
+    Route::get('/candidate/premium-services', [CandidatePremiumServiceController::class, 'index']);
+    // Détails d'un service spécifique
+    Route::get('/candidate/premium-services/{slug}', [CandidatePremiumServiceController::class, 'show']);
+    // Acheter un service premium avec le wallet
+    Route::post('/candidate/premium-services/purchase', [CandidatePremiumServiceController::class, 'purchase']);
+    // Liste de mes services actifs
+    Route::get('/candidate/premium-services/my-services', [CandidatePremiumServiceController::class, 'myServices']);
+    // Vérifier l'accès à un service spécifique
+    Route::get('/candidate/premium-services/check-access/{slug}', [CandidatePremiumServiceController::class, 'checkAccess']);
+
+    // ------------------
+    // MODE ÉTUDIANT - ÉPREUVES D'EXAMEN (Réservé aux étudiants)
+    // ------------------
+    // Liste des épreuves disponibles (filtres: specialty, subject, level, is_correction, year, search)
+    Route::get('/exam-papers', [ExamPaperApiController::class, 'index']);
+    // Filtres disponibles (spécialités, matières, niveaux, années)
+    Route::get('/exam-papers/filters', [ExamPaperApiController::class, 'filters']);
+    // Statistiques des épreuves
+    Route::get('/exam-papers/stats', [ExamPaperApiController::class, 'stats']);
+    // Détails d'une épreuve
+    Route::get('/exam-papers/{id}', [ExamPaperApiController::class, 'show']);
+    // Visualiser le PDF (retourne l'URL)
+    Route::get('/exam-papers/{id}/view', [ExamPaperApiController::class, 'viewPdf']);
+    // Télécharger le PDF
+    Route::get('/exam-papers/{id}/download', [ExamPaperApiController::class, 'download']);
+
+    // ------------------
     // RECRUTEUR - TESTS DE COMPÉTENCES (CRUD)
     // ------------------
     // Lister mes tests
@@ -192,6 +227,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // Récupérer un test pour le passer
     Route::get('/candidate/skill-tests/{testId}', [RecruiterSkillTestController::class, 'getTestForCandidate']);
+    // Calculer le score AVANT de postuler (sans application_id) - pour sauvegarder dans local storage
+    Route::post('/candidate/skill-tests/{testId}/calculate-score', [RecruiterSkillTestController::class, 'calculateScoreOnly']);
     // Soumettre les résultats d'un test
     Route::post('/candidate/skill-tests/{testId}/submit', [RecruiterSkillTestController::class, 'submitTestResults']);
 

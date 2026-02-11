@@ -28,6 +28,7 @@ return new class extends Migration
                 'sms_alerts',          // Alertes SMS/WhatsApp
                 'cv_review',           // Révision CV par expert
                 'interview_coaching',   // Coaching entretien
+                'student_mode',        // Mode Étudiant (stages, examens, orientation)
                 'custom'               // Service personnalisé
             ]);
 

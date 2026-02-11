@@ -104,12 +104,34 @@ class PremiumServiceConfigSeeder extends Seeder
                 'color' => '#8b5cf6',
                 'icon' => '🎓',
             ],
+            [
+                'name' => 'Mode Étudiant',
+                'slug' => 'student_mode',
+                'description' => 'Accédez aux avantages exclusifs réservés aux étudiants : stages locaux, sujets d\'examens et orientation professionnelle',
+                'display_order' => 6,
+                'price' => 2000.00, // FCFA
+                'duration_days' => 365, // 1 an (service annuel)
+                'service_type' => 'student_mode',
+                'features' => [
+                    'Accès aux anciens sujets d\'examen',
+                    'Orientation professionnelle (spécialité/métier)',
+                    'Accès prioritaire aux stages locaux',
+                    'Ressources pédagogiques exclusives',
+                ],
+                'is_active' => true,
+                'is_popular' => true,
+                'color' => '#6366F1',
+                'icon' => '🎓',
+            ],
         ];
 
         foreach ($services as $service) {
-            PremiumServiceConfig::create($service);
+            PremiumServiceConfig::updateOrCreate(
+                ['slug' => $service['slug']], // Critère de recherche
+                $service // Données à créer ou mettre à jour
+            );
         }
 
-        $this->command->info('✅ 5 services premium candidats créés avec succès !');
+        $this->command->info('✅ 6 services premium candidats créés/mis à jour avec succès (dont Mode Étudiant) !');
     }
 }

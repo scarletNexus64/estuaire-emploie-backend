@@ -129,6 +129,18 @@ class NavigationService
                         'permission' => 'manage_recruiter_services',
                     ],
                     [
+                        'name' => 'Services pour Candidats',
+                        'route' => 'admin.premium-services.index',
+                        'icon' => 'fas fa-user-graduate',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Épreuves d\'Examen (Mode Étudiant)',
+                        'route' => 'admin.exam-papers.index',
+                        'icon' => 'fas fa-file-pdf',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
                         'name' => 'Gestion des Espaces Publicitaires',
                         'route' => 'admin.advertisements.index',
                         'icon' => 'fas fa-bullhorn',
@@ -158,12 +170,6 @@ class NavigationService
                 'section' => 'Administration',
                 'items' => [
                     [
-                        'name' => 'Sections',
-                        'route' => 'admin.sections.index',
-                        'icon' => 'fas fa-list',
-                        'permission' => 'manage_sections',
-                    ],
-                    [
                         'name' => 'Administrateurs',
                         'route' => 'admin.admins.index',
                         'icon' => 'fas fa-user-shield',
@@ -180,6 +186,12 @@ class NavigationService
                         'route' => 'admin.fcm-tokens.index',
                         'icon' => 'fas fa-bell',
                         'permission' => null, // All admins can view FCM tokens
+                    ],
+                    [
+                        'name' => 'Mode Maintenance',
+                        'route' => 'admin.maintenance.index',
+                        'icon' => 'fas fa-wrench',
+                        'permission' => 'manage_settings',
                     ],
                     [
                         'name' => 'Paramètres',

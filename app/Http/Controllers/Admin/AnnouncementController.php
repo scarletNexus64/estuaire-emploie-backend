@@ -47,6 +47,7 @@ class AnnouncementController extends Controller
             'user_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'message' => 'required|string|max:1000',
+            'channel' => 'required|in:push,email,both',
         ], [
             'user_id.required' => 'Veuillez sélectionner un utilisateur',
             'user_id.exists' => 'L\'utilisateur sélectionné n\'existe pas',
@@ -54,6 +55,8 @@ class AnnouncementController extends Controller
             'title.max' => 'Le titre ne doit pas dépasser 255 caractères',
             'message.required' => 'Le message est requis',
             'message.max' => 'Le message ne doit pas dépasser 1000 caractères',
+            'channel.required' => 'Le canal d\'envoi est requis',
+            'channel.in' => 'Canal invalide',
         ]);
 
         if ($validator->fails()) {
@@ -64,27 +67,70 @@ class AnnouncementController extends Controller
         }
 
         $user = User::find($request->user_id);
+        $channel = $request->channel;
 
-        if (!$user->fcm_token) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cet utilisateur n\'a pas de token FCM. Il ne peut pas recevoir de notifications push.'
-            ], 400);
+        // Vérifier si l'utilisateur a un token FCM si on veut envoyer du push
+        if (($channel === 'push' || $channel === 'both') && !$user->fcm_token) {
+            if ($channel === 'push') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cet utilisateur n\'a pas de token FCM. Veuillez choisir "Email uniquement".'
+                ], 400);
+            }
+            // Si c'est "both" et pas de token, on envoie juste l'email
+            $channel = 'email';
         }
 
-        try {
-            $this->firebaseService->sendToToken(
-                $user->fcm_token,
-                $request->title,
-                $request->message,
-                [
-                    'type' => 'announcement',
-                    'sent_at' => now()->toISOString(),
-                    'sender' => 'admin'
-                ]
-            );
+        $sentPush = false;
+        $sentEmail = false;
+        $errors = [];
 
-            // Enregistrer la notification dans la base de données
+        try {
+            // 1. Envoyer la notification Push si demandé
+            if ($channel === 'push' || $channel === 'both') {
+                try {
+                    $this->firebaseService->sendToToken(
+                        $user->fcm_token,
+                        $request->title,
+                        $request->message,
+                        [
+                            'type' => 'announcement',
+                            'sent_at' => now()->toISOString(),
+                            'sender' => 'admin',
+                        ]
+                    );
+                    $sentPush = true;
+                } catch (\Exception $e) {
+                    Log::error('Erreur envoi push', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $errors[] = 'Push: ' . $e->getMessage();
+
+                    // Supprimer le token si invalide
+                    if (str_contains($e->getMessage(), 'Requested entity was not found') ||
+                        str_contains($e->getMessage(), 'registration token is not valid') ||
+                        str_contains($e->getMessage(), 'Invalid registration')) {
+                        $user->update(['fcm_token' => null]);
+                    }
+                }
+            }
+
+            // 2. Envoyer l'email si demandé
+            if ($channel === 'email' || $channel === 'both') {
+                try {
+                    $user->notify(new \App\Notifications\AnnouncementNotification($request->title, $request->message));
+                    $sentEmail = true;
+                } catch (\Exception $e) {
+                    Log::error('Erreur envoi email', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $errors[] = 'Email: ' . $e->getMessage();
+                }
+            }
+
+            // 3. Enregistrer dans la base de données
             Notification::create([
                 'type' => 'announcement',
                 'notifiable_type' => User::class,
@@ -93,56 +139,35 @@ class AnnouncementController extends Controller
                     'title' => $request->title,
                     'message' => $request->message,
                     'sent_at' => now()->toISOString(),
-                    'sender' => 'admin'
+                    'sender' => 'admin',
+                    'channel' => $request->channel,
+                    'sent_push' => $sentPush,
+                    'sent_email' => $sentEmail,
                 ],
-                'read_at' => null, // Non lue par défaut
+                'read_at' => null,
             ]);
 
-            Log::info('Notification envoyée à l\'utilisateur', [
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'title' => $request->title
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Notification envoyée avec succès à ' . $user->name
-            ]);
-        } catch (\Kreait\Firebase\Exception\Messaging\NotFound $e) {
-            Log::warning('Token FCM non trouvé ou révoqué', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Le token de notification de cet utilisateur est invalide ou expiré. L\'utilisateur doit se reconnecter dans l\'application mobile.'
-            ], 400);
-        } catch (\Kreait\Firebase\Exception\Messaging\InvalidMessage $e) {
-            Log::error('Message Firebase invalide', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erreur de configuration Firebase : ' . $e->getMessage() . '. Vérifiez FIREBASE_SETUP_GUIDE.md'
-            ], 500);
+            if ($sentPush || $sentEmail) {
+                $channelText = $sentPush && $sentEmail ? 'Push + Email' : ($sentPush ? 'Push' : 'Email');
+                return response()->json([
+                    'success' => true,
+                    'message' => "Notification envoyée via $channelText à {$user->name}" . (!empty($errors) ? ' (avec erreurs partielles)' : ''),
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Échec d\'envoi : ' . implode(', ', $errors),
+                ], 500);
+            }
         } catch (\Exception $e) {
             Log::error('Erreur lors de l\'envoi de la notification', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'error_class' => get_class($e)
             ]);
-
-            $userMessage = $e->getMessage();
-            if (strpos($userMessage, 'invalid_grant') !== false) {
-                $userMessage = 'Problème de configuration Firebase (invalid_grant). Consultez FIREBASE_SETUP_GUIDE.md pour la solution.';
-            }
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'envoi : ' . $userMessage
+                'message' => 'Erreur lors de l\'envoi : ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -157,10 +182,12 @@ class AnnouncementController extends Controller
             'message' => 'required|string|max:1000',
             'batch' => 'required|integer|min:0',
             'batch_size' => 'required|integer|min:1|max:100',
-            'target_group' => 'nullable|in:all,candidates,recruiters'
+            'target_group' => 'nullable|in:all,candidates,recruiters',
+            'channel' => 'required|in:push,email,both',
         ], [
             'title.required' => 'Le titre est requis',
             'message.required' => 'Le message est requis',
+            'channel.required' => 'Le canal d\'envoi est requis',
         ]);
 
         if ($validator->fails()) {
@@ -173,14 +200,20 @@ class AnnouncementController extends Controller
         $batchNumber = $request->batch;
         $batchSize = $request->batch_size;
         $targetGroup = $request->target_group ?? 'all';
+        $channel = $request->channel;
 
         // Construire la requête en fonction du groupe cible
-        $query = User::whereNotNull('fcm_token');
+        $query = User::query();
 
         if ($targetGroup === 'candidates') {
             $query->where('role', 'candidate');
         } elseif ($targetGroup === 'recruiters') {
             $query->where('role', 'recruiter');
+        }
+
+        // Si on envoie du push, filtrer par token FCM
+        if ($channel === 'push' || $channel === 'both') {
+            $query->whereNotNull('fcm_token');
         }
 
         // Récupérer le lot d'utilisateurs
@@ -203,20 +236,59 @@ class AnnouncementController extends Controller
         $errors = [];
 
         foreach ($users as $user) {
-            try {
-                $this->firebaseService->sendToToken(
-                    $user->fcm_token,
-                    $request->title,
-                    $request->message,
-                    [
-                        'type' => 'announcement',
-                        'sent_at' => now()->toISOString(),
-                        'sender' => 'admin',
-                        'target_group' => $targetGroup
-                    ]
-                );
+            $userSent = false;
+            $userFailed = false;
 
-                // Enregistrer la notification dans la base de données
+            try {
+                // 1. Envoyer la notification Push si demandé
+                if ($channel === 'push' || $channel === 'both') {
+                    if ($user->fcm_token) {
+                        try {
+                            $this->firebaseService->sendToToken(
+                                $user->fcm_token,
+                                $request->title,
+                                $request->message,
+                                [
+                                    'type' => 'announcement',
+                                    'sent_at' => now()->toISOString(),
+                                    'sender' => 'admin',
+                                    'target_group' => $targetGroup,
+                                ]
+                            );
+                            $userSent = true;
+                        } catch (\Exception $e) {
+                            Log::warning('Erreur FCM en masse', [
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage(),
+                            ]);
+
+                            // Supprimer le token si invalide
+                            if (str_contains($e->getMessage(), 'Requested entity was not found') ||
+                                str_contains($e->getMessage(), 'registration token is not valid') ||
+                                str_contains($e->getMessage(), 'Invalid registration')) {
+                                $user->update(['fcm_token' => null]);
+                            }
+
+                            $userFailed = true;
+                        }
+                    }
+                }
+
+                // 2. Envoyer l'email si demandé
+                if ($channel === 'email' || $channel === 'both') {
+                    try {
+                        $user->notify(new \App\Notifications\AnnouncementNotification($request->title, $request->message));
+                        $userSent = true;
+                    } catch (\Exception $e) {
+                        Log::error('Erreur email en masse', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $userFailed = true;
+                    }
+                }
+
+                // 3. Enregistrer dans la base de données
                 Notification::create([
                     'type' => 'announcement',
                     'notifiable_type' => User::class,
@@ -226,56 +298,48 @@ class AnnouncementController extends Controller
                         'message' => $request->message,
                         'sent_at' => now()->toISOString(),
                         'sender' => 'admin',
-                        'target_group' => $targetGroup
+                        'target_group' => $targetGroup,
+                        'channel' => $channel,
                     ],
-                    'read_at' => null, // Non lue par défaut
+                    'read_at' => null,
                 ]);
 
-                $sent++;
-            } catch (\Kreait\Firebase\Exception\Messaging\NotFound $e) {
-                $failed++;
-                $errors[] = [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'error' => 'Token invalide ou expiré'
-                ];
-
-                Log::warning('Token FCM invalide lors de l\'envoi en masse', [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name
-                ]);
-
-                // Optionnellement, réinitialiser le token invalide
-                // $user->update(['fcm_token' => null]);
+                if ($userSent && !$userFailed) {
+                    $sent++;
+                } else {
+                    $failed++;
+                    $errors[] = [
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                        'error' => 'Échec d\'envoi',
+                    ];
+                }
             } catch (\Exception $e) {
                 $failed++;
-                $errorMessage = $e->getMessage();
-                if (strpos($errorMessage, 'invalid_grant') !== false) {
-                    $errorMessage = 'Configuration Firebase invalide';
-                }
-
                 $errors[] = [
                     'user_id' => $user->id,
                     'user_name' => $user->name,
-                    'error' => $errorMessage
+                    'error' => $e->getMessage(),
                 ];
 
                 Log::error('Erreur lors de l\'envoi de notification en masse', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
-                    'error_class' => get_class($e)
                 ]);
             }
         }
 
         // Calculer le total pour la progression
-        $totalUsers = User::whereNotNull('fcm_token');
+        $totalQuery = User::query();
         if ($targetGroup === 'candidates') {
-            $totalUsers->where('role', 'candidate');
+            $totalQuery->where('role', 'candidate');
         } elseif ($targetGroup === 'recruiters') {
-            $totalUsers->where('role', 'recruiter');
+            $totalQuery->where('role', 'recruiter');
         }
-        $total = $totalUsers->count();
+        if ($channel === 'push' || $channel === 'both') {
+            $totalQuery->whereNotNull('fcm_token');
+        }
+        $total = $totalQuery->count();
 
         $processed = ($batchNumber + 1) * $batchSize;
         $completed = $processed >= $total;
@@ -285,7 +349,8 @@ class AnnouncementController extends Controller
             'sent' => $sent,
             'failed' => $failed,
             'total' => $total,
-            'target_group' => $targetGroup
+            'target_group' => $targetGroup,
+            'channel' => $channel,
         ]);
 
         return response()->json([

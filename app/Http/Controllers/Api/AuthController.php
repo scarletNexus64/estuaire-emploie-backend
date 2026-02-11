@@ -746,14 +746,15 @@ public function login(Request $request)
         $previousRole = $user->role;
         $roleUpdated = false;
 
-        // Vérifier si l'utilisateur a un abonnement actif
-        $activeSubscription = $user->activeSubscription();
-        $hasActiveSubscription = $activeSubscription && $activeSubscription->isValid();
+        // 🎯 Vérifier si l'utilisateur a un abonnement recruteur actif
+        // (On ne change le rôle que si l'utilisateur a un abonnement RECRUTEUR, pas candidat)
+        $activeSubscription = $user->activeSubscription('recruiter');
+        $hasRecruiterSubscription = $activeSubscription && $activeSubscription->isValid();
 
-        Log::info("[AuthController] 🔍 Abonnement actif: " . ($hasActiveSubscription ? 'OUI' : 'NON'));
+        Log::info("[AuthController] 🔍 Abonnement recruteur actif: " . ($hasRecruiterSubscription ? 'OUI' : 'NON'));
 
-        if ($hasActiveSubscription) {
-            // L'utilisateur a un abonnement actif, il doit être recruteur
+        if ($hasRecruiterSubscription) {
+            // L'utilisateur a un abonnement recruteur actif, il doit être recruteur
             if ($user->role !== 'recruiter') {
                 Log::info("[AuthController] ⚙️  Mise à jour du rôle: {$user->role} → recruiter");
                 $user->role = 'recruiter';
@@ -782,9 +783,9 @@ public function login(Request $request)
                 'user_id' => $user->id,
                 'previous_role' => $previousRole,
                 'current_role' => $user->role,
-                'has_active_subscription' => $hasActiveSubscription,
+                'has_active_subscription' => $hasRecruiterSubscription,
                 'role_updated' => $roleUpdated,
-                'subscription_info' => $hasActiveSubscription ? [
+                'subscription_info' => $hasRecruiterSubscription ? [
                     'plan_name' => $activeSubscription->subscriptionPlan->name ?? 'N/A',
                     'expires_at' => $activeSubscription->expires_at?->toIso8601String(),
                     'days_remaining' => $activeSubscription->days_remaining ?? 0,

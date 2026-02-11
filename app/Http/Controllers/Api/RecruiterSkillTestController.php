@@ -447,19 +447,47 @@ class RecruiterSkillTestController extends Controller
 
         $correctAnswers = 0;
 
+        \Log::info('🔍 Calcul du score', [
+            'total_questions' => $totalQuestions,
+            'total_answers' => count($answers),
+        ]);
+
         foreach ($questions as $index => $question) {
             $userAnswer = $answers[$index] ?? null;
             $correctAnswer = $question['correct_answer'] ?? null;
 
             if ($userAnswer !== null && $correctAnswer !== null) {
-                // For multiple choice, compare directly
-                if ($userAnswer === $correctAnswer) {
+                // Normalize both answers: trim whitespace and compare case-insensitively
+                $normalizedUserAnswer = trim($userAnswer);
+                $normalizedCorrectAnswer = trim($correctAnswer);
+
+                \Log::info("Question $index:", [
+                    'user_answer' => $normalizedUserAnswer,
+                    'correct_answer' => $normalizedCorrectAnswer,
+                    'match' => $normalizedUserAnswer === $normalizedCorrectAnswer,
+                ]);
+
+                // For multiple choice, compare after normalization
+                if ($normalizedUserAnswer === $normalizedCorrectAnswer) {
                     $correctAnswers++;
                 }
+            } else {
+                \Log::warning("Question $index: réponse ou bonne réponse manquante", [
+                    'has_user_answer' => $userAnswer !== null,
+                    'has_correct_answer' => $correctAnswer !== null,
+                ]);
             }
         }
 
-        return (int) (($correctAnswers / $totalQuestions) * 100);
+        $score = (int) (($correctAnswers / $totalQuestions) * 100);
+
+        \Log::info('✅ Score calculé', [
+            'correct_answers' => $correctAnswers,
+            'total_questions' => $totalQuestions,
+            'score' => $score,
+        ]);
+
+        return $score;
     }
 
     /**
@@ -490,6 +518,40 @@ class RecruiterSkillTestController extends Controller
                 'duration_minutes' => $test->duration_minutes,
                 'passing_score' => $test->passing_score,
                 'questions' => $questions,
+            ],
+        ]);
+    }
+
+    /**
+     * Calculate test score BEFORE applying (no application_id yet)
+     * POST /api/candidate/skill-tests/{testId}/calculate-score
+     */
+    public function calculateScoreOnly(Request $request, $testId)
+    {
+        $request->validate([
+            'answers' => 'required|array',
+            'started_at' => 'required|date',
+        ]);
+
+        $test = RecruiterSkillTest::where('is_active', true)->findOrFail($testId);
+
+        // Calculate score
+        $score = $this->calculateScore($test->questions, $request->answers);
+        $passed = $score >= $test->passing_score;
+
+        \Log::info('✅ Score calculé pour candidat (avant candidature)', [
+            'test_id' => $testId,
+            'user_id' => Auth::id(),
+            'score' => $score,
+            'passed' => $passed,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'result' => [
+                'score' => $score,
+                'passed' => $passed,
+                'passing_score' => $test->passing_score,
             ],
         ]);
     }

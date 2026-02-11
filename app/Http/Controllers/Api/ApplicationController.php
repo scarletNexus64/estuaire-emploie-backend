@@ -917,8 +917,8 @@ class ApplicationController extends Controller
             'candidate_user_id' => $candidateId,
         ]);
 
-        // Incrémenter le compteur de contacts utilisés dans l'abonnement
-        $subscription = $user->activeSubscription();
+        // 🎯 Incrémenter le compteur de contacts utilisés dans l'abonnement recruteur
+        $subscription = $user->activeSubscription($user->role);
         if ($subscription) {
             $subscription->incrementContactsUsed();
         }

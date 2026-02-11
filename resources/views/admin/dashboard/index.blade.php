@@ -328,8 +328,9 @@
                                     <div>
                                         <h4 class="font-semibold text-gray-900">{{ $application->user->name }}</h4>
                                         <p class="text-sm text-gray-600">{{ $application->job->title ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $application->job->company->name ?? 'N/A' }}</p>
                                     </div>
-                                    <a href="{{ route('admin.applications.show', $application) }}" class="text-blue-600 hover:text-blue-700">
+                                    <a href="{{ route('admin.applications.show', $application->id) }}" class="text-blue-600 hover:text-blue-700">
                                         <i class="mdi mdi-chevron-right text-2xl"></i>
                                     </a>
                                 </div>

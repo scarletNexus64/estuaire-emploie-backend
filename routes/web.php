@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
 use App\Http\Controllers\Admin\SkillTestController;
+use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Route;
 
@@ -224,6 +225,19 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'show'])->name('show');
     });
 
+    // MODE ÉTUDIANT - Épreuves d'examen
+    Route::middleware('permission:manage_premium_services')->prefix('exam-papers')->name('exam-papers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ExamPaperController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ExamPaperController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ExamPaperController::class, 'store'])->name('store');
+        Route::get('/{examPaper}/edit', [\App\Http\Controllers\Admin\ExamPaperController::class, 'edit'])->name('edit');
+        Route::put('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'update'])->name('update');
+        Route::delete('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'destroy'])->name('destroy');
+        Route::patch('/{examPaper}/toggle', [\App\Http\Controllers\Admin\ExamPaperController::class, 'toggle'])->name('toggle');
+        Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
+        Route::get('/{examPaper}/download', [\App\Http\Controllers\Admin\ExamPaperController::class, 'download'])->name('download');
+    });
+
     // MONÉTISATION - CVthèque
     Route::middleware('permission:manage_cvtheque')->prefix('cvtheque')->name('cvtheque.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CVthequeController::class, 'index'])->name('index');
@@ -298,5 +312,11 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'initiateWithdrawal'])->name('initiate-withdrawal');
         Route::get('/withdrawal/{id}/status', [\App\Http\Controllers\Admin\BankAccountController::class, 'checkWithdrawalStatus'])->name('withdrawal-status');
         Route::get('/history', [\App\Http\Controllers\Admin\BankAccountController::class, 'history'])->name('history');
+    });
+
+    // Maintenance Mode Management
+    Route::middleware('permission:manage_settings')->prefix('maintenance')->name('maintenance.')->group(function () {
+        Route::get('/', [MaintenanceModeController::class, 'index'])->name('index');
+        Route::post('/toggle', [MaintenanceModeController::class, 'toggle'])->name('toggle');
     });
 });

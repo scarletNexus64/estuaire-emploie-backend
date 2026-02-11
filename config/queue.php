@@ -13,6 +13,13 @@ return [
             'retry_after' => 90,
         ],
 
+        'notifications' => [
+            'driver' => 'database',
+            'table' => 'job_queue',
+            'queue' => 'notifications', // Queue séparée pour les notifications d'emploi
+            'retry_after' => 300,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

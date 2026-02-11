@@ -363,8 +363,8 @@ class JobController extends Controller
             ], 403);
         }
 
-        // Vérifier l'abonnement actif
-        $subscription = $user->activeSubscription();
+        // 🎯 Vérifier l'abonnement recruteur actif (pas candidat)
+        $subscription = $user->activeSubscription($user->role);
         if (!$subscription || !$subscription->isValid()) {
             return response()->json([
                 'message' => 'Vous devez avoir un abonnement actif pour publier des offres',
@@ -823,8 +823,8 @@ class JobController extends Controller
             ], 403);
         }
 
-        // Décrémenter le compteur jobs_used de l'abonnement actif
-        $subscription = $user->activeSubscription();
+        // 🎯 Décrémenter le compteur jobs_used de l'abonnement recruteur
+        $subscription = $user->activeSubscription($user->role);
         if ($subscription && $subscription->jobs_used > 0) {
             $subscription->decrement('jobs_used');
         }
