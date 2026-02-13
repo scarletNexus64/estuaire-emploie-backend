@@ -24,14 +24,14 @@ class ProgramController extends Controller
 
         // Get user's active subscription
         $activeSubscription = $user ? $user->activeSubscription() : null;
-        $userPlanName = strtoupper($activeSubscription->subscriptionPlan->name ?? '');
+        $userPlanSlug = strtoupper($activeSubscription->subscriptionPlan->slug ?? '');
 
-        // Map program access rules
-        $programAccess = $this->getProgramAccessRules($userPlanName);
+        // Determine user's pack (C1, C2, or C3)
+        $userPack = $this->getUserPack($userPlanSlug);
 
         // Transform programs with access information
-        $transformedPrograms = $programs->map(function ($program) use ($programAccess) {
-            $hasAccess = in_array($program->type, $programAccess);
+        $transformedPrograms = $programs->map(function ($program) use ($userPack) {
+            $hasAccess = $this->checkProgramAccess($program, $userPack);
 
             return [
                 'id' => $program->id,
@@ -46,7 +46,7 @@ class ProgramController extends Controller
                 'order' => $program->order,
                 'steps_count' => $program->steps->count(),
                 'has_access' => $hasAccess,
-                'required_plans' => $this->getRequiredPlansForProgram($program->type),
+                'required_packs' => $program->required_packs ?? [],
             ];
         });
 
@@ -54,7 +54,8 @@ class ProgramController extends Controller
             'success' => true,
             'programs' => $transformedPrograms,
             'user_subscription' => [
-                'plan_name' => $userPlanName,
+                'plan_slug' => $userPlanSlug,
+                'user_pack' => $userPack,
                 'has_subscription' => $activeSubscription !== null,
             ],
         ]);
@@ -69,17 +70,17 @@ class ProgramController extends Controller
 
         // Check if user has access to this program
         $activeSubscription = $user ? $user->activeSubscription() : null;
-        $userPlanName = strtoupper($activeSubscription->subscriptionPlan->name ?? '');
+        $userPlanSlug = strtoupper($activeSubscription->subscriptionPlan->slug ?? '');
+        $userPack = $this->getUserPack($userPlanSlug);
 
-        $programAccess = $this->getProgramAccessRules($userPlanName);
-        $hasAccess = in_array($program->type, $programAccess);
+        $hasAccess = $this->checkProgramAccess($program, $userPack);
 
         if (!$hasAccess) {
             return response()->json([
                 'success' => false,
                 'message' => 'Vous n\'avez pas accès à ce programme',
-                'required_plans' => $this->getRequiredPlansForProgram($program->type),
-                'current_plan' => $userPlanName,
+                'required_packs' => $program->required_packs ?? [],
+                'current_pack' => $userPack,
             ], 403);
         }
 
@@ -136,67 +137,83 @@ class ProgramController extends Controller
                 'success' => true,
                 'has_access' => false,
                 'message' => 'Aucun abonnement actif',
-                'required_plans' => ['PACK C2 (OR)', 'PACK C3 (DIAMANT)'],
+                'current_pack' => null,
             ]);
         }
 
-        $planName = strtoupper($activeSubscription->subscriptionPlan->name ?? '');
-        $hasAccess = $this->hasProgramsAccess($planName);
+        $userPlanSlug = strtoupper($activeSubscription->subscriptionPlan->slug ?? '');
+        $userPack = $this->getUserPack($userPlanSlug);
+        $hasAccess = !empty($userPack);
 
         return response()->json([
             'success' => true,
             'has_access' => $hasAccess,
-            'current_plan' => $planName,
-            'accessible_programs' => $this->getProgramAccessRules($planName),
-            'required_plans' => ['PACK C2 (OR)', 'PACK C3 (DIAMANT)'],
+            'current_pack' => $userPack,
+            'plan_slug' => $userPlanSlug,
         ]);
     }
 
     /**
-     * Get program access rules based on subscription plan
+     * Get user's pack based on their subscription plan slug
      */
-    private function getProgramAccessRules(string $planName): array
+    private function getUserPack(string $planSlug): ?string
     {
-        // PACK C3 (DIAMANT) - All programs (cumulative access including C2)
-        if (str_contains($planName, 'C3') || str_contains($planName, 'DIAMANT')) {
-            return [
-                'immersion_professionnelle',      // Inherited from C2
-                'entreprenariat',                 // Exclusive to C3
-                'transformation_professionnelle'  // Exclusive to C3
-            ];
+        $planSlugUpper = strtoupper($planSlug);
+
+        // Map plan slugs to packs
+        // Check for C3/DIAMANT/PLATINUM first (highest tier)
+        if (str_contains($planSlugUpper, 'C3') ||
+            str_contains($planSlugUpper, 'DIAMANT') ||
+            str_contains($planSlugUpper, 'PLATINUM')) {
+            return 'C3';
         }
 
-        // PACK C2 (OR) - Only Immersion Professionnelle
-        if (str_contains($planName, 'C2') || str_contains($planName, 'OR')) {
-            return ['immersion_professionnelle'];
+        // Check for C2/OR/GOLD
+        if (str_contains($planSlugUpper, 'C2') ||
+            str_contains($planSlugUpper, 'OR') ||
+            str_contains($planSlugUpper, 'GOLD')) {
+            return 'C2';
         }
 
-        // No access for other plans
-        return [];
+        // Check for C1/ARGENT/SILVER
+        if (str_contains($planSlugUpper, 'C1') ||
+            str_contains($planSlugUpper, 'ARGENT') ||
+            str_contains($planSlugUpper, 'SILVER')) {
+            return 'C1';
+        }
+
+        return null;
     }
 
     /**
-     * Get required plans for a specific program type
+     * Check if user has access to a specific program
      */
-    private function getRequiredPlansForProgram(string $programType): array
+    private function checkProgramAccess(Program $program, ?string $userPack): bool
     {
-        return match($programType) {
-            'immersion_professionnelle' => ['PACK C2 (OR)', 'PACK C3 (DIAMANT)'],
-            'entreprenariat' => ['PACK C3 (DIAMANT)'],
-            'transformation_professionnelle' => ['PACK C3 (DIAMANT)'],
-            default => [],
-        };
-    }
+        // If no pack is assigned to the program, everyone has access
+        if (empty($program->required_packs)) {
+            return true;
+        }
 
-    /**
-     * Check if user has access to programs feature at all
-     */
-    private function hasProgramsAccess(string $planName): bool
-    {
-        $allowedKeywords = ['C2', 'C3', 'OR', 'DIAMANT'];
+        // If user has no pack, they have no access
+        if (empty($userPack)) {
+            return false;
+        }
 
-        foreach ($allowedKeywords as $keyword) {
-            if (str_contains($planName, $keyword)) {
+        // Pack hierarchy: C3 > C2 > C1
+        $packHierarchy = [
+            'C1' => 1,
+            'C2' => 2,
+            'C3' => 3,
+        ];
+
+        $userPackLevel = $packHierarchy[$userPack] ?? 0;
+
+        // Check if user's pack level is sufficient for any of the required packs
+        foreach ($program->required_packs as $requiredPack) {
+            $requiredLevel = $packHierarchy[$requiredPack] ?? 0;
+            // User has access if their pack level is equal or higher
+            if ($userPackLevel >= $requiredLevel) {
                 return true;
             }
         }

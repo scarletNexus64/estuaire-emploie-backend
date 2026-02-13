@@ -114,6 +114,7 @@
                 <tr>
                     <th>Programme</th>
                     <th>Type</th>
+                    <th>Packs Requis</th>
                     <th>Durée</th>
                     <th>Étapes</th>
                     <th>Ordre</th>
@@ -149,6 +150,24 @@
                         <span class="badge badge-{{ $typeColors[$program->type] ?? 'secondary' }}">
                             {{ $typeIcons[$program->type] ?? '' }} {{ $program->type_display }}
                         </span>
+                    </td>
+                    <td>
+                        @if($program->required_packs && count($program->required_packs) > 0)
+                            <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                @foreach($program->required_packs as $pack)
+                                    @php
+                                        $packInfo = [
+                                            'C1' => ['icon' => '🥈', 'color' => 'secondary'],
+                                            'C2' => ['icon' => '🥇', 'color' => 'warning'],
+                                            'C3' => ['icon' => '💎', 'color' => 'primary']
+                                        ][$pack] ?? ['icon' => '📦', 'color' => 'secondary'];
+                                    @endphp
+                                    <span class="badge badge-{{ $packInfo['color'] }}">{{ $packInfo['icon'] }} {{ $pack }}</span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-muted">-</span>
+                        @endif
                     </td>
                     <td>
                         @if($program->duration_weeks)
@@ -205,7 +224,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--secondary);">
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
                         <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucun programme trouvé</p>
                         <p style="margin-bottom: 1.5rem;">Créez un nouveau programme pour aider les candidats</p>

@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\SendJobNotificationBatch;
 
 /**
  * Job Laravel pour envoyer des notifications de manière asynchrone
@@ -50,35 +51,41 @@ class SendJobPublishedNotification implements ShouldQueue
         try {
             $jobOffer = $this->jobOffer->load(['company', 'category', 'location']);
 
-            $title = "Nouvelle offre : {$jobOffer->title}";
-            $message = "{$jobOffer->company->name} recrute à {$jobOffer->location->name}";
-
-            Log::info('Début envoi notifications pour job publié', [
+            Log::info('📢 [JOB PUBLISHED] Début dispatch des lots de notifications', [
                 'job_id' => $jobOffer->id,
                 'job_title' => $jobOffer->title,
             ]);
 
-            // Envoi à tous les candidats de manière sécurisée (par lots)
-            $result = $notificationService->sendToAllCandidates(
-                $title,
-                $message,
-                'job_published',
-                [
-                    'job_id' => $jobOffer->id,
-                    'job_title' => $jobOffer->title,
-                    'company_name' => $jobOffer->company->name,
-                    'location' => $jobOffer->location->name,
-                    'category' => $jobOffer->category->name ?? null,
-                ]
-            );
+            // Compter le nombre total de candidats
+            $totalCandidates = \App\Models\User::where('role', 'candidate')
+                ->whereNotNull('fcm_token')
+                ->count();
 
-            Log::info('Notifications job publié envoyées', [
+            // Définir la taille des lots (100 candidats par lot)
+            $batchSize = 100;
+
+            // Calculer le nombre de lots nécessaires
+            $totalBatches = ceil($totalCandidates / $batchSize);
+
+            Log::info('📢 [JOB PUBLISHED] Création des lots', [
                 'job_id' => $jobOffer->id,
-                'sent' => $result['sent'],
-                'failed' => $result['failed'],
+                'total_candidates' => $totalCandidates,
+                'batch_size' => $batchSize,
+                'total_batches' => $totalBatches,
             ]);
+
+            // Créer un job par lot
+            for ($i = 0; $i < $totalBatches; $i++) {
+                SendJobNotificationBatch::dispatch($jobOffer, $i, $batchSize);
+            }
+
+            Log::info('✅ [JOB PUBLISHED] Tous les lots ont été dispatchés', [
+                'job_id' => $jobOffer->id,
+                'total_batches' => $totalBatches,
+            ]);
+
         } catch (\Exception $e) {
-            Log::error('Erreur envoi notifications job publié', [
+            Log::error('❌ [JOB PUBLISHED] Erreur dispatch des lots', [
                 'job_id' => $this->jobOffer->id,
                 'error' => $e->getMessage(),
             ]);

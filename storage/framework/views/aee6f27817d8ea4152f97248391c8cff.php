@@ -79,6 +79,51 @@ unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Packs Requis *</label>
+                        <div class="<?php $__errorArgs = ['required_packs'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pack_c1" name="required_packs[]" value="C1"
+                                       <?php echo e((is_array(old('required_packs')) && in_array('C1', old('required_packs'))) || (!old('required_packs') && is_array($program->required_packs) && in_array('C1', $program->required_packs)) ? 'checked' : ''); ?>>
+                                <label class="form-check-label" for="pack_c1">
+                                    🥈 PACK C1 (ARGENT) - 1 000 FCFA/Mois
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pack_c2" name="required_packs[]" value="C2"
+                                       <?php echo e((is_array(old('required_packs')) && in_array('C2', old('required_packs'))) || (!old('required_packs') && is_array($program->required_packs) && in_array('C2', $program->required_packs)) ? 'checked' : ''); ?>>
+                                <label class="form-check-label" for="pack_c2">
+                                    🥇 PACK C2 (OR) - 5 000 FCFA/Mois
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pack_c3" name="required_packs[]" value="C3"
+                                       <?php echo e((is_array(old('required_packs')) && in_array('C3', old('required_packs'))) || (!old('required_packs') && is_array($program->required_packs) && in_array('C3', $program->required_packs)) ? 'checked' : ''); ?>>
+                                <label class="form-check-label" for="pack_c3">
+                                    💎 PACK C3 (DIAMANT) - 10 000 FCFA/Mois
+                                </label>
+                            </div>
+                        </div>
+                        <?php $__errorArgs = ['required_packs'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        <small class="text-muted">Sélectionnez les packs qui peuvent accéder à ce programme</small>
+                    </div>
+
+                    <div class="form-group">
                         <label for="description" class="form-label">Description *</label>
                         <textarea class="form-control <?php $__errorArgs = ['description'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -208,7 +253,7 @@ unset($__errorArgs, $__bag); ?>
 
                     <div class="form-group">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
                                    <?php echo e(old('is_active', $program->is_active) ? 'checked' : ''); ?>>
                             <label class="form-check-label" for="is_active">
                                 Programme actif

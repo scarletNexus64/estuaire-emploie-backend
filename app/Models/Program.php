@@ -19,12 +19,14 @@ class Program extends Model
         'duration_weeks',
         'order',
         'is_active',
+        'required_packs',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'duration_weeks' => 'integer',
         'order' => 'integer',
+        'required_packs' => 'array',
     ];
 
     /**

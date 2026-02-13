@@ -53,6 +53,7 @@ Route::get('/jobs/{job}', [JobController::class, 'show']);
 
 // Entreprises publiques
 Route::get('/companies', [CompanyController::class, 'index']);
+Route::get('/companies/nearby', [CompanyController::class, 'getNearbyCompanies']); // Récupérer les entreprises à proximité par GPS
 Route::get('/companies/{company}', [CompanyController::class, 'show']);
 
 // Catégories et filtres (données de référence)

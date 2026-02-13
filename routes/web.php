@@ -53,6 +53,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('companies/{company}/verify', [CompanyController::class, 'verify'])->name('companies.verify');
         Route::patch('companies/{company}/suspend', [CompanyController::class, 'suspend'])->name('companies.suspend');
         Route::delete('companies/bulk-delete', [CompanyController::class, 'bulkDelete'])->name('companies.bulk-delete');
+        Route::post('companies/verify-address', [CompanyController::class, 'verifyAddress'])->name('companies.verify-address');
     });
 
     // Jobs Management

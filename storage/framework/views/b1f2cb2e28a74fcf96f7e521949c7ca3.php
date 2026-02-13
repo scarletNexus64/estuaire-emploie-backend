@@ -193,6 +193,28 @@
                     <div><code><?php echo e($program->slug); ?></code></div>
                 </div>
                 <div class="mb-3">
+                    <strong>Packs Requis :</strong>
+                    <?php if($program->required_packs && count($program->required_packs) > 0): ?>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.25rem;">
+                            <?php $__currentLoopData = $program->required_packs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pack): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php
+                                    $packInfo = [
+                                        'C1' => ['name' => 'PACK C1 (ARGENT)', 'icon' => '🥈', 'color' => '#C0C0C0'],
+                                        'C2' => ['name' => 'PACK C2 (OR)', 'icon' => '🥇', 'color' => '#FFD700'],
+                                        'C3' => ['name' => 'PACK C3 (DIAMANT)', 'icon' => '💎', 'color' => '#E5E4E2']
+                                    ][$pack] ?? ['name' => $pack, 'icon' => '📦', 'color' => '#6c757d'];
+                                ?>
+                                <span class="badge" style="background-color: <?php echo e($packInfo['color']); ?>; color: #000;">
+                                    <?php echo e($packInfo['icon']); ?> <?php echo e($packInfo['name']); ?>
+
+                                </span>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-muted">Aucun pack requis</div>
+                    <?php endif; ?>
+                </div>
+                <div class="mb-3">
                     <strong>Ordre d'affichage :</strong>
                     <div class="text-muted"><?php echo e($program->order); ?></div>
                 </div>

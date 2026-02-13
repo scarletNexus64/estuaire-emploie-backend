@@ -67,10 +67,12 @@ class NotificationService
                     // Si le token est invalide, le supprimer de la BDD
                     if (str_contains($fcmError->getMessage(), 'Requested entity was not found') ||
                         str_contains($fcmError->getMessage(), 'registration token is not valid') ||
-                        str_contains($fcmError->getMessage(), 'Invalid registration')) {
+                        str_contains($fcmError->getMessage(), 'Invalid registration') ||
+                        str_contains($fcmError->getMessage(), 'NotRegistered')) {
                         Log::warning('⚠️ [NOTIFICATION] Token FCM invalide supprimé', [
                             'user_id' => $user->id,
-                            'old_token' => $user->fcm_token
+                            'old_token' => $user->fcm_token,
+                            'error_type' => $fcmError->getMessage()
                         ]);
                         $user->update(['fcm_token' => null]);
                     }

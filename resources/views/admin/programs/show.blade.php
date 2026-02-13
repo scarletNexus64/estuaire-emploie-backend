@@ -193,6 +193,27 @@
                     <div><code>{{ $program->slug }}</code></div>
                 </div>
                 <div class="mb-3">
+                    <strong>Packs Requis :</strong>
+                    @if($program->required_packs && count($program->required_packs) > 0)
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.25rem;">
+                            @foreach($program->required_packs as $pack)
+                                @php
+                                    $packInfo = [
+                                        'C1' => ['name' => 'PACK C1 (ARGENT)', 'icon' => '🥈', 'color' => '#C0C0C0'],
+                                        'C2' => ['name' => 'PACK C2 (OR)', 'icon' => '🥇', 'color' => '#FFD700'],
+                                        'C3' => ['name' => 'PACK C3 (DIAMANT)', 'icon' => '💎', 'color' => '#E5E4E2']
+                                    ][$pack] ?? ['name' => $pack, 'icon' => '📦', 'color' => '#6c757d'];
+                                @endphp
+                                <span class="badge" style="background-color: {{ $packInfo['color'] }}; color: #000;">
+                                    {{ $packInfo['icon'] }} {{ $packInfo['name'] }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-muted">Aucun pack requis</div>
+                    @endif
+                </div>
+                <div class="mb-3">
                     <strong>Ordre d'affichage :</strong>
                     <div class="text-muted">{{ $program->order }}</div>
                 </div>

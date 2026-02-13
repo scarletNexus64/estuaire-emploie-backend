@@ -2,7 +2,7 @@
 
 return [
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'redis'),
 
     'connections' => [
 
@@ -13,11 +13,22 @@ return [
             'retry_after' => 90,
         ],
 
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('REDIS_QUEUE', 'default'),
+            'retry_after' => 90,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
         'notifications' => [
-            'driver' => 'database',
-            'table' => 'job_queue',
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => 'notifications', // Queue séparée pour les notifications d'emploi
             'retry_after' => 300,
+            'block_for' => null,
+            'after_commit' => false,
         ],
 
         'sync' => [

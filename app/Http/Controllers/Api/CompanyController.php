@@ -410,4 +410,122 @@ class CompanyController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/companies/nearby",
+     *     summary="Récupérer les entreprises à proximité",
+     *     description="Récupère toutes les entreprises (vérifiées et non vérifiées) dans un rayon donné autour des coordonnées GPS fournies. Les entreprises vérifiées ont status='verified'.",
+     *     operationId="getNearbyCompanies",
+     *     tags={"Companies"},
+     *     @OA\Parameter(
+     *         name="latitude",
+     *         in="query",
+     *         description="Latitude de la position actuelle",
+     *         required=true,
+     *         @OA\Schema(type="number", format="float", example=4.0511)
+     *     ),
+     *     @OA\Parameter(
+     *         name="longitude",
+     *         in="query",
+     *         description="Longitude de la position actuelle",
+     *         required=true,
+     *         @OA\Schema(type="number", format="float", example=9.7679)
+     *     ),
+     *     @OA\Parameter(
+     *         name="radius",
+     *         in="query",
+     *         description="Rayon de recherche en kilomètres (par défaut: 50km)",
+     *         required=false,
+     *         @OA\Schema(type="number", format="float", example=50)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des entreprises à proximité avec leur distance",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="name", type="string"),
+     *                 @OA\Property(property="email", type="string"),
+     *                 @OA\Property(property="phone", type="string"),
+     *                 @OA\Property(property="logo_url", type="string", nullable=true),
+     *                 @OA\Property(property="description", type="string"),
+     *                 @OA\Property(property="sector", type="string"),
+     *                 @OA\Property(property="address", type="string"),
+     *                 @OA\Property(property="city", type="string"),
+     *                 @OA\Property(property="latitude", type="number"),
+     *                 @OA\Property(property="longitude", type="number"),
+     *                 @OA\Property(property="status", type="string", enum={"pending", "verified", "suspended"}),
+     *                 @OA\Property(property="is_verified", type="boolean", description="true si status='verified'"),
+     *                 @OA\Property(property="distance", type="number", format="float", description="Distance en km"),
+     *                 @OA\Property(property="jobs_count", type="integer")
+     *             )),
+     *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="total", type="integer"),
+     *                 @OA\Property(property="radius_km", type="number"),
+     *                 @OA\Property(property="center", type="object",
+     *                     @OA\Property(property="latitude", type="number"),
+     *                     @OA\Property(property="longitude", type="number")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erreur de validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function getNearbyCompanies(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'latitude' => 'required|numeric|between:-90,90',
+                'longitude' => 'required|numeric|between:-180,180',
+                'radius' => 'nullable|numeric|min:1|max:500', // Max 500km
+            ]);
+
+            $latitude = $validated['latitude'];
+            $longitude = $validated['longitude'];
+            $radius = $validated['radius'] ?? 50; // Par défaut 50km
+
+            // Utiliser le scope nearby du modèle Company
+            $companies = Company::nearby($latitude, $longitude, $radius)
+                ->withCount('jobs')
+                ->get();
+
+            return response()->json([
+                'data' => $companies,
+                'meta' => [
+                    'total' => $companies->count(),
+                    'radius_km' => $radius,
+                    'center' => [
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                    ],
+                ],
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Paramètres invalides',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la récupération des entreprises à proximité', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Erreur lors de la récupération des entreprises',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

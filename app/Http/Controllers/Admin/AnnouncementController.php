@@ -110,7 +110,12 @@ class AnnouncementController extends Controller
                     // Supprimer le token si invalide
                     if (str_contains($e->getMessage(), 'Requested entity was not found') ||
                         str_contains($e->getMessage(), 'registration token is not valid') ||
-                        str_contains($e->getMessage(), 'Invalid registration')) {
+                        str_contains($e->getMessage(), 'Invalid registration') ||
+                        str_contains($e->getMessage(), 'NotRegistered')) {
+                        Log::info('🧹 [ANNOUNCEMENT] Token invalide supprimé', [
+                            'user_id' => $user->id,
+                            'error_type' => $e->getMessage()
+                        ]);
                         $user->update(['fcm_token' => null]);
                     }
                 }

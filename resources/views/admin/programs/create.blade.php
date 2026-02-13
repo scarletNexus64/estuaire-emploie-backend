@@ -50,6 +50,37 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Packs Requis *</label>
+                        <div class="@error('required_packs') is-invalid @enderror">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pack_c1" name="required_packs[]" value="C1"
+                                       {{ is_array(old('required_packs')) && in_array('C1', old('required_packs')) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="pack_c1">
+                                    🥈 PACK C1 (ARGENT) - 1 000 FCFA/Mois
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pack_c2" name="required_packs[]" value="C2"
+                                       {{ is_array(old('required_packs')) && in_array('C2', old('required_packs')) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="pack_c2">
+                                    🥇 PACK C2 (OR) - 5 000 FCFA/Mois
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pack_c3" name="required_packs[]" value="C3"
+                                       {{ is_array(old('required_packs')) && in_array('C3', old('required_packs')) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="pack_c3">
+                                    💎 PACK C3 (DIAMANT) - 10 000 FCFA/Mois
+                                </label>
+                            </div>
+                        </div>
+                        @error('required_packs')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Sélectionnez les packs qui peuvent accéder à ce programme</small>
+                    </div>
+
+                    <div class="form-group">
                         <label for="description" class="form-label">Description *</label>
                         <textarea class="form-control @error('description') is-invalid @enderror"
                                   id="description" name="description" rows="4" required>{{ old('description') }}</textarea>
@@ -109,7 +140,7 @@
 
                     <div class="form-group">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
                                    {{ old('is_active', true) ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_active">
                                 Programme actif

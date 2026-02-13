@@ -115,6 +115,7 @@
                 <tr>
                     <th>Programme</th>
                     <th>Type</th>
+                    <th>Packs Requis</th>
                     <th>Durée</th>
                     <th>Étapes</th>
                     <th>Ordre</th>
@@ -151,6 +152,24 @@
                             <?php echo e($typeIcons[$program->type] ?? ''); ?> <?php echo e($program->type_display); ?>
 
                         </span>
+                    </td>
+                    <td>
+                        <?php if($program->required_packs && count($program->required_packs) > 0): ?>
+                            <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                <?php $__currentLoopData = $program->required_packs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pack): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
+                                        $packInfo = [
+                                            'C1' => ['icon' => '🥈', 'color' => 'secondary'],
+                                            'C2' => ['icon' => '🥇', 'color' => 'warning'],
+                                            'C3' => ['icon' => '💎', 'color' => 'primary']
+                                        ][$pack] ?? ['icon' => '📦', 'color' => 'secondary'];
+                                    ?>
+                                    <span class="badge badge-<?php echo e($packInfo['color']); ?>"><?php echo e($packInfo['icon']); ?> <?php echo e($pack); ?></span>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-muted">-</span>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <?php if($program->duration_weeks): ?>
@@ -207,7 +226,7 @@
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--secondary);">
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--secondary);">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
                         <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucun programme trouvé</p>
                         <p style="margin-bottom: 1.5rem;">Créez un nouveau programme pour aider les candidats</p>
