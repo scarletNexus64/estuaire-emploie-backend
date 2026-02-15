@@ -6,18 +6,25 @@ use App\Models\UserPresence;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class UpdateLastSeen
 {
     /**
      * Handle an incoming request.
-     * Met à jour le last_seen de l'utilisateur authentifié à chaque requête
+     * Met à jour le last_seen de l'utilisateur authentifié (throttled: 1 fois par minute max)
      */
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            UserPresence::updateLastSeen(Auth::id());
+            $userId = Auth::id();
+            $cacheKey = "user_last_seen:{$userId}";
+
+            if (!Cache::has($cacheKey)) {
+                UserPresence::updateLastSeen($userId);
+                Cache::put($cacheKey, true, 60);
+            }
         }
 
         return $next($request);

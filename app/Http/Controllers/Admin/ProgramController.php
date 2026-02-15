@@ -37,7 +37,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle',
+            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle,digital_skills,agriculture_agrobusiness,tourisme_hotellerie,btp_construction,sante_social,commerce_vente,artisanat_metiers,finance_comptabilite,energie_environnement',
             'description' => 'required|string',
             'objectives' => 'nullable|string',
             'icon' => 'nullable|string|max:10',
@@ -84,7 +84,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle',
+            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle,digital_skills,agriculture_agrobusiness,tourisme_hotellerie,btp_construction,sante_social,commerce_vente,artisanat_metiers,finance_comptabilite,energie_environnement',
             'description' => 'required|string',
             'objectives' => 'nullable|string',
             'icon' => 'nullable|string|max:10',

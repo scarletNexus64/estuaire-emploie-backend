@@ -38,7 +38,6 @@ class SendCompanyVerifiedNotification implements ShouldQueue
     {
         $this->company = $company;
 
-        // Définir la connexion de queue (séparée de 'default' pour éviter les conflits)
         $this->onQueue('notifications');
     }
 

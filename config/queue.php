@@ -6,9 +6,13 @@ return [
 
     'connections' => [
 
+        'sync' => [
+            'driver' => 'sync',
+        ],
+
         'database' => [
             'driver' => 'database',
-            'table' => 'job_queue', // <- ta table personnalisée
+            'table' => 'job_queue',
             'queue' => 'default',
             'retry_after' => 90,
         ],
@@ -17,25 +21,16 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 90,
-            'block_for' => null,
-            'after_commit' => false,
-        ],
-
-        'notifications' => [
-            'driver' => 'redis',
-            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
-            'queue' => 'notifications', // Queue séparée pour les notifications d'emploi
             'retry_after' => 300,
-            'block_for' => null,
+            'block_for' => 3,
             'after_commit' => false,
         ],
 
-        'sync' => [
-            'driver' => 'sync',
-        ],
+    ],
 
-        // tu peux ajouter d'autres drivers si besoin
+    'batching' => [
+        'database' => env('DB_CONNECTION', 'mysql'),
+        'table' => 'job_batches',
     ],
 
     'failed' => [
