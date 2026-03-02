@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -57,33 +58,62 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-            'phone' => 'nullable|string|max:20',
+            'name'      => 'required|string|max:255',
+            'email'     => [
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->whereNull('deleted_at')
+            ],
+            'password'  => 'required|string|min:6',
+            'phone'     => 'nullable|string|max:20',
             'fcm_token' => 'nullable|string',
+            'referral_code' => 'nullable|string|exists:users,referral_code',
         ]);
 
+        // Au moins un identifiant (email ou téléphone) est requis
+        if (empty($validated['email']) && empty($validated['phone'])) {
+            return response()->json([
+                'message' => 'Un email ou un numéro de téléphone est requis.',
+                'errors'  => ['identifier' => ['Veuillez fournir un email ou un numéro de téléphone.']],
+            ], 422);
+        }
+
+        // Récupérer le parrain si un code parrain est fourni
+        $referrerId = null;
+        if (!empty($validated['referral_code'])) {
+            $referrer = User::where('referral_code', $validated['referral_code'])->first();
+            if ($referrer) {
+                $referrerId = $referrer->id;
+            }
+        }
+
         Log::info('📝 [REGISTER] Nouvelle inscription', [
-            'email' => $validated['email'],
+            'email'             => $validated['email'] ?? 'N/A (inscription par téléphone)',
+            'phone'             => $validated['phone'] ?? 'N/A',
             'fcm_token_present' => !empty($validated['fcm_token']),
-            'fcm_token' => $validated['fcm_token'] ?? 'N/A'
+            'fcm_token'         => $validated['fcm_token'] ?? 'N/A',
+            'referral_code'     => $validated['referral_code'] ?? 'N/A',
+            'referred_by_id'    => $referrerId ?? 'N/A',
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'] ?? null,
-            'fcm_token' => $validated['fcm_token'] ?? null,
-            'role' => 'candidate',
-            'available_roles' => ['candidate'], // ✅ Initialiser avec le rôle par défaut
-            'email_verified_at' => now(),
+            'name'             => $validated['name'],
+            'email'            => $validated['email'] ?? null,
+            'password'         => Hash::make($validated['password']),
+            'phone'            => $validated['phone'] ?? null,
+            'fcm_token'        => $validated['fcm_token'] ?? null,
+            'role'             => 'candidate',
+            'available_roles'  => ['candidate'], // ✅ Initialiser avec le rôle par défaut
+            'email_verified_at'=> !empty($validated['email']) ? now() : null,
+            'referred_by_id'   => $referrerId,
         ]);
 
         Log::info('✅ [REGISTER] Utilisateur créé avec succès', [
             'user_id' => $user->id,
-            'fcm_token_saved' => !empty($user->fcm_token)
+            'fcm_token_saved' => !empty($user->fcm_token),
+            'has_referrer' => !empty($referrerId),
         ]);
 
         // Charger les relations du user
@@ -92,9 +122,9 @@ class AuthController extends Controller
         }
         $user->load(['unreadNotifications']);
 
-        // Ajouter les comptes
-        $user->applications_count = $user->applications()->count();
-        $user->favorites_count = $user->favorites()->count();
+        // Ajouter les comptes (pour un nouvel utilisateur, ces valeurs sont toujours 0)
+        $user->applications_count = 0;
+        $user->favorites_count = 0;
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
@@ -1024,5 +1054,75 @@ public function login(Request $request)
             'success' => true,
             'data' => $user->getSubscriptionInfo(),
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/check-availability",
+     *     summary="Vérifier la disponibilité d'un email ou téléphone",
+     *     description="Vérifie si l'email ou le numéro de téléphone est déjà utilisé",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", format="email", example="test@example.com"),
+     *             @OA\Property(property="phone", type="string", example="+237690123456")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Disponibilité vérifiée",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="available", type="boolean"),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Erreur de validation")
+     * )
+     */
+    public function checkAvailability(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'nullable|string|email|max:255',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        // Au moins un identifiant doit être fourni
+        if (empty($validated['email']) && empty($validated['phone'])) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Veuillez fournir un email ou un numéro de téléphone',
+            ], 422);
+        }
+
+        // Vérifier l'email
+        if (!empty($validated['email'])) {
+            $emailExists = User::where('email', $validated['email'])->exists();
+            if ($emailExists) {
+                return response()->json([
+                    'available' => false,
+                    'field' => 'email',
+                    'message' => 'Cette adresse email est déjà utilisée',
+                ], 200);
+            }
+        }
+
+        // Vérifier le téléphone
+        if (!empty($validated['phone'])) {
+            $phoneExists = User::where('phone', $validated['phone'])->exists();
+            if ($phoneExists) {
+                return response()->json([
+                    'available' => false,
+                    'field' => 'phone',
+                    'message' => 'Ce numéro de téléphone est déjà utilisé',
+                ], 200);
+            }
+        }
+
+        // Disponible
+        return response()->json([
+            'available' => true,
+            'message' => 'Disponible',
+        ], 200);
     }
 }

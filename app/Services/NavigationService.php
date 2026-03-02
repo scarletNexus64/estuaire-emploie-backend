@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AdminRole;
 use App\Models\User;
 
 class NavigationService
@@ -29,6 +30,12 @@ class NavigationService
                 'section' => 'Gestion',
                 'items' => [
                     [
+                        'name' => 'Utilisateurs',
+                        'route' => 'admin.users.index',
+                        'icon' => 'fas fa-users',
+                        'permission' => 'manage_users',
+                    ],
+                    [
                         'name' => 'Entreprises',
                         'route' => 'admin.companies.index',
                         'icon' => 'fas fa-building',
@@ -38,6 +45,12 @@ class NavigationService
                         'name' => 'Offres d\'emploi',
                         'route' => 'admin.jobs.index',
                         'icon' => 'fas fa-briefcase',
+                        'permission' => 'manage_jobs',
+                    ],
+                    [
+                        'name' => 'Services Rapides',
+                        'route' => 'admin.quick-services.index',
+                        'icon' => 'fas fa-tools',
                         'permission' => 'manage_jobs',
                     ],
                     [
@@ -51,12 +64,6 @@ class NavigationService
                         'route' => 'admin.skill-tests.index',
                         'icon' => 'fas fa-clipboard-check',
                         'permission' => 'manage_applications',
-                    ],
-                    [
-                        'name' => 'Candidats',
-                        'route' => 'admin.users.index',
-                        'icon' => 'fas fa-users',
-                        'permission' => 'manage_users',
                     ],
                     [
                         'name' => 'Portfolios',
@@ -80,6 +87,35 @@ class NavigationService
                         'route' => 'admin.programs.index',
                         'icon' => 'fas fa-book',
                         'permission' => 'manage_settings',
+                    ],
+                ],
+            ],
+            [
+                'section' => 'Contenu Étudiant',
+                'items' => [
+                    [
+                        'name' => 'Packs d\'Épreuves',
+                        'route' => 'admin.exam-packs.index',
+                        'icon' => 'fas fa-box',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Épreuves (gestion)',
+                        'route' => 'admin.exam-papers.index',
+                        'icon' => 'fas fa-file-pdf',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Packs de Formation',
+                        'route' => 'admin.training-packs.index',
+                        'icon' => 'fas fa-graduation-cap',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Vidéos de Formation',
+                        'route' => 'admin.training-videos.index',
+                        'icon' => 'fas fa-video',
+                        'permission' => 'manage_premium_services',
                     ],
                 ],
             ],
@@ -117,7 +153,7 @@ class NavigationService
                         'permission' => 'manage_payments',
                     ],
                     [
-                        'name' => 'Compte Bancaire',
+                        'name' => 'Compte FREEMOPAY',
                         'route' => 'admin.bank-account.index',
                         'icon' => 'fas fa-university',
                         'permission' => 'manage_payments',
@@ -132,12 +168,6 @@ class NavigationService
                         'name' => 'Services pour Candidats',
                         'route' => 'admin.premium-services.index',
                         'icon' => 'fas fa-user-graduate',
-                        'permission' => 'manage_premium_services',
-                    ],
-                    [
-                        'name' => 'Épreuves d\'Examen (Mode Étudiant)',
-                        'route' => 'admin.exam-papers.index',
-                        'icon' => 'fas fa-file-pdf',
                         'permission' => 'manage_premium_services',
                     ],
                     [
@@ -211,7 +241,78 @@ class NavigationService
     }
 
     /**
-     * Filter menu items based on user permissions
+     * Check if a menu item should be visible for a specific admin role
+     *
+     * @param string $route
+     * @param AdminRole $adminRole
+     * @return bool
+     */
+    private static function isMenuItemVisibleForRole(string $route, AdminRole $adminRole): bool
+    {
+        // Define which routes are visible for each role
+        $roleMenuAccess = [
+            AdminRole::SUPER_ADMIN->value => ['*'], // Voit tout
+
+            AdminRole::CANDIDATE_RECRUITER_MANAGER->value => [
+                'admin.users.index',
+                'admin.companies.index',
+                'admin.jobs.index',
+                'admin.quick-services.index',
+                'admin.applications.index',
+                'admin.skill-tests.index',
+                'admin.portfolios.index',
+                'admin.recruiters.index',
+                'admin.settings.index',
+            ],
+
+            AdminRole::TRAINING_PROGRAMS_MANAGER->value => [
+                'admin.programs.index',
+            ],
+
+            AdminRole::STUDENT_SPACE_MANAGER->value => [
+                'admin.exam-packs.index',
+                'admin.exam-papers.index',
+                'admin.training-packs.index',
+                'admin.training-videos.index',
+                'admin.settings.index',
+            ],
+
+            AdminRole::ADVERTISING_MANAGER->value => [
+                'admin.announcements.index',
+                'admin.advertisements.index',
+            ],
+
+            AdminRole::FINANCE_MANAGER->value => [
+                'admin.subscription-plans.recruiters.index',
+                'admin.subscription-plans.job-seekers.index',
+                'admin.manual-subscriptions.index',
+                'admin.payments.index',
+                'admin.wallets.index',
+                'admin.bank-account.index',
+                'admin.recruiter-services.index',
+                'admin.premium-services.index',
+                'admin.advertisements.index',
+                'admin.financial-stats.index',
+            ],
+
+            AdminRole::BULK_ANNOUNCEMENTS_MANAGER->value => [
+                'admin.announcements.index',
+            ],
+        ];
+
+        $allowedRoutes = $roleMenuAccess[$adminRole->value] ?? [];
+
+        // Super admin can see everything
+        if (in_array('*', $allowedRoutes)) {
+            return true;
+        }
+
+        // Check if the route is in the allowed routes
+        return in_array($route, $allowedRoutes);
+    }
+
+    /**
+     * Filter menu items based on user permissions and admin role
      *
      * @param User $user
      * @return array
@@ -225,12 +326,27 @@ class NavigationService
             $filteredItems = [];
 
             foreach ($section['items'] as $item) {
-                // If no permission required, or user is super admin, or user has the permission
-                if (
-                    $item['permission'] === null ||
-                    $user->isSuperAdmin() ||
-                    $user->hasPermission($item['permission'])
-                ) {
+                $shouldShow = false;
+
+                // Super admin sees everything
+                if ($user->isSuperAdmin()) {
+                    $shouldShow = true;
+                }
+                // Check role-based access
+                elseif ($user->admin_role && isset($item['route'])) {
+                    $shouldShow = self::isMenuItemVisibleForRole($item['route'], $user->admin_role);
+                }
+                // Fallback to permission-based access
+                elseif ($item['permission'] === null || $user->hasPermission($item['permission'])) {
+                    $shouldShow = true;
+                }
+
+                // Dashboard is always visible for all admins
+                if (isset($item['route']) && $item['route'] === 'admin.dashboard') {
+                    $shouldShow = true;
+                }
+
+                if ($shouldShow) {
                     $filteredItems[] = $item;
                 }
             }

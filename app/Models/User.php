@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\AdminRole;
 use App\Models\Traits\UserFeatures;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -23,7 +25,9 @@ class User extends Authenticatable
         'fcm_token',
         'role',
         'available_roles',
-        'wallet_balance',
+        'wallet_balance', // Legacy - will be deprecated
+        'freemopay_wallet_balance',
+        'paypal_wallet_balance',
         'preferred_currency', // XAF, USD, EUR
         'password',
         'profile_photo',
@@ -35,8 +39,11 @@ class User extends Authenticatable
         'visibility_score',
         'is_active',
         'is_super_admin',
+        'admin_role',
         'permissions',
         'last_login_at',
+        'referral_code',
+        'referred_by_id',
     ];
 
     protected $hidden = [
@@ -51,9 +58,12 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'is_super_admin' => 'boolean',
+            'admin_role' => AdminRole::class,
             'permissions' => 'array',
             'available_roles' => 'array',
-            'wallet_balance' => 'decimal:2',
+            'wallet_balance' => 'decimal:2', // Legacy - will be deprecated
+            'freemopay_wallet_balance' => 'decimal:2',
+            'paypal_wallet_balance' => 'decimal:2',
             'last_login_at' => 'datetime',
         ];
     }
@@ -102,9 +112,22 @@ class User extends Authenticatable
         return $this->hasMany(Job::class, 'posted_by');
     }
 
-    public function favorites(): BelongsToMany
+    public function favorites(): HasMany
     {
-        return $this->belongsToMany(Job::class, 'favorites')
+        return $this->hasMany(Favorite::class);
+    }
+
+    // Relation spécifique pour les jobs favoris (via polymorphic)
+    public function favoriteJobs(): MorphToMany
+    {
+        return $this->morphToMany(Job::class, 'favoriteable', 'favorites')
+            ->withTimestamps();
+    }
+
+    // Relation spécifique pour les services favoris (via polymorphic)
+    public function favoriteQuickServices(): MorphToMany
+    {
+        return $this->morphToMany(\App\Models\QuickService::class, 'favoriteable', 'favorites')
             ->withTimestamps();
     }
 
@@ -140,12 +163,47 @@ class User extends Authenticatable
             return true;
         }
 
+        // Check role-based permissions
+        $rolePermissions = $this->getAdminRolePermissions();
+        if (in_array($permission, $rolePermissions)) {
+            return true;
+        }
+
+        // Check custom permissions
         return in_array($permission, $this->permissions ?? []);
     }
 
     public function isSuperAdmin(): bool
     {
         return $this->role === 'admin' && $this->is_super_admin === true;
+    }
+
+    /**
+     * Get permissions based on admin role
+     */
+    public function getAdminRolePermissions(): array
+    {
+        if (!$this->isAdmin() || !$this->admin_role) {
+            return [];
+        }
+
+        return $this->admin_role->permissions();
+    }
+
+    /**
+     * Get the admin role enum instance
+     */
+    public function getAdminRole(): ?AdminRole
+    {
+        return $this->admin_role;
+    }
+
+    /**
+     * Check if user has a specific admin role
+     */
+    public function hasAdminRole(AdminRole $role): bool
+    {
+        return $this->admin_role === $role;
     }
 
     /**
@@ -557,5 +615,71 @@ class User extends Authenticatable
     public function hasWalletBalance(float $amount): bool
     {
         return ($this->wallet_balance ?? 0) >= $amount;
+    }
+
+    /**
+     * Boot method pour générer automatiquement le code parrain
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->referral_code)) {
+                $user->referral_code = static::generateUniqueReferralCode();
+            }
+        });
+    }
+
+    /**
+     * Génère un code parrain unique
+     */
+    public static function generateUniqueReferralCode(): string
+    {
+        do {
+            $code = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        } while (static::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Le parrain qui a parrainé cet utilisateur
+     */
+    public function referrer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_id');
+    }
+
+    /**
+     * Les filleuls parrainés par cet utilisateur
+     */
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by_id');
+    }
+
+    /**
+     * Commissions gagnées en tant que parrain
+     */
+    public function earnedCommissions(): HasMany
+    {
+        return $this->hasMany(ReferralCommission::class, 'referrer_id');
+    }
+
+    /**
+     * Commissions générées pour le parrain
+     */
+    public function generatedCommissions(): HasMany
+    {
+        return $this->hasMany(ReferralCommission::class, 'referred_id');
+    }
+
+    /**
+     * Calcule le total des commissions gagnées
+     */
+    public function getTotalEarnedCommissions(): float
+    {
+        return $this->earnedCommissions()->sum('commission_amount');
     }
 }

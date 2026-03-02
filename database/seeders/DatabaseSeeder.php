@@ -27,6 +27,15 @@ class DatabaseSeeder extends Seeder
             RecruiterSeeder::class,
             JobSeeder::class,
             ApplicationSeeder::class,
+
+            // Configuration Académique (Spécialités et Catégories)
+            SpecialtySeeder::class, // Spécialités pour épreuves et packs d'épreuves
+            TrainingCategorySeeder::class, // Catégories pour packs de formation
+
+            // Contenu Étudiant - Packs de Formation et Épreuves
+            TrainingVideoSeeder::class, // Vidéos de formation (YouTube)
+            TrainingPackSeeder::class, // Packs de formation payants
+            ExamPackSeeder::class, // Packs d'épreuves payants (avec épreuves incluses)
         ]);
     }
 }

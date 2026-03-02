@@ -67,6 +67,27 @@
                 <label class="form-label">Confirmer le mot de passe</label>
                 <input type="password" name="password_confirmation" class="form-control">
             </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label" style="font-weight: 600; font-size: 1rem; margin-bottom: 0.75rem;">Rôle de l'administrateur *</label>
+                <select name="admin_role" id="admin_role" class="form-control" required style="padding: 0.75rem; font-size: 0.9375rem;">
+                    <option value="">-- Sélectionner un rôle --</option>
+                    @foreach(\App\Enums\AdminRole::options() as $roleValue => $roleData)
+                        @if($roleValue !== 'super_admin' || auth()->user()->isSuperAdmin())
+                            <option value="{{ $roleValue }}" {{ old('admin_role', $user->admin_role?->value) === $roleValue ? 'selected' : '' }}>
+                                {{ $roleData['label'] }}
+                            </option>
+                        @endif
+                    @endforeach
+                </select>
+                @error('admin_role')
+                    <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+                @enderror
+
+                <div id="roleDescription" style="margin-top: 0.75rem; padding: 1rem; background: var(--light); border-radius: 8px; display: none;">
+                    <p style="margin: 0; color: var(--secondary); font-size: 0.875rem; line-height: 1.5;"></p>
+                </div>
+            </div>
         </div>
 
         @if(auth()->user()->isSuperAdmin())
@@ -88,8 +109,9 @@
         </div>
         @endif
 
-        <div class="form-group">
-            <label class="form-label" style="font-weight: 600; font-size: 1rem; margin-bottom: 1rem; display: block;">Permissions</label>
+        <div class="form-group" style="display: none;">
+            <label class="form-label" style="font-weight: 600; font-size: 1rem; margin-bottom: 1rem; display: block;">Permissions personnalisées (optionnel)</label>
+            <p style="color: var(--secondary); font-size: 0.875rem; margin-bottom: 1rem;">Les permissions sont automatiquement attribuées en fonction du rôle sélectionné. Vous pouvez ajouter des permissions supplémentaires ci-dessous si nécessaire.</p>
 
             @foreach($permissionsByCategory as $category => $permissions)
                 <div style="margin-bottom: 1.5rem;">
@@ -130,4 +152,33 @@
         </div>
     </form>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Role descriptions mapping
+    const roleDescriptions = {
+        @foreach(\App\Enums\AdminRole::options() as $roleValue => $roleData)
+        '{{ $roleValue }}': '{{ $roleData['description'] }}',
+        @endforeach
+    };
+
+    // Show/hide role description based on selection
+    document.getElementById('admin_role').addEventListener('change', function() {
+        const descriptionDiv = document.getElementById('roleDescription');
+        const descriptionText = descriptionDiv.querySelector('p');
+
+        if (this.value && roleDescriptions[this.value]) {
+            descriptionText.textContent = roleDescriptions[this.value];
+            descriptionDiv.style.display = 'block';
+        } else {
+            descriptionDiv.style.display = 'none';
+        }
+    });
+
+    // Trigger change event on page load if there's a pre-selected value
+    if (document.getElementById('admin_role').value) {
+        document.getElementById('admin_role').dispatchEvent(new Event('change'));
+    }
+</script>
 @endsection

@@ -615,9 +615,65 @@ class ApplicationController extends Controller
             ], 403);
         }
 
-        $query = Application::whereHas('job', function ($q) use ($recruiter) {
+        // === DEBUG LOGS ===
+        \Log::info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        \Log::info('[ReceivedApplications] 🔍 DEBUG INFO');
+        \Log::info('[ReceivedApplications] User ID: ' . $user->id);
+        \Log::info('[ReceivedApplications] User Name: ' . $user->name);
+        \Log::info('[ReceivedApplications] Recruiter ID: ' . ($recruiter->id ?? 'NULL'));
+        \Log::info('[ReceivedApplications] Company ID: ' . ($recruiter->company_id ?? 'NULL'));
+
+        // Vérifier combien de jobs existent pour cette company
+        $jobsCount = \App\Models\Job::where('company_id', $recruiter->company_id)->count();
+        \Log::info('[ReceivedApplications] Jobs count for company: ' . $jobsCount);
+
+        // Vérifier combien d'applications existent au total
+        $totalApplications = \App\Models\Application::count();
+        \Log::info('[ReceivedApplications] Total applications in DB: ' . $totalApplications);
+
+        // Vérifier les applications pour les jobs de cette company
+        $applicationsForCompanyJobs = \App\Models\Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
-        })->with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation', 'portfolio']);
+        })->count();
+        \Log::info('[ReceivedApplications] Applications for company jobs: ' . $applicationsForCompanyJobs);
+
+        // Lister les job_ids qui ont des candidatures
+        $jobIdsWithApplications = \App\Models\Application::whereHas('job', function ($q) use ($recruiter) {
+            $q->where('company_id', $recruiter->company_id);
+        })->pluck('job_id')->unique()->toArray();
+        \Log::info('[ReceivedApplications] Job IDs with applications: ' . json_encode($jobIdsWithApplications));
+
+        // Vérifier si le job_id demandé existe et appartient à cette company
+        if ($request->has('job_id')) {
+            $requestedJobBelongsToCompany = \App\Models\Job::where('id', $request->job_id)
+                ->where('company_id', $recruiter->company_id)
+                ->exists();
+            \Log::info('[ReceivedApplications] Job ID ' . $request->job_id . ' belongs to company: ' . ($requestedJobBelongsToCompany ? 'YES' : 'NO'));
+        }
+
+        // Vérifier si la candidature a un utilisateur valide
+        $applicationsWithUsers = \App\Models\Application::whereHas('user')
+            ->whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->count();
+        \Log::info('[ReceivedApplications] Applications with valid users: ' . $applicationsWithUsers);
+
+        // Vérifier les candidatures SANS utilisateur (utilisateurs supprimés)
+        $applicationsWithoutUsers = \App\Models\Application::whereDoesntHave('user')
+            ->whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->count();
+        \Log::info('[ReceivedApplications] Applications with deleted users: ' . $applicationsWithoutUsers);
+
+        \Log::info('[ReceivedApplications] Request job_id filter: ' . ($request->job_id ?? 'NULL'));
+        \Log::info('[ReceivedApplications] Request status filter: ' . ($request->status ?? 'NULL'));
+        \Log::info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        // === END DEBUG LOGS ===
+
+        $query = Application::whereHas('user')  // Exclure les candidatures dont l'utilisateur a été supprimé
+            ->whereHas('job', function ($q) use ($recruiter) {
+                $q->where('company_id', $recruiter->company_id);
+            })->with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation', 'portfolio']);
 
         // Charger les infos utilisateur de base (sans contact sensible)
         $query->with(['user' => function ($q) {
@@ -643,6 +699,11 @@ class ApplicationController extends Controller
 
         // Transform applications to add access info
         $applications->getCollection()->transform(function ($application) use ($company, $purchaseService) {
+            // Skip if user is null (should not happen with whereHas filter, but safety check)
+            if (!$application->user) {
+                return $application;
+            }
+
             $hasFullAccess = $purchaseService->hasAccessToCandidateContact($company, $application->user);
 
             // If has access, load full user info

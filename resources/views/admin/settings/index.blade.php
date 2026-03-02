@@ -4,289 +4,151 @@
 @section('page-title', 'Paramètres du Système')
 
 @section('content')
-    <!-- Categories -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Catégories de Métiers</h3>
-            <button class="btn btn-primary btn-sm" onclick="document.getElementById('add-category-form').style.display='block'">
-                Ajouter
+    <div class="card" style="border-radius: 8px; overflow: hidden;">
+        <!-- Tabs Navigation -->
+        <div style="display: flex; border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
+            <button
+                id="tab-btn-jobs"
+                class="tab-button active"
+                onclick="switchSettingsTab('jobs')"
+                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+            >
+                <i class="mdi mdi-briefcase"></i> Configuration Emplois
+                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">4</span>
+            </button>
+            <button
+                id="tab-btn-academic"
+                class="tab-button"
+                onclick="switchSettingsTab('academic')"
+                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+            >
+                <i class="mdi mdi-school"></i> Configuration Académique
+                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">2</span>
+            </button>
+            <button
+                id="tab-btn-referral"
+                class="tab-button"
+                onclick="switchSettingsTab('referral')"
+                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+            >
+                <i class="mdi mdi-account-multiple"></i> Parrainage
+                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">3</span>
             </button>
         </div>
 
-        <div id="add-category-form" style="display: none; padding: 1.5rem; border-bottom: 1px solid var(--border);">
-            <form action="{{ route('admin.settings.categories.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="type" value="category">
-                <div class="form-group">
-                    <label class="form-label">Nom de la catégorie</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control"></textarea>
-                </div>
-                <button type="submit" class="btn btn-success">Ajouter</button>
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-category-form').style.display='none'">
-                    Annuler
-                </button>
-            </form>
-        </div>
+        <!-- Tab Content Container -->
+        <div style="position: relative; overflow: hidden;">
+            <!-- Tab: Configuration Emplois -->
+            <div id="tab-content-jobs" class="settings-tab-content" style="display: block;">
+                @include('admin.settings.partials.job-categories', ['categories' => $categories])
+                @include('admin.settings.partials.locations', ['locations' => $locations])
+                @include('admin.settings.partials.contract-types', ['contractTypes' => $contractTypes])
+                @include('admin.settings.partials.service-categories', ['serviceCategories' => $serviceCategories])
+            </div>
 
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Slug</th>
-                        <th>Nombre d'offres</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($categories as $category)
-                        <tr id="category-row-{{ $category->id }}">
-                            <td><strong>{{ $category->name }}</strong></td>
-                            <td>{{ $category->slug }}</td>
-                            <td>
-                                <span class="badge badge-info">{{ $category->jobs_count }}</span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-info btn-sm" onclick="showEditForm('category', {{ $category->id }})">
-                                    <i class="mdi mdi-pencil"></i> Modifier
-                                </button>
-                                <form action="{{ route('admin.settings.categories.delete', $category) }}?type=category" method="POST" style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr ?')">
-                                        <i class="mdi mdi-delete"></i> Supprimer
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr id="category-edit-{{ $category->id }}" style="display: none;">
-                            <td colspan="4" style="padding: 1.5rem; background-color: #f9fafb;">
-                                <form action="{{ route('admin.settings.categories.store') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="type" value="category">
-                                    <input type="hidden" name="id" value="{{ $category->id }}">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div class="form-group">
-                                            <label class="form-label">Nom de la catégorie</label>
-                                            <input type="text" name="name" class="form-control" value="{{ $category->name }}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Description</label>
-                                            <textarea name="description" class="form-control">{{ $category->description }}</textarea>
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="mdi mdi-check"></i> Enregistrer
-                                    </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="hideEditForm('category', {{ $category->id }})">
-                                        <i class="mdi mdi-close"></i> Annuler
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <!-- Tab: Configuration Académique -->
+            <div id="tab-content-academic" class="settings-tab-content" style="display: none;">
+                @include('admin.settings.partials.specialties', ['specialties' => $specialties])
+                @include('admin.settings.partials.training-categories', ['trainingCategories' => $trainingCategories])
+            </div>
+
+            <!-- Tab: Parrainage -->
+            <div id="tab-content-referral" class="settings-tab-content" style="display: none;">
+                @include('admin.settings.partials.referral-config')
+                @include('admin.settings.partials.referral-users')
+                @include('admin.settings.partials.referral-commissions')
+            </div>
         </div>
     </div>
 
-    <!-- Locations -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Localisations</h3>
-            <button class="btn btn-primary btn-sm" onclick="document.getElementById('add-location-form').style.display='block'">
-                Ajouter
-            </button>
-        </div>
+    <style>
+        /* Tab button active state */
+        .tab-button.active {
+            color: #1e293b !important;
+            border-bottom-color: #667eea !important;
+            background: white !important;
+        }
 
-        <div id="add-location-form" style="display: none; padding: 1.5rem; border-bottom: 1px solid var(--border);">
-            <form action="{{ route('admin.settings.categories.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="type" value="location">
-                <div class="form-group">
-                    <label class="form-label">Nom de la ville</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Pays</label>
-                    <input type="text" name="country" class="form-control" value="Cameroun">
-                </div>
-                <button type="submit" class="btn btn-success">Ajouter</button>
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-location-form').style.display='none'">
-                    Annuler
-                </button>
-            </form>
-        </div>
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.05) !important;
+        }
 
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ville</th>
-                        <th>Pays</th>
-                        <th>Nombre d'offres</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($locations as $location)
-                        <tr id="location-row-{{ $location->id }}">
-                            <td><strong>{{ $location->name }}</strong></td>
-                            <td>{{ $location->country }}</td>
-                            <td>
-                                <span class="badge badge-info">{{ $location->jobs_count }}</span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-info btn-sm" onclick="showEditForm('location', {{ $location->id }})">
-                                    <i class="mdi mdi-pencil"></i> Modifier
-                                </button>
-                                <form action="{{ route('admin.settings.categories.delete', $location) }}?type=location" method="POST" style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr ?')">
-                                        <i class="mdi mdi-delete"></i> Supprimer
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr id="location-edit-{{ $location->id }}" style="display: none;">
-                            <td colspan="4" style="padding: 1.5rem; background-color: #f9fafb;">
-                                <form action="{{ route('admin.settings.categories.store') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="type" value="location">
-                                    <input type="hidden" name="id" value="{{ $location->id }}">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        <div class="form-group">
-                                            <label class="form-label">Nom de la ville</label>
-                                            <input type="text" name="name" class="form-control" value="{{ $location->name }}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Pays</label>
-                                            <input type="text" name="country" class="form-control" value="{{ $location->country }}">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="mdi mdi-check"></i> Enregistrer
-                                    </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="hideEditForm('location', {{ $location->id }})">
-                                        <i class="mdi mdi-close"></i> Annuler
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+        .tab-button.active span {
+            background: #28a745 !important;
+        }
 
-    <!-- Contract Types -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Types de Contrat</h3>
-            <button class="btn btn-primary btn-sm" onclick="document.getElementById('add-contract-form').style.display='block'">
-                Ajouter
-            </button>
-        </div>
+        /* Tab content animation */
+        .settings-tab-content {
+            animation: slideIn 0.3s ease-in-out;
+        }
 
-        <div id="add-contract-form" style="display: none; padding: 1.5rem; border-bottom: 1px solid var(--border);">
-            <form action="{{ route('admin.settings.categories.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="type" value="contract_type">
-                <div class="form-group">
-                    <label class="form-label">Nom du type de contrat</label>
-                    <input type="text" name="name" class="form-control" required placeholder="Ex: CDI, CDD, Stage, Freelance">
-                </div>
-                <button type="submit" class="btn btn-success">Ajouter</button>
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('add-contract-form').style.display='none'">
-                    Annuler
-                </button>
-            </form>
-        </div>
-
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Slug</th>
-                        <th>Nombre d'offres</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($contractTypes as $type)
-                        <tr id="contract_type-row-{{ $type->id }}">
-                            <td><strong>{{ $type->name }}</strong></td>
-                            <td>{{ $type->slug }}</td>
-                            <td>
-                                <span class="badge badge-info">{{ $type->jobs_count }}</span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-info btn-sm" onclick="showEditForm('contract_type', {{ $type->id }})">
-                                    <i class="mdi mdi-pencil"></i> Modifier
-                                </button>
-                                <form action="{{ route('admin.settings.categories.delete', $type) }}?type=contract_type" method="POST" style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr ?')">
-                                        <i class="mdi mdi-delete"></i> Supprimer
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr id="contract_type-edit-{{ $type->id }}" style="display: none;">
-                            <td colspan="4" style="padding: 1.5rem; background-color: #f9fafb;">
-                                <form action="{{ route('admin.settings.categories.store') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="type" value="contract_type">
-                                    <input type="hidden" name="id" value="{{ $type->id }}">
-                                    <div class="form-group mb-4">
-                                        <label class="form-label">Nom du type de contrat</label>
-                                        <input type="text" name="name" class="form-control" value="{{ $type->name }}" required placeholder="Ex: CDI, CDD, Stage, Freelance">
-                                    </div>
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="mdi mdi-check"></i> Enregistrer
-                                    </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="hideEditForm('contract_type', {{ $type->id }})">
-                                        <i class="mdi mdi-close"></i> Annuler
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-@endsection
-
-@push('scripts')
-<script>
-    function showEditForm(type, id) {
-        // Hide all other edit forms first
-        document.querySelectorAll('tr[id$="-edit-' + id + '"]').forEach(function(row) {
-            if (row.id !== type + '-edit-' + id) {
-                row.style.display = 'none';
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
             }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+
+    <script>
+        // Tab Switching Function
+        function switchSettingsTab(tabName) {
+            console.log('Switching to tab:', tabName);
+
+            // Hide all tab contents
+            const allContents = document.querySelectorAll('.settings-tab-content');
+            allContents.forEach(content => {
+                content.style.display = 'none';
+                console.log('Hiding:', content.id);
+            });
+
+            // Remove active class from all buttons
+            const allButtons = document.querySelectorAll('.tab-button');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const selectedContent = document.getElementById('tab-content-' + tabName);
+            if (selectedContent) {
+                selectedContent.style.display = 'block';
+                console.log('Showing:', selectedContent.id);
+            } else {
+                console.error('Content not found for tab:', tabName);
+            }
+
+            // Add active class to selected button
+            const selectedButton = document.getElementById('tab-btn-' + tabName);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+                console.log('Activated button:', selectedButton.id);
+            }
+        }
+
+        // Edit Form Functions (pour les formulaires dans les partials)
+        function showEditForm(type, id) {
+            const row = document.getElementById(`${type}-row-${id}`);
+            const edit = document.getElementById(`${type}-edit-${id}`);
+            if (row) row.style.display = 'none';
+            if (edit) edit.style.display = 'table-row';
+        }
+
+        function hideEditForm(type, id) {
+            const edit = document.getElementById(`${type}-edit-${id}`);
+            const row = document.getElementById(`${type}-row-${id}`);
+            if (edit) edit.style.display = 'none';
+            if (row) row.style.display = 'table-row';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Settings page loaded');
+            // Make sure first tab is active
+            switchSettingsTab('jobs');
         });
-
-        // Show the selected edit form
-        const editRow = document.getElementById(type + '-edit-' + id);
-        if (editRow) {
-            editRow.style.display = 'table-row';
-        }
-    }
-
-    function hideEditForm(type, id) {
-        const editRow = document.getElementById(type + '-edit-' + id);
-        if (editRow) {
-            editRow.style.display = 'none';
-        }
-    }
-</script>
-@endpush
+    </script>
+@endsection

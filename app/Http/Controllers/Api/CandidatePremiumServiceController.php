@@ -38,9 +38,11 @@ class CandidatePremiumServiceController extends Controller
     {
         $request->validate([
             'service_slug' => 'required|string|exists:premium_services_configs,slug',
+            'payment_provider' => 'required|string|in:freemopay,paypal',
         ]);
 
         $user = Auth::user();
+        $paymentProvider = $request->payment_provider;
 
         // Récupérer le service
         $service = PremiumServiceConfig::where('slug', $request->service_slug)
@@ -75,15 +77,21 @@ class CandidatePremiumServiceController extends Controller
             ], 400);
         }
 
+        // Déterminer le champ wallet et le nom du provider
+        $walletField = $paymentProvider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+        $walletBalance = $user->{$walletField} ?? 0;
+        $providerName = $paymentProvider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+
         // Vérifier le solde wallet
-        if ($user->wallet_balance < $service->price) {
+        if ($walletBalance < $service->price) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solde insuffisant. Veuillez recharger votre wallet.',
+                'message' => "Solde {$providerName} insuffisant. Veuillez recharger votre wallet.",
                 'data' => [
                     'required_amount' => $service->price,
-                    'current_balance' => $user->wallet_balance,
-                    'missing_amount' => $service->price - $user->wallet_balance,
+                    'current_balance' => $walletBalance,
+                    'missing_amount' => $service->price - $walletBalance,
+                    'provider' => $paymentProvider,
                 ],
             ], 400);
         }
@@ -91,9 +99,13 @@ class CandidatePremiumServiceController extends Controller
         // Transaction pour l'achat
         DB::beginTransaction();
         try {
-            // Débiter le wallet
-            $user->wallet_balance -= $service->price;
-            $user->save();
+            // Store balance before debit
+            $balanceBefore = $walletBalance;
+
+            // Débiter le wallet spécifique
+            $user->decrement($walletField, $service->price);
+            $user->refresh();
+            $balanceAfter = $user->{$walletField};
 
             // Créer le paiement
             $payment = Payment::create([
@@ -104,6 +116,7 @@ class CandidatePremiumServiceController extends Controller
                 'currency' => 'XAF',
                 'payment_method' => 'wallet',
                 'payment_type' => 'service',
+                'provider' => $paymentProvider,
                 'status' => 'completed',
                 'paid_at' => now(),
                 'payable_type' => PremiumServiceConfig::class,
@@ -115,11 +128,12 @@ class CandidatePremiumServiceController extends Controller
                 'user_id' => $user->id,
                 'type' => 'debit',
                 'amount' => $service->price,
-                'balance_before' => $user->wallet_balance + $service->price,
-                'balance_after' => $user->wallet_balance,
-                'description' => "Achat du service: {$service->name}",
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'description' => "Achat du service: {$service->name} ({$providerName})",
                 'reference_type' => 'payment',
                 'reference_id' => $payment->id,
+                'provider' => $paymentProvider,
                 'status' => 'completed',
             ]);
 
@@ -142,13 +156,17 @@ class CandidatePremiumServiceController extends Controller
 
             DB::commit();
 
+            // Envoyer notification FCM pour l'achat
+            $this->sendPurchaseNotification($user, $service, $paymentProvider);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Service activé avec succès !',
                 'data' => [
                     'service' => $userService->load('config'),
                     'payment' => $payment,
-                    'new_balance' => $user->wallet_balance,
+                    'new_balance' => $balanceAfter,
+                    'provider' => $paymentProvider,
                 ],
             ], 200);
 
@@ -160,6 +178,63 @@ class CandidatePremiumServiceController extends Controller
                 'message' => 'Erreur lors de l\'achat du service',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Envoie une notification FCM pour un achat de service premium
+     */
+    protected function sendPurchaseNotification(User $user, PremiumServiceConfig $service, string $paymentProvider): void
+    {
+        try {
+            if (!$user->fcm_token) {
+                return;
+            }
+
+            $providerName = $paymentProvider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+            $title = "Service premium activé";
+            $body = "Votre service premium {$service->name} pour " . number_format($service->price, 0, ',', ' ') . " FCFA via wallet {$providerName} a été activé avec succès.";
+
+            // Créer la notification avec la structure correcte
+            $notification = \App\Models\Notification::create([
+                'type' => 'premium_service_purchase',
+                'notifiable_type' => User::class,
+                'notifiable_id' => $user->id,
+                'data' => [
+                    'title' => $title,
+                    'body' => $body,
+                    'service_name' => $service->name,
+                    'service_slug' => $service->slug,
+                    'amount' => $service->price,
+                    'provider' => $paymentProvider,
+                ],
+            ]);
+
+            // Envoyer via FCM
+            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
+                ->post('https://fcm.googleapis.com/fcm/send', [
+                    'to' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                        'sound' => 'default',
+                    ],
+                    'data' => [
+                        'type' => 'premium_service_purchase',
+                        'service_name' => $service->name,
+                        'notification_id' => $notification->id,
+                    ],
+                ]);
+
+            \Log::info("[CandidatePremiumService] ✅ FCM notification sent for service purchase", [
+                'user_id' => $user->id,
+                'service_name' => $service->name,
+                'amount' => $service->price,
+                'provider' => $paymentProvider,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("[CandidatePremiumService] ❌ Failed to send FCM notification: " . $e->getMessage());
         }
     }
 

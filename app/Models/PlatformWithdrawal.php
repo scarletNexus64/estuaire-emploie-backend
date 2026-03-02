@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PlatformWithdrawal extends Model
 {
     protected $fillable = [
+        'user_id',
         'admin_id',
         'amount_requested',
         'commission_rate',
         'commission_amount',
         'amount_sent',
         'currency',
+        'provider',
         'payment_method',
         'payment_account',
         'payment_account_name',
@@ -21,6 +23,9 @@ class PlatformWithdrawal extends Model
         'transaction_reference',
         'freemopay_reference',
         'freemopay_response',
+        'paypal_batch_id',
+        'paypal_payout_item_id',
+        'paypal_response',
         'failure_code',
         'failure_reason',
         'admin_notes',
@@ -35,11 +40,20 @@ class PlatformWithdrawal extends Model
         'commission_amount' => 'decimal:2',
         'amount_sent' => 'decimal:2',
         'freemopay_response' => 'array',
+        'paypal_response' => 'array',
         'completed_at' => 'datetime',
     ];
 
     /**
-     * Get the admin who initiated the withdrawal
+     * Get the user who initiated the withdrawal (for user withdrawals)
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the admin who initiated the withdrawal (for admin/platform withdrawals)
      */
     public function admin(): BelongsTo
     {
@@ -91,12 +105,37 @@ class PlatformWithdrawal extends Model
      */
     public function markAsCompleted(string $reference, array $response): void
     {
-        $this->update([
+        $updateData = [
             'status' => 'completed',
-            'freemopay_reference' => $reference,
-            'freemopay_response' => $response,
             'completed_at' => now(),
-        ]);
+        ];
+
+        // Store reference and response based on provider
+        if ($this->provider === 'paypal') {
+            $updateData['paypal_batch_id'] = $reference;
+            $updateData['paypal_response'] = $response;
+        } else {
+            $updateData['freemopay_reference'] = $reference;
+            $updateData['freemopay_response'] = $response;
+        }
+
+        $this->update($updateData);
+    }
+
+    /**
+     * Check if withdrawal is using PayPal
+     */
+    public function isPayPal(): bool
+    {
+        return $this->provider === 'paypal';
+    }
+
+    /**
+     * Check if withdrawal is using FreeMoPay
+     */
+    public function isFreeMoPay(): bool
+    {
+        return $this->provider === 'freemopay';
     }
 
     /**

@@ -25,6 +25,7 @@ class RecruiterServicePurchaseController extends Controller
     {
         $request->validate([
             'application_id' => 'required|exists:applications,id',
+            'payment_provider' => 'required|string|in:freemopay,paypal',
         ]);
 
         $user = Auth::user();
@@ -57,7 +58,12 @@ class RecruiterServicePurchaseController extends Controller
             ], 403);
         }
 
-        $result = $this->purchaseService->purchaseCandidateContact($user, $company, $application);
+        $result = $this->purchaseService->purchaseCandidateContact(
+            $user,
+            $company,
+            $application,
+            $request->payment_provider
+        );
 
         $status = $result['success'] ? 200 : 400;
         return response()->json($result, $status);
@@ -71,6 +77,7 @@ class RecruiterServicePurchaseController extends Controller
     {
         $request->validate([
             'application_id' => 'required|exists:applications,id',
+            'payment_provider' => 'required|string|in:freemopay,paypal',
         ]);
 
         $user = Auth::user();
@@ -103,7 +110,12 @@ class RecruiterServicePurchaseController extends Controller
             ], 403);
         }
 
-        $result = $this->purchaseService->purchaseDiplomaVerification($user, $company, $application);
+        $result = $this->purchaseService->purchaseDiplomaVerification(
+            $user,
+            $company,
+            $application,
+            $request->payment_provider
+        );
 
         $status = $result['success'] ? 200 : 400;
         return response()->json($result, $status);
@@ -115,6 +127,10 @@ class RecruiterServicePurchaseController extends Controller
      */
     public function purchaseSkillsTest(Request $request)
     {
+        $request->validate([
+            'payment_provider' => 'required|string|in:freemopay,paypal',
+        ]);
+
         $user = Auth::user();
 
         // Vérifier que l'utilisateur est un recruteur
@@ -135,7 +151,11 @@ class RecruiterServicePurchaseController extends Controller
             ], 403);
         }
 
-        $result = $this->purchaseService->purchaseSkillsTest($user, $company);
+        $result = $this->purchaseService->purchaseSkillsTest(
+            $user,
+            $company,
+            $request->payment_provider
+        );
 
         $status = $result['success'] ? 200 : 400;
         return response()->json($result, $status);

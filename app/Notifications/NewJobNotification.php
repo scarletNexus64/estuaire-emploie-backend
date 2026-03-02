@@ -31,7 +31,7 @@ class NewJobNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['database']; // Email retiré - notifications bulk via FCM uniquement
     }
 
     /**

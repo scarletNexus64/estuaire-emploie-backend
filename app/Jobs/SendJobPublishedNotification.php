@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Job pour envoyer des notifications lors de la publication d'une offre d'emploi
  * Utilise Firebase Multicast pour envoyer en masse (500 tokens/requête)
+ * BULK: FCM uniquement (pas d'email)
  */
 class SendJobPublishedNotification implements ShouldQueue
 {
@@ -57,7 +58,7 @@ class SendJobPublishedNotification implements ShouldQueue
                 'candidates' => $candidates->count(),
             ]);
 
-            // Envoyer via multicast (500 tokens par requête Firebase)
+            // Envoyer via multicast (500 tokens par requête Firebase - FCM uniquement)
             $result = $notificationService->sendToMultipleUsers(
                 $candidates,
                 $title,

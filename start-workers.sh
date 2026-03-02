@@ -13,7 +13,9 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-WORKDIR="/var/www/clients/client1/web19/web/estuaire-emploie-backend"
+# Détecte automatiquement le répertoire du projet
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+WORKDIR="${SCRIPT_DIR}"
 
 print_header() {
     echo ""
@@ -124,6 +126,9 @@ cleanup() {
 }
 
 trap cleanup SIGINT SIGTERM
+
+# Créer le répertoire des logs s'il n'existe pas
+mkdir -p "$WORKDIR/storage/logs"
 
 # Vérifier Redis
 echo -e "${CYAN}🔍 Vérification de Redis...${NC}"

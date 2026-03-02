@@ -216,10 +216,8 @@ class AnnouncementController extends Controller
             $query->where('role', 'recruiter');
         }
 
-        // Si on envoie du push, filtrer par token FCM
-        if ($channel === 'push' || $channel === 'both') {
-            $query->whereNotNull('fcm_token');
-        }
+        // BULK : toujours filtrer par token FCM (pas d'email en masse)
+        $query->whereNotNull('fcm_token');
 
         // Récupérer le lot d'utilisateurs
         $users = $query->skip($batchNumber * $batchSize)
@@ -245,55 +243,39 @@ class AnnouncementController extends Controller
             $userFailed = false;
 
             try {
-                // 1. Envoyer la notification Push si demandé
-                if ($channel === 'push' || $channel === 'both') {
-                    if ($user->fcm_token) {
-                        try {
-                            $this->firebaseService->sendToToken(
-                                $user->fcm_token,
-                                $request->title,
-                                $request->message,
-                                [
-                                    'type' => 'announcement',
-                                    'sent_at' => now()->toISOString(),
-                                    'sender' => 'admin',
-                                    'target_group' => $targetGroup,
-                                ]
-                            );
-                            $userSent = true;
-                        } catch (\Exception $e) {
-                            Log::warning('Erreur FCM en masse', [
-                                'user_id' => $user->id,
-                                'error' => $e->getMessage(),
-                            ]);
-
-                            // Supprimer le token si invalide
-                            if (str_contains($e->getMessage(), 'Requested entity was not found') ||
-                                str_contains($e->getMessage(), 'registration token is not valid') ||
-                                str_contains($e->getMessage(), 'Invalid registration')) {
-                                $user->update(['fcm_token' => null]);
-                            }
-
-                            $userFailed = true;
-                        }
-                    }
-                }
-
-                // 2. Envoyer l'email si demandé
-                if ($channel === 'email' || $channel === 'both') {
+                // 1. Envoyer la notification Push (BULK - FCM uniquement)
+                if ($user->fcm_token) {
                     try {
-                        $user->notify(new \App\Notifications\AnnouncementNotification($request->title, $request->message));
+                        $this->firebaseService->sendToToken(
+                            $user->fcm_token,
+                            $request->title,
+                            $request->message,
+                            [
+                                'type' => 'announcement',
+                                'sent_at' => now()->toISOString(),
+                                'sender' => 'admin',
+                                'target_group' => $targetGroup,
+                            ]
+                        );
                         $userSent = true;
                     } catch (\Exception $e) {
-                        Log::error('Erreur email en masse', [
+                        Log::warning('Erreur FCM en masse', [
                             'user_id' => $user->id,
                             'error' => $e->getMessage(),
                         ]);
+
+                        // Supprimer le token si invalide
+                        if (str_contains($e->getMessage(), 'Requested entity was not found') ||
+                            str_contains($e->getMessage(), 'registration token is not valid') ||
+                            str_contains($e->getMessage(), 'Invalid registration')) {
+                            $user->update(['fcm_token' => null]);
+                        }
+
                         $userFailed = true;
                     }
                 }
 
-                // 3. Enregistrer dans la base de données
+                // 2. Enregistrer dans la base de données (BULK - FCM uniquement, pas d'email)
                 Notification::create([
                     'type' => 'announcement',
                     'notifiable_type' => User::class,

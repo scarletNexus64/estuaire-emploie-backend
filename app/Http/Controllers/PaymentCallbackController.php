@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Services\Payment\PayPalService;
+use App\Services\ReferralCommissionService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
 
@@ -11,11 +12,16 @@ class PaymentCallbackController extends Controller
 {
     protected PayPalService $paypalService;
     protected WalletService $walletService;
+    protected ReferralCommissionService $referralCommissionService;
 
-    public function __construct(PayPalService $paypalService, WalletService $walletService)
-    {
+    public function __construct(
+        PayPalService $paypalService,
+        WalletService $walletService,
+        ReferralCommissionService $referralCommissionService
+    ) {
         $this->paypalService = $paypalService;
         $this->walletService = $walletService;
+        $this->referralCommissionService = $referralCommissionService;
     }
 
     /**
@@ -183,5 +189,8 @@ class PaymentCallbackController extends Controller
             'user_id' => $user->id,
             'new_balance' => $user->wallet_balance,
         ]);
+
+        // Traiter la commission de parrainage si applicable
+        $this->referralCommissionService->processReferralCommission($user, $payment);
     }
 }

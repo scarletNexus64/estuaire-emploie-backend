@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo('/admin/login');
+        $middleware->redirectUsersTo('/admin/dashboard');
 
         // Enable CORS for API routes
         $middleware->api(prepend: [

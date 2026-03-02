@@ -278,6 +278,19 @@ class CompanyController extends Controller
         $totalApplications = $company->jobs()->withCount('applications')->get()->sum('applications_count');
         $totalViews = $company->jobs()->sum('views_count');
 
+        // Statistiques des candidatures par statut
+        $companyJobIds = $company->jobs()->pluck('id');
+        $acceptedApplications = \App\Models\Application::whereIn('job_id', $companyJobIds)
+            ->where('status', 'accepted')
+            ->count();
+        $rejectedApplications = \App\Models\Application::whereIn('job_id', $companyJobIds)
+            ->where('status', 'rejected')
+            ->count();
+        $newApplications = \App\Models\Application::whereIn('job_id', $companyJobIds)
+            ->where('status', 'pending')
+            ->whereNull('viewed_at')
+            ->count();
+
         return response()->json([
             'data' => $company,
             'active_jobs' => $activeJobsList,
@@ -286,6 +299,9 @@ class CompanyController extends Controller
                 'total_jobs' => $totalJobs,
                 'total_applications' => $totalApplications,
                 'total_views' => $totalViews,
+                'accepted_applications' => $acceptedApplications,
+                'rejected_applications' => $rejectedApplications,
+                'new_applications' => $newApplications,
             ],
         ]);
     }

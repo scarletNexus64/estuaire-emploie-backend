@@ -24,6 +24,7 @@ class WalletService
      * @param Payment|null $payment Paiement source (FreeMoPay, PayPal, etc.)
      * @param string $description
      * @param array $metadata
+     * @param string $provider Provider (freemopay ou paypal)
      * @return WalletTransaction
      */
     public function credit(
@@ -31,14 +32,18 @@ class WalletService
         float $amount,
         ?Payment $payment = null,
         string $description = 'Recharge wallet',
-        array $metadata = []
+        array $metadata = [],
+        string $provider = 'freemopay'
     ): WalletTransaction {
-        return DB::transaction(function () use ($user, $amount, $payment, $description, $metadata) {
-            $balanceBefore = $user->wallet_balance ?? 0;
+        return DB::transaction(function () use ($user, $amount, $payment, $description, $metadata, $provider) {
+            // Déterminer quel wallet mettre à jour
+            $walletField = $provider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+
+            $balanceBefore = $user->{$walletField} ?? 0;
             $balanceAfter = $balanceBefore + $amount;
 
-            // Mettre à jour le solde du user
-            $user->wallet_balance = $balanceAfter;
+            // Mettre à jour le solde du wallet spécifique
+            $user->{$walletField} = $balanceAfter;
             $user->save();
 
             // Créer la transaction
@@ -52,10 +57,12 @@ class WalletService
                 'payment_id' => $payment?->id,
                 'metadata' => $metadata,
                 'status' => 'completed',
+                'provider' => $provider,
             ]);
 
             Log::info("[WalletService] Wallet credited", [
                 'user_id' => $user->id,
+                'provider' => $provider,
                 'amount' => $amount,
                 'balance_after' => $balanceAfter,
                 'transaction_id' => $transaction->id,
@@ -74,8 +81,9 @@ class WalletService
      * @param string|null $referenceType Type de référence (subscription, addon_service, etc.)
      * @param int|null $referenceId ID de la référence
      * @param array $metadata
+     * @param string $provider Provider OBLIGATOIRE (freemopay ou paypal)
      * @return WalletTransaction
-     * @throws \Exception Si solde insuffisant
+     * @throws \Exception Si solde insuffisant ou provider invalide
      */
     public function debit(
         User $user,
@@ -83,20 +91,30 @@ class WalletService
         string $description,
         ?string $referenceType = null,
         ?int $referenceId = null,
-        array $metadata = []
+        array $metadata = [],
+        string $provider
     ): WalletTransaction {
-        return DB::transaction(function () use ($user, $amount, $description, $referenceType, $referenceId, $metadata) {
-            $balanceBefore = $user->wallet_balance ?? 0;
+        return DB::transaction(function () use ($user, $amount, $description, $referenceType, $referenceId, $metadata, $provider) {
+            // Valider le provider
+            if (!in_array($provider, ['freemopay', 'paypal'])) {
+                throw new \Exception("Provider invalide. Doit être 'freemopay' ou 'paypal'.");
+            }
+
+            // Déterminer quel wallet débiter
+            $walletField = $provider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+
+            $balanceBefore = $user->{$walletField} ?? 0;
 
             // Vérifier le solde
             if ($balanceBefore < $amount) {
-                throw new \Exception("Solde insuffisant. Solde actuel: {$balanceBefore} FCFA, Montant requis: {$amount} FCFA");
+                $providerName = $provider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+                throw new \Exception("Solde {$providerName} insuffisant. Solde actuel: {$balanceBefore} FCFA, Montant requis: {$amount} FCFA");
             }
 
             $balanceAfter = $balanceBefore - $amount;
 
-            // Mettre à jour le solde du user
-            $user->wallet_balance = $balanceAfter;
+            // Mettre à jour le solde du wallet spécifique
+            $user->{$walletField} = $balanceAfter;
             $user->save();
 
             // Créer la transaction
@@ -111,10 +129,12 @@ class WalletService
                 'reference_id' => $referenceId,
                 'metadata' => $metadata,
                 'status' => 'completed',
+                'provider' => $provider,
             ]);
 
             Log::info("[WalletService] Wallet debited", [
                 'user_id' => $user->id,
+                'provider' => $provider,
                 'amount' => $amount,
                 'balance_after' => $balanceAfter,
                 'transaction_id' => $transaction->id,
@@ -288,29 +308,47 @@ class WalletService
     {
         $transactions = $user->walletTransactions()->completed();
 
-        // Le solde est toujours stocké en XAF dans la base
-        $balanceXAF = $user->wallet_balance ?? 0;
-        $totalCreditsXAF = $transactions->clone()->credits()->sum('amount');
-        $totalDebitsXAF = abs($transactions->clone()->debits()->sum('amount'));
+        // Récupérer les soldes séparés (toujours en XAF dans la base)
+        $freemopayBalanceXAF = $user->freemopay_wallet_balance ?? 0;
+        $paypalBalanceXAF = $user->paypal_wallet_balance ?? 0;
+        $totalBalanceXAF = $freemopayBalanceXAF + $paypalBalanceXAF;
+
+        // Stats par provider
+        $freemopayCreditsXAF = $transactions->clone()->where('provider', 'freemopay')->credits()->sum('amount');
+        $freemopayDebitsXAF = abs($transactions->clone()->where('provider', 'freemopay')->debits()->sum('amount'));
+
+        $paypalCreditsXAF = $transactions->clone()->where('provider', 'paypal')->credits()->sum('amount');
+        $paypalDebitsXAF = abs($transactions->clone()->where('provider', 'paypal')->debits()->sum('amount'));
+
+        $totalCreditsXAF = $freemopayCreditsXAF + $paypalCreditsXAF;
+        $totalDebitsXAF = $freemopayDebitsXAF + $paypalDebitsXAF;
 
         // Devise à utiliser (préférée ou celle demandée)
         $targetCurrency = $currency ?? ($user->preferred_currency ?? 'XAF');
 
         // Convertir les montants si nécessaire
         if ($targetCurrency !== 'XAF') {
-            $balance = $this->currencyService->convert($balanceXAF, 'XAF', $targetCurrency);
+            $freemopayBalance = $this->currencyService->convert($freemopayBalanceXAF, 'XAF', $targetCurrency);
+            $paypalBalance = $this->currencyService->convert($paypalBalanceXAF, 'XAF', $targetCurrency);
+            $totalBalance = $this->currencyService->convert($totalBalanceXAF, 'XAF', $targetCurrency);
             $totalCredits = $this->currencyService->convert($totalCreditsXAF, 'XAF', $targetCurrency);
             $totalDebits = $this->currencyService->convert($totalDebitsXAF, 'XAF', $targetCurrency);
         } else {
-            $balance = $balanceXAF;
+            $freemopayBalance = $freemopayBalanceXAF;
+            $paypalBalance = $paypalBalanceXAF;
+            $totalBalance = $totalBalanceXAF;
             $totalCredits = $totalCreditsXAF;
             $totalDebits = $totalDebitsXAF;
         }
 
         return [
-            // Montants dans la devise demandée
-            'current_balance' => $balance,
-            'formatted_balance' => $this->currencyService->format($balance, $targetCurrency),
+            // Soldes par provider
+            'freemopay_balance' => $freemopayBalance,
+            'paypal_balance' => $paypalBalance,
+            'current_balance' => $totalBalance,
+            'formatted_balance' => $this->currencyService->format($totalBalance, $targetCurrency),
+
+            // Totaux
             'total_credits' => $totalCredits,
             'total_debits' => $totalDebits,
             'total_transactions' => $transactions->count(),
@@ -321,7 +359,9 @@ class WalletService
             'currency_symbol' => \App\Models\CurrencyRate::getCurrencySymbol($targetCurrency),
 
             // Montants bruts en XAF (pour référence)
-            'balance_xaf' => $balanceXAF,
+            'freemopay_balance_xaf' => $freemopayBalanceXAF,
+            'paypal_balance_xaf' => $paypalBalanceXAF,
+            'balance_xaf' => $totalBalanceXAF,
         ];
     }
 
@@ -330,21 +370,48 @@ class WalletService
      *
      * @param User $user
      * @param float $amount
+     * @param string|null $provider Provider spécifique (null = total des deux wallets)
      * @return array ['can_pay' => bool, 'message' => string, 'missing_amount' => float]
      */
-    public function canPayWithWallet(User $user, float $amount): array
+    public function canPayWithWallet(User $user, float $amount, ?string $provider = null): array
     {
-        $balance = $user->wallet_balance ?? 0;
-        $canPay = $balance >= $amount;
+        if ($provider) {
+            // Vérifier un wallet spécifique
+            $walletField = $provider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+            $balance = $user->{$walletField} ?? 0;
+            $providerName = $provider === 'paypal' ? 'PayPal' : 'FreeMoPay';
 
-        return [
-            'can_pay' => $canPay,
-            'current_balance' => $balance,
-            'required_amount' => $amount,
-            'missing_amount' => $canPay ? 0 : ($amount - $balance),
-            'message' => $canPay
-                ? "Paiement possible"
-                : "Solde insuffisant. Il vous manque " . number_format($amount - $balance, 0, ',', ' ') . " FCFA",
-        ];
+            $canPay = $balance >= $amount;
+
+            return [
+                'can_pay' => $canPay,
+                'current_balance' => $balance,
+                'required_amount' => $amount,
+                'missing_amount' => $canPay ? 0 : ($amount - $balance),
+                'provider' => $provider,
+                'message' => $canPay
+                    ? "Paiement possible avec wallet {$providerName}"
+                    : "Solde {$providerName} insuffisant. Il vous manque " . number_format($amount - $balance, 0, ',', ' ') . " FCFA",
+            ];
+        } else {
+            // Vérifier le total des deux wallets
+            $freemopayBalance = $user->freemopay_wallet_balance ?? 0;
+            $paypalBalance = $user->paypal_wallet_balance ?? 0;
+            $totalBalance = $freemopayBalance + $paypalBalance;
+
+            $canPay = $totalBalance >= $amount;
+
+            return [
+                'can_pay' => $canPay,
+                'freemopay_balance' => $freemopayBalance,
+                'paypal_balance' => $paypalBalance,
+                'total_balance' => $totalBalance,
+                'required_amount' => $amount,
+                'missing_amount' => $canPay ? 0 : ($amount - $totalBalance),
+                'message' => $canPay
+                    ? "Paiement possible"
+                    : "Solde total insuffisant. Il vous manque " . number_format($amount - $totalBalance, 0, ',', ' ') . " FCFA",
+            ];
+        }
     }
 }

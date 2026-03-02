@@ -359,7 +359,7 @@ class JobController extends Controller
             return response()->json([
                 'success' => true,
                 'completed' => true,
-                'message' => 'Tous les emails ont été envoyés',
+                'message' => 'Toutes les notifications ont été envoyées',
                 'sent' => 0,
                 'failed' => 0,
             ]);
@@ -369,7 +369,7 @@ class JobController extends Controller
         $failed = 0;
         $errors = [];
 
-        // Envoyer les emails directement (sans queue)
+        // Envoyer les notifications directement (BULK - database uniquement, FCM géré par SendJobPublishedNotification)
         foreach ($users as $user) {
             try {
                 $user->notify(new \App\Notifications\NewJobNotification($job));
@@ -381,7 +381,7 @@ class JobController extends Controller
                     'user_email' => $user->email,
                     'error' => $e->getMessage(),
                 ];
-                \Log::error('Erreur envoi email nouveau job', [
+                \Log::error('Erreur envoi notification nouveau job', [
                     'job_id' => $job->id,
                     'user_id' => $user->id,
                     'error' => $e->getMessage()
@@ -398,7 +398,7 @@ class JobController extends Controller
         $processed = ($batchNumber + 1) * $batchSize;
         $completed = $processed >= $totalUsers;
 
-        Log::info('Lot d\'emails envoyé pour job', [
+        Log::info('Lot de notifications envoyé pour job (database only)', [
             'job_id' => $job->id,
             'batch' => $batchNumber,
             'sent' => $sent,

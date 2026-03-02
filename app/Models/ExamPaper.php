@@ -43,28 +43,11 @@ class ExamPaper extends Model
     }
 
     /**
-     * Spécialités disponibles
+     * Spécialités disponibles (depuis la base de données)
      */
     public static function getSpecialties(): array
     {
-        return [
-            'Informatique' => 'Informatique',
-            'Gestion' => 'Gestion',
-            'Commerce' => 'Commerce',
-            'Marketing' => 'Marketing',
-            'Finance' => 'Finance',
-            'Comptabilité' => 'Comptabilité',
-            'Ressources Humaines' => 'Ressources Humaines',
-            'Droit' => 'Droit',
-            'Économie' => 'Économie',
-            'Communication' => 'Communication',
-            'Ingénierie' => 'Ingénierie',
-            'Architecture' => 'Architecture',
-            'Médecine' => 'Médecine',
-            'Sciences' => 'Sciences',
-            'Lettres' => 'Lettres',
-            'Autre' => 'Autre',
-        ];
+        return Specialty::getSelectOptions();
     }
 
     /**

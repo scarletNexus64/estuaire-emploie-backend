@@ -75,6 +75,8 @@ class FreeMoPayDisbursementService
 
     /**
      * Check withdrawal status by reference
+     *
+     * API v2 endpoint: GET /api/v2/payment/{reference}
      */
     public function checkWithdrawalStatus(string $reference): array
     {
@@ -82,14 +84,18 @@ class FreeMoPayDisbursementService
             throw new \Exception('FreeMoPay n\'est pas configuré.');
         }
 
-        $endpoint = "{$this->baseUrl}/api/v2/payment/check-status/{$reference}";
+        // CORRECT ENDPOINT: GET /api/v2/payment/{reference} (NOT check-status!)
+        $endpoint = "{$this->baseUrl}/api/v2/payment/{$reference}";
 
-        Log::debug("[FreeMoPay] Vérification statut - Référence: {$reference}");
+        Log::debug("[FreeMoPay Disbursement] Vérification statut retrait - Référence: {$reference}");
+        Log::debug("[FreeMoPay Disbursement] Endpoint: {$endpoint}");
 
         try {
             $response = Http::withBasicAuth($this->appKey, $this->secretKey)
                 ->timeout(30)
                 ->get($endpoint);
+
+            Log::debug("[FreeMoPay Disbursement] HTTP Status: {$response->status()}");
 
             if (!$response->successful()) {
                 $errorBody = $response->json() ?? ['message' => $response->body()];
@@ -97,17 +103,17 @@ class FreeMoPayDisbursementService
                     ? implode(', ', $errorBody['message'])
                     : ($errorBody['message'] ?? "Erreur HTTP {$response->status()}");
 
-                Log::error("[FreeMoPay] Erreur check-status: {$errorMessage}");
+                Log::error("[FreeMoPay Disbursement] Erreur API: {$errorMessage}");
                 throw new \Exception("Erreur vérification statut: {$errorMessage}");
             }
 
             $data = $response->json();
-            Log::debug("[FreeMoPay] Statut reçu: " . json_encode($data));
+            Log::debug("[FreeMoPay Disbursement] Statut reçu: " . json_encode($data));
 
             return $data;
 
         } catch (\Exception $e) {
-            Log::error("[FreeMoPay] Exception check-status: " . $e->getMessage());
+            Log::error("[FreeMoPay Disbursement] Exception: " . $e->getMessage());
             throw $e;
         }
     }

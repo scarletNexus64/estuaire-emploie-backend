@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\SubscriptionPlan;
+use App\Models\User;
 use App\Models\UserSubscriptionPlan;
 use App\Services\Payment\FreeMoPayService;
 use Illuminate\Http\JsonResponse;
@@ -1325,10 +1326,12 @@ class SubscriptionPlanController extends Controller
     {
         $request->validate([
             'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
+            'payment_provider' => 'required|string|in:freemopay,paypal',
         ]);
 
         $user = $request->user();
         $subscriptionPlanId = $request->subscription_plan_id;
+        $paymentProvider = $request->payment_provider;
 
         // Vérifier que le plan existe et est actif
         $plan = SubscriptionPlan::active()->find($subscriptionPlanId);
@@ -1342,15 +1345,19 @@ class SubscriptionPlanController extends Controller
         // Le paiement wallet est disponible pour tous les types de plans
         // (recruteurs ET candidats)
 
-        // Vérifier le solde wallet
-        $walletBalance = $user->wallet_balance ?? 0;
+        // Vérifier le solde du wallet spécifique
+        $walletField = $paymentProvider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+        $walletBalance = $user->{$walletField} ?? 0;
+        $providerName = $paymentProvider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+
         if ($walletBalance < $plan->price) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solde insuffisant',
+                'message' => "Solde {$providerName} insuffisant",
                 'required_amount' => $plan->price,
                 'current_balance' => $walletBalance,
                 'missing_amount' => $plan->price - $walletBalance,
+                'provider' => $paymentProvider,
             ], 400);
         }
 
@@ -1383,7 +1390,7 @@ class SubscriptionPlanController extends Controller
                 ],
             ]);
 
-            // Débiter le wallet
+            // Débiter le wallet spécifique
             $walletService = app(\App\Services\WalletService::class);
             $walletService->debit(
                 $user,
@@ -1391,7 +1398,8 @@ class SubscriptionPlanController extends Controller
                 "Abonnement {$plan->name}",
                 'subscription',
                 $plan->id,
-                ['payment_id' => $payment->id]
+                ['payment_id' => $payment->id],
+                $paymentProvider
             );
 
             // Activer l'abonnement (logique similaire à activate())
@@ -1481,6 +1489,9 @@ class SubscriptionPlanController extends Controller
                 'current_active_role' => $user->role,
             ]);
 
+            // Envoyer notification FCM pour l'achat d'abonnement
+            $this->sendSubscriptionPurchaseNotification($user, $plan, $paymentProvider, $isRenewal);
+
             $message = $isRenewal
                 ? "Abonnement {$plan->name} renouvelé avec succès !"
                 : "Abonnement {$plan->name} activé avec succès !";
@@ -1510,6 +1521,68 @@ class SubscriptionPlanController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 400);
+        }
+    }
+
+    /**
+     * Envoie une notification FCM pour un achat d'abonnement via wallet
+     */
+    protected function sendSubscriptionPurchaseNotification(User $user, SubscriptionPlan $plan, string $paymentProvider, bool $isRenewal): void
+    {
+        try {
+            if (!$user->fcm_token) {
+                return;
+            }
+
+            $providerName = $paymentProvider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+            $title = $isRenewal ? "Abonnement renouvelé" : "Abonnement activé";
+            $actionText = $isRenewal ? "renouvelé" : "activé";
+            $body = "Votre abonnement {$plan->name} pour " . number_format($plan->price, 0, ',', ' ') . " FCFA via wallet {$providerName} a été {$actionText} avec succès.";
+
+            // Créer la notification avec la structure correcte
+            $notification = \App\Models\Notification::create([
+                'type' => 'subscription_purchase',
+                'notifiable_type' => User::class,
+                'notifiable_id' => $user->id,
+                'data' => [
+                    'title' => $title,
+                    'body' => $body,
+                    'plan_name' => $plan->name,
+                    'plan_slug' => $plan->slug,
+                    'plan_type' => $plan->plan_type,
+                    'amount' => $plan->price,
+                    'provider' => $paymentProvider,
+                    'is_renewal' => $isRenewal,
+                ],
+            ]);
+
+            // Envoyer via FCM
+            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
+                ->post('https://fcm.googleapis.com/fcm/send', [
+                    'to' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                        'sound' => 'default',
+                    ],
+                    'data' => [
+                        'type' => 'subscription_purchase',
+                        'plan_name' => $plan->name,
+                        'is_renewal' => $isRenewal,
+                        'notification_id' => $notification->id,
+                    ],
+                ]);
+
+            Log::info("[SubscriptionPlanController] ✅ FCM notification sent for subscription purchase", [
+                'user_id' => $user->id,
+                'plan_name' => $plan->name,
+                'amount' => $plan->price,
+                'provider' => $paymentProvider,
+                'is_renewal' => $isRenewal,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("[SubscriptionPlanController] ❌ Failed to send FCM notification: " . $e->getMessage());
         }
     }
 }
