@@ -116,7 +116,7 @@ class OtpController extends Controller
         );
 
         // Message OTP
-        $message = "Votre OTP est \"{$code}\"\nIl est valable pendant 5 minutes. Ne le partagez avec personne.";
+        $message = " \"{$code}\"\nIl est valable pendant 5 minutes. Ne le partagez avec personne.";
 
         // Envoyer via Nexah (2 fois avec senderID différents)
         try {
