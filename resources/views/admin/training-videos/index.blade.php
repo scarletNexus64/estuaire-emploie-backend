@@ -36,7 +36,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Vidéos Actives</div>
-                <div class="stat-value">{{ $videos->where('is_active', true)->count() }}</div>
+                <div class="stat-value">{{ $totalActive }}</div>
             </div>
             <div class="stat-icon">✅</div>
         </div>
@@ -46,7 +46,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Vidéos Aperçu</div>
-                <div class="stat-value">{{ $videos->where('is_preview', true)->count() }}</div>
+                <div class="stat-value">{{ $totalPreview }}</div>
             </div>
             <div class="stat-icon">👁️</div>
         </div>

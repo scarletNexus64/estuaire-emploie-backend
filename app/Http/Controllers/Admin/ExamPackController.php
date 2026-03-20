@@ -43,13 +43,19 @@ class ExamPackController extends Controller
                            ->orderBy('created_at', 'desc')
                            ->paginate(20);
 
+        // Stats globales (pas seulement la page courante)
+        $totalActive = ExamPack::where('is_active', true)->count();
+        $totalFeatured = ExamPack::where('is_featured', true)->count();
+
         $specialties = ExamPaper::getSpecialties();
         $examTypes = ExamPack::getExamTypes();
 
         return view('admin.exam-packs.index', compact(
             'examPacks',
             'specialties',
-            'examTypes'
+            'examTypes',
+            'totalActive',
+            'totalFeatured'
         ));
     }
 
