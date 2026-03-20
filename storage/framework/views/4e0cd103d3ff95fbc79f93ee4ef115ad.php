@@ -2089,4 +2089,4 @@
     <?php echo $__env->yieldContent('scripts'); ?>
 </body>
 </html>
-<?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/clients/client1/web19/web/estuaire-emploie-backend/resources/views/admin/layouts/app.blade.php ENDPATH**/ ?>

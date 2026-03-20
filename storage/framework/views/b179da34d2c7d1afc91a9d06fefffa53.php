@@ -157,7 +157,7 @@
                 <?php $__empty_1 = true; $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <tr>
                     <td class="checkbox-cell">
-                        <input type="checkbox" class="row-checkbox custom-checkbox" value="<?php echo e($user->id); ?>">
+                        <input type="checkbox" class="row-checkbox custom-checkbox" value="<?php echo e($user->id); ?>" <?php echo e($user->role === 'admin' ? 'disabled title=Impossible de supprimer un admin' : ''); ?>>
                     </td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -305,6 +305,9 @@
 
         const form = document.getElementById('bulkDeleteForm');
 
+        // Nettoyer les anciens inputs cachés
+        form.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
+
         // Add selected IDs as JSON
         const idsInput = document.createElement('input');
         idsInput.type = 'hidden';
@@ -317,4 +320,4 @@
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/admin/users/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('admin.layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/clients/client1/web19/web/estuaire-emploie-backend/resources/views/admin/users/index.blade.php ENDPATH**/ ?>

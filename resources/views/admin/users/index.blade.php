@@ -159,7 +159,7 @@
                 @forelse($users as $user)
                 <tr>
                     <td class="checkbox-cell">
-                        <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $user->id }}">
+                        <input type="checkbox" class="row-checkbox custom-checkbox" value="{{ $user->id }}" {{ $user->role === 'admin' ? 'disabled title=Impossible de supprimer un admin' : '' }}>
                     </td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -303,6 +303,9 @@
         }
 
         const form = document.getElementById('bulkDeleteForm');
+
+        // Nettoyer les anciens inputs cachés
+        form.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
 
         // Add selected IDs as JSON
         const idsInput = document.createElement('input');

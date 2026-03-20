@@ -91,25 +91,30 @@ class QuickServiceController extends Controller
 
     public function bulkDelete(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:quick_services,id',
-        ]);
+        try {
+            $ids = json_decode($request->input('ids'), true);
 
-        $services = QuickService::whereIn('id', $validated['ids'])->get();
-
-        foreach ($services as $service) {
-            // Supprimer les images
-            if ($service->images) {
-                foreach ($service->images as $image) {
-                    \Storage::disk('public')->delete($image);
-                }
+            if (!is_array($ids) || empty($ids)) {
+                return redirect()->back()->with('error', 'Aucun élément sélectionné');
             }
-            $service->delete();
-        }
 
-        return redirect()->route('admin.quick-services.index')
-            ->with('success', count($validated['ids']) . ' service(s) supprimé(s) avec succès');
+            $services = QuickService::whereIn('id', $ids)->get();
+
+            foreach ($services as $service) {
+                // Supprimer les images
+                if ($service->images) {
+                    foreach ($service->images as $image) {
+                        \Storage::disk('public')->delete($image);
+                    }
+                }
+                $service->delete();
+            }
+
+            return redirect()->route('admin.quick-services.index')
+                ->with('success', count($ids) . ' service(s) supprimé(s) avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
     }
 
     public function approve($id): RedirectResponse

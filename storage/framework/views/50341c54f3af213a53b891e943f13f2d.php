@@ -144,4 +144,4 @@
         }
     </style>
 <?php endif; ?>
-<?php /**PATH /Users/macbookpro/Desktop/Developments/INSAM-DEV/E-Emploie-Backend/estuaire-emploie-backend/resources/views/vendor/pagination/custom.blade.php ENDPATH**/ ?>
+<?php /**PATH /var/www/clients/client1/web19/web/estuaire-emploie-backend/resources/views/vendor/pagination/custom.blade.php ENDPATH**/ ?>

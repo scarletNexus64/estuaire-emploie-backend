@@ -284,13 +284,15 @@
         }
 
         const form = document.getElementById('bulkDeleteForm');
-        selected.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'ids[]';
-            input.value = id;
-            form.appendChild(input);
-        });
+
+        // Nettoyer les anciens inputs cachés
+        form.querySelectorAll('input[name="ids"]').forEach(el => el.remove());
+
+        const idsInput = document.createElement('input');
+        idsInput.type = 'hidden';
+        idsInput.name = 'ids';
+        idsInput.value = JSON.stringify(selected);
+        form.appendChild(idsInput);
 
         form.submit();
     });

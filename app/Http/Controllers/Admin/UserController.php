@@ -120,6 +120,16 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        if ($user->id === auth()->id()) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Vous ne pouvez pas supprimer votre propre compte');
+        }
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Impossible de supprimer un administrateur');
+        }
+
         $user->delete();
 
         return redirect()->route('admin.users.index')
@@ -171,7 +181,17 @@ class UserController extends Controller
                 return redirect()->back()->with('error', 'Aucun élément sélectionné');
             }
 
-            $count = User::whereIn('id', $ids)->delete();
+            // Exclure l'admin connecté et les autres admins de la suppression
+            $currentUserId = auth()->id();
+            $ids = array_filter($ids, fn($id) => (int) $id !== $currentUserId);
+
+            if (empty($ids)) {
+                return redirect()->back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte');
+            }
+
+            $count = User::whereIn('id', $ids)
+                ->where('role', '!=', 'admin')
+                ->delete();
 
             return redirect()->back()->with('success', "$count élément(s) supprimé(s) avec succès");
         } catch (\Exception $e) {
