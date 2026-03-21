@@ -38,7 +38,11 @@ class TrainingVideoController extends Controller
                        ->orderBy('created_at', 'desc')
                        ->paginate(20);
 
-        return view('admin.training-videos.index', compact('videos'));
+        // Stats globales (pas seulement la page courante)
+        $totalActive = TrainingVideo::where('is_active', true)->count();
+        $totalPreview = TrainingVideo::where('is_preview', true)->count();
+
+        return view('admin.training-videos.index', compact('videos', 'totalActive', 'totalPreview'));
     }
 
     /**

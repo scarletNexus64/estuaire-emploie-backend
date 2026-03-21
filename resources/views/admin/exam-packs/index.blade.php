@@ -36,7 +36,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Packs Actifs</div>
-                <div class="stat-value">{{ $examPacks->where('is_active', true)->count() }}</div>
+                <div class="stat-value">{{ $totalActive }}</div>
             </div>
             <div class="stat-icon">✅</div>
         </div>
@@ -46,7 +46,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Packs Mis en Avant</div>
-                <div class="stat-value">{{ $examPacks->where('is_featured', true)->count() }}</div>
+                <div class="stat-value">{{ $totalFeatured }}</div>
             </div>
             <div class="stat-icon">⭐</div>
         </div>

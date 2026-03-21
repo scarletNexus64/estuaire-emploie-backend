@@ -40,13 +40,19 @@ class TrainingPackController extends Controller
                               ->orderBy('created_at', 'desc')
                               ->paginate(20);
 
+        // Stats globales (pas seulement la page courante)
+        $totalActive = TrainingPack::where('is_active', true)->count();
+        $totalFeatured = TrainingPack::where('is_featured', true)->count();
+
         $categories = TrainingPack::getCategories();
         $levels = TrainingPack::getLevels();
 
         return view('admin.training-packs.index', compact(
             'trainingPacks',
             'categories',
-            'levels'
+            'levels',
+            'totalActive',
+            'totalFeatured'
         ));
     }
 
