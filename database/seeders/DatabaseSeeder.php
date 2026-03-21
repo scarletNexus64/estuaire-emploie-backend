@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
             // Contenu Étudiant - Packs de Formation et Épreuves
             TrainingVideoSeeder::class, // Vidéos de formation (YouTube)
             TrainingPackSeeder::class, // Packs de formation payants
-            ExamPackSeeder::class, // Packs d'épreuves payants (avec épreuves incluses)
+            ExamPaperBulkSeeder::class, // Épreuves réelles + Packs d'épreuves (1000-2500 XAF)
         ]);
     }
 }

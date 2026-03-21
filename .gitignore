@@ -1,5 +1,6 @@
-database/data/epreuves_classees/
-storage/app/public/exam_papers/
+
+database/data/epreuves_classees
+storage/app/public/exam_papers
 
 bootstrap/cache/*.php
 storage/framework/views/*
