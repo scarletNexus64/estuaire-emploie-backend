@@ -36,6 +36,12 @@ class NavigationService
                         'permission' => 'manage_users',
                     ],
                     [
+                        'name' => 'Étudiants',
+                        'route' => 'admin.students.index',
+                        'icon' => 'fas fa-user-graduate',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
                         'name' => 'Entreprises',
                         'route' => 'admin.companies.index',
                         'icon' => 'fas fa-building',
@@ -270,6 +276,7 @@ class NavigationService
             ],
 
             AdminRole::STUDENT_SPACE_MANAGER->value => [
+                'admin.students.index',
                 'admin.exam-packs.index',
                 'admin.exam-papers.index',
                 'admin.training-packs.index',

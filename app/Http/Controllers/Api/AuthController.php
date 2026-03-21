@@ -240,6 +240,7 @@ public function login(Request $request)
         'message' => 'Connexion réussie',
         'token' => $token,
         'user' => $user,
+        'must_change_password' => (bool) $user->must_change_password, // Flag visible pour le front
     ]);
 }
 
@@ -1123,6 +1124,50 @@ public function login(Request $request)
         return response()->json([
             'available' => true,
             'message' => 'Disponible',
+        ], 200);
+    }
+
+    /**
+     * Forcer le changement de mot de passe (pour les étudiants)
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function forceChangePassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        // Vérifier l'ancien mot de passe
+        if (!Hash::check($validated['old_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'L\'ancien mot de passe est incorrect',
+            ], 422);
+        }
+
+        // Vérifier que le nouveau mot de passe est différent de l'ancien
+        if (Hash::check($validated['new_password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Le nouveau mot de passe doit être différent de l\'ancien',
+            ], 422);
+        }
+
+        // Mettre à jour le mot de passe
+        $user->password = Hash::make($validated['new_password']);
+        $user->must_change_password = false; // Lever le flag
+        $user->save();
+
+        Log::info("User changed password after forced change", ['user_id' => $user->id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mot de passe changé avec succès',
         ], 200);
     }
 }

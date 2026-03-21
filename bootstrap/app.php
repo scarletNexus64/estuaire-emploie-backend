@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'subscription' => \App\Http\Middleware\CheckSubscriptionLimits::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'must.change.password' => \App\Http\Middleware\MustChangePassword::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

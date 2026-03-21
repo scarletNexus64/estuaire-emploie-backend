@@ -1288,13 +1288,13 @@ class SubscriptionPlanController extends Controller
                 'color' => $subscription->subscriptionPlan->color,
                 'icon' => $subscription->subscriptionPlan->icon,
             ],
-            'payment' => [
+            'payment' => $subscription->payment ? [
                 'id' => $subscription->payment->id,
                 'amount' => $subscription->payment->amount,
                 'status' => $subscription->payment->status,
                 'payment_method' => $subscription->payment->payment_method,
                 'paid_at' => $subscription->payment->paid_at?->toIso8601String(),
-            ],
+            ] : null, // Null pour les souscriptions gratuites (étudiants)
             'usage' => [
                 'jobs_used' => $subscription->jobs_used,
                 'jobs_limit' => $subscription->getEffectiveJobsLimit(),

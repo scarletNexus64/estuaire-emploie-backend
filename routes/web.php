@@ -304,6 +304,19 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/{trainingPack}/update-videos-order', [\App\Http\Controllers\Admin\TrainingPackController::class, 'updateVideosOrder'])->name('update-videos-order');
     });
 
+    // GESTION DES ÉTUDIANTS
+    Route::middleware('permission:manage_premium_services')->prefix('students')->name('students.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\StudentController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('store');
+        Route::post('/confirm', [\App\Http\Controllers\Admin\StudentController::class, 'confirmAndSave'])->name('confirm');
+        Route::post('/{user}/send-sms', [\App\Http\Controllers\Admin\StudentController::class, 'sendSMS'])->name('send-sms');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('update');
+        Route::delete('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('destroy');
+    });
+
     // MONÉTISATION - CVthèque
     Route::middleware('permission:manage_cvtheque')->prefix('cvtheque')->name('cvtheque.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CVthequeController::class, 'index'])->name('index');

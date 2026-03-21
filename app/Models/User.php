@@ -30,6 +30,7 @@ class User extends Authenticatable
         'paypal_wallet_balance',
         'preferred_currency', // XAF, USD, EUR
         'password',
+        'must_change_password',
         'profile_photo',
         'bio',
         'skills',
@@ -44,6 +45,10 @@ class User extends Authenticatable
         'last_login_at',
         'referral_code',
         'referred_by_id',
+        // Champs étudiants
+        'level',
+        'interests',
+        'specialty',
     ];
 
     protected $hidden = [
@@ -58,6 +63,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'is_super_admin' => 'boolean',
+            'must_change_password' => 'boolean',
             'admin_role' => AdminRole::class,
             'permissions' => 'array',
             'available_roles' => 'array',
@@ -681,5 +687,38 @@ class User extends Authenticatable
     public function getTotalEarnedCommissions(): float
     {
         return $this->earnedCommissions()->sum('commission_amount');
+    }
+
+    /**
+     * Relation vers les services premium de l'utilisateur
+     */
+    public function premiumServices(): HasMany
+    {
+        return $this->hasMany(UserPremiumService::class);
+    }
+
+    /**
+     * Vérifie si l'utilisateur a un service premium actif
+     */
+    public function hasPremiumService(string $serviceSlug): bool
+    {
+        return $this->premiumServices()
+            ->whereHas('config', function ($query) use ($serviceSlug) {
+                $query->where('slug', $serviceSlug);
+            })
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+    }
+
+    /**
+     * Vérifie si l'utilisateur est un étudiant (a le service Mode Étudiant actif)
+     */
+    public function isStudent(): bool
+    {
+        return $this->isCandidate() && $this->hasPremiumService('student_mode');
     }
 }

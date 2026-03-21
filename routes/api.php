@@ -41,6 +41,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+Route::post('/password/force-change', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
 
 // Vérification email (OTP legacy)
 Route::post('/email/send-code', [EmailVerificationController::class, 'sendCode']);
@@ -86,7 +87,7 @@ Route::get('/video-stream/{videoId}', [\App\Http\Controllers\Api\TrainingPackApi
 // ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
-Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, 'must.change.password'])->group(function () {
 
     // ------------------
     // AUTHENTIFICATION & PROFIL
