@@ -78,6 +78,12 @@ class NavigationService
                         'permission' => 'manage_users',
                     ],
                     [
+                        'name' => 'CVthèque',
+                        'route' => 'admin.cvtheque.index',
+                        'icon' => 'fas fa-file-alt',
+                        'permission' => 'manage_cvtheque',
+                    ],
+                    [
                         'name' => 'Recruteurs',
                         'route' => 'admin.recruiters.index',
                         'icon' => 'fas fa-user-tie',
@@ -267,6 +273,7 @@ class NavigationService
                 'admin.applications.index',
                 'admin.skill-tests.index',
                 'admin.portfolios.index',
+                'admin.cvtheque.index',
                 'admin.recruiters.index',
                 'admin.settings.index',
             ],
