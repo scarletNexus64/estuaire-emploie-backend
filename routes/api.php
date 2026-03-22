@@ -428,6 +428,30 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/portfolio/by-slug/{slug}', [PortfolioController::class, 'showBySlug']);
 
     // ------------------
+    // CVS / RESUMES (Candidat)
+    // ------------------
+    // Liste des templates disponibles
+    Route::get('/resumes/templates', [\App\Http\Controllers\Api\ResumeController::class, 'templates']);
+    // Récupérer tous mes CVs
+    Route::get('/resumes', [\App\Http\Controllers\Api\ResumeController::class, 'index']);
+    // Récupérer mon CV par défaut
+    Route::get('/resumes/default', [\App\Http\Controllers\Api\ResumeController::class, 'getDefault']);
+    // Créer un nouveau CV
+    Route::post('/resumes', [\App\Http\Controllers\Api\ResumeController::class, 'store']);
+    // Afficher un CV spécifique
+    Route::get('/resumes/{id}', [\App\Http\Controllers\Api\ResumeController::class, 'show']);
+    // Mettre à jour un CV
+    Route::put('/resumes/{id}', [\App\Http\Controllers\Api\ResumeController::class, 'update']);
+    // Supprimer un CV
+    Route::delete('/resumes/{id}', [\App\Http\Controllers\Api\ResumeController::class, 'destroy']);
+    // Générer le PDF d'un CV
+    Route::post('/resumes/{id}/generate-pdf', [\App\Http\Controllers\Api\ResumeController::class, 'generatePdf']);
+    // Définir un CV comme CV par défaut
+    Route::post('/resumes/{id}/set-default', [\App\Http\Controllers\Api\ResumeController::class, 'setDefault']);
+    // Dupliquer un CV
+    Route::post('/resumes/{id}/duplicate', [\App\Http\Controllers\Api\ResumeController::class, 'duplicate']);
+
+    // ------------------
     // PROGRAMMES (Candidat C2 OR / C3 DIAMANT)
     // ------------------
     // Liste des programmes avec informations d'accès

@@ -84,6 +84,11 @@ class User extends Authenticatable
         return $this->hasOne(Portfolio::class);
     }
 
+    public function resumes(): HasMany
+    {
+        return $this->hasMany(Resume::class);
+    }
+
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
