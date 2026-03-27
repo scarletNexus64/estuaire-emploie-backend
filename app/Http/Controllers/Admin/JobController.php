@@ -65,7 +65,8 @@ class JobController extends Controller
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'required|exists:categories,id',
-            'location_id' => 'required|exists:locations,id',
+            'location_ids' => 'required|array|min:1',
+            'location_ids.*' => 'required|exists:locations,id',
             'contract_type_id' => 'required|exists:contract_types,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -77,6 +78,10 @@ class JobController extends Controller
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date|after:today',
         ]);
+
+        // Extraire les location_ids
+        $locationIds = $validated['location_ids'];
+        unset($validated['location_ids']);
 
         // Auteur de l'offre
         $validated['posted_by'] = Auth::id();
@@ -90,17 +95,27 @@ class JobController extends Controller
             $validated['published_at'] = now();
         }
 
-        // Création
-        $job = Job::create($validated);
+        // Créer un job pour chaque localisation sélectionnée
+        $createdJobs = [];
+        foreach ($locationIds as $locationId) {
+            $validated['location_id'] = $locationId;
+            $job = Job::create($validated);
+            $createdJobs[] = $job;
 
-        // Dispatcher l'événement si le job est publié
-        if ($job->status === 'published') {
-            JobPublished::dispatch($job);
+            // Dispatcher l'événement si le job est publié
+            if ($job->status === 'published') {
+                JobPublished::dispatch($job);
+            }
         }
+
+        $count = count($createdJobs);
+        $message = $count > 1
+            ? "Offre créée avec succès dans {$count} villes"
+            : 'Offre créée avec succès';
 
         return redirect()
             ->route('admin.jobs.index')
-            ->with('success', 'Offre créée avec succès');
+            ->with('success', $message);
     }
 
     public function show(Job $job): View
