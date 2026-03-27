@@ -21,6 +21,18 @@
 @endpush
 
 @section('content')
+<!-- Actions CV -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+    @if(isset($resume) && $resume)
+        <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-info">✏️ Modifier le CV</a>
+        @if($resume->pdf_path)
+            <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success">👁️ Voir le CV (PDF)</a>
+        @endif
+    @else
+        <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-primary">➕ Créer un CV</a>
+    @endif
+</div>
+
 <div class="card">
     <form action="{{ route('admin.students.update', $student->id) }}" method="POST">
         @csrf

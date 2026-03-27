@@ -55,4 +55,92 @@ class CVthequeController extends Controller
         return redirect()->route('admin.cvtheque.index')
             ->with('success', 'Export en cours...');
     }
+
+    /**
+     * Prévisualiser un CV
+     */
+    public function preview($id)
+    {
+        $resume = Resume::with('user')->findOrFail($id);
+
+        return view('admin.monetization.cvtheque.preview', compact('resume'));
+    }
+
+    /**
+     * Afficher le formulaire d'édition d'un CV
+     */
+    public function edit($id)
+    {
+        $resume = Resume::with('user')->findOrFail($id);
+
+        return view('admin.monetization.cvtheque.edit', compact('resume'));
+    }
+
+    /**
+     * Mettre à jour un CV
+     */
+    public function update(Request $request, $id)
+    {
+        $resume = Resume::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'template_type' => 'nullable|string',
+            'professional_summary' => 'nullable|string',
+            'personal_info' => 'nullable|array',
+            'personal_info.name' => 'nullable|string|max:255',
+            'personal_info.email' => 'nullable|email|max:255',
+            'personal_info.phone' => 'nullable|string|max:50',
+            'personal_info.address' => 'nullable|string|max:500',
+            'is_public' => 'nullable|boolean',
+            'is_default' => 'nullable|boolean',
+        ]);
+
+        // Préparer les données à mettre à jour
+        $updateData = [
+            'title' => $validated['title'],
+            'template_type' => $validated['template_type'] ?? $resume->template_type,
+            'professional_summary' => $validated['professional_summary'] ?? $resume->professional_summary,
+            'is_public' => $request->has('is_public'),
+        ];
+
+        // Fusionner les informations personnelles existantes avec les nouvelles
+        if (isset($validated['personal_info'])) {
+            $currentPersonalInfo = $resume->personal_info ?? [];
+            $updateData['personal_info'] = array_merge($currentPersonalInfo, array_filter($validated['personal_info']));
+        }
+
+        // Gérer le CV par défaut
+        if ($request->has('is_default')) {
+            $resume->setAsDefault();
+        } else {
+            $updateData['is_default'] = false;
+        }
+
+        $resume->update($updateData);
+
+        return redirect()->route('admin.cvtheque.index')
+            ->with('success', 'CV mis à jour avec succès');
+    }
+
+    /**
+     * Supprimer un CV
+     */
+    public function destroy($id)
+    {
+        $resume = Resume::findOrFail($id);
+
+        // Supprimer le fichier PDF si existant
+        if ($resume->pdf_path) {
+            $pdfFullPath = storage_path('app/public/' . $resume->pdf_path);
+            if (file_exists($pdfFullPath)) {
+                unlink($pdfFullPath);
+            }
+        }
+
+        $resume->delete();
+
+        return redirect()->route('admin.cvtheque.index')
+            ->with('success', 'CV supprimé avec succès');
+    }
 }

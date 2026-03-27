@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Gestion des Étudiants')
-@section('page-title', 'Gestion des Étudiants')
+@section('title', 'Création de compte étudiant')
+@section('page-title', 'Création de compte étudiant')
 
 @section('breadcrumbs')
     <span> / </span>
@@ -109,8 +109,20 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('admin.students.show', $student->id) }}" class="btn btn-sm btn-primary">👁️ Voir</a>
-                        <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-sm btn-warning">✏️ Modifier</a>
+                        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                            <a href="{{ route('admin.students.show', $student->id) }}" class="btn btn-sm btn-primary">👁️ Voir</a>
+                            <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-sm btn-warning">✏️ Modifier</a>
+
+                            @php
+                                $studentResume = $student->resumes->first();
+                            @endphp
+
+                            @if($studentResume)
+                                <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-info" title="Modifier le CV">📝 CV</a>
+                            @else
+                                <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-success" title="Créer un CV">➕ CV</a>
+                            @endif
+                        </div>
                     </td>
                 </tr>
                 @empty

@@ -21,12 +21,57 @@ use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('admin.dashboard');
     }
     return redirect()->route('admin.login');
+});
+
+// Route de test pour le PDF CV
+Route::get('/test-pdf-cv', function () {
+    $data = [
+        'name' => 'Marie Martin',
+        'title' => 'AIDE-SOIGNANTE',
+        'phone' => '0612345678',
+        'email' => 'm.martin@mail.fr',
+        'address' => '34 rue La Boétie, 75014 Paris',
+        'photo_path' => null,
+        'objective' => 'Professionnelle de la santé recherchant activement un poste d\'aide soignante afin de mettre en valeur 17 ans d\'expérience dans des rôles connexes.',
+        'skills' => ['Premiers secours et sécurité', 'Gestion des maladies chroniques', 'Planification et organisation des repas'],
+        'hobbies' => ['Jardinage', 'Pratique du Pilates'],
+        'experiences' => [
+            [
+                'date' => '02/2013 - Actuel',
+                'company' => 'EHPAD | Paris',
+                'title' => 'Aide-soignante',
+                'description' => [
+                    'Suivi des progrès et consignation de tout changement de statut',
+                    'Assistance fournie aux patients dans leurs besoins de la vie quotidienne',
+                ],
+            ],
+        ],
+        'education' => [
+            [
+                'school' => 'Institut de Formation d\'Aides-soignants | CHU de Rouen',
+                'degree' => 'Diplôme d\'État d\'Aide-Soignant (DEAS)',
+            ],
+        ],
+    ];
+
+    try {
+        $pdf = Pdf::loadView('pdf.cv_aide_soignante', ['data' => $data]);
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->stream('test_cv.pdf');
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
 });
 
 // Payment Callback Routes (Public - No Auth Required)
@@ -304,12 +349,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/{trainingPack}/update-videos-order', [\App\Http\Controllers\Admin\TrainingPackController::class, 'updateVideosOrder'])->name('update-videos-order');
     });
 
-    // GESTION DES ÉTUDIANTS
+    // Création de compte étudiant
     Route::middleware('permission:manage_premium_services')->prefix('students')->name('students.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\StudentController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('store');
         Route::post('/confirm', [\App\Http\Controllers\Admin\StudentController::class, 'confirmAndSave'])->name('confirm');
+        Route::get('/{user}/create-cv', [\App\Http\Controllers\Admin\StudentController::class, 'showCreateCV'])->name('create-cv');
+        Route::post('/{user}/store-cv', [\App\Http\Controllers\Admin\StudentController::class, 'storeCV'])->name('store-cv');
         Route::post('/{user}/send-sms', [\App\Http\Controllers\Admin\StudentController::class, 'sendSMS'])->name('send-sms');
         Route::get('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');
@@ -320,8 +367,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // MONÉTISATION - CVthèque
     Route::middleware('permission:manage_cvtheque')->prefix('cvtheque')->name('cvtheque.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CVthequeController::class, 'index'])->name('index');
-        Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
         Route::get('/export/all', [\App\Http\Controllers\Admin\CVthequeController::class, 'export'])->name('export');
+        Route::get('/{resume}/preview', [\App\Http\Controllers\Admin\CVthequeController::class, 'preview'])->name('preview');
+        Route::get('/{resume}/edit', [\App\Http\Controllers\Admin\CVthequeController::class, 'edit'])->name('edit');
+        Route::put('/{resume}', [\App\Http\Controllers\Admin\CVthequeController::class, 'update'])->name('update');
+        Route::delete('/{resume}', [\App\Http\Controllers\Admin\CVthequeController::class, 'destroy'])->name('destroy');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
     });
 
     // MONÉTISATION - Advertisements

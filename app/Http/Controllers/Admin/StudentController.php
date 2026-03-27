@@ -6,16 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Specialty;
 use App\Models\User;
 use App\Services\StudentService;
+use App\Services\CVGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class StudentController extends Controller
 {
     protected StudentService $studentService;
+    protected CVGeneratorService $cvGeneratorService;
 
-    public function __construct(StudentService $studentService)
+    public function __construct(StudentService $studentService, CVGeneratorService $cvGeneratorService)
     {
         $this->studentService = $studentService;
+        $this->cvGeneratorService = $cvGeneratorService;
     }
 
     /**
@@ -25,7 +28,9 @@ class StudentController extends Controller
     {
         $query = User::where('role', 'candidate')
             ->whereNotNull('level') // Filtre les candidats qui ont un niveau = étudiants
-            ->with(['premiumServices.config', 'userSubscriptionPlans.subscriptionPlan'])
+            ->with(['premiumServices.config', 'userSubscriptionPlans.subscriptionPlan', 'resumes' => function($q) {
+                $q->latest()->limit(1);
+            }])
             ->latest();
 
         // Recherche
@@ -114,14 +119,98 @@ class StudentController extends Controller
 
         $user = $result['user'];
 
-        // Nettoyer la session
-        session()->forget(['student_data', 'student_password']);
+        // Sauvegarder le password en session pour l'étape suivante
+        session(['created_student_password' => $password]);
 
-        // Récupérer les avantages pour l'affichage
-        $benefits = $this->studentService->getStudentBenefits($user);
+        // Ne pas nettoyer student_data et student_password ici
+        // Rediriger vers l'éditeur de CV
+        return redirect()->route('admin.students.create-cv', $user->id)
+            ->with('success', 'Compte créé avec succès ! Créez maintenant le CV de l\'étudiant.');
+    }
 
-        // Retourner vers une page de confirmation avec les infos
-        return view('admin.students.confirmation', compact('user', 'password', 'benefits'));
+    /**
+     * Afficher l'éditeur de CV pour un étudiant
+     */
+    public function showCreateCV($userId)
+    {
+        $student = User::where('role', 'candidate')
+            ->whereNotNull('level')
+            ->findOrFail($userId);
+
+        // Charger le CV existant s'il existe
+        $resume = $student->resumes()->latest()->first();
+
+        return view('admin.students.create_cv', compact('student', 'resume'));
+    }
+
+    /**
+     * Sauvegarder le CV d'un étudiant
+     */
+    public function storeCV(Request $request, $userId)
+    {
+        $student = User::where('role', 'candidate')
+            ->whereNotNull('level')
+            ->findOrFail($userId);
+
+        // Validation
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'photo' => 'nullable|image|max:2048',
+            'phone' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:500',
+            'objective' => 'nullable|string|max:1000',
+            'skills' => 'nullable|string|max:2000',
+            'hobbies' => 'nullable|string|max:1000',
+            'experiences' => 'nullable|array',
+            'education' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            // Vérifier si un CV existe déjà
+            $existingResume = $student->resumes()->latest()->first();
+
+            if ($existingResume) {
+                // Mettre à jour le CV existant
+                $resume = $this->cvGeneratorService->updateStudentCV(
+                    $existingResume,
+                    $request->all(),
+                    $request->file('photo')
+                );
+            } else {
+                // Générer un nouveau CV
+                $resume = $this->cvGeneratorService->generateStudentCV(
+                    $student,
+                    $request->all(),
+                    $request->file('photo')
+                );
+            }
+
+            // Récupérer le mot de passe de la session
+            $password = session('created_student_password');
+
+            // Nettoyer toutes les sessions temporaires
+            session()->forget(['student_data', 'student_password', 'created_student_password']);
+
+            // Récupérer les avantages pour l'affichage
+            $benefits = $this->studentService->getStudentBenefits($student);
+
+            // Message de succès
+            $successMessage = $existingResume
+                ? 'CV mis à jour avec succès ! Vous pouvez maintenant envoyer le SMS.'
+                : 'CV créé avec succès ! Vous pouvez maintenant envoyer le SMS.';
+
+            // Rediriger vers la page de confirmation avec le CV créé/mis à jour
+            return view('admin.students.confirmation', compact('student', 'password', 'benefits', 'resume'))
+                ->with('user', $student)
+                ->with('success', $successMessage);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors de la création du CV : ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -172,7 +261,10 @@ class StudentController extends Controller
 
         $benefits = $this->studentService->getStudentBenefits($student);
 
-        return view('admin.students.show', compact('student', 'benefits'));
+        // Charger le CV existant s'il existe
+        $resume = $student->resumes()->latest()->first();
+
+        return view('admin.students.show', compact('student', 'benefits', 'resume'));
     }
 
     /**
@@ -184,7 +276,10 @@ class StudentController extends Controller
             ->whereNotNull('level')
             ->findOrFail($id);
 
-        return view('admin.students.edit', compact('student'));
+        // Charger le CV existant s'il existe
+        $resume = $student->resumes()->latest()->first();
+
+        return view('admin.students.edit', compact('student', 'resume'));
     }
 
     /**

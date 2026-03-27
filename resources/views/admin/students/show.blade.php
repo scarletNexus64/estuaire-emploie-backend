@@ -13,8 +13,18 @@
 @section('content')
 <div style="display: grid; gap: 1.5rem;">
     <!-- Actions -->
-    <div style="display: flex; gap: 0.5rem;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-warning">✏️ Modifier</a>
+
+        @if(isset($resume) && $resume)
+            <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-info">✏️ Modifier le CV</a>
+            @if($resume->pdf_path)
+                <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success">👁️ Voir le CV (PDF)</a>
+            @endif
+        @else
+            <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-primary">➕ Créer un CV</a>
+        @endif
+
         <a href="{{ route('admin.students.index') }}" class="btn btn-secondary">← Retour à la liste</a>
         <form action="{{ route('admin.students.destroy', $student->id) }}" method="POST" style="display: inline;"
               onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?');">
@@ -23,6 +33,52 @@
             <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
         </form>
     </div>
+
+    <!-- CV Info -->
+    @if(isset($resume) && $resume)
+    <div class="card">
+        <div class="card-header">
+            <h3 style="margin: 0;">📄 Curriculum Vitae</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <strong>Titre :</strong> {{ $resume->title ?? 'N/A' }}
+                </div>
+                <div>
+                    <strong>Template :</strong>
+                    <span class="badge badge-info">{{ ucfirst($resume->template_type) }}</span>
+                </div>
+                <div>
+                    <strong>Complétude :</strong>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="flex: 1; background: #e5e7eb; border-radius: 9999px; height: 8px; max-width: 200px;">
+                            <div style="background: linear-gradient(to right, #3b82f6, #8b5cf6); height: 8px; border-radius: 9999px; width: {{ $resume->calculateCompleteness() }}%;"></div>
+                        </div>
+                        <span style="font-weight: 600;">{{ $resume->calculateCompleteness() }}%</span>
+                    </div>
+                </div>
+                <div>
+                    <strong>Statut :</strong>
+                    @if($resume->is_public)
+                        <span class="badge badge-success">Public</span>
+                    @else
+                        <span class="badge badge-secondary">Privé</span>
+                    @endif
+                    @if($resume->is_default)
+                        <span class="badge badge-primary">Par défaut</span>
+                    @endif
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                <strong>CV créé le :</strong> {{ $resume->created_at->format('d/m/Y à H:i') }}<br>
+                @if($resume->pdf_generated_at)
+                <strong>PDF généré le :</strong> {{ $resume->pdf_generated_at->format('d/m/Y à H:i') }}
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Student Info -->
     <div class="card">

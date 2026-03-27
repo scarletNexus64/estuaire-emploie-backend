@@ -210,6 +210,11 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
+                                        <a href="{{ route('admin.cvtheque.preview', $resume->id) }}"
+                                           class="text-purple-600 hover:text-purple-900 transition-colors"
+                                           title="Prévisualiser">
+                                            <i class="mdi mdi-eye-outline text-xl"></i>
+                                        </a>
                                         @if($resume->pdf_path)
                                             <a href="{{ $resume->pdf_url }}" target="_blank"
                                                class="text-orange-600 hover:text-orange-900 transition-colors"
@@ -218,10 +223,21 @@
                                             </a>
                                         @endif
                                         <a href="{{ route('admin.cvtheque.show', $resume->user_id) }}"
-                                           class="text-primary hover:text-primary-dark transition-colors"
+                                           class="text-blue-600 hover:text-blue-900 transition-colors"
                                            title="Voir les détails">
                                             <i class="mdi mdi-eye text-xl"></i>
                                         </a>
+                                        <form action="{{ route('admin.cvtheque.destroy', $resume->id) }}" method="POST"
+                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce CV ?')"
+                                              class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="text-red-600 hover:text-red-900 transition-colors"
+                                                    title="Supprimer">
+                                                <i class="mdi mdi-delete text-xl"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

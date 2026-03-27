@@ -5,7 +5,7 @@
 
 @section('breadcrumbs')
     <span> / </span>
-    <a href="{{ route('admin.students.index') }}">Étudiants</a>
+    <a href="{{ route('admin.students.index') }}">Création de compte étudiant</a>
     <span> / </span>
     <span>Confirmation</span>
 @endsection
@@ -15,9 +15,30 @@
     <div class="card-body">
         <!-- Success Message -->
         <div class="alert alert-success" style="margin-bottom: 2rem;">
-            <h4 style="margin-bottom: 0.5rem;">✅ Étudiant créé avec succès !</h4>
-            <p style="margin-bottom: 0;">L'étudiant <strong>{{ $user->name }}</strong> a été créé et ses avantages ont été activés.</p>
+            <h4 style="margin-bottom: 0.5rem;">✅ Étudiant et CV créés avec succès !</h4>
+            <p style="margin-bottom: 0;">L'étudiant <strong>{{ $user->name }}</strong> a été créé avec son CV et ses avantages ont été activés.</p>
         </div>
+
+        @if(isset($resume))
+        <!-- CV Info -->
+        <div style="background: #e7f3ff; border: 2px solid #0056b3; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 1rem;">📄 CV Généré</h4>
+            <p>Le CV de <strong>{{ $user->name }}</strong> a été créé avec succès !</p>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                @if($resume->pdf_path)
+                    <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-info">
+                        👁️ Voir le CV (PDF)
+                    </a>
+                    <a href="{{ asset('storage/' . $resume->pdf_path) }}" download class="btn btn-success">
+                        💾 Télécharger le CV
+                    </a>
+                    <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning">
+                        ✏️ Modifier le CV
+                    </a>
+                @endif
+            </div>
+        </div>
+        @endif
 
         <!-- Student Info -->
         <h3 style="margin-bottom: 1.5rem;">📋 Informations de Connexion</h3>
@@ -84,26 +105,37 @@
         @endif
 
         <!-- SMS Form -->
-        <div style="background: #e7f3ff; border: 2px solid #0056b3; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
-            <h4 style="margin-bottom: 1rem;">📲 Envoyer les Identifiants par SMS</h4>
+        <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
+            <h4 style="margin-bottom: 1rem;">📲 Dernière étape : Envoyer les Identifiants par SMS</h4>
             <p style="margin-bottom: 1rem;">
-                Un SMS contenant les informations de connexion sera envoyé au numéro <strong>{{ $user->phone }}</strong>.
+                Un SMS contenant les informations de connexion (email, mot de passe) sera envoyé au numéro <strong>{{ $user->phone }}</strong>.
+            </p>
+            <p style="margin-bottom: 1rem; color: #856404;">
+                ⚠️ <strong>Important :</strong> Le SMS permettra à l'étudiant de se connecter à la plateforme et d'accéder à son CV.
             </p>
 
             <form action="{{ route('admin.students.send-sms', $user->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir envoyer le SMS à {{ $user->phone }} ?');">
                 @csrf
                 <input type="hidden" name="password" value="{{ $password }}">
 
-                <div style="display: flex; gap: 1rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                     <button type="submit" class="btn btn-primary btn-lg">
-                        📤 Envoyer par SMS
+                        📤 Envoyer le SMS maintenant
                     </button>
                     <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-lg">
-                        Terminer sans envoyer
+                        ⏭️ Terminer sans envoyer
                     </a>
                     <a href="{{ route('admin.students.show', $user->id) }}" class="btn btn-info btn-lg">
                         👁️ Voir le Profil
                     </a>
+                    @if(isset($resume) && $resume->pdf_path)
+                        <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success btn-lg">
+                            📄 Voir le CV
+                        </a>
+                        <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning btn-lg">
+                            ✏️ Modifier le CV
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>

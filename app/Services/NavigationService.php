@@ -36,7 +36,7 @@ class NavigationService
                         'permission' => 'manage_users',
                     ],
                     [
-                        'name' => 'Étudiants',
+                        'name' => 'Création de compte étudiant',
                         'route' => 'admin.students.index',
                         'icon' => 'fas fa-user-graduate',
                         'permission' => 'manage_premium_services',
