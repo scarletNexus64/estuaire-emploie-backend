@@ -349,6 +349,17 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/{trainingPack}/update-videos-order', [\App\Http\Controllers\Admin\TrainingPackController::class, 'updateVideosOrder'])->name('update-videos-order');
     });
 
+    // TARIFICATION DES FORMATIONS INSAMTECHS
+    Route::middleware('permission:manage_premium_services')->prefix('insamtechs-pricing')->name('insamtechs-pricing.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'store'])->name('store');
+        Route::get('/{pricing}/edit', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'edit'])->name('edit');
+        Route::put('/{pricing}', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'update'])->name('update');
+        Route::patch('/{pricing}/toggle', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'toggle'])->name('toggle');
+        Route::delete('/{pricing}', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'destroy'])->name('destroy');
+    });
+
     // Création de compte étudiant
     Route::middleware('permission:manage_premium_services')->prefix('students')->name('students.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index');

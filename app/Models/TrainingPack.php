@@ -29,6 +29,7 @@ class TrainingPack extends Model
         'instructor_bio',
         'instructor_photo',
         'is_active',
+        'whatsapp_group_link',
         'is_featured',
         'display_order',
         'purchases_count',

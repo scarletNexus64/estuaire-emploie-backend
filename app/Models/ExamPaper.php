@@ -18,6 +18,8 @@ class ExamPaper extends Model
         'level',
         'year',
         'is_correction',
+        'has_correction',
+        'correction_paper_id',
         'description',
         'file_path',
         'file_name',
@@ -34,12 +36,29 @@ class ExamPaper extends Model
             'level' => 'integer',
             'year' => 'integer',
             'is_correction' => 'boolean',
+            'has_correction' => 'boolean',
             'file_size' => 'integer',
             'downloads_count' => 'integer',
             'views_count' => 'integer',
             'is_active' => 'boolean',
             'display_order' => 'integer',
         ];
+    }
+
+    /**
+     * Relation : Le corrigé associé à cette épreuve
+     */
+    public function correctionPaper()
+    {
+        return $this->belongsTo(ExamPaper::class, 'correction_paper_id');
+    }
+
+    /**
+     * Relation : L'épreuve dont celle-ci est le corrigé
+     */
+    public function subjectPaper()
+    {
+        return $this->hasOne(ExamPaper::class, 'correction_paper_id');
     }
 
     /**

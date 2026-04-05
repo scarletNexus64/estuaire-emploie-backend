@@ -257,6 +257,20 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/training-packs/{packId}/videos/{videoId}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'viewVideo']);
     // Streamer une vidéo de formation (optimisé pour mobile) - depuis un pack
     Route::get('/training-packs/{packId}/videos/{videoId}/stream', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'streamVideo']);
+    // Marquer une vidéo comme terminée
+    Route::post('/training-packs/{packId}/videos/{videoId}/complete', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'markVideoCompleted']);
+
+    // ------------------
+    // FORMATIONS INSAMTECHS (Tarification & Achat)
+    // ------------------
+    // Récupérer les prix des formations InsamTechs
+    Route::get('/insamtechs-formations/pricing', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'pricing']);
+    // Mes achats de formations InsamTechs
+    Route::get('/my-insamtechs-formations', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'myPurchases']);
+    // Acheter une formation InsamTechs
+    Route::post('/insamtechs-formations/{formationId}/purchase', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'purchase']);
+    // Vérifier l'accès à une formation
+    Route::get('/insamtechs-formations/{formationId}/check-access', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'checkAccess']);
 
     // ------------------
     // RECRUTEUR - TESTS DE COMPÉTENCES (CRUD)

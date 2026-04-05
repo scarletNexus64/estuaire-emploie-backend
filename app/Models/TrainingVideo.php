@@ -72,6 +72,22 @@ class TrainingVideo extends Model
     }
 
     /**
+     * Relation : Les chapitres de cette vidéo
+     */
+    public function chapters()
+    {
+        return $this->hasMany(TrainingVideoChapter::class)->orderBy('display_order');
+    }
+
+    /**
+     * Relation : Les complétions de cette vidéo
+     */
+    public function completions()
+    {
+        return $this->hasMany(\App\Models\TrainingVideoCompletion::class);
+    }
+
+    /**
      * Scope pour les vidéos actives
      */
     public function scopeActive($query)

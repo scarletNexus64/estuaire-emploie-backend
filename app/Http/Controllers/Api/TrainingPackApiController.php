@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TrainingPack;
+use App\Models\TrainingVideo;
+use App\Models\TrainingVideoCompletion;
 use App\Models\PackPurchase;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
@@ -74,7 +76,8 @@ class TrainingPackApiController extends Controller
     public function show($id)
     {
         $pack = TrainingPack::with(['trainingVideos' => function ($query) {
-                                $query->orderBy('training_pack_videos.section_order')
+                                $query->with('chapters')
+                                      ->orderBy('training_pack_videos.section_order')
                                       ->orderBy('training_pack_videos.display_order');
                             }])
                             ->withCount('trainingVideos')
@@ -237,6 +240,7 @@ class TrainingPackApiController extends Controller
                 'data' => [
                     'purchase' => $purchase,
                     'pack' => $pack,
+                    'whatsapp_group_link' => $pack->whatsapp_group_link,
                 ],
             ]);
 
@@ -457,6 +461,45 @@ class TrainingPackApiController extends Controller
             'Content-Type' => $mimeType,
             'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    }
+
+    /**
+     * Marquer une vidéo comme terminée
+     */
+    public function markVideoCompleted($packId, $videoId)
+    {
+        $user = auth()->user();
+
+        // Verify user has purchased the pack
+        $hasAccess = PackPurchase::where('user_id', $user->id)
+            ->where('training_pack_id', $packId)
+            ->where('pack_type', 'training')
+            ->where('status', 'completed')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+
+        if (!$hasAccess) {
+            return response()->json(['success' => false, 'message' => 'Accès non autorisé'], 403);
+        }
+
+        $video = TrainingVideo::findOrFail($videoId);
+
+        $completion = TrainingVideoCompletion::firstOrCreate(
+            ['user_id' => $user->id, 'training_video_id' => $videoId],
+            ['completed_at' => now()]
+        );
+
+        if ($completion->wasRecentlyCreated) {
+            $video->incrementCompletions();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vidéo marquée comme terminée',
+            'data' => ['completions_count' => $video->fresh()->completions_count]
         ]);
     }
 

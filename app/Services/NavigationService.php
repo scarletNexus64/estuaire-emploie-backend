@@ -129,6 +129,12 @@ class NavigationService
                         'icon' => 'fas fa-video',
                         'permission' => 'manage_premium_services',
                     ],
+                    [
+                        'name' => 'Tarification InsamTechs',
+                        'route' => 'admin.insamtechs-pricing.index',
+                        'icon' => 'fas fa-tags',
+                        'permission' => 'manage_premium_services',
+                    ],
                 ],
             ],
             [
@@ -288,6 +294,7 @@ class NavigationService
                 'admin.exam-papers.index',
                 'admin.training-packs.index',
                 'admin.training-videos.index',
+                'admin.insamtechs-pricing.index',
                 'admin.settings.index',
             ],
 

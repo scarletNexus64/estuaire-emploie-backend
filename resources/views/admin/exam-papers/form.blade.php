@@ -209,9 +209,11 @@
                             <input
                                 type="checkbox"
                                 name="is_correction"
+                                id="is_correction_checkbox"
                                 value="1"
                                 {{ old('is_correction', $examPaper->is_correction ?? false) ? 'checked' : '' }}
                                 class="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                                onchange="toggleCorrectionSection()"
                             >
                             <div>
                                 <p class="font-medium text-gray-900">Corrigé</p>
@@ -254,6 +256,44 @@
             </div>
         </div>
 
+        <!-- Lier une correction (visible seulement si ce n'est PAS un corrigé) -->
+        <div class="card" id="correction-link-section"
+             style="{{ old('is_correction', $examPaper->is_correction ?? false) ? 'display:none;' : '' }}">
+            <div class="card-header" style="background-color: #28a745; color: white;">
+                <h3 class="card-title" style="color: white;">✅ Correction disponible</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Lier une correction à ce sujet
+                    </label>
+                    <select name="correction_paper_id" class="form-control">
+                        <option value="">— Aucune correction liée —</option>
+                        @foreach($corrections as $correction)
+                            <option value="{{ $correction->id }}"
+                                    {{ old('correction_paper_id', $examPaper->correction_paper_id ?? '') == $correction->id ? 'selected' : '' }}>
+                                {{ $correction->title }} ({{ $correction->specialty }} - {{ $correction->subject }}, {{ $correction->year }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="form-text text-muted" style="margin-top: 0.5rem; display: block;">
+                        Sélectionnez le corrigé correspondant à ce sujet. Le badge "Correction dispo" s'affichera dans l'application.
+                    </small>
+                </div>
+
+                @if(isset($examPaper) && $examPaper->correction_paper_id)
+                    <div class="mt-3 p-3 rounded-lg" style="background-color: #d4edda; border: 1px solid #c3e6cb;">
+                        <div class="flex items-center gap-2">
+                            <span style="color: #28a745; font-size: 1.2rem;">✅</span>
+                            <span style="color: #155724; font-weight: 600;">
+                                Correction liée : {{ $examPaper->correctionPaper->title ?? 'N/A' }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <!-- Actions -->
         <div class="flex gap-3 justify-end">
             <a href="{{ route('admin.exam-papers.index') }}" class="btn btn-secondary">
@@ -278,6 +318,12 @@ function displayFileName(input) {
     } else {
         fileNameEl.classList.add('hidden');
     }
+}
+
+function toggleCorrectionSection() {
+    const isCorrection = document.getElementById('is_correction_checkbox').checked;
+    const section = document.getElementById('correction-link-section');
+    section.style.display = isCorrection ? 'none' : '';
 }
 </script>
 @endsection

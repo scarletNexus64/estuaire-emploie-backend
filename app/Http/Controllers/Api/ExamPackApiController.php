@@ -78,7 +78,7 @@ class ExamPackApiController extends Controller
     {
         $pack = ExamPack::with(['examPapers' => function ($query) {
                             $query->orderBy('exam_pack_papers.display_order');
-                        }])
+                        }, 'examPapers.correctionPaper'])
                         ->withCount('examPapers')
                         ->findOrFail($id);
 

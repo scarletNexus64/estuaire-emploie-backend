@@ -160,7 +160,7 @@ class ExamPaperApiController extends Controller
             ], 403);
         }
 
-        $examPaper = ExamPaper::active()->find($id);
+        $examPaper = ExamPaper::with('correctionPaper')->active()->find($id);
 
         if (!$examPaper) {
             return response()->json([

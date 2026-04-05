@@ -43,3 +43,6 @@ database/database.sqlite
 /.vscode
 firebase/estuaire-emplois-firebase-adminsdk-fbsvc-6c0d8105ad.json
 /storage/logs/*.log
+
+CLAUDE.md
+.claude/

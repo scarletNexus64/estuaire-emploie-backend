@@ -91,6 +91,7 @@ class TrainingPackController extends Controller
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'display_order' => 'nullable|integer',
+            'whatsapp_group_link' => 'nullable|url|max:500',
         ]);
 
         // Upload de l'image de couverture

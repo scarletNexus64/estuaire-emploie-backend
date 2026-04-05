@@ -152,6 +152,36 @@
                 </div>
             </div>
 
+            <!-- Groupe WhatsApp -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header" style="background-color: #25D366; color: white;">
+                    <h3 class="card-title" style="color: white;">Groupe WhatsApp</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="whatsapp_group_link">Lien du Groupe WhatsApp</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" style="background-color: #25D366; color: white;">
+                                    <i class="fas fa-brands fa-whatsapp"></i> WhatsApp
+                                </span>
+                            </div>
+                            <input type="url" name="whatsapp_group_link" id="whatsapp_group_link"
+                                   class="form-control @error('whatsapp_group_link') is-invalid @enderror"
+                                   value="{{ old('whatsapp_group_link', $trainingPack->whatsapp_group_link ?? '') }}"
+                                   placeholder="https://chat.whatsapp.com/...">
+                        </div>
+                        @error('whatsapp_group_link')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">
+                            Ce lien sera envoyé automatiquement aux acheteurs après l'achat du pack.
+                            Créez un groupe WhatsApp et copiez le lien d'invitation ici.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
             <!-- Informations Instructeur -->
             <div class="card" style="margin-top: 1.5rem;">
                 <div class="card-header">
