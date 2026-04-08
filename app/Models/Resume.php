@@ -11,6 +11,8 @@ class Resume extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $appends = ['pdf_url'];
+
     protected $fillable = [
         'user_id',
         'title',

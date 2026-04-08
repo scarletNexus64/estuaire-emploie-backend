@@ -279,8 +279,8 @@
         <!-- COLONNE GAUCHE (bleue) -->
         <div class="cv-left">
             <div class="photo-box">
-                @if(!empty($personalInfo['photo']))
-                    <img src="{{ asset('storage/' . $personalInfo['photo']) }}" alt="Photo">
+                @if(!empty($personalInfo['photo_path']))
+                    <img src="{{ asset('storage/' . $personalInfo['photo_path']) }}" alt="Photo">
                 @else
                     <div class="photo-placeholder">👤</div>
                 @endif

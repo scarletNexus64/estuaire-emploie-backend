@@ -379,6 +379,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/confirm', [\App\Http\Controllers\Admin\StudentController::class, 'confirmAndSave'])->name('confirm');
         Route::get('/{user}/create-cv', [\App\Http\Controllers\Admin\StudentController::class, 'showCreateCV'])->name('create-cv');
         Route::post('/{user}/store-cv', [\App\Http\Controllers\Admin\StudentController::class, 'storeCV'])->name('store-cv');
+        Route::get('/{user}/confirmation', [\App\Http\Controllers\Admin\StudentController::class, 'confirmation'])->name('confirmation');
         Route::post('/{user}/send-sms', [\App\Http\Controllers\Admin\StudentController::class, 'sendSMS'])->name('send-sms');
         Route::get('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');

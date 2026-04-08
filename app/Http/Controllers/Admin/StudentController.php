@@ -190,27 +190,44 @@ class StudentController extends Controller
                 );
             }
 
-            // Récupérer le mot de passe de la session
-            $password = session('created_student_password');
-
-            // Nettoyer toutes les sessions temporaires
-            session()->forget(['student_data', 'student_password', 'created_student_password']);
-
-            // Récupérer les avantages pour l'affichage
-            $benefits = $this->studentService->getStudentBenefits($student);
-
             // Message de succès
             $successMessage = $existingResume
                 ? 'CV mis à jour avec succès ! Vous pouvez maintenant envoyer le SMS.'
                 : 'CV créé avec succès ! Vous pouvez maintenant envoyer le SMS.';
 
-            // Rediriger vers la page de confirmation avec le CV créé/mis à jour
-            return view('admin.students.confirmation', compact('student', 'password', 'benefits', 'resume'))
-                ->with('user', $student)
+            // Rediriger vers la page de confirmation (PRG pattern)
+            return redirect()->route('admin.students.confirmation', $student->id)
                 ->with('success', $successMessage);
         } catch (\Exception $e) {
             return back()->with('error', 'Erreur lors de la création du CV : ' . $e->getMessage())->withInput();
         }
+    }
+
+    /**
+     * Afficher la page de confirmation après création/mise à jour du CV
+     */
+    public function confirmation($userId)
+    {
+        $student = User::where('role', 'candidate')
+            ->whereNotNull('level')
+            ->findOrFail($userId);
+
+        $resume = $student->resumes()->latest()->first();
+
+        if (!$resume) {
+            return redirect()->route('admin.students.create-cv', $student->id)
+                ->with('error', 'Aucun CV trouvé pour cet étudiant.');
+        }
+
+        $password = session('created_student_password');
+
+        // Nettoyer les sessions temporaires
+        session()->forget(['student_data', 'student_password', 'created_student_password']);
+
+        $benefits = $this->studentService->getStudentBenefits($student);
+
+        return view('admin.students.confirmation', compact('student', 'password', 'benefits', 'resume'))
+            ->with('user', $student);
     }
 
     /**
