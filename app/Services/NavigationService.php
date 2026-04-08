@@ -117,24 +117,24 @@ class NavigationService
                         'icon' => 'fas fa-file-pdf',
                         'permission' => 'manage_premium_services',
                     ],
-                    [
-                        'name' => 'Packs de Formation',
-                        'route' => 'admin.training-packs.index',
-                        'icon' => 'fas fa-graduation-cap',
-                        'permission' => 'manage_premium_services',
-                    ],
-                    [
-                        'name' => 'Vidéos de Formation',
-                        'route' => 'admin.training-videos.index',
-                        'icon' => 'fas fa-video',
-                        'permission' => 'manage_premium_services',
-                    ],
-                    [
-                        'name' => 'Tarification InsamTechs',
-                        'route' => 'admin.insamtechs-pricing.index',
-                        'icon' => 'fas fa-tags',
-                        'permission' => 'manage_premium_services',
-                    ],
+                    // [
+                    //     'name' => 'Packs de Formation',
+                    //     'route' => 'admin.training-packs.index',
+                    //     'icon' => 'fas fa-graduation-cap',
+                    //     'permission' => 'manage_premium_services',
+                    // ],
+                    // [
+                    //     'name' => 'Vidéos de Formation',
+                    //     'route' => 'admin.training-videos.index',
+                    //     'icon' => 'fas fa-video',
+                    //     'permission' => 'manage_premium_services',
+                    // ],
+                    // [
+                    //     'name' => 'Tarification InsamTechs',
+                    //     'route' => 'admin.insamtechs-pricing.index',
+                    //     'icon' => 'fas fa-tags',
+                    //     'permission' => 'manage_premium_services',
+                    // ],
                 ],
             ],
             [
