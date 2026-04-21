@@ -40,6 +40,7 @@
                         <th>Offre</th>
                         <th>Entreprise</th>
                         <th>CV</th>
+                        <th>Localisation</th>
                         <th>Statut</th>
                         <th>Date de soumission</th>
                         <th>Actions</th>
@@ -66,6 +67,19 @@
                                     <span style="color: #dc3545;">Aucun</span>
                                 @endif
                             </td>
+                            <td style="text-align: center;">
+                                @if($application->latitude && $application->longitude)
+                                    <a href="https://www.google.com/maps?q={{ $application->latitude }},{{ $application->longitude }}"
+                                       target="_blank"
+                                       title="Voir la localisation sur Google Maps ({{ $application->city ?? 'Position GPS' }})">
+                                        <i class="fas fa-map-marker-alt" style="color: #28a745; font-size: 1.2rem;"></i>
+                                    </a>
+                                @else
+                                    <span style="color: #6c757d;" title="Localisation non disponible">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </span>
+                                @endif
+                            </td>
                             <td>
                                 @if($application->status === 'accepted')
                                     <span class="badge badge-success">✅ Acceptée</span>
@@ -82,7 +96,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 2rem;">
+                            <td colspan="10" style="text-align: center; padding: 2rem;">
                                 Aucune candidature trouvée
                             </td>
                         </tr>

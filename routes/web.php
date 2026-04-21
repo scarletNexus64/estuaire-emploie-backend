@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
 use App\Http\Controllers\Admin\SkillTestController;
 use App\Http\Controllers\Admin\MaintenanceModeController;
+use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -319,6 +320,16 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
     });
 
+    // CONTENU ÉTUDIANT - Forum de Discussion
+    Route::middleware('permission:manage_premium_services')->prefix('forum')->name('forum.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ForumController::class, 'index'])->name('index');
+        Route::post('/reply', [\App\Http\Controllers\Admin\ForumController::class, 'reply'])->name('reply');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\ForumController::class, 'destroy'])->name('destroy');
+        Route::get('/admins', [\App\Http\Controllers\Admin\ForumController::class, 'admins'])->name('admins');
+        Route::post('/admins', [\App\Http\Controllers\Admin\ForumController::class, 'addAdmin'])->name('add-admin');
+        Route::delete('/admins/{id}', [\App\Http\Controllers\Admin\ForumController::class, 'removeAdmin'])->name('remove-admin');
+    });
+
     // CONTENU ÉTUDIANT - Vidéos de formation
     Route::middleware('permission:manage_premium_services')->prefix('training-videos')->name('training-videos.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'index'])->name('index');
@@ -384,6 +395,21 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/{resume}', [\App\Http\Controllers\Admin\CVthequeController::class, 'update'])->name('update');
         Route::delete('/{resume}', [\App\Http\Controllers\Admin\CVthequeController::class, 'destroy'])->name('destroy');
         Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
+    });
+
+    // Import/Export Management
+    Route::middleware('permission:manage_jobs')->prefix('import-export')->name('import-export.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ImportExportController::class, 'index'])->name('index');
+
+        // Export Templates
+        Route::post('/jobs/export-template', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportJobsTemplate'])->name('jobs.export-template');
+        Route::post('/resumes/export-template', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportResumesTemplate'])->name('resumes.export-template');
+        Route::post('/quick-services/export-template', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportQuickServicesTemplate'])->name('quick-services.export-template');
+
+        // Import Data
+        Route::post('/jobs/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'importJobs'])->name('jobs.import');
+        Route::post('/resumes/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'importResumes'])->name('resumes.import');
+        Route::post('/quick-services/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'importQuickServices'])->name('quick-services.import');
     });
 
     // MONÉTISATION - Advertisements

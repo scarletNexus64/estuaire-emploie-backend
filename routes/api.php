@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\RecruiterSkillTestController;
 use App\Http\Controllers\Api\CandidatePremiumServiceController;
 use App\Http\Controllers\Api\ExamPaperApiController;
 use App\Http\Controllers\Api\QuickServiceController;
+use App\Http\Controllers\Api\ImportExportController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -259,6 +260,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/training-packs/{packId}/videos/{videoId}/stream', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'streamVideo']);
     // Marquer une vidéo comme terminée
     Route::post('/training-packs/{packId}/videos/{videoId}/complete', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'markVideoCompleted']);
+
+    // ------------------
+    // FORUM DE DISCUSSION (Questions aux formateurs)
+    // ------------------
+    // Liste des messages du forum
+    Route::get('/forum/messages', [\App\Http\Controllers\Api\ForumController::class, 'index']);
+    // Créer un nouveau message dans le forum
+    Route::post('/forum/messages', [\App\Http\Controllers\Api\ForumController::class, 'store']);
 
     // ------------------
     // FORMATIONS INSAMTECHS (Tarification & Achat)
@@ -500,6 +509,24 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/my-quick-services', [QuickServiceController::class, 'myServices']);
     // Mes réponses aux services
     Route::get('/my-service-responses', [QuickServiceController::class, 'myResponses']);
+
+    // ------------------
+    // IMPORT/EXPORT (Jobs, CVs, Services Rapides)
+    // ------------------
+    // Jobs - Export template avec sélection de colonnes
+    Route::post('/jobs/export-template', [ImportExportController::class, 'exportJobsTemplate']);
+    // Jobs - Import CSV/Excel avec validation et rapport
+    Route::post('/jobs/import', [ImportExportController::class, 'importJobs']);
+
+    // Resumes (CVs) - Export template avec sélection de colonnes
+    Route::post('/resumes/export-template', [ImportExportController::class, 'exportResumesTemplate']);
+    // Resumes (CVs) - Import CSV/Excel avec validation et rapport
+    Route::post('/resumes/import', [ImportExportController::class, 'importResumes']);
+
+    // Quick Services - Export template avec sélection de colonnes
+    Route::post('/quick-services/export-template', [ImportExportController::class, 'exportQuickServicesTemplate']);
+    // Quick Services - Import CSV/Excel avec validation et rapport
+    Route::post('/quick-services/import', [ImportExportController::class, 'importQuickServices']);
 
     // ------------------
     // BROADCASTING AUTH (WebSocket Authentication)

@@ -23,6 +23,41 @@
                         <p><strong>Compétences:</strong> {{ $application->user->skills }}</p>
                     @endif
 
+                    @if($application->latitude && $application->longitude)
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">📍 Localisation du Candidat</h4>
+                        <div style="border: 1px solid #dee2e6; border-radius: 4px; padding: 1rem; background-color: #f8f9fa;">
+                            <p><strong>Coordonnées GPS:</strong></p>
+                            <p style="margin-left: 1rem;">
+                                <strong>Latitude:</strong> {{ $application->latitude }}<br>
+                                <strong>Longitude:</strong> {{ $application->longitude }}
+                            </p>
+
+                            @if($application->address || $application->city || $application->country)
+                                <p style="margin-top: 1rem;"><strong>Adresse:</strong></p>
+                                <p style="margin-left: 1rem;">
+                                    @if($application->address)
+                                        {{ $application->address }}<br>
+                                    @endif
+                                    @if($application->city)
+                                        {{ $application->city }}
+                                    @endif
+                                    @if($application->country)
+                                        , {{ $application->country }}
+                                    @endif
+                                </p>
+                            @endif
+
+                            <p style="margin-top: 1rem;">
+                                <a href="https://www.google.com/maps?q={{ $application->latitude }},{{ $application->longitude }}"
+                                   target="_blank"
+                                   class="btn btn-primary"
+                                   style="display: inline-block; padding: 0.5rem 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+                                    <i class="fas fa-map-marker-alt"></i> Voir sur Google Maps
+                                </a>
+                            </p>
+                        </div>
+                    @endif
+
                     <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Offre d'Emploi</h4>
                     <p><strong>Titre:</strong> {{ $application->job?->title ?? 'N/A' }}</p>
                     <p><strong>Entreprise:</strong> {{ $application->job?->company?->name ?? 'N/A' }}</p>

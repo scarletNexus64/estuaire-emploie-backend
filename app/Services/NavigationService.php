@@ -84,6 +84,12 @@ class NavigationService
                         'permission' => 'manage_cvtheque',
                     ],
                     [
+                        'name' => 'Import/Export',
+                        'route' => 'admin.import-export.index',
+                        'icon' => 'fas fa-file-import',
+                        'permission' => 'manage_jobs',
+                    ],
+                    [
                         'name' => 'Recruteurs',
                         'route' => 'admin.recruiters.index',
                         'icon' => 'fas fa-user-tie',
@@ -115,6 +121,12 @@ class NavigationService
                         'name' => 'Épreuves (gestion)',
                         'route' => 'admin.exam-papers.index',
                         'icon' => 'fas fa-file-pdf',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Forum de Discussion',
+                        'route' => 'admin.forum.index',
+                        'icon' => 'fas fa-comments',
                         'permission' => 'manage_premium_services',
                     ],
                     // [
@@ -280,6 +292,7 @@ class NavigationService
                 'admin.skill-tests.index',
                 'admin.portfolios.index',
                 'admin.cvtheque.index',
+                'admin.import-export.index',
                 'admin.recruiters.index',
                 'admin.settings.index',
             ],
