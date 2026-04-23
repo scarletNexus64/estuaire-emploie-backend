@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ForumMessage;
 use App\Events\ForumMessageSent;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ForumController extends Controller
 {
@@ -84,34 +86,32 @@ class ForumController extends Controller
     }
 
     /**
-     * Notifier les admins du forum via FCM
+     * Notifier les admins du forum via FCM + DB
      */
     private function notifyForumAdmins(ForumMessage $message)
     {
         try {
-            // Récupérer tous les admins du forum (sauf l'auteur du message)
             $admins = \App\Models\User::where('is_forum_admin', true)
                 ->where('id', '!=', $message->user_id)
-                ->whereNotNull('fcm_token')
                 ->get();
 
-            foreach ($admins as $admin) {
-                // Envoyer notification FCM
-                \App\Services\FCMService::sendNotification(
-                    $admin->fcm_token,
-                    'Nouveau message au forum',
-                    $message->user->name . ' a posté un message',
-                    [
-                        'type' => 'forum_message',
-                        'message_id' => $message->id,
-                        'user_id' => $message->user_id,
-                        'user_name' => $message->user->name,
-                    ]
-                );
+            if ($admins->isEmpty()) {
+                return;
             }
-        } catch (\Exception $e) {
-            // Log l'erreur mais ne pas bloquer la création du message
-            \Log::error('Erreur notification FCM forum: ' . $e->getMessage());
+
+            app(NotificationService::class)->sendToMultipleUsers(
+                $admins,
+                'Nouveau message au forum',
+                $message->user->name . ' a posté un message',
+                'forum_message',
+                [
+                    'message_id' => $message->id,
+                    'user_id' => $message->user_id,
+                    'user_name' => $message->user->name,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::error('Erreur notification forum: ' . $e->getMessage());
         }
     }
 }

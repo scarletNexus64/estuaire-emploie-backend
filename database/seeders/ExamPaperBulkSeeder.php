@@ -105,8 +105,9 @@ class ExamPaperBulkSeeder extends Seeder
                 // Niveau 3: Matières
                 foreach (File::directories($filiereDir) as $subjectDir) {
                     $subjectName = basename($subjectDir);
+                    $subjectIsCorrection = $this->isCorrectionName($subjectName);
 
-                    // Niveau 4: Années (ou fichiers directs)
+                    // Niveau 4: Années (ou dossiers correction, ou fichiers directs)
                     foreach (File::directories($subjectDir) as $yearDir) {
                         $yearName = basename($yearDir);
                         $year = is_numeric($yearName) ? (int) $yearName : null;
@@ -116,22 +117,32 @@ class ExamPaperBulkSeeder extends Seeder
                             $year = null;
                         }
 
-                        // Scanner les PDFs dans année/ (sujets)
+                        // Le "year" peut en fait être un dossier correction (ex: "Corrigé Sujet 1")
+                        $yearIsCorrection = $year === null && $this->isCorrectionName($yearName);
+
+                        // Scanner les PDFs directement dans année/
                         foreach (File::glob($yearDir . '/*.pdf') as $pdfPath) {
+                            $isCorr = $subjectIsCorrection || $yearIsCorrection
+                                || $this->isCorrection(basename($pdfPath));
                             $result = $this->createPaper(
                                 $pdfPath, $appSpecialty, $filiereName, $subjectName,
-                                $year, false, $displayOrder, $specialtyDir, $filiereDir, $subjectDir
+                                $year, $isCorr, $displayOrder, $specialtyDir, $filiereDir, $subjectDir
                             );
                             if ($result) { $count++; $displayOrder++; } else { $errors++; }
                         }
 
-                        // Scanner le sous-dossier Corrigé
-                        $corrigeDir = $yearDir . '/Corrigé';
-                        if (File::isDirectory($corrigeDir)) {
-                            foreach (File::glob($corrigeDir . '/*.pdf') as $pdfPath) {
+                        // Scanner les sous-dossiers (Corrigé, Sujet, etc.) — détection robuste
+                        // NB: matching par nom normalisé (NFC) car les archives macOS produisent du NFD
+                        foreach (File::directories($yearDir) as $subDir) {
+                            $subName = basename($subDir);
+                            $subIsCorrection = $this->isCorrectionName($subName)
+                                || $subjectIsCorrection
+                                || $yearIsCorrection;
+                            foreach (File::glob($subDir . '/*.pdf') as $pdfPath) {
+                                $isCorr = $subIsCorrection || $this->isCorrection(basename($pdfPath));
                                 $result = $this->createPaper(
                                     $pdfPath, $appSpecialty, $filiereName, $subjectName,
-                                    $year, true, $displayOrder, $specialtyDir, $filiereDir, $subjectDir
+                                    $year, $isCorr, $displayOrder, $specialtyDir, $filiereDir, $subjectDir
                                 );
                                 if ($result) { $count++; $displayOrder++; } else { $errors++; }
                             }
@@ -140,7 +151,7 @@ class ExamPaperBulkSeeder extends Seeder
 
                     // PDFs directement dans le dossier matière (pas dans un sous-dossier année)
                     foreach (File::glob($subjectDir . '/*.pdf') as $pdfPath) {
-                        $isCorr = $this->isCorrection(basename($pdfPath));
+                        $isCorr = $subjectIsCorrection || $this->isCorrection(basename($pdfPath));
                         $result = $this->createPaper(
                             $pdfPath, $appSpecialty, $filiereName, $subjectName,
                             null, $isCorr, $displayOrder, $specialtyDir, $filiereDir, $subjectDir
@@ -358,10 +369,36 @@ class ExamPaperBulkSeeder extends Seeder
 
     private function isCorrection(string $fileName): bool
     {
-        $lower = strtolower($fileName);
+        $lower = mb_strtolower($this->normalize($fileName));
         return str_contains($lower, 'correction') || str_contains($lower, 'corrigé') ||
                str_contains($lower, 'corrige') || str_contains($lower, 'corriger') ||
+               str_contains($lower, 'corrrige') || str_contains($lower, 'corri ge') ||
                str_contains($lower, 'solution');
+    }
+
+    /**
+     * Détecte si un nom de dossier (matière / année / sous-dossier) désigne un corrigé.
+     * Robuste aux variations de casse et à la normalisation Unicode NFD (archives macOS).
+     */
+    private function isCorrectionName(string $name): bool
+    {
+        return $this->isCorrection($name);
+    }
+
+    /**
+     * Normalise une chaîne en NFC. Les archives créées sur macOS stockent les noms
+     * de fichiers en NFD (é = "e" + U+0301), ce qui fait échouer les comparaisons
+     * avec des chaînes PHP littérales en NFC.
+     */
+    private function normalize(string $s): string
+    {
+        if (class_exists(\Normalizer::class)) {
+            $normalized = \Normalizer::normalize($s, \Normalizer::FORM_C);
+            if ($normalized !== false) {
+                return $normalized;
+            }
+        }
+        return $s;
     }
 
     private function cleanTitle(string $fileName, string $subject, string $filiere): string
