@@ -91,6 +91,11 @@ Route::get('/video-stream/{videoId}', [\App\Http\Controllers\Api\TrainingPackApi
 Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, 'must.change.password'])->group(function () {
 
     // ------------------
+    // TEST NOTIFICATIONS (DEBUG ONLY)
+    // ------------------
+    Route::post('/test-notification', [TestNotificationController::class, 'send']);
+
+    // ------------------
     // AUTHENTIFICATION & PROFIL
     // ------------------
     Route::post('/logout', [AuthController::class, 'logout']);

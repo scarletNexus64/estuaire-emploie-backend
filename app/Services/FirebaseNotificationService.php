@@ -5,6 +5,8 @@ namespace App\Services;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Kreait\Firebase\Messaging\ApnsConfig;
+use Kreait\Firebase\Messaging\AndroidConfig;
 use Illuminate\Support\Facades\Log;
 
 class FirebaseNotificationService
@@ -26,13 +28,45 @@ class FirebaseNotificationService
     {
         $message = CloudMessage::withTarget('token', $fcmToken)
             ->withNotification(Notification::create($title, $body))
-            ->withData($data);
+            ->withData($data)
+            ->withApnsConfig(
+                ApnsConfig::fromArray([
+                    'headers' => [
+                        'apns-priority' => '10',
+                    ],
+                    'payload' => [
+                        'aps' => [
+                            'alert' => [
+                                'title' => $title,
+                                'body' => $body,
+                            ],
+                            'sound' => 'default',
+                            'badge' => 1,
+                            'mutable-content' => 1,
+                        ],
+                    ],
+                ])
+            )
+            ->withAndroidConfig(
+                AndroidConfig::fromArray([
+                    'priority' => 'high',
+                    'notification' => [
+                        'sound' => 'default',
+                        'channel_id' => 'channel_id',
+                    ],
+                ])
+            );
 
         try {
             $result = $this->messaging->send($message);
+            Log::info('FCM notification sent successfully', [
+                'token' => substr($fcmToken, 0, 20) . '...',
+                'title' => $title,
+            ]);
             return $result;
         } catch (\Throwable $e) {
             Log::warning('FCM send failed', [
+                'token' => substr($fcmToken, 0, 20) . '...',
                 'error' => $e->getMessage(),
             ]);
             throw $e;
@@ -65,7 +99,34 @@ class FirebaseNotificationService
             try {
                 $message = CloudMessage::new()
                     ->withNotification(Notification::create($title, $body))
-                    ->withData($data);
+                    ->withData($data)
+                    ->withApnsConfig(
+                        ApnsConfig::fromArray([
+                            'headers' => [
+                                'apns-priority' => '10',
+                            ],
+                            'payload' => [
+                                'aps' => [
+                                    'alert' => [
+                                        'title' => $title,
+                                        'body' => $body,
+                                    ],
+                                    'sound' => 'default',
+                                    'badge' => 1,
+                                    'mutable-content' => 1,
+                                ],
+                            ],
+                        ])
+                    )
+                    ->withAndroidConfig(
+                        AndroidConfig::fromArray([
+                            'priority' => 'high',
+                            'notification' => [
+                                'sound' => 'default',
+                                'channel_id' => 'channel_id',
+                            ],
+                        ])
+                    );
 
                 $report = $this->messaging->sendMulticast($message, $tokenChunk);
 

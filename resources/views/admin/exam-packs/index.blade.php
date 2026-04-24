@@ -118,7 +118,6 @@
                             <th>Spécialité</th>
                             <th>Année</th>
                             <th>Type</th>
-                            <th>Prix (XAF)</th>
                             <th>Épreuves</th>
                             <th>Achats</th>
                             <th>Statut</th>
@@ -144,7 +143,6 @@
                                 <td>{{ $pack->specialty ?? '-' }}</td>
                                 <td>{{ $pack->year ?? '-' }}</td>
                                 <td>{{ $pack->exam_type ?? '-' }}</td>
-                                <td><strong>{{ number_format($pack->price_xaf, 0, ',', ' ') }} XAF</strong></td>
                                 <td>
                                     <span class="badge bg-info">{{ $pack->exam_papers_count }} épreuves</span>
                                 </td>

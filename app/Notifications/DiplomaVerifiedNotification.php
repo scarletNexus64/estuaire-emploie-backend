@@ -65,7 +65,7 @@ class DiplomaVerifiedNotification extends Notification
             ->action('Voir la candidature', url('/admin/applications/' . $this->application->id))
             ->salutation('Cordialement,
 **L\'équipe ESTUAIRE EMPLOI**
-_Votre partenaire emploi au Congo_');
+_Votre partenaire emploi au Cameroun_');
     }
 
     /**

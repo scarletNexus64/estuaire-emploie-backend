@@ -113,7 +113,6 @@
                             <th>Catégorie</th>
                             <th>Niveau</th>
                             <th>Instructeur</th>
-                            <th>Prix (XAF)</th>
                             <th>Vidéos</th>
                             <th>Achats</th>
                             <th>Note</th>
@@ -140,7 +139,6 @@
                                 <td>{{ $pack->category ?? '-' }}</td>
                                 <td>{{ $pack->level ?? '-' }}</td>
                                 <td>{{ $pack->instructor_name ?? '-' }}</td>
-                                <td><strong>{{ number_format($pack->price_xaf, 0, ',', ' ') }} XAF</strong></td>
                                 <td>
                                     <span class="badge bg-info">{{ $pack->training_videos_count }} vidéos</span>
                                 </td>

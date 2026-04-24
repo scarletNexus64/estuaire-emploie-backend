@@ -44,7 +44,7 @@ class AnnouncementNotification extends Notification
             ->line('Merci d\'utiliser **Estuaire Emploi** !')
             ->salutation('Cordialement,
 **L\'équipe ESTUAIRE EMPLOI**
-_Votre partenaire emploi au Congo_');
+_Votre partenaire emploi au Cameroun_');
     }
 
     /**

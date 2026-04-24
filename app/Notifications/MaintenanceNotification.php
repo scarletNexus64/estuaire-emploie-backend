@@ -49,7 +49,7 @@ class MaintenanceNotification extends Notification implements ShouldQueue
                 ->line('Nous nous excusons pour ce désagrément et vous remercions de votre patience.')
                 ->salutation('Cordialement,
 **L\'équipe ESTUAIRE EMPLOI**
-_Votre partenaire emploi au Congo_');
+_Votre partenaire emploi au Cameroun_');
         } else {
             return (new MailMessage)
                 ->subject('✅ Services disponibles - Estuaire Emploi')
@@ -61,7 +61,7 @@ _Votre partenaire emploi au Congo_');
                 ->line('Merci d\'utiliser **Estuaire Emploi** !')
                 ->salutation('Cordialement,
 **L\'équipe ESTUAIRE EMPLOI**
-_Votre partenaire emploi au Congo_');
+_Votre partenaire emploi au Cameroun_');
         }
     }
 

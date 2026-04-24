@@ -102,41 +102,6 @@
                         @enderror
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="price_xaf">Prix XAF <span class="text-danger">*</span></label>
-                                <input type="number" name="price_xaf" id="price_xaf" class="form-control @error('price_xaf') is-invalid @enderror"
-                                       value="{{ old('price_xaf', $trainingPack->price_xaf ?? 0) }}" step="0.01" required>
-                                @error('price_xaf')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="price_usd">Prix USD</label>
-                                <input type="number" name="price_usd" id="price_usd" class="form-control @error('price_usd') is-invalid @enderror"
-                                       value="{{ old('price_usd', $trainingPack->price_usd ?? '') }}" step="0.01">
-                                @error('price_usd')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="price_eur">Prix EUR</label>
-                                <input type="number" name="price_eur" id="price_eur" class="form-control @error('price_eur') is-invalid @enderror"
-                                       value="{{ old('price_eur', $trainingPack->price_eur ?? '') }}" step="0.01">
-                                @error('price_eur')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="form-group">
                         <label for="cover_image">Image de Couverture</label>
                         <input type="file" name="cover_image" id="cover_image" class="form-control @error('cover_image') is-invalid @enderror" accept="image/*">

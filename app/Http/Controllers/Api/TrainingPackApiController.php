@@ -54,12 +54,16 @@ class TrainingPackApiController extends Controller
         // Ajouter les informations d'achat pour l'utilisateur connecté
         if (Auth::check()) {
             $userId = Auth::id();
-            $packs->getCollection()->transform(function ($pack) use ($userId) {
+            $user = Auth::user();
+            $isStudent = $user->isStudent();
+
+            $packs->getCollection()->transform(function ($pack) use ($userId, $isStudent) {
                 $pack->is_purchased = PackPurchase::where('user_id', $userId)
                                                   ->where('training_pack_id', $pack->id)
                                                   ->where('pack_type', 'training')
                                                   ->active()
                                                   ->exists();
+                $pack->is_free_for_student = $isStudent;
                 return $pack;
             });
         }
@@ -88,16 +92,19 @@ class TrainingPackApiController extends Controller
 
         // Vérifier si l'utilisateur a acheté ce pack
         $isPurchased = false;
+        $isFreeForStudent = false;
         if (Auth::check()) {
+            $user = Auth::user();
             $isPurchased = PackPurchase::where('user_id', Auth::id())
                                        ->where('training_pack_id', $pack->id)
                                        ->where('pack_type', 'training')
                                        ->active()
                                        ->exists();
+            $isFreeForStudent = $user->isStudent();
         }
 
-        // Si non acheté, ne montrer que les vidéos en aperçu
-        if (!$isPurchased) {
+        // Si non acheté ET pas étudiant, ne montrer que les vidéos en aperçu
+        if (!$isPurchased && !$isFreeForStudent) {
             $pack->trainingVideos = $pack->trainingVideos->where('is_preview', true);
         }
 
@@ -106,6 +113,7 @@ class TrainingPackApiController extends Controller
             'data' => [
                 'pack' => $pack,
                 'is_purchased' => $isPurchased,
+                'is_free_for_student' => $isFreeForStudent,
             ],
         ]);
     }
@@ -166,10 +174,13 @@ class TrainingPackApiController extends Controller
             ], 400);
         }
 
+        // Vérifier si l'utilisateur est un étudiant (a le Mode Étudiant actif)
+        $isStudent = $user->isStudent();
+
         // Obtenir le prix dans la devise demandée
         $price = $pack->getPrice($currency);
 
-        if ($price <= 0) {
+        if ($price <= 0 && !$isStudent) {
             return response()->json([
                 'success' => false,
                 'message' => 'Prix invalide pour ce pack',
@@ -178,6 +189,42 @@ class TrainingPackApiController extends Controller
 
         try {
             DB::beginTransaction();
+
+            // Si l'utilisateur est un étudiant, le pack est GRATUIT
+            if ($isStudent) {
+                // Créer l'achat du pack GRATUITEMENT
+                $purchase = PackPurchase::create([
+                    'user_id' => $user->id,
+                    'pack_type' => 'training',
+                    'training_pack_id' => $pack->id,
+                    'amount_paid' => 0,
+                    'currency' => $currency,
+                    'payment_method' => 'free_student',
+                    'status' => 'completed',
+                    'purchased_at' => now(),
+                ]);
+
+                // Incrémenter le compteur d'achats du pack
+                $pack->incrementPurchases();
+
+                DB::commit();
+
+                // Envoyer notification FCM pour l'achat gratuit
+                $this->sendPurchaseNotification($user, $pack, 0, 'student_mode');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pack obtenu gratuitement avec le Mode Étudiant',
+                    'data' => [
+                        'purchase' => $purchase,
+                        'pack' => $pack,
+                        'whatsapp_group_link' => $pack->whatsapp_group_link,
+                        'is_free' => true,
+                    ],
+                ]);
+            }
+
+            // Sinon, procéder au paiement normal
 
             // Déterminer le champ wallet à utiliser
             $walletField = $paymentProvider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';

@@ -80,7 +80,7 @@ class ExamPackController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:exam_packs,slug',
             'description' => 'nullable|string',
-            'price_xaf' => 'required|numeric|min:0',
+            'price_xaf' => 'nullable|numeric|min:0',
             'price_usd' => 'nullable|numeric|min:0',
             'price_eur' => 'nullable|numeric|min:0',
             'specialty' => 'nullable|string|max:255',
@@ -93,6 +93,11 @@ class ExamPackController extends Controller
             'exam_papers' => 'nullable|array',
             'exam_papers.*' => 'exists:exam_papers,id',
         ]);
+
+        // Définir les prix par défaut à 0 s'ils ne sont pas fournis (gratuit pour étudiants)
+        $validated['price_xaf'] = $validated['price_xaf'] ?? 0;
+        $validated['price_usd'] = $validated['price_usd'] ?? 0;
+        $validated['price_eur'] = $validated['price_eur'] ?? 0;
 
         // Upload de l'image de couverture
         if ($request->hasFile('cover_image')) {
@@ -152,7 +157,7 @@ class ExamPackController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:exam_packs,slug,' . $examPack->id,
             'description' => 'nullable|string',
-            'price_xaf' => 'required|numeric|min:0',
+            'price_xaf' => 'nullable|numeric|min:0',
             'price_usd' => 'nullable|numeric|min:0',
             'price_eur' => 'nullable|numeric|min:0',
             'specialty' => 'nullable|string|max:255',
@@ -165,6 +170,11 @@ class ExamPackController extends Controller
             'exam_papers' => 'nullable|array',
             'exam_papers.*' => 'exists:exam_papers,id',
         ]);
+
+        // Définir les prix par défaut à 0 s'ils ne sont pas fournis (gratuit pour étudiants)
+        $validated['price_xaf'] = $validated['price_xaf'] ?? 0;
+        $validated['price_usd'] = $validated['price_usd'] ?? 0;
+        $validated['price_eur'] = $validated['price_eur'] ?? 0;
 
         // Upload d'une nouvelle image de couverture
         if ($request->hasFile('cover_image')) {

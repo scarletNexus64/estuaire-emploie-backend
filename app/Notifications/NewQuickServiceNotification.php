@@ -62,7 +62,7 @@ class NewQuickServiceNotification extends Notification
             ->line('')
             ->salutation('Cordialement,
 **L\'équipe ESTUAIRE EMPLOI**
-_Votre partenaire emploi au Congo_');
+_Votre partenaire emploi au Cameroun_');
     }
 
     /**

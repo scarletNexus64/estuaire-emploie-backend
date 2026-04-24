@@ -78,7 +78,7 @@ class TrainingPackController extends Controller
             'slug' => 'nullable|string|unique:training_packs,slug',
             'description' => 'nullable|string',
             'learning_objectives' => 'nullable|string',
-            'price_xaf' => 'required|numeric|min:0',
+            'price_xaf' => 'nullable|numeric|min:0',
             'price_usd' => 'nullable|numeric|min:0',
             'price_eur' => 'nullable|numeric|min:0',
             'category' => 'nullable|string|max:255',
@@ -93,6 +93,11 @@ class TrainingPackController extends Controller
             'display_order' => 'nullable|integer',
             'whatsapp_group_link' => 'nullable|url|max:500',
         ]);
+
+        // Définir les prix par défaut à 0 s'ils ne sont pas fournis (gratuit pour étudiants)
+        $validated['price_xaf'] = $validated['price_xaf'] ?? 0;
+        $validated['price_usd'] = $validated['price_usd'] ?? 0;
+        $validated['price_eur'] = $validated['price_eur'] ?? 0;
 
         // Upload de l'image de couverture
         if ($request->hasFile('cover_image')) {
@@ -150,7 +155,7 @@ class TrainingPackController extends Controller
             'slug' => 'nullable|string|unique:training_packs,slug,' . $trainingPack->id,
             'description' => 'nullable|string',
             'learning_objectives' => 'nullable|string',
-            'price_xaf' => 'required|numeric|min:0',
+            'price_xaf' => 'nullable|numeric|min:0',
             'price_usd' => 'nullable|numeric|min:0',
             'price_eur' => 'nullable|numeric|min:0',
             'category' => 'nullable|string|max:255',
@@ -164,6 +169,11 @@ class TrainingPackController extends Controller
             'is_featured' => 'boolean',
             'display_order' => 'nullable|integer',
         ]);
+
+        // Définir les prix par défaut à 0 s'ils ne sont pas fournis (gratuit pour étudiants)
+        $validated['price_xaf'] = $validated['price_xaf'] ?? 0;
+        $validated['price_usd'] = $validated['price_usd'] ?? 0;
+        $validated['price_eur'] = $validated['price_eur'] ?? 0;
 
         // Upload d'une nouvelle image de couverture
         if ($request->hasFile('cover_image')) {
