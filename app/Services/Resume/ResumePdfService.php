@@ -60,12 +60,18 @@ class ResumePdfService
             'phone' => $personalInfo['phone'] ?? '',
             'email' => $personalInfo['email'] ?? '',
             'address' => $personalInfo['address'] ?? null,
+            'languages' => $personalInfo['languages'] ?? null,
+            'level' => $resume->customization['level'] ?? null,
+            'specialty' => $resume->customization['specialty'] ?? null,
             'photo_path' => $photoFullPath,
             'objective' => $resume->professional_summary ?? null,
             'experiences' => $this->formatExperiences($resume->experiences ?? []),
             'education' => $this->formatEducation($resume->education ?? []),
             'skills' => $this->formatSkills($resume->skills ?? []),
             'hobbies' => $this->formatHobbies($resume->hobbies ?? []),
+            'soft_skills' => $this->formatSkills($resume->customization['soft_skills'] ?? []),
+            'projects' => $this->formatSkills($resume->projects ?? []),
+            'certifications' => $this->formatSkills($resume->certifications ?? []),
         ];
     }
 
@@ -77,7 +83,13 @@ class ResumePdfService
         $formatted = [];
 
         foreach ($experiences as $exp) {
-            if (!is_array($exp) || (empty($exp['company']) && empty($exp['title']))) {
+            if (!is_array($exp)) {
+                continue;
+            }
+
+            $hasDescription = !empty($exp['description']);
+            $hasMainFields = !empty($exp['company']) || !empty($exp['title']) || !empty($exp['date']) || !empty($exp['start_date']);
+            if (!$hasDescription && !$hasMainFields) {
                 continue;
             }
 
@@ -106,7 +118,7 @@ class ResumePdfService
             }
 
             $formatted[] = [
-                'date' => $date,
+                'date' => $date ?: ($exp['date'] ?? ''),
                 'company' => $exp['company'] ?? '',
                 'title' => $exp['title'] ?? '',
                 'description' => $description,

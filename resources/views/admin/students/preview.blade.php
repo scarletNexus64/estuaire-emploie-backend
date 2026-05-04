@@ -46,6 +46,12 @@
                     <strong>Niveau Académique :</strong><br>
                     <span class="badge badge-success" style="font-size: 1rem; padding: 0.5rem 1rem;">{{ $studentData['level'] }}</span>
                 </div>
+                <div style="grid-column: 1 / -1;">
+                    <strong>Template CV sélectionné :</strong><br>
+                    <span class="badge badge-info" style="font-size: 0.95rem; padding: 0.5rem 1rem; margin-top: 0.4rem;">
+                        #{{ $template->id }} - {{ $template->title }} | {{ $template->customization['specialty'] ?? 'N/A' }} | {{ $template->customization['level'] ?? 'N/A' }}
+                    </span>
+                </div>
                 @if(!empty($studentData['interests']))
                 <div style="grid-column: 1 / -1;">
                     <strong>Centre d'Intérêt :</strong><br>
@@ -93,7 +99,7 @@
         </div>
     </div>
 
-    <!-- App Download Links -->
+    {{-- <!-- App Download Links -->
     <div class="card" style="border: 2px solid #6f42c1;">
         <div class="card-header" style="background: #6f42c1; color: white;">
             <h3 style="margin: 0;">📲 Liens de Téléchargement de l'Application</h3>
@@ -123,7 +129,7 @@
                 L'étudiant devra télécharger l'application pour se connecter.
             </p>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Benefits Info -->
     <div class="card" style="border: 2px solid #ffc107;">

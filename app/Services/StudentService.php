@@ -166,7 +166,7 @@ class StudentService
         // Approche : message naturel sans labels qui ressemblent à des credentials
         $message = "Estuaire Emploi - Bienvenue !\n\n"
             . "Votre compte etudiant est cree.\n"
-            . "Utilisez {$email} avec {$password} pour vous connecter.\n\n"
+            . "Utilisez votre numero {$phone} avec {$password} comme identifiantpour vous connecter.\n\n"
             . "Telechargez l'application maintenant.";
 
         return $message;

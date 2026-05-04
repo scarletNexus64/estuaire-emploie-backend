@@ -98,6 +98,17 @@ class NavigationService
                 ],
             ],
             [
+                'section' => 'CV Librairies',
+                'items' => [
+                    [
+                        'name' => 'Liste des CVs',
+                        'route' => 'admin.cv-library.index',
+                        'icon' => 'fas fa-file-pdf',
+                        'permission' => 'manage_cvtheque',
+                    ],
+                ],
+            ],
+            [
                 'section' => 'Programmes de Formation',
                 'items' => [
                     [
@@ -292,6 +303,7 @@ class NavigationService
                 'admin.skill-tests.index',
                 'admin.portfolios.index',
                 'admin.cvtheque.index',
+                'admin.cv-library.index',
                 'admin.import-export.index',
                 'admin.recruiters.index',
                 'admin.settings.index',

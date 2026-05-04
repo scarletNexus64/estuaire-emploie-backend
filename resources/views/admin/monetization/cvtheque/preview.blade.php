@@ -42,6 +42,7 @@
         background: #f5f5f5;
         padding: 2rem;
         min-height: 100vh;
+        overflow-x: auto;
     }
 
     .cv-preview-container {
@@ -263,6 +264,43 @@
         -webkit-hyphens: auto;
         -moz-hyphens: auto;
     }
+
+    @media (max-width: 1024px) {
+        .cv-preview-wrapper {
+            padding: 1rem;
+        }
+        .cv-preview-container {
+            width: 100%;
+            max-width: 210mm;
+            min-height: auto;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .cv-preview-container {
+            position: static;
+            width: 100%;
+            box-shadow: none;
+        }
+        .cv-left,
+        .cv-right {
+            position: static;
+            width: 100%;
+            min-height: auto;
+            padding: 24px 18px;
+        }
+        .photo-box {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+        }
+        .cv-name {
+            font-size: 22px;
+        }
+        .cv-job-title {
+            font-size: 12px;
+        }
+    }
 </style>
 
 @section('content')
@@ -272,6 +310,9 @@
     $education = $resume->education ?? [];
     $skills = $resume->skills ?? [];
     $hobbies = $resume->hobbies ?? [];
+    $projects = $resume->projects ?? [];
+    $certifications = $resume->certifications ?? [];
+    $softSkills = $resume->customization['soft_skills'] ?? [];
 @endphp
 
 <div class="cv-preview-wrapper">
@@ -303,6 +344,24 @@
                         @endif
                     @endforeach
                 </ul>
+            </div>
+            @endif
+
+            @if(!empty($softSkills) && count($softSkills) > 0)
+            <div class="left-section">
+                <h3>SAVOIR-ÊTRE</h3>
+                <ul>
+                    @foreach($softSkills as $soft)
+                        <li>• {{ $soft }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            @if(!empty($personalInfo['languages']))
+            <div class="left-section">
+                <h3>LANGUES</h3>
+                <p>{{ $personalInfo['languages'] }}</p>
             </div>
             @endif
 
@@ -349,35 +408,39 @@
             <div class="right-section">
                 <h3>EXPÉRIENCES PROFESSIONNELLES</h3>
                 @foreach($experiences as $exp)
-                    @if(is_array($exp))
                     <div class="experience-block">
-                        @if(!empty($exp['date']))
-                        <div class="exp-date">{{ $exp['date'] }}</div>
-                        @endif
+                        @if(is_array($exp))
+                            @if(!empty($exp['date']))
+                            <div class="exp-date">{{ $exp['date'] }}</div>
+                            @endif
 
-                        @if(!empty($exp['company']))
-                        <div class="exp-company">{{ $exp['company'] }}</div>
-                        @endif
+                            @if(!empty($exp['company']))
+                            <div class="exp-company">{{ $exp['company'] }}</div>
+                            @endif
 
-                        @if(!empty($exp['title']))
-                        <div class="exp-position">{{ $exp['title'] }}</div>
-                        @endif
+                            @if(!empty($exp['title']))
+                            <div class="exp-position">{{ $exp['title'] }}</div>
+                            @endif
 
-                        @if(!empty($exp['description']))
-                        <div class="exp-desc">
-                            <ul>
-                                @if(is_array($exp['description']))
-                                    @foreach($exp['description'] as $task)
-                                    <li>• {{ $task }}</li>
-                                    @endforeach
-                                @else
-                                    <li>• {{ $exp['description'] }}</li>
-                                @endif
-                            </ul>
-                        </div>
+                            @if(!empty($exp['description']))
+                            <div class="exp-desc">
+                                <ul>
+                                    @if(is_array($exp['description']))
+                                        @foreach($exp['description'] as $task)
+                                        <li>• {{ $task }}</li>
+                                        @endforeach
+                                    @else
+                                        <li>• {{ $exp['description'] }}</li>
+                                    @endif
+                                </ul>
+                            </div>
+                            @endif
+                        @else
+                            <div class="exp-desc">
+                                <ul><li>• {{ $exp }}</li></ul>
+                            </div>
                         @endif
                     </div>
-                    @endif
                 @endforeach
             </div>
             @endif
@@ -386,18 +449,48 @@
             <div class="right-section">
                 <h3>FORMATION</h3>
                 @foreach($education as $edu)
-                    @if(is_array($edu))
                     <div class="education-block">
-                        @if(!empty($edu['school']))
-                        <div class="exp-company">{{ $edu['school'] }}</div>
-                        @endif
+                        @if(is_array($edu))
+                            @if(!empty($edu['school']))
+                            <div class="exp-company">{{ $edu['school'] }}</div>
+                            @endif
 
-                        @if(!empty($edu['degree']))
-                        <div class="exp-position">{{ $edu['degree'] }}</div>
+                            @if(!empty($edu['degree']))
+                            <div class="exp-position">{{ $edu['degree'] }}</div>
+                            @endif
+                        @else
+                            <div class="exp-desc">
+                                <ul><li>• {{ $edu }}</li></ul>
+                            </div>
                         @endif
                     </div>
-                    @endif
                 @endforeach
+            </div>
+            @endif
+
+            @if(!empty($projects) && count($projects) > 0)
+            <div class="right-section">
+                <h3>PROJETS ACADÉMIQUES</h3>
+                <div class="exp-desc">
+                    <ul>
+                    @foreach($projects as $project)
+                        <li>• {{ $project }}</li>
+                    @endforeach
+                    </ul>
+                </div>
+            </div>
+            @endif
+
+            @if(!empty($certifications) && count($certifications) > 0)
+            <div class="right-section">
+                <h3>CERTIFICATIONS</h3>
+                <div class="exp-desc">
+                    <ul>
+                    @foreach($certifications as $cert)
+                        <li>• {{ $cert }}</li>
+                    @endforeach
+                    </ul>
+                </div>
             </div>
             @endif
         </div>

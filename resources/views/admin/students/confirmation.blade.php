@@ -32,9 +32,9 @@
                     <a href="{{ asset('storage/' . $resume->pdf_path) }}" download class="btn btn-success">
                         💾 Télécharger le CV
                     </a>
-                    <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning">
-                        ✏️ Modifier le CV
-                    </a>
+                    {{-- <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning">
+                        ✏️ Modifier le CV (optionnel)
+                    </a> --}}
                 @endif
             </div>
         </div>
@@ -132,9 +132,9 @@
                         <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success btn-lg">
                             📄 Voir le CV
                         </a>
-                        <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning btn-lg">
-                            ✏️ Modifier le CV
-                        </a>
+                        {{-- <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning btn-lg">
+                            ✏️ Modifier le CV (optionnel)
+                        </a> --}}
                     @endif
                 </div>
             </form>

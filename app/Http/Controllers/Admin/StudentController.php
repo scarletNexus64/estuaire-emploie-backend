@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Specialty;
+use App\Models\Resume;
 use App\Models\User;
+use App\Services\Resume\ResumePdfService;
 use App\Services\StudentService;
 use App\Services\CVGeneratorService;
 use Illuminate\Http\Request;
@@ -14,11 +15,17 @@ class StudentController extends Controller
 {
     protected StudentService $studentService;
     protected CVGeneratorService $cvGeneratorService;
+    protected ResumePdfService $resumePdfService;
 
-    public function __construct(StudentService $studentService, CVGeneratorService $cvGeneratorService)
+    public function __construct(
+        StudentService $studentService,
+        CVGeneratorService $cvGeneratorService,
+        ResumePdfService $resumePdfService
+    )
     {
         $this->studentService = $studentService;
         $this->cvGeneratorService = $cvGeneratorService;
+        $this->resumePdfService = $resumePdfService;
     }
 
     /**
@@ -60,7 +67,12 @@ class StudentController extends Controller
      */
     public function create()
     {
-        return view('admin.students.create');
+        $templates = Resume::with('user')
+            ->where('customization->source', 'INSAM_IMPORT')
+            ->latest()
+            ->get();
+
+        return view('admin.students.create', compact('templates'));
     }
 
     /**
@@ -75,10 +87,21 @@ class StudentController extends Controller
             'specialty' => 'required|string|max:255',
             'level' => 'required|string|max:100',
             'interests' => 'nullable|string|max:1000',
+            'cv_template_id' => 'required|integer|exists:resumes,id',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        $template = Resume::where('id', $request->integer('cv_template_id'))
+            ->where('customization->source', 'INSAM_IMPORT')
+            ->first();
+
+        if (!$template) {
+            return back()->withErrors([
+                'cv_template_id' => 'Le template sélectionné est invalide. Veuillez choisir un CV depuis la bibliothèque.',
+            ])->withInput();
         }
 
         // Générer le mot de passe
@@ -93,7 +116,8 @@ class StudentController extends Controller
             'student_password' => $password,
         ]);
 
-        return view('admin.students.preview', compact('password', 'smsMessage'))->with('studentData', $request->all());
+        return view('admin.students.preview', compact('password', 'smsMessage', 'template'))
+            ->with('studentData', $request->all());
     }
 
     /**
@@ -119,13 +143,16 @@ class StudentController extends Controller
 
         $user = $result['user'];
 
+        // Dupliquer le template CV sélectionné pour le nouvel étudiant
+        $this->cloneTemplateForStudent($studentData['cv_template_id'], $user);
+
         // Sauvegarder le password en session pour l'étape suivante
         session(['created_student_password' => $password]);
 
         // Ne pas nettoyer student_data et student_password ici
-        // Rediriger vers l'éditeur de CV
-        return redirect()->route('admin.students.create-cv', $user->id)
-            ->with('success', 'Compte créé avec succès ! Créez maintenant le CV de l\'étudiant.');
+        // Rediriger directement vers la confirmation avec CV déjà attribué
+        return redirect()->route('admin.students.confirmation', $user->id)
+            ->with('success', 'Compte créé avec succès ! Le CV modèle a été attribué automatiquement.');
     }
 
     /**
@@ -323,7 +350,88 @@ class StudentController extends Controller
 
         $student->update($request->only(['name', 'email', 'phone', 'specialty', 'level', 'interests']));
 
+        // Synchroniser automatiquement les infos clés dans le CV existant
+        $resume = $student->resumes()->latest()->first();
+        if ($resume) {
+            $personalInfo = $resume->personal_info ?? [];
+            $personalInfo['name'] = $student->name;
+            $personalInfo['email'] = $student->email;
+            $personalInfo['phone'] = $student->phone;
+
+            $customization = $resume->customization ?? [];
+            $customization['level'] = $student->level;
+            $customization['specialty'] = $student->specialty;
+
+            $resume->update([
+                'personal_info' => $personalInfo,
+                'customization' => $customization,
+                'hobbies' => $student->interests
+                    ? array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $student->interests)))
+                    : [],
+            ]);
+        }
+
         return redirect()->route('admin.students.show', $student->id)->with('success', 'Étudiant mis à jour avec succès');
+    }
+
+    /**
+     * Duplique un template CV de la librairie pour un étudiant et injecte ses informations personnelles.
+     */
+    protected function cloneTemplateForStudent(int $templateId, User $student): Resume
+    {
+        $template = Resume::where('id', $templateId)
+            ->where('customization->source', 'INSAM_IMPORT')
+            ->firstOrFail();
+
+        $personalInfo = $template->personal_info ?? [];
+        $personalInfo['name'] = $student->name;
+        $personalInfo['email'] = $student->email;
+        $personalInfo['phone'] = $student->phone;
+        $personalInfo['address'] = $personalInfo['address'] ?? null;
+
+        $customization = $template->customization ?? [];
+        $customization['level'] = $student->level;
+        $customization['specialty'] = $student->specialty;
+        $customization['source'] = 'STUDENT_TEMPLATE_CLONE';
+        $customization['template_resume_id'] = $template->id;
+
+        // Si l'étudiant a déjà un CV, le nouveau clone devient le CV par défaut.
+        Resume::where('user_id', $student->id)->update(['is_default' => false]);
+
+        $resume = Resume::create([
+            'user_id' => $student->id,
+            'title' => $template->title,
+            'template_type' => $template->template_type,
+            'personal_info' => $personalInfo,
+            'professional_summary' => $template->professional_summary,
+            'experiences' => $template->experiences ?? [],
+            'education' => $template->education ?? [],
+            'skills' => $template->skills ?? [],
+            'certifications' => $template->certifications ?? [],
+            'projects' => $template->projects ?? [],
+            'references' => $template->references ?? [],
+            'hobbies' => $student->interests
+                ? array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $student->interests)))
+                : [],
+            'customization' => $customization,
+            'pdf_path' => null,
+            'pdf_generated_at' => null,
+            'is_public' => false,
+            'is_default' => true,
+        ]);
+
+        // Générer directement le PDF pour que l'étudiant voie un CV complet après création.
+        try {
+            $this->resumePdfService->generatePdf($resume);
+        } catch (\Throwable $e) {
+            \Log::warning('Échec génération PDF après duplication template étudiant', [
+                'student_id' => $student->id,
+                'resume_id' => $resume->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $resume->fresh();
     }
 
     /**

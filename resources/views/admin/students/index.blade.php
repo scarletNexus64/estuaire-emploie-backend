@@ -118,7 +118,7 @@
                             @endphp
 
                             @if($studentResume)
-                                <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-info" title="Modifier le CV">📝 CV</a>
+                                {{-- <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-info" title="Modifier le CV">📝 CV</a> --}}
                             @else
                                 <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-success" title="Créer un CV">➕ CV</a>
                             @endif

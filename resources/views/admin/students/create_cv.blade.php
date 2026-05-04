@@ -302,10 +302,77 @@
             position: relative;
         }
     }
+
+    @media (max-width: 1024px) {
+        .cv-preview {
+            width: 100%;
+            min-height: auto;
+            transform: none;
+        }
+        .cv-left,
+        .cv-right {
+            padding: 28px 20px;
+        }
+        .photo-box {
+            width: 130px;
+            height: 130px;
+            margin-bottom: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-section,
+        .preview-section {
+            padding: 1rem;
+        }
+        .cv-preview table,
+        .cv-preview tbody,
+        .cv-preview tr,
+        .cv-preview td {
+            display: block;
+            width: 100%;
+        }
+        .cv-left,
+        .cv-right {
+            padding: 20px 16px;
+        }
+        .cv-name {
+            font-size: 22px;
+        }
+        .cv-job-title {
+            font-size: 12px;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
+@php
+    $resumeSkillsText = '';
+    if (isset($resume) && is_array($resume->skills ?? null)) {
+        $resumeSkillsText = collect($resume->skills)
+            ->map(function ($skill) {
+                if (is_string($skill)) {
+                    return $skill;
+                }
+                if (is_array($skill) && !empty($skill['name'])) {
+                    return $skill['name'];
+                }
+                return null;
+            })
+            ->filter()
+            ->implode("\n");
+    }
+
+    $resumeHobbiesText = '';
+    if (isset($resume) && is_array($resume->hobbies ?? null)) {
+        $resumeHobbiesText = collect($resume->hobbies)
+            ->map(fn($hobby) => is_string($hobby) ? $hobby : null)
+            ->filter()
+            ->implode("\n");
+    }
+@endphp
+
 <div class="alert alert-info mb-4">
     <strong>📝 {{ isset($resume) ? 'Modifier' : 'Étape 2/3' }} :</strong> {{ isset($resume) ? 'Modifiez' : 'Créez' }} le CV de <strong>{{ $student->name }}</strong> {{ isset($resume) ? '' : 'avant d\'envoyer le SMS d\'activation' }}.
 </div>
@@ -341,12 +408,12 @@
             <h4 class="mt-4 mb-3">📞 Contact</h4>
             <div class="form-group mb-3">
                 <label class="form-label">Téléphone</label>
-                <input type="text" name="phone" id="phoneInput" class="form-control" value="{{ $student->phone }}">
+                <input type="text" name="phone" id="phoneInput" class="form-control" value="{{ old('phone', $resume->personal_info['phone'] ?? $student->phone) }}">
             </div>
 
             <div class="form-group mb-3">
                 <label class="form-label">Email</label>
-                <input type="email" name="email" id="emailInput" class="form-control" value="{{ $student->email }}">
+                <input type="email" name="email" id="emailInput" class="form-control" value="{{ old('email', $resume->personal_info['email'] ?? $student->email) }}">
             </div>
 
             <div class="form-group mb-3">
@@ -373,13 +440,13 @@
             <!-- Compétences -->
             <h4 class="mt-4 mb-3">🛠️ Compétences</h4>
             <div class="form-group mb-3">
-                <textarea name="skills" id="skillsInput" class="form-control" rows="5" placeholder="Une compétence par ligne&#10;Ex: Premiers secours et sécurité&#10;Gestion des maladies chroniques">{{ old('skills', isset($resume) && is_array($resume->skills) ? implode("\n", $resume->skills) : '') }}</textarea>
+                <textarea name="skills" id="skillsInput" class="form-control" rows="5" placeholder="Une compétence par ligne&#10;Ex: Premiers secours et sécurité&#10;Gestion des maladies chroniques">{{ old('skills', $resumeSkillsText) }}</textarea>
             </div>
 
             <!-- Centres d'intérêt -->
             <h4 class="mt-4 mb-3">🎨 Centres d'Intérêt</h4>
             <div class="form-group mb-3">
-                <textarea name="hobbies" id="hobbiesInput" class="form-control" rows="3" placeholder="Ex: Jardinage, Pratique du Pilates">{{ old('hobbies', isset($resume) && is_array($resume->hobbies) ? implode("\n", $resume->hobbies) : $student->interests) }}</textarea>
+                <textarea name="hobbies" id="hobbiesInput" class="form-control" rows="3" placeholder="Ex: Jardinage, Pratique du Pilates">{{ old('hobbies', $resumeHobbiesText ?: $student->interests) }}</textarea>
             </div>
 
             <!-- Actions -->
@@ -755,6 +822,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 @endif
                 @if(!empty($exp['description']) && is_array($exp['description']))
                 document.querySelector(`#experience-${currentExpCount} [name*="[description]"]`).value = {!! json_encode(implode("\n", $exp['description'])) !!};
+                @elseif(!empty($exp['description']) && is_string($exp['description']))
+                document.querySelector(`#experience-${currentExpCount} [name*="[description]"]`).value = {!! json_encode($exp['description']) !!};
                 @endif
             })();
         @endforeach
@@ -771,6 +840,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const currentEduCount = educationCount;
                 @if(!empty($edu['school']))
                 document.querySelector(`#education-${currentEduCount} [name*="[school]"]`).value = {!! json_encode($edu['school']) !!};
+                @elseif(!empty($edu['institution']))
+                document.querySelector(`#education-${currentEduCount} [name*="[school]"]`).value = {!! json_encode($edu['institution']) !!};
                 @endif
                 @if(!empty($edu['degree']))
                 document.querySelector(`#education-${currentEduCount} [name*="[degree]"]`).value = {!! json_encode($edu['degree']) !!};

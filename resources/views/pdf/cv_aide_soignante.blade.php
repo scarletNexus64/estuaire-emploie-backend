@@ -19,32 +19,27 @@
         }
 
         .cv-container {
-            position: relative;
-            width: 210mm;
-            height: 297mm;
-            overflow: hidden;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
         }
 
-        /* Zone bleue - Position absolue */
+        /* Zone bleue */
         .cv-left {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 75mm;
-            height: 297mm;
+            display: table-cell;
+            vertical-align: top;
+            width: 35%;
             background-color: #004a7c;
             color: white;
             padding: 12mm 8mm;
             box-sizing: border-box;
         }
 
-        /* Zone blanche - Position absolue */
+        /* Zone blanche */
         .cv-right {
-            position: absolute;
-            left: 75mm;
-            top: 0;
-            width: 135mm;
-            height: 297mm;
+            display: table-cell;
+            vertical-align: top;
+            width: 65%;
             background-color: white;
             padding: 12mm 10mm;
             box-sizing: border-box;
@@ -272,6 +267,24 @@
             </div>
             @endif
 
+            @if(!empty($data['soft_skills']) && count($data['soft_skills']) > 0)
+            <div class="left-section">
+                <h3>SAVOIR-ÊTRE</h3>
+                <ul>
+                    @foreach($data['soft_skills'] as $softSkill)
+                    <li>• {{ $softSkill }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            @if(!empty($data['languages']))
+            <div class="left-section">
+                <h3>LANGUES</h3>
+                <p>{{ $data['languages'] }}</p>
+            </div>
+            @endif
+
             @if(!empty($data['hobbies']) && count($data['hobbies']) > 0)
             <div class="left-section">
                 <h3>CENTRES D'INTÉRÊT</h3>
@@ -305,6 +318,18 @@
                 @if(!empty($data['address']))
                 <div class="contact-item">
                     <span class="contact-icon">⌂</span> {{ $data['address'] }}
+                </div>
+                @endif
+
+                @if(!empty($data['level']))
+                <div class="contact-item">
+                    <span class="contact-icon">🎓</span> {{ $data['level'] }}
+                </div>
+                @endif
+
+                @if(!empty($data['specialty']))
+                <div class="contact-item">
+                    <span class="contact-icon">🧭</span> {{ $data['specialty'] }}
                 </div>
                 @endif
             </div>
@@ -354,6 +379,32 @@
                     @endif
                 </div>
                 @endforeach
+            </div>
+            @endif
+
+            @if(!empty($data['projects']) && count($data['projects']) > 0)
+            <div class="right-section">
+                <h3>PROJETS ACADÉMIQUES</h3>
+                <div class="exp-desc">
+                    <ul>
+                        @foreach($data['projects'] as $project)
+                        <li>• {{ $project }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            @endif
+
+            @if(!empty($data['certifications']) && count($data['certifications']) > 0)
+            <div class="right-section">
+                <h3>CERTIFICATIONS</h3>
+                <div class="exp-desc">
+                    <ul>
+                        @foreach($data['certifications'] as $certification)
+                        <li>• {{ $certification }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
             @endif
         </div>

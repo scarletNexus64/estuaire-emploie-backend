@@ -398,6 +398,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
     });
 
+    // CV LIBRAIRIES (Importés)
+    Route::middleware('permission:manage_cvtheque')->prefix('cv-library')->name('cv-library.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CVLibraryController::class, 'index'])->name('index');
+        Route::get('/{resume}', [\App\Http\Controllers\Admin\CVLibraryController::class, 'show'])->name('show');
+    });
+
     // Import/Export Management
     Route::middleware('permission:manage_jobs')->prefix('import-export')->name('import-export.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ImportExportController::class, 'index'])->name('index');

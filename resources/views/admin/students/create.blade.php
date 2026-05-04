@@ -67,6 +67,28 @@
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <!-- Template CV -->
+                <div class="form-group">
+                    <label class="form-label required">Template CV (Bibliothèque)</label>
+                    <input type="text" id="templateSearch" class="form-control mb-2" placeholder="Tapez pour filtrer le template...">
+                    <select name="cv_template_id" id="templateSelect" class="form-control @error('cv_template_id') is-invalid @enderror" required>
+                        <option value="">-- Choisir un template --</option>
+                        @foreach($templates as $template)
+                            <option
+                                value="{{ $template->id }}"
+                                data-search="{{ strtolower(($template->title ?? '') . ' ' . ($template->customization['specialty'] ?? '') . ' ' . ($template->customization['level'] ?? '') . ' ' . ($template->user->name ?? '')) }}"
+                                {{ (string)old('cv_template_id') === (string)$template->id ? 'selected' : '' }}
+                            >
+                                #{{ $template->id }} - {{ $template->title }} | {{ $template->customization['specialty'] ?? 'N/A' }} | {{ $template->customization['level'] ?? 'N/A' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('cv_template_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="form-text">Choisissez un CV depuis la CV Library. Il sera dupliqué pour l'étudiant.</small>
+                </div>
+
                 <!-- Spécialité -->
                 <div class="form-group">
                     <label class="form-label required">Spécialité</label>
@@ -115,6 +137,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.querySelector('input[name="phone"]');
+    const templateSearch = document.getElementById('templateSearch');
+    const templateSelect = document.getElementById('templateSelect');
 
     const iti = window.intlTelInput(phoneInput, {
         initialCountry: "cm", // Cameroun par défaut
@@ -128,6 +152,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullNumber = iti.getNumber();
         phoneInput.value = fullNumber;
     });
+
+    // Filtre simple sur la liste de templates
+    if (templateSearch && templateSelect) {
+        templateSearch.addEventListener('input', function() {
+            const term = this.value.toLowerCase().trim();
+            Array.from(templateSelect.options).forEach((option, index) => {
+                if (index === 0) {
+                    option.hidden = false;
+                    return;
+                }
+                const searchable = option.dataset.search || '';
+                option.hidden = term !== '' && !searchable.includes(term);
+            });
+        });
+    }
 });
 </script>
 @endpush

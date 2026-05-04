@@ -226,21 +226,37 @@ class CVGeneratorService
             Storage::disk('public')->delete($resume->pdf_path);
         }
 
-        // Mettre à jour l'enregistrement
+        $existingPersonalInfo = is_array($resume->personal_info) ? $resume->personal_info : [];
+        $existingCustomization = is_array($resume->customization) ? $resume->customization : [];
+
+        // Mettre à jour l'enregistrement sans perdre les données importées non éditées dans le formulaire étudiant
         $resume->update([
             'title' => $data['title'] ?? $resume->title,
-            'personal_info' => [
+            'personal_info' => array_merge($existingPersonalInfo, [
                 'name' => $resume->user->name,
                 'email' => $data['email'] ?? $resume->user->email,
                 'phone' => $data['phone'] ?? $resume->user->phone,
-                'address' => $data['address'] ?? null,
+                'address' => $data['address'] ?? ($existingPersonalInfo['address'] ?? null),
                 'photo_path' => $photoPath,
-            ],
-            'professional_summary' => $data['objective'] ?? null,
-            'experiences' => $data['experiences'] ?? [],
-            'education' => $data['education'] ?? [],
-            'skills' => $this->parseMultilineToArray($data['skills'] ?? ''),
-            'hobbies' => $this->parseMultilineToArray($data['hobbies'] ?? ''),
+            ]),
+            'professional_summary' => array_key_exists('objective', $data)
+                ? ($data['objective'] ?? null)
+                : $resume->professional_summary,
+            'experiences' => array_key_exists('experiences', $data)
+                ? ($data['experiences'] ?? [])
+                : ($resume->experiences ?? []),
+            'education' => array_key_exists('education', $data)
+                ? ($data['education'] ?? [])
+                : ($resume->education ?? []),
+            'skills' => array_key_exists('skills', $data)
+                ? $this->parseMultilineToArray($data['skills'] ?? '')
+                : ($resume->skills ?? []),
+            'hobbies' => array_key_exists('hobbies', $data)
+                ? $this->parseMultilineToArray($data['hobbies'] ?? '')
+                : ($resume->hobbies ?? []),
+            'projects' => $resume->projects ?? [],
+            'certifications' => $resume->certifications ?? [],
+            'customization' => $existingCustomization,
             'pdf_path' => $pdfPath,
             'pdf_generated_at' => now(),
         ]);
