@@ -99,6 +99,7 @@ class CompanyController extends Controller
             ->where('status', 'published')
             ->with(['category', 'location'])
             ->latest()
+            ->take(20)
             ->get();
 
         return response()->json([

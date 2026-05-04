@@ -131,14 +131,14 @@ class User extends Authenticatable
     // Relation spécifique pour les jobs favoris (via polymorphic)
     public function favoriteJobs(): MorphToMany
     {
-        return $this->morphToMany(Job::class, 'favoriteable', 'favorites')
+        return $this->morphedByMany(Job::class, 'favoriteable', 'favorites')
             ->withTimestamps();
     }
 
     // Relation spécifique pour les services favoris (via polymorphic)
     public function favoriteQuickServices(): MorphToMany
     {
-        return $this->morphToMany(\App\Models\QuickService::class, 'favoriteable', 'favorites')
+        return $this->morphedByMany(\App\Models\QuickService::class, 'favoriteable', 'favorites')
             ->withTimestamps();
     }
 

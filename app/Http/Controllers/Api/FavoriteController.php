@@ -91,7 +91,7 @@ class FavoriteController extends Controller
     public function index(Request $request)
     {
         $query = auth()->user()
-            ->favorites()
+            ->favoriteJobs()
             ->with(['company', 'category', 'location', 'contractType'])
             ->orderBy('favorites.created_at', 'desc');
 
@@ -101,17 +101,12 @@ class FavoriteController extends Controller
             $normalizedSearch = $this->normalizeString($search);
 
             $query->where(function ($q) use ($normalizedSearch) {
-                // Recherche dans le titre du job
                 $q->whereRaw('LOWER(jobs.title) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                    // Recherche dans la description du job
                     ->orWhereRaw('LOWER(jobs.description) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                    // Recherche dans les exigences du job
                     ->orWhereRaw('LOWER(jobs.requirements) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                    // Recherche dans le nom de l'entreprise
                     ->orWhereHas('company', function ($companyQuery) use ($normalizedSearch) {
                         $companyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
                     })
-                    // Recherche dans la catégorie
                     ->orWhereHas('category', function ($categoryQuery) use ($normalizedSearch) {
                         $categoryQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
                     });

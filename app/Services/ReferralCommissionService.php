@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Payment;
 use App\Models\ReferralCommission;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -11,28 +10,40 @@ use Illuminate\Support\Facades\Log;
 class ReferralCommissionService
 {
     protected WalletService $walletService;
+    protected NotificationService $notificationService;
 
-    public function __construct(WalletService $walletService)
+    public function __construct(WalletService $walletService, NotificationService $notificationService)
     {
         $this->walletService = $walletService;
+        $this->notificationService = $notificationService;
     }
 
     /**
-     * Traite la commission de parrainage pour une recharge de wallet
+     * Traite la commission de parrainage pour un achat payé via wallet
+     * (pack candidat, pack recruteur, service, etc.).
      *
-     * @param User $user L'utilisateur qui a rechargé son wallet
-     * @param Payment $payment Le paiement de recharge
+     * Le parrain reçoit X% du montant dépensé, crédité sur le même provider
+     * de wallet (paypal ou freemopay) que celui utilisé par le filleul.
+     *
+     * @param User $user L'utilisateur qui a effectué l'achat
+     * @param float $purchaseAmount Montant dépensé
+     * @param string $provider 'paypal' ou 'freemopay'
+     * @param string $purchaseLabel Libellé de l'achat (ex: "Pack candidat C2")
+     * @param string|null $reference Référence de la transaction (payment id, etc.)
      * @return ReferralCommission|null La commission créée, ou null si pas de parrain
      */
-    public function processReferralCommission(User $user, Payment $payment): ?ReferralCommission
-    {
-        // Vérifier si le système de parrainage est activé
+    public function processPurchaseCommission(
+        User $user,
+        float $purchaseAmount,
+        string $provider,
+        string $purchaseLabel,
+        ?string $reference = null
+    ): ?ReferralCommission {
         if (!$this->isReferralSystemEnabled()) {
             Log::info('[ReferralCommission] Système de parrainage désactivé');
             return null;
         }
 
-        // Vérifier si l'utilisateur a un parrain
         if (!$user->referred_by_id) {
             Log::info('[ReferralCommission] Utilisateur sans parrain', [
                 'user_id' => $user->id,
@@ -40,7 +51,6 @@ class ReferralCommissionService
             return null;
         }
 
-        // Récupérer le parrain
         $referrer = User::find($user->referred_by_id);
         if (!$referrer) {
             Log::warning('[ReferralCommission] Parrain introuvable', [
@@ -50,16 +60,23 @@ class ReferralCommissionService
             return null;
         }
 
-        // Récupérer le pourcentage de commission depuis les settings
+        if (!in_array($provider, ['freemopay', 'paypal'], true)) {
+            Log::warning('[ReferralCommission] Provider invalide', [
+                'user_id' => $user->id,
+                'provider' => $provider,
+            ]);
+            return null;
+        }
+
         $commissionPercentage = $this->getCommissionPercentage();
+        $commissionAmount = ($purchaseAmount * $commissionPercentage) / 100;
 
-        // Calculer le montant de la commission
-        $commissionAmount = ($payment->amount * $commissionPercentage) / 100;
-
-        Log::info('[ReferralCommission] Calcul de la commission', [
+        Log::info('[ReferralCommission] Calcul de la commission (achat)', [
             'user_id' => $user->id,
             'referrer_id' => $referrer->id,
-            'recharge_amount' => $payment->amount,
+            'purchase_amount' => $purchaseAmount,
+            'provider' => $provider,
+            'purchase_label' => $purchaseLabel,
             'commission_percentage' => $commissionPercentage,
             'commission_amount' => $commissionAmount,
         ]);
@@ -67,35 +84,28 @@ class ReferralCommissionService
         try {
             DB::beginTransaction();
 
-            // Enregistrer la commission dans la table referral_commissions
             $commission = ReferralCommission::create([
                 'referrer_id' => $referrer->id,
                 'referred_id' => $user->id,
-                'transaction_type' => $payment->payment_method, // 'paypal' ou 'freemopay'
-                'transaction_reference' => $payment->transaction_id ?? $payment->id,
-                'transaction_amount' => $payment->amount,
+                'transaction_type' => $provider, // 'paypal' ou 'freemopay'
+                'transaction_reference' => $reference,
+                'transaction_amount' => $purchaseAmount,
                 'commission_percentage' => $commissionPercentage,
                 'commission_amount' => $commissionAmount,
             ]);
 
-            // Déterminer le provider basé sur le payment_method
-            $provider = 'freemopay'; // Par défaut
-            if (in_array(strtolower($payment->payment_method), ['paypal', 'paypal_native'])) {
-                $provider = 'paypal';
-            }
-
-            // Créditer le wallet du parrain (même provider que la recharge du filleul)
             $this->walletService->credit(
                 $referrer,
                 $commissionAmount,
-                null, // Pas de payment associé
-                "Commission de parrainage - Recharge de {$user->name}",
+                null,
+                "Commission de parrainage - {$purchaseLabel} de {$user->name}",
                 [
                     'referral_commission_id' => $commission->id,
                     'referred_user_id' => $user->id,
-                    'recharge_amount' => $payment->amount,
+                    'purchase_amount' => $purchaseAmount,
+                    'purchase_label' => $purchaseLabel,
                 ],
-                $provider // Utiliser le même provider que la recharge
+                $provider
             );
 
             DB::commit();
@@ -104,14 +114,19 @@ class ReferralCommissionService
                 'commission_id' => $commission->id,
                 'referrer_id' => $referrer->id,
                 'commission_amount' => $commissionAmount,
-                'referrer_new_balance' => $referrer->fresh()->wallet_balance,
+                'provider' => $provider,
             ]);
 
-            // Envoyer notification FCM au parrain
-            $this->sendReferralCommissionNotification($referrer, $user, $commissionAmount, $payment);
+            $this->sendReferralCommissionNotification(
+                $referrer,
+                $user,
+                $commissionAmount,
+                $provider,
+                $purchaseAmount,
+                $purchaseLabel
+            );
 
             return $commission;
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -145,58 +160,41 @@ class ReferralCommissionService
     /**
      * Envoie une notification FCM au parrain pour sa commission
      */
-    private function sendReferralCommissionNotification(User $referrer, User $referred, float $commissionAmount, Payment $payment): void
-    {
+    private function sendReferralCommissionNotification(
+        User $referrer,
+        User $referred,
+        float $commissionAmount,
+        string $provider,
+        float $purchaseAmount,
+        string $purchaseLabel
+    ): void {
         try {
-            if (!$referrer->fcm_token) {
-                Log::info('[ReferralCommission] Pas de FCM token pour le parrain', [
-                    'referrer_id' => $referrer->id,
-                ]);
-                return;
-            }
+            $providerName = $provider === 'paypal' ? 'PayPal' : 'Mobile Money';
+            $formattedAmount = number_format($commissionAmount, 0, ',', ' ');
 
             $title = "Commission de parrainage reçue !";
-            $body = "Vous avez reçu " . number_format($commissionAmount, 0, ',', ' ') . " FCFA de commission pour la recharge de {$referred->name}.";
+            $body = "Vous avez reçu {$formattedAmount} FCFA sur votre wallet {$providerName} suite à l'achat de {$referred->name} ({$purchaseLabel}).";
 
-            // Créer la notification en base de données
-            $notification = \App\Models\Notification::create([
-                'type' => 'referral_commission_earned',
-                'notifiable_type' => User::class,
-                'notifiable_id' => $referrer->id,
-                'data' => [
-                    'title' => $title,
-                    'body' => $body,
-                    'commission_amount' => $commissionAmount,
-                    'referred_user_id' => $referred->id,
+            $this->notificationService->sendToUser(
+                $referrer,
+                $title,
+                $body,
+                'referral_commission_earned',
+                [
+                    'commission_amount' => (string) $commissionAmount,
+                    'wallet_provider' => $provider,
+                    'referred_user_id' => (string) $referred->id,
                     'referred_user_name' => $referred->name,
-                    'recharge_amount' => $payment->amount,
-                    'payment_method' => $payment->payment_method,
-                ],
-            ]);
-
-            // Envoyer via FCM
-            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
-                ->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $referrer->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'sound' => 'default',
-                    ],
-                    'data' => [
-                        'type' => 'referral_commission_earned',
-                        'commission_amount' => $commissionAmount,
-                        'referred_user_name' => $referred->name,
-                        'notification_id' => $notification->id,
-                    ],
-                ]);
+                    'purchase_amount' => (string) $purchaseAmount,
+                    'purchase_label' => $purchaseLabel,
+                ]
+            );
 
             Log::info('[ReferralCommission] ✅ Notification FCM envoyée au parrain', [
                 'referrer_id' => $referrer->id,
                 'commission_amount' => $commissionAmount,
-                'notification_id' => $notification->id,
+                'wallet_provider' => $provider,
             ]);
-
         } catch (\Exception $e) {
             Log::error('[ReferralCommission] ❌ Erreur lors de l\'envoi de la notification FCM', [
                 'referrer_id' => $referrer->id,
