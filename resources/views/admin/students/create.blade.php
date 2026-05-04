@@ -46,13 +46,13 @@
 
             <!-- Email -->
             <div class="form-group">
-                <label class="form-label required">Adresse Email</label>
+                <label class="form-label">Adresse Email</label>
                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                       value="{{ old('email') }}" placeholder="Ex: jean.dupont@example.com" required>
+                       value="{{ old('email') }}" placeholder="Ex: jean.dupont@example.com">
                 @error('email')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-                <small class="form-text">L'étudiant pourra se connecter avec cet email.</small>
+                <small class="form-text">Champ optionnel. L'étudiant peut aussi se connecter avec son téléphone.</small>
             </div>
 
             <!-- Téléphone -->

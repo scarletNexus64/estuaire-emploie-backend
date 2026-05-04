@@ -42,7 +42,7 @@ class StudentService
             // 2. Créer l'utilisateur
             $user = User::create([
                 'name' => $data['name'],
-                'email' => $data['email'],
+                'email' => $data['email'] ?? null,
                 'phone' => $data['phone'],
                 'password' => Hash::make($generatedPassword),
                 'must_change_password' => false, // Pas obligé de changer le mot de passe
@@ -150,23 +150,23 @@ class StudentService
      * Prépare le message SMS qui sera envoyé à l'étudiant
      *
      * @param string $name
-     * @param string $email
+     * @param string|null $email
      * @param string $password
      * @param string $phone
      * @return string
      */
-    public function prepareSMSMessage(string $name, string $email, string $password, string $phone = null): string
+    public function prepareSMSMessage(string $name, ?string $email, string $password, string $phone = null): string
     {
         // Template court optimisé pour Nexah
         // Éviter : "mot de passe", "password", "OTP", "code", "acces"
         // Nexah bloque si détection de OTP (erreur NXH312)
-        $loginInfo = $phone ? "{$email} ou {$phone}" : $email;
+        $loginInfo = $email ?: ($phone ?: 'votre numero');
 
         // Message SANS structure login/password (Nexah détecte le pattern)
         // Approche : message naturel sans labels qui ressemblent à des credentials
         $message = "Estuaire Emploi - Bienvenue !\n\n"
             . "Votre compte etudiant est cree.\n"
-            . "Utilisez votre numero {$phone} avec {$password} comme identifiantpour vous connecter.\n\n"
+            . "Utilisez {$loginInfo} avec {$password} pour vous connecter.\n\n"
             . "Telechargez l'application maintenant.";
 
         return $message;
