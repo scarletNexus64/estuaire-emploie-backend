@@ -194,6 +194,11 @@ class TrainingPackApiController extends Controller
             if ($isStudent) {
                 // Créer l'achat du pack GRATUITEMENT
                 $purchase = PackPurchase::create([
+
+
+
+
+                
                     'user_id' => $user->id,
                     'pack_type' => 'training',
                     'training_pack_id' => $pack->id,

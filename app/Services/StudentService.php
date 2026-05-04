@@ -58,7 +58,7 @@ class StudentService
             // 3. Attribuer le plan SILVER (C1) pour 1 mois GRATUITEMENT
             $this->assignSilverPlan($user);
 
-            // 4. Attribuer le service Mode Étudiant pour 1 an GRATUITEMENT
+            // 4. Attribuer le service Mode Étudiant pour 1 mois GRATUITEMENT
             $this->assignStudentMode($user);
 
             DB::commit();
@@ -115,7 +115,7 @@ class StudentService
     }
 
     /**
-     * Attribue le service Mode Étudiant pour 1 an gratuitement
+     * Attribue le service Mode Étudiant pour 1 mois gratuitement
      */
     protected function assignStudentMode(User $user): void
     {
@@ -131,7 +131,7 @@ class StudentService
             'payment_id' => null, // Pas de paiement car gratuit
             'purchased_at' => now(),
             'activated_at' => now(),
-            'expires_at' => now()->addDays(365), // 1 an
+            'expires_at' => now()->addDays(30), // 1 mois
             'is_active' => true,
             'auto_renew' => false,
         ]);

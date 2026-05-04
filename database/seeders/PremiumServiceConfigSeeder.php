@@ -110,7 +110,7 @@ class PremiumServiceConfigSeeder extends Seeder
                 'description' => 'Accédez aux avantages exclusifs réservés aux étudiants : stages locaux, sujets d\'examens et orientation professionnelle',
                 'display_order' => 6,
                 'price' => 2000.00, // FCFA
-                'duration_days' => 365, // 1 an (service annuel)
+                'duration_days' => 30, // 1 mois
                 'service_type' => 'student_mode',
                 'features' => [
                     'Accès aux anciens sujets d\'examen',
