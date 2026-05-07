@@ -46,12 +46,56 @@ class ResumePdfService
      */
     protected function prepareCVData(Resume $resume): array
     {
-        $personalInfo = is_array($resume->personal_info) ? $resume->personal_info : [];
+        // IMPORTANT: Récupérer les données brutes sans passer par l'accessor
+        // car l'accessor transforme le chemin en URL complète
+        $personalInfo = json_decode($resume->getAttributes()['personal_info'] ?? '[]', true);
 
-        // Gérer la photo si elle existe
-        $photoFullPath = null;
-        if (!empty($personalInfo['photo_path'])) {
-            $photoFullPath = storage_path('app/public/' . $personalInfo['photo_path']);
+        // Gérer la photo si elle existe - encoder en base64 pour DomPDF
+        $photoBase64 = null;
+        if (!empty($personalInfo['photo'])) {
+            // Vérifier si c'est une URL complète (générée par l'accessor) ou un chemin relatif
+            $photoPath = $personalInfo['photo'];
+
+            // Si c'est une URL, extraire le chemin relatif
+            if (filter_var($photoPath, FILTER_VALIDATE_URL)) {
+                // Extraire le chemin après 'storage/'
+                $photoPath = str_replace(url('storage/'), '', $photoPath);
+                \Log::info('Photo Resume - URL détectée, extraction du chemin: ' . $photoPath);
+            }
+
+            $photoFullPath = storage_path('app/public/' . $photoPath);
+
+            \Log::info('Photo Resume - Chemin relatif: ' . $photoPath);
+            \Log::info('Photo Resume - Chemin absolu: ' . $photoFullPath);
+            \Log::info('Photo Resume - Fichier existe: ' . (file_exists($photoFullPath) ? 'OUI' : 'NON'));
+
+            if (file_exists($photoFullPath)) {
+                // Lire le fichier et l'encoder en base64
+                $imageData = file_get_contents($photoFullPath);
+                $mimeType = mime_content_type($photoFullPath);
+                $photoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+                \Log::info('Photo Resume - Image encodée en base64 (longueur: ' . strlen($photoBase64) . ' caractères)');
+            } else {
+                \Log::warning('Photo Resume - Fichier non trouvé: ' . $photoFullPath);
+            }
+        } else {
+            \Log::info('Photo Resume - Aucune photo dans personal_info, utilisation du logo par défaut');
+        }
+
+        // Si aucune photo n'a été encodée, utiliser le logo Estuaire Emploi par défaut
+        if ($photoBase64 === null) {
+            $defaultLogoPath = public_path('images/logo-estuaire-emploi.png');
+
+            \Log::info('Photo Resume - Tentative de chargement du logo par défaut: ' . $defaultLogoPath);
+
+            if (file_exists($defaultLogoPath)) {
+                $imageData = file_get_contents($defaultLogoPath);
+                $mimeType = mime_content_type($defaultLogoPath);
+                $photoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+                \Log::info('Photo Resume - Logo par défaut utilisé (longueur: ' . strlen($photoBase64) . ' caractères)');
+            } else {
+                \Log::warning('Photo Resume - Logo par défaut non trouvé: ' . $defaultLogoPath);
+            }
         }
 
         return [
@@ -63,7 +107,7 @@ class ResumePdfService
             'languages' => $personalInfo['languages'] ?? null,
             'level' => $resume->customization['level'] ?? null,
             'specialty' => $resume->customization['specialty'] ?? null,
-            'photo_path' => $photoFullPath,
+            'photo_path' => $photoBase64,
             'objective' => $resume->professional_summary ?? null,
             'experiences' => $this->formatExperiences($resume->experiences ?? []),
             'education' => $this->formatEducation($resume->education ?? []),

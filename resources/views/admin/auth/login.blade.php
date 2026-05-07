@@ -16,11 +16,13 @@
         }
 
         :root {
-            --primary: #E31E24;
-            --primary-dark: #B71C1C;
-            --secondary: #0091D5;
-            --secondary-light: #4FC3F7;
-            --tertiary: #7B1FA2;
+            --primary: #059669;
+            --primary-dark: #047857;
+            --primary-light: #10b981;
+            --secondary: #448858;
+            --secondary-light: #52a068;
+            --tertiary: #dc2626;
+            --tertiary-dark: #b91c1c;
             --accent: #F39C12;
             --success: #10b981;
             --danger: #ef4444;
@@ -39,7 +41,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -56,8 +58,8 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle at 30% 50%, rgba(0, 145, 213, 0.15), transparent 50%),
-                        radial-gradient(circle at 70% 50%, rgba(243, 156, 18, 0.1), transparent 50%);
+            background: radial-gradient(circle at 30% 50%, rgba(5, 150, 105, 0.15), transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(68, 136, 88, 0.1), transparent 50%);
             animation: float 20s ease-in-out infinite;
         }
 
@@ -82,7 +84,7 @@
         }
 
         .login-left {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             padding: 60px 50px;
             color: white;
             display: flex;
@@ -110,7 +112,7 @@
             left: -100px;
             width: 400px;
             height: 400px;
-            background: rgba(0, 145, 213, 0.15);
+            background: rgba(16, 185, 129, 0.15);
             border-radius: 50%;
         }
 
@@ -307,7 +309,7 @@
             outline: none;
             border-color: var(--primary);
             background: white;
-            box-shadow: 0 0 0 4px rgba(227, 30, 36, 0.1);
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
         }
 
         input[type="email"]:focus + .input-icon,
@@ -346,7 +348,7 @@
         .btn-login {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             border: none;
             border-radius: 12px;
@@ -354,7 +356,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(227, 30, 36, 0.3);
+            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -364,7 +366,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(227, 30, 36, 0.4);
+            box-shadow: 0 6px 24px rgba(5, 150, 105, 0.4);
         }
 
         .btn-login:active {

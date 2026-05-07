@@ -69,8 +69,8 @@ class ForumController extends Controller
             // Broadcast l'événement via Reverb
             broadcast(new ForumMessageSent($message))->toOthers();
 
-            // TODO: Envoyer notification FCM aux admins du forum
-            $this->notifyForumAdmins($message);
+            // Envoyer notification FCM au topic 'forum' pour notifier tous les abonnés
+            $this->notifyForumTopic($message);
 
             return response()->json([
                 'success' => true,
@@ -86,32 +86,34 @@ class ForumController extends Controller
     }
 
     /**
-     * Notifier les admins du forum via FCM + DB
+     * Notifier tous les utilisateurs abonnés au topic 'forum' via FCM
      */
-    private function notifyForumAdmins(ForumMessage $message)
+    private function notifyForumTopic(ForumMessage $message)
     {
         try {
-            $admins = \App\Models\User::where('is_forum_admin', true)
-                ->where('id', '!=', $message->user_id)
-                ->get();
+            $firebaseService = app(\App\Services\FirebaseNotificationService::class);
 
-            if ($admins->isEmpty()) {
-                return;
-            }
-
-            app(NotificationService::class)->sendToMultipleUsers(
-                $admins,
+            // Envoyer la notification au topic 'forum'
+            $firebaseService->sendToTopic(
+                'forum',
                 'Nouveau message au forum',
-                $message->user->name . ' a posté un message',
-                'forum_message',
+                $message->user->name . ' : ' . mb_substr($message->content, 0, 100),
                 [
+                    'type' => 'forum_message',
                     'message_id' => $message->id,
                     'user_id' => $message->user_id,
                     'user_name' => $message->user->name,
+                    'sent_at' => now()->toISOString(),
                 ]
             );
+
+            Log::info('Forum topic notification sent', [
+                'topic' => 'forum',
+                'message_id' => $message->id,
+                'user_id' => $message->user_id,
+            ]);
         } catch (\Throwable $e) {
-            Log::error('Erreur notification forum: ' . $e->getMessage());
+            Log::error('Erreur notification forum topic: ' . $e->getMessage());
         }
     }
 }

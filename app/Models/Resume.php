@@ -127,6 +127,21 @@ class Resume extends Model
     }
 
     /**
+     * Transforme personal_info pour ajouter l'URL complète de la photo
+     */
+    public function getPersonalInfoAttribute($value)
+    {
+        $personalInfo = json_decode($value, true);
+
+        // Ajouter l'URL complète de la photo si elle existe
+        if (isset($personalInfo['photo']) && !empty($personalInfo['photo'])) {
+            $personalInfo['photo'] = url('storage/' . $personalInfo['photo']);
+        }
+
+        return $personalInfo;
+    }
+
+    /**
      * Liste des templates disponibles
      */
     public static function getAvailableTemplates(): array

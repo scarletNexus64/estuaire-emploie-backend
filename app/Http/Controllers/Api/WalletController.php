@@ -1701,4 +1701,150 @@ class WalletController extends Controller
             \Log::error("[WalletController] ❌ Failed to send FCM notification for purchase: " . $e->getMessage());
         }
     }
+
+    /**
+     * Transfère de l'argent à un autre utilisateur
+     * Les transferts se font uniquement entre wallets du même provider
+     * (PayPal → PayPal ou FreeMo → FreeMo)
+     *
+     * POST /api/wallet/transfer
+     */
+    public function transfer(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'recipient_id' => 'required|integer|exists:users,id',
+            'amount' => 'required|numeric|min:1',
+            'provider' => 'required|in:freemopay,paypal',
+            'note' => 'nullable|string|max:255',
+        ], [
+            'recipient_id.required' => 'Le destinataire est requis',
+            'recipient_id.integer' => 'L\'ID du destinataire n\'est pas valide',
+            'recipient_id.exists' => 'Aucun utilisateur trouvé avec cet ID',
+            'amount.required' => 'Le montant est requis',
+            'amount.numeric' => 'Le montant doit être un nombre',
+            'amount.min' => 'Le montant minimum est 1 FCFA',
+            'provider.required' => 'Le mode de paiement est requis',
+            'provider.in' => 'Le mode de paiement doit être PayPal ou Mobile Money (FreeMo)',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $sender = $request->user();
+            $recipientId = $request->recipient_id;
+            $amount = (float) $request->amount;
+            $provider = $request->provider;
+            $note = $request->note;
+
+            // Récupérer le destinataire
+            $recipient = \App\Models\User::find($recipientId);
+
+            if (!$recipient) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Utilisateur destinataire introuvable',
+                ], 404);
+            }
+
+            // Effectuer le transfert
+            $result = $this->walletService->transfer(
+                $sender,
+                $recipient,
+                $amount,
+                $provider,
+                $note
+            );
+
+            $providerName = $provider === 'paypal' ? 'PayPal' : 'Mobile Money (FreeMo)';
+
+            return response()->json([
+                'success' => true,
+                'message' => "Transfert de " . number_format($amount, 0, ',', ' ') . " FCFA effectué avec succès via {$providerName}",
+                'data' => [
+                    'sender_transaction' => [
+                        'id' => $result['sender_transaction']->id,
+                        'amount' => $result['sender_transaction']->amount,
+                        'balance_before' => $result['sender_transaction']->balance_before,
+                        'balance_after' => $result['sender_transaction']->balance_after,
+                        'description' => $result['sender_transaction']->description,
+                        'created_at' => $result['sender_transaction']->created_at,
+                    ],
+                    'recipient' => [
+                        'id' => $recipient->id,
+                        'name' => $recipient->name,
+                        'email' => $recipient->email,
+                    ],
+                    'provider' => $provider,
+                    'provider_name' => $providerName,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("[WalletController] Transfer failed", [
+                'error' => $e->getMessage(),
+                'sender_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Liste des utilisateurs disponibles pour le transfert
+     * Exclut l'utilisateur connecté et retourne une liste paginée
+     *
+     * GET /api/wallet/users
+     */
+    public function getTransferableUsers(Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+            $perPage = $request->input('per_page', 20);
+            $search = $request->input('search');
+
+            $query = \App\Models\User::query()
+                ->select(['id', 'name', 'email', 'phone', 'role'])
+                ->where('id', '!=', $currentUser->id)
+                ->orderBy('name', 'asc');
+
+            // Recherche par nom, email ou téléphone
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            $users = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $users->items(),
+                'pagination' => [
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("[WalletController] Error fetching transferable users", [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des utilisateurs',
+            ], 500);
+        }
+    }
 }

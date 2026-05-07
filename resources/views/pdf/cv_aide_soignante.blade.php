@@ -242,10 +242,8 @@
         <!-- COLONNE GAUCHE (bleue) -->
         <div class="cv-left">
             <div class="photo-box">
-                @if(!empty($data['photo_path']) && file_exists($data['photo_path']))
-                    <img src="{{ $data['photo_path'] }}" alt="Photo">
-                @else
-                    <div class="photo-placeholder">👤</div>
+                @if(!empty($data['photo_path']))
+                    <img src="{{ $data['photo_path'] }}" alt="Photo de profil">
                 @endif
             </div>
 

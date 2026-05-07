@@ -56,7 +56,12 @@ class ResumeController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Gérer les données de formulaire multipart (avec photo) ou JSON standard
+        $data = $request->has('resume_data')
+            ? json_decode($request->input('resume_data'), true)
+            : $request->all();
+
+        $validator = Validator::make($data, [
             'title' => 'required|string|max:255',
             'template_type' => 'required|string|in:modern,classic,creative,professional,minimalist',
             'personal_info' => 'required|array',
@@ -80,6 +85,21 @@ class ResumeController extends Controller
             'is_default' => 'nullable|boolean',
         ]);
 
+        // Valider la photo de profil si elle est présente
+        if ($request->hasFile('profile_photo')) {
+            $photoValidator = Validator::make($request->all(), [
+                'profile_photo' => 'image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            ]);
+
+            if ($photoValidator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photo invalide',
+                    'errors' => $photoValidator->errors(),
+                ], 422);
+            }
+        }
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -90,25 +110,47 @@ class ResumeController extends Controller
 
         $user = $request->user();
 
+        // Gérer l'upload de la photo de profil
+        $personalInfo = $data['personal_info'];
+
+        \Log::info('📸 Upload photo - hasFile: ' . ($request->hasFile('profile_photo') ? 'OUI' : 'NON'));
+
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            \Log::info('📸 Upload photo - Taille: ' . $photo->getSize() . ' bytes');
+            \Log::info('📸 Upload photo - MIME: ' . $photo->getMimeType());
+
+            $photoPath = $photo->store('resumes/photos', 'public');
+            $personalInfo['photo'] = $photoPath;
+
+            \Log::info('📸 Upload photo - Sauvegardée: ' . $photoPath);
+            \Log::info('📸 Personal info après ajout photo: ' . json_encode($personalInfo));
+        } else {
+            \Log::info('📸 Aucune photo uploadée dans cette requête');
+        }
+
         // Si c'est le premier CV, le définir comme défaut
         $isFirstResume = $user->resumes()->count() === 0;
 
         $resume = $user->resumes()->create([
-            'title' => $request->title,
-            'template_type' => $request->template_type,
-            'personal_info' => $request->personal_info,
-            'professional_summary' => $request->professional_summary,
-            'experiences' => $request->experiences,
-            'education' => $request->education,
-            'skills' => $request->skills,
-            'certifications' => $request->certifications,
-            'projects' => $request->projects,
-            'references' => $request->references,
-            'hobbies' => $request->hobbies,
-            'customization' => $request->customization ?? [],
-            'is_public' => $request->is_public ?? false,
-            'is_default' => $isFirstResume ? true : ($request->is_default ?? false),
+            'title' => $data['title'],
+            'template_type' => $data['template_type'],
+            'personal_info' => $personalInfo,
+            'professional_summary' => $data['professional_summary'] ?? null,
+            'experiences' => $data['experiences'] ?? null,
+            'education' => $data['education'] ?? null,
+            'skills' => $data['skills'] ?? null,
+            'certifications' => $data['certifications'] ?? null,
+            'projects' => $data['projects'] ?? null,
+            'references' => $data['references'] ?? null,
+            'hobbies' => $data['hobbies'] ?? null,
+            'customization' => $data['customization'] ?? [],
+            'is_public' => $data['is_public'] ?? false,
+            'is_default' => $isFirstResume ? true : ($data['is_default'] ?? false),
         ]);
+
+        \Log::info('✅ CV créé - ID: ' . $resume->id);
+        \Log::info('✅ CV créé - Personal info sauvegardé: ' . json_encode($resume->personal_info));
 
         // Si défini comme défaut, retirer le flag des autres
         if ($resume->is_default) {
@@ -173,7 +215,12 @@ class ResumeController extends Controller
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
+        // Gérer les données de formulaire multipart (avec photo) ou JSON standard
+        $data = $request->has('resume_data')
+            ? json_decode($request->input('resume_data'), true)
+            : $request->all();
+
+        $validator = Validator::make($data, [
             'title' => 'sometimes|required|string|max:255',
             'template_type' => 'sometimes|required|string|in:modern,classic,creative,professional,minimalist',
             'personal_info' => 'sometimes|required|array',
@@ -190,6 +237,21 @@ class ResumeController extends Controller
             'is_default' => 'nullable|boolean',
         ]);
 
+        // Valider la photo de profil si elle est présente
+        if ($request->hasFile('profile_photo')) {
+            $photoValidator = Validator::make($request->all(), [
+                'profile_photo' => 'image|mimes:jpeg,png,jpg|max:5120', // Max 5MB
+            ]);
+
+            if ($photoValidator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photo invalide',
+                    'errors' => $photoValidator->errors(),
+                ], 422);
+            }
+        }
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -198,22 +260,67 @@ class ResumeController extends Controller
             ], 422);
         }
 
-        $resume->update($request->only([
-            'title',
-            'template_type',
-            'personal_info',
-            'professional_summary',
-            'experiences',
-            'education',
-            'skills',
-            'certifications',
-            'projects',
-            'references',
-            'hobbies',
-            'customization',
-            'is_public',
-            'is_default',
-        ]));
+        // Gérer l'upload de la photo de profil
+        \Log::info('🔄 Update photo - hasFile: ' . ($request->hasFile('profile_photo') ? 'OUI' : 'NON'));
+
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            \Log::info('🔄 Update photo - Taille: ' . $photo->getSize() . ' bytes');
+            \Log::info('🔄 Update photo - MIME: ' . $photo->getMimeType());
+
+            // IMPORTANT: Récupérer les données brutes sans passer par l'accessor
+            $currentPersonalInfo = json_decode($resume->getAttributes()['personal_info'] ?? '[]', true);
+
+            \Log::info('🔄 Update photo - Ancienne photo: ' . ($currentPersonalInfo['photo'] ?? 'AUCUNE'));
+
+            // Supprimer l'ancienne photo si elle existe
+            if (isset($currentPersonalInfo['photo']) && \Storage::disk('public')->exists($currentPersonalInfo['photo'])) {
+                \Storage::disk('public')->delete($currentPersonalInfo['photo']);
+                \Log::info('🔄 Update photo - Ancienne photo supprimée');
+            }
+
+            // Uploader la nouvelle photo
+            $photoPath = $photo->store('resumes/photos', 'public');
+            \Log::info('🔄 Update photo - Nouvelle photo sauvegardée: ' . $photoPath);
+
+            // Mettre à jour personal_info avec la nouvelle photo
+            if (isset($data['personal_info'])) {
+                $data['personal_info']['photo'] = $photoPath;
+            } else {
+                $currentPersonalInfo['photo'] = $photoPath;
+                $data['personal_info'] = $currentPersonalInfo;
+            }
+
+            \Log::info('🔄 Update photo - Personal info après ajout: ' . json_encode($data['personal_info']));
+        } else {
+            \Log::info('🔄 Aucune nouvelle photo dans cette mise à jour');
+        }
+
+        $resume->update(array_filter([
+            'title' => $data['title'] ?? null,
+            'template_type' => $data['template_type'] ?? null,
+            'personal_info' => $data['personal_info'] ?? null,
+            'professional_summary' => $data['professional_summary'] ?? null,
+            'experiences' => $data['experiences'] ?? null,
+            'education' => $data['education'] ?? null,
+            'skills' => $data['skills'] ?? null,
+            'certifications' => $data['certifications'] ?? null,
+            'projects' => $data['projects'] ?? null,
+            'references' => $data['references'] ?? null,
+            'hobbies' => $data['hobbies'] ?? null,
+            'customization' => $data['customization'] ?? null,
+            'is_public' => $data['is_public'] ?? null,
+            'is_default' => $data['is_default'] ?? null,
+        ], function ($value) {
+            return $value !== null;
+        }));
+
+        // Recharger pour avoir les nouvelles données
+        $resume->refresh();
+        \Log::info('✅ CV mis à jour - ID: ' . $resume->id);
+        // Récupérer les données brutes pour le log
+        $rawPersonalInfo = json_decode($resume->getAttributes()['personal_info'] ?? '[]', true);
+        \Log::info('✅ CV mis à jour - Personal info sauvegardé (brut): ' . json_encode($rawPersonalInfo));
 
         // Si défini comme défaut, retirer le flag des autres
         if ($request->has('is_default') && $request->is_default) {

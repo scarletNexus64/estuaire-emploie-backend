@@ -22,3 +22,15 @@ Schedule::command('subscriptions:send-expiry-reminders')
     ->timezone('Africa/Douala')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/subscription-reminders.log'));
+
+// Désactivation quotidienne des packs de stockage expirés
+Schedule::call(function () {
+    $storagePackService = app(\App\Services\StoragePackService::class);
+    $count = $storagePackService->deactivateExpiredPacks();
+    \Log::info('[Scheduler] Deactivated ' . $count . ' expired storage packs');
+})
+    ->name('deactivate-expired-storage-packs')
+    ->dailyAt('01:00')
+    ->timezone('Africa/Douala')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/storage-pack-expirations.log'));

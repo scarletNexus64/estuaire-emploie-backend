@@ -52,6 +52,10 @@ Route::post('/email/verify-code', [EmailVerificationController::class, 'verifyCo
 Route::post('/otp/send', [OtpController::class, 'sendOtp']);
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
 
+// OTP pour réinitialisation mot de passe (SMS ou Email)
+Route::post('/otp/password-reset/send', [OtpController::class, 'sendPasswordResetOtp']);
+Route::post('/otp/password-reset/verify', [OtpController::class, 'verifyPasswordResetOtp']);
+
 // Maintenance Mode Status
 Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeController::class, 'status']);
 
@@ -69,6 +73,7 @@ Route::get('/companies/{company}', [CompanyController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'categories']);
 Route::get('/locations', [CategoryController::class, 'locations']);
 Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
+Route::get('/domains-sectors', [CompanyController::class, 'getDomainsSectors']); // Domaines et secteurs d'activité
 
 // Plans d'abonnement publics (consultation)
 Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
@@ -82,18 +87,22 @@ Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'reco
 // Catégories de services rapides (publique)
 Route::get('/service-categories', [QuickServiceController::class, 'categories']);
 
+// Packs de stockage (consultation publique)
+Route::get('/storage-packs', [\App\Http\Controllers\Api\StoragePackController::class, 'index']);
+Route::get('/storage-packs/{id}', [\App\Http\Controllers\Api\StoragePackController::class, 'show']);
+
 // Streaming vidéo optimisé (authentification optionnelle, gère les Range requests)
 Route::get('/video-stream/{videoId}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'streamVideoPublic']);
+
+// ------------------
+// TEST NOTIFICATIONS (DEBUG ONLY - PUBLIC)
+// ------------------
+Route::post('/test-notification', [TestNotificationController::class, 'send']);
 
 // ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
 Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, 'must.change.password'])->group(function () {
-
-    // ------------------
-    // TEST NOTIFICATIONS (DEBUG ONLY)
-    // ------------------
-    Route::post('/test-notification', [TestNotificationController::class, 'send']);
 
     // ------------------
     // AUTHENTIFICATION & PROFIL
@@ -371,6 +380,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::post('/wallet/can-pay', [WalletController::class, 'canPay']);
     // Payer avec le wallet (abonnements, services)
     Route::post('/wallet/pay', [WalletController::class, 'pay']);
+    // Transférer de l'argent à un autre utilisateur
+    Route::post('/wallet/transfer', [WalletController::class, 'transfer']);
+    // Liste des utilisateurs disponibles pour le transfert
+    Route::get('/wallet/users', [WalletController::class, 'getTransferableUsers']);
 
     // ------------------
     // RETRAITS WALLET
@@ -385,6 +398,60 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/wallet/withdrawal-status/{withdrawalId}', [WalletController::class, 'checkWithdrawalStatus']);
     // Historique des retraits
     Route::get('/wallet/withdrawals', [WalletController::class, 'getWithdrawalHistory']);
+
+    // ------------------
+    // DEMANDES DE RETRAIT PAYPAL (avec approbation admin)
+    // ------------------
+    // Soumettre une demande de retrait PayPal
+    Route::post('/withdrawal-requests', [\App\Http\Controllers\Api\WithdrawalRequestController::class, 'store']);
+    // Liste mes demandes de retrait
+    Route::get('/withdrawal-requests', [\App\Http\Controllers\Api\WithdrawalRequestController::class, 'index']);
+    // Voir une demande spécifique
+    Route::get('/withdrawal-requests/{id}', [\App\Http\Controllers\Api\WithdrawalRequestController::class, 'show']);
+
+    // ------------------
+    // ADMIN - GESTION DES DEMANDES DE RETRAIT
+    // ------------------
+    // Liste toutes les demandes (Admin)
+    Route::get('/admin/withdrawal-requests', [\App\Http\Controllers\Api\Admin\WithdrawalRequestController::class, 'index'])->middleware('admin');
+    // Voir une demande (Admin)
+    Route::get('/admin/withdrawal-requests/{id}', [\App\Http\Controllers\Api\Admin\WithdrawalRequestController::class, 'show'])->middleware('admin');
+    // Approuver ou refuser une demande (Admin)
+    Route::post('/admin/withdrawal-requests/{id}/respond', [\App\Http\Controllers\Api\Admin\WithdrawalRequestController::class, 'respond'])->middleware('admin');
+
+    // ------------------
+    // PACKS ESPACE DE STOCKAGE (Actions protégées)
+    // ------------------
+    // Acheter un pack de stockage via le wallet
+    Route::post('/storage-packs/{id}/purchase', [\App\Http\Controllers\Api\StoragePackController::class, 'purchase']);
+    // Mes packs de stockage
+    Route::get('/my-storage-packs', [\App\Http\Controllers\Api\StoragePackController::class, 'myPacks']);
+    // Mes statistiques de stockage
+    Route::get('/my-storage-stats', [\App\Http\Controllers\Api\StoragePackController::class, 'myStats']);
+    // Upgrade un pack de stockage vers un pack supérieur
+    Route::post('/storage-packs/{userPackId}/upgrade', [\App\Http\Controllers\Api\StoragePackController::class, 'upgradePack']);
+
+    // ------------------
+    // GESTION DES FICHIERS (CLOUD STORAGE)
+    // ------------------
+    // Lister mes fichiers
+    Route::get('/storage/files', [\App\Http\Controllers\Api\StorageFileController::class, 'index']);
+    // Créer un dossier
+    Route::post('/storage/folders', [\App\Http\Controllers\Api\StorageFileController::class, 'createFolder']);
+    // Upload un fichier
+    Route::post('/storage/upload', [\App\Http\Controllers\Api\StorageFileController::class, 'upload']);
+    // Renommer un fichier/dossier
+    Route::post('/storage/files/{id}/rename', [\App\Http\Controllers\Api\StorageFileController::class, 'rename']);
+    // Déplacer un fichier/dossier
+    Route::post('/storage/files/{id}/move', [\App\Http\Controllers\Api\StorageFileController::class, 'move']);
+    // Copier un fichier/dossier
+    Route::post('/storage/files/{id}/copy', [\App\Http\Controllers\Api\StorageFileController::class, 'copy']);
+    // Supprimer plusieurs fichiers en une fois (IMPORTANT: avant la route {id})
+    Route::delete('/storage/files/batch-delete', [\App\Http\Controllers\Api\StorageFileController::class, 'batchDelete']);
+    // Télécharger un fichier
+    Route::get('/storage/files/{id}/download', [\App\Http\Controllers\Api\StorageFileController::class, 'download']);
+    // Supprimer un fichier
+    Route::delete('/storage/files/{id}', [\App\Http\Controllers\Api\StorageFileController::class, 'destroy']);
 
     // ------------------
     // DEVISES & CONVERSIONS

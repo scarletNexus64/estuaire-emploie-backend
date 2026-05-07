@@ -134,11 +134,34 @@ class StudentController extends Controller
                 ->with('error', 'Session expirée. Veuillez recommencer.');
         }
 
+        // Nettoyer immédiatement la session pour éviter les doublons
+        session()->forget(['student_data', 'student_password']);
+
+        // Vérifier si un utilisateur avec cet email ou téléphone existe déjà
+        $existingUser = User::where(function($query) use ($studentData) {
+            if (!empty($studentData['email'])) {
+                $query->where('email', $studentData['email']);
+            }
+            if (!empty($studentData['phone'])) {
+                $query->orWhere('phone', $studentData['phone']);
+            }
+        })
+        ->whereNull('deleted_at')
+        ->first();
+
+        if ($existingUser) {
+            return redirect()->route('admin.students.create')
+                ->with('error', 'Un étudiant avec cet email ou téléphone existe déjà.')
+                ->withInput();
+        }
+
         // Créer l'étudiant via le service avec le mot de passe de la session
         $result = $this->studentService->createStudent($studentData, $password);
 
         if (!$result['success']) {
-            return back()->with('error', $result['message'])->withInput();
+            return redirect()->route('admin.students.create')
+                ->with('error', $result['message'])
+                ->withInput();
         }
 
         $user = $result['user'];
@@ -149,7 +172,6 @@ class StudentController extends Controller
         // Sauvegarder le password en session pour l'étape suivante
         session(['created_student_password' => $password]);
 
-        // Ne pas nettoyer student_data et student_password ici
         // Rediriger directement vers la confirmation avec CV déjà attribué
         return redirect()->route('admin.students.confirmation', $user->id)
             ->with('success', 'Compte créé avec succès ! Le CV modèle a été attribué automatiquement.');

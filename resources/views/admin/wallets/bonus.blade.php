@@ -40,6 +40,27 @@
                 @csrf
 
                 <div class="form-group">
+                    <label class="form-label required">Mode de Paiement</label>
+                    <select name="provider"
+                            class="form-control @error('provider') is-invalid @enderror"
+                            required>
+                        <option value="">-- Sélectionner un mode de paiement --</option>
+                        <option value="freemopay" {{ old('provider') == 'freemopay' ? 'selected' : '' }}>
+                            Mobile Money (FreeMo)
+                        </option>
+                        <option value="paypal" {{ old('provider') == 'paypal' ? 'selected' : '' }}>
+                            PayPal
+                        </option>
+                    </select>
+                    @error('provider')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="form-text">
+                        Choisissez le mode de paiement pour la recharge du wallet
+                    </small>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label required">Montant du Bonus (FCFA)</label>
                     <input type="number"
                            step="0.01"
@@ -86,7 +107,7 @@
 
         <!-- Info Box -->
         <div class="alert alert-info" style="margin-top: 1.5rem;">
-            <strong>ℹ️ Information :</strong> Le bonus sera immédiatement ajouté au wallet de l'utilisateur et une notification lui sera envoyée.
+            <strong>ℹ️ Information :</strong> Le bonus sera immédiatement ajouté au wallet de l'utilisateur selon le mode de paiement sélectionné (PayPal ou Mobile Money). Une notification push sera automatiquement envoyée à l'utilisateur pour l'informer de la recharge.
         </div>
     </div>
 </div>

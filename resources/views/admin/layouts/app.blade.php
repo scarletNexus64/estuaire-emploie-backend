@@ -22,19 +22,19 @@
                 extend: {
                     colors: {
                         primary: {
-                            DEFAULT: '#E31E24',
-                            dark: '#B71C1C',
-                            light: '#EF5350',
+                            DEFAULT: '#059669',
+                            dark: '#047857',
+                            light: '#10b981',
                         },
                         secondary: {
-                            DEFAULT: '#0091D5',
-                            dark: '#0277BD',
-                            light: '#4FC3F7',
+                            DEFAULT: '#448858',
+                            dark: '#336644',
+                            light: '#52a068',
                         },
                         tertiary: {
-                            DEFAULT: '#7B1FA2',
-                            dark: '#6A1B9A',
-                            light: '#9C27B0',
+                            DEFAULT: '#dc2626',
+                            dark: '#b91c1c',
+                            light: '#ef4444',
                         },
                         accent: '#F39C12',
                     }
@@ -150,11 +150,12 @@
             text-decoration: none;
         }
         .btn-primary {
-            background: linear-gradient(to right, #E31E24, #7B1FA2);
+            background: linear-gradient(to right, #059669, #448858);
             color: white;
         }
         .btn-primary:hover {
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            box-shadow: 0 10px 15px -3px rgb(5 150 105 / 0.3);
+            transform: translateY(-1px);
         }
         .btn-secondary {
             background-color: #4b5563;
@@ -253,8 +254,8 @@
             color: #374151;
         }
         .badge-primary {
-            background-color: rgba(227, 30, 36, 0.1);
-            color: #E31E24;
+            background-color: rgba(5, 150, 105, 0.1);
+            color: #059669;
         }
 
         .form-group {
@@ -277,8 +278,8 @@
         }
         .form-control:focus, input:focus, textarea:focus, select:focus {
             outline: none;
-            border-color: #E31E24;
-            box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
         }
         .form-control:disabled {
             background-color: #f3f4f6;
@@ -311,9 +312,9 @@
             background-color: #f9fafb;
         }
         .pagination .active {
-            background-color: #E31E24;
+            background-color: #059669;
             color: white;
-            border-color: #E31E24;
+            border-color: #059669;
         }
 
         .stats-grid {
@@ -415,8 +416,8 @@
         }
 
         .nav-link.active {
-            color: #E31E24;
-            border-bottom-color: #E31E24;
+            color: #059669;
+            border-bottom-color: #059669;
         }
 
         .tab-content {
@@ -462,8 +463,8 @@
         }
 
         .file-upload:hover {
-            border-color: #E31E24;
-            background-color: rgba(227, 30, 36, 0.05);
+            border-color: #059669;
+            background-color: rgba(5, 150, 105, 0.05);
         }
 
         .file-upload input[type="file"] {
@@ -535,9 +536,9 @@
         }
 
         .list-group-item.active {
-            background-color: #E31E24;
+            background-color: #059669;
             color: white;
-            border-color: #E31E24;
+            border-color: #059669;
         }
 
         .progress {
@@ -549,7 +550,7 @@
 
         .progress-bar {
             height: 100%;
-            background-color: #E31E24;
+            background-color: #059669;
             transition: width 0.3s;
             display: flex;
             align-items: center;
@@ -637,7 +638,7 @@
         }
 
         .breadcrumb a:hover {
-            color: #E31E24;
+            color: #059669;
         }
 
         .breadcrumb-item.active {
@@ -1347,12 +1348,12 @@
         }
 
         a {
-            color: #E31E24;
+            color: #059669;
             text-decoration: none;
         }
 
         a:hover {
-            color: #B71C1C;
+            color: #047857;
             text-decoration: underline;
         }
 
@@ -1452,7 +1453,7 @@
             border-radius: 0.25rem;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.875rem;
-            color: #E31E24;
+            color: #059669;
         }
 
         pre code {
@@ -1497,7 +1498,7 @@
         blockquote {
             padding: 1rem 1.5rem;
             margin: 1rem 0;
-            border-left: 4px solid #E31E24;
+            border-left: 4px solid #059669;
             background-color: #f9fafb;
             font-style: italic;
         }
@@ -1601,7 +1602,7 @@
         :class="{ '-translate-x-full lg:translate-x-0': !sidebarOpen, 'translate-x-0': sidebarOpen }"
     >
         <!-- Logo -->
-        <div class="bg-gradient-to-r from-primary to-tertiary px-6 py-5 border-b border-white/10 flex-shrink-0">
+        <div class="bg-gradient-to-r from-primary to-secondary px-6 py-5 border-b border-white/10 flex-shrink-0">
             <div class="flex items-center gap-3">
                 <img src="{{ asset('images/logo-estuaire-emploi.png') }}" alt="Estuaire Emploi" class="w-12 h-12 brightness-0 invert">
                 <div>
@@ -1658,7 +1659,28 @@
                     </div>
                     @foreach($section['items'] as $item)
                         @php
-                            $isActive = isset($item['route']) && (request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route'])));
+                            // Logique améliorée pour éviter les conflits entre routes similaires
+                            $isActive = false;
+                            if (isset($item['route'])) {
+                                // Vérifie d'abord la route exacte
+                                if (request()->routeIs($item['route'])) {
+                                    $isActive = true;
+                                }
+                                // Pour les routes .index, vérifie aussi les sous-routes (edit, show, create)
+                                // mais pas les routes soeurs (ex: subscribers)
+                                elseif (str_ends_with($item['route'], '.index')) {
+                                    $baseRoute = str_replace('.index', '', $item['route']);
+                                    $currentRoute = request()->route()->getName();
+
+                                    // Vérifie que c'est une sous-route directe (edit, show, create, update, destroy)
+                                    if (str_starts_with($currentRoute, $baseRoute . '.')) {
+                                        $suffix = str_replace($baseRoute . '.', '', $currentRoute);
+                                        if (in_array($suffix, ['create', 'edit', 'show', 'update', 'destroy', 'toggle'])) {
+                                            $isActive = true;
+                                        }
+                                    }
+                                }
+                            }
                             $mdiIcon = $iconMapping[$item['icon']] ?? 'mdi-cog';
                         @endphp
                         <a href="{{ isset($item['url']) ? $item['url'] : route($item['route']) }}"
@@ -1691,7 +1713,7 @@
         <!-- User Profile Section (Bottom) -->
         <div class="bg-gray-900/50 border-t border-white/10 p-4 flex-shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white font-bold text-sm">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm">
                     {{ substr(auth()->user()->name ?? 'A', 0, 1) }}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -1791,7 +1813,7 @@
                             @click.away="open = false"
                             class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none"
                         >
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white font-bold text-sm">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm">
                                 {{ substr(auth()->user()->name ?? 'A', 0, 1) }}
                             </div>
                             <i class="mdi mdi-chevron-down text-gray-600" :class="{ 'rotate-180': open }"></i>

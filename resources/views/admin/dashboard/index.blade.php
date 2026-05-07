@@ -9,7 +9,7 @@
 @endsection
 
 @section('header-actions')
-    <a href="{{ route('admin.jobs.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-tertiary text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium">
+    <a href="{{ route('admin.jobs.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200 font-medium shadow-md">
         <i class="mdi mdi-plus-circle"></i>
         Nouvelle offre
     </a>
@@ -23,96 +23,100 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Card: Total Companies -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-            <div class="p-6">
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:scale-105 group">
+            <div class="p-6 relative">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-transparent rounded-full -mr-16 -mt-16"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
-                        <i class="mdi mdi-office-building text-2xl text-primary"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <i class="mdi mdi-office-building text-2xl text-white"></i>
                     </div>
                     @if($stats['pending_companies'] > 0)
-                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
-                            {{ $stats['pending_companies'] }} en attente
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full animate-pulse">
+                            {{ $stats['pending_companies'] }}
                         </span>
                     @endif
                 </div>
-                <h3 class="text-gray-600 text-sm font-medium mb-1">Entreprises</h3>
-                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_companies']) }}</p>
+                <h3 class="text-gray-500 text-sm font-semibold mb-2 uppercase tracking-wide">Entreprises</h3>
+                <p class="text-4xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">{{ number_format($stats['total_companies']) }}</p>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
-                <a href="{{ route('admin.companies.index') }}" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1">
+            <div class="bg-gradient-to-r from-primary/5 to-transparent px-6 py-4 border-t border-primary/10">
+                <a href="{{ route('admin.companies.index') }}" class="text-sm text-primary hover:text-primary-dark font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
                     Voir tout
-                    <i class="mdi mdi-arrow-right text-sm"></i>
+                    <i class="mdi mdi-arrow-right text-base"></i>
                 </a>
             </div>
         </div>
 
         <!-- Card: Total Jobs -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-            <div class="p-6">
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:scale-105 group">
+            <div class="p-6 relative">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-secondary/5 to-transparent rounded-full -mr-16 -mt-16"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-secondary/10 to-secondary/20 rounded-lg flex items-center justify-center">
-                        <i class="mdi mdi-briefcase text-2xl text-secondary"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-secondary to-secondary-light rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <i class="mdi mdi-briefcase text-2xl text-white"></i>
                     </div>
                     @if($stats['pending_jobs'] > 0)
-                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
-                            {{ $stats['pending_jobs'] }} en attente
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full animate-pulse">
+                            {{ $stats['pending_jobs'] }}
                         </span>
                     @endif
                 </div>
-                <h3 class="text-gray-600 text-sm font-medium mb-1">Offres d'emploi</h3>
-                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_jobs']) }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ number_format($stats['published_jobs']) }} publiées</p>
+                <h3 class="text-gray-500 text-sm font-semibold mb-2 uppercase tracking-wide">Offres d'emploi</h3>
+                <p class="text-4xl font-bold bg-gradient-to-r from-secondary to-secondary-dark bg-clip-text text-transparent">{{ number_format($stats['total_jobs']) }}</p>
+                <p class="text-xs text-gray-500 mt-2 font-medium">{{ number_format($stats['published_jobs']) }} publiées</p>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
-                <a href="{{ route('admin.jobs.index') }}" class="text-sm text-secondary hover:text-secondary-dark font-medium flex items-center gap-1">
+            <div class="bg-gradient-to-r from-secondary/5 to-transparent px-6 py-4 border-t border-secondary/10">
+                <a href="{{ route('admin.jobs.index') }}" class="text-sm text-secondary hover:text-secondary-dark font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
                     Voir tout
-                    <i class="mdi mdi-arrow-right text-sm"></i>
+                    <i class="mdi mdi-arrow-right text-base"></i>
                 </a>
             </div>
         </div>
 
         <!-- Card: Applications -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-            <div class="p-6">
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:scale-105 group">
+            <div class="p-6 relative">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-tertiary/5 to-transparent rounded-full -mr-16 -mt-16"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-tertiary/10 to-tertiary/20 rounded-lg flex items-center justify-center">
-                        <i class="mdi mdi-file-document-multiple text-2xl text-tertiary"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-tertiary to-tertiary-light rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <i class="mdi mdi-file-document-multiple text-2xl text-white"></i>
                     </div>
                     @if($stats['pending_applications'] > 0)
-                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-1 rounded-full">
-                            {{ $stats['pending_applications'] }} nouvelles
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full animate-pulse">
+                            {{ $stats['pending_applications'] }}
                         </span>
                     @endif
                 </div>
-                <h3 class="text-gray-600 text-sm font-medium mb-1">Candidatures</h3>
-                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_applications']) }}</p>
+                <h3 class="text-gray-500 text-sm font-semibold mb-2 uppercase tracking-wide">Candidatures</h3>
+                <p class="text-4xl font-bold bg-gradient-to-r from-tertiary to-tertiary-dark bg-clip-text text-transparent">{{ number_format($stats['total_applications']) }}</p>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
-                <a href="{{ route('admin.applications.index') }}" class="text-sm text-tertiary hover:text-tertiary-dark font-medium flex items-center gap-1">
+            <div class="bg-gradient-to-r from-tertiary/5 to-transparent px-6 py-4 border-t border-tertiary/10">
+                <a href="{{ route('admin.applications.index') }}" class="text-sm text-tertiary hover:text-tertiary-dark font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
                     Voir tout
-                    <i class="mdi mdi-arrow-right text-sm"></i>
+                    <i class="mdi mdi-arrow-right text-base"></i>
                 </a>
             </div>
         </div>
 
         <!-- Card: Users -->
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-            <div class="p-6">
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:scale-105 group">
+            <div class="p-6 relative">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-transparent rounded-full -mr-16 -mt-16"></div>
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-green-500/10 to-green-500/20 rounded-lg flex items-center justify-center">
-                        <i class="mdi mdi-account-group text-2xl text-green-600"></i>
+                    <div class="w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <i class="mdi mdi-account-group text-2xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-600 text-sm font-medium mb-1">Utilisateurs</h3>
-                <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_candidates'] + $stats['total_recruiters']) }}</p>
-                <p class="text-xs text-gray-500 mt-1">
+                <h3 class="text-gray-500 text-sm font-semibold mb-2 uppercase tracking-wide">Utilisateurs</h3>
+                <p class="text-4xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">{{ number_format($stats['total_candidates'] + $stats['total_recruiters']) }}</p>
+                <p class="text-xs text-gray-500 mt-2 font-medium">
                     {{ number_format($stats['total_candidates']) }} candidats · {{ number_format($stats['total_recruiters']) }} recruteurs
                 </p>
             </div>
-            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
-                <a href="{{ route('admin.users.index') }}" class="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1">
+            <div class="bg-gradient-to-r from-primary/5 to-transparent px-6 py-4 border-t border-primary/10">
+                <a href="{{ route('admin.users.index') }}" class="text-sm text-primary hover:text-primary-dark font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
                     Voir tout
-                    <i class="mdi mdi-arrow-right text-sm"></i>
+                    <i class="mdi mdi-arrow-right text-base"></i>
                 </a>
             </div>
         </div>
@@ -121,10 +125,15 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Applications by Status Chart (Doughnut) -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-gray-900">Statut des candidatures</h3>
-                <i class="mdi mdi-chart-donut text-2xl text-gray-400"></i>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Statut des candidatures</h3>
+                    <p class="text-sm text-gray-500 mt-1">Vue d'ensemble des candidatures</p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-tertiary/10 to-tertiary/5 rounded-xl flex items-center justify-center">
+                    <i class="mdi mdi-chart-donut text-2xl text-tertiary"></i>
+                </div>
             </div>
             <div class="h-64 flex items-center justify-center">
                 <canvas id="applicationsChart"></canvas>
@@ -132,10 +141,15 @@
         </div>
 
         <!-- Jobs by Status Chart (Bar) -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-gray-900">Statut des offres</h3>
-                <i class="mdi mdi-chart-bar text-2xl text-gray-400"></i>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Statut des offres</h3>
+                    <p class="text-sm text-gray-500 mt-1">Distribution par état</p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-secondary/10 to-secondary/5 rounded-xl flex items-center justify-center">
+                    <i class="mdi mdi-chart-bar text-2xl text-secondary"></i>
+                </div>
             </div>
             <div class="h-64">
                 <canvas id="jobsChart"></canvas>
@@ -144,10 +158,15 @@
     </div>
 
     <!-- Users Chart (Line) -->
-    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+    <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 mb-8 border border-gray-100">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-bold text-gray-900">Répartition des utilisateurs</h3>
-            <i class="mdi mdi-chart-line text-2xl text-gray-400"></i>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Répartition des utilisateurs</h3>
+                <p class="text-sm text-gray-500 mt-1">Candidats vs Recruteurs</p>
+            </div>
+            <div class="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center">
+                <i class="mdi mdi-chart-line text-2xl text-primary"></i>
+            </div>
         </div>
         <div class="h-80">
             <canvas id="usersChart"></canvas>
@@ -157,10 +176,12 @@
     <!-- Recent Activities -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Jobs -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <i class="mdi mdi-briefcase-clock text-xl text-primary"></i>
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-primary/5 to-transparent">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-briefcase-clock text-lg text-white"></i>
+                    </div>
                     Offres récentes
                 </h3>
             </div>
@@ -210,20 +231,22 @@
                 @endforelse
             </div>
             @if($recentJobs->count() > 0)
-                <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
-                    <a href="{{ route('admin.jobs.index') }}" class="text-sm text-primary hover:text-primary-dark font-medium flex items-center justify-center gap-1">
+                <div class="px-6 py-4 bg-gradient-to-r from-primary/5 to-transparent border-t border-primary/10">
+                    <a href="{{ route('admin.jobs.index') }}" class="text-sm text-primary hover:text-primary-dark font-semibold flex items-center justify-center gap-2 group hover:gap-3 transition-all">
                         Voir toutes les offres
-                        <i class="mdi mdi-arrow-right text-sm"></i>
+                        <i class="mdi mdi-arrow-right text-base"></i>
                     </a>
                 </div>
             @endif
         </div>
 
         <!-- Recent Applications -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <i class="mdi mdi-file-document-multiple-outline text-xl text-secondary"></i>
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-secondary/5 to-transparent">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-secondary to-secondary-dark rounded-lg flex items-center justify-center">
+                        <i class="mdi mdi-file-document-multiple-outline text-lg text-white"></i>
+                    </div>
                     Candidatures récentes
                 </h3>
             </div>
@@ -233,7 +256,7 @@
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-8 h-8 bg-gradient-to-br from-secondary to-tertiary rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-secondary to-secondary-light rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
                                         {{ substr($application->user->name ?? 'U', 0, 1) }}
                                     </div>
                                     <div class="flex-1 min-w-0">
@@ -275,10 +298,10 @@
                 @endforelse
             </div>
             @if($recentApplications->count() > 0)
-                <div class="px-6 py-3 bg-gray-50 border-t border-gray-100">
-                    <a href="{{ route('admin.applications.index') }}" class="text-sm text-secondary hover:text-secondary-dark font-medium flex items-center justify-center gap-1">
+                <div class="px-6 py-4 bg-gradient-to-r from-secondary/5 to-transparent border-t border-secondary/10">
+                    <a href="{{ route('admin.applications.index') }}" class="text-sm text-secondary hover:text-secondary-dark font-semibold flex items-center justify-center gap-2 group hover:gap-3 transition-all">
                         Voir toutes les candidatures
-                        <i class="mdi mdi-arrow-right text-sm"></i>
+                        <i class="mdi mdi-arrow-right text-base"></i>
                     </a>
                 </div>
             @endif
@@ -290,20 +313,27 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             @if($pendingCompanies->count() > 0)
                 <!-- Pending Companies -->
-                <div class="bg-orange-50 border border-orange-200 rounded-xl p-6">
-                    <h3 class="text-lg font-bold text-orange-900 mb-4 flex items-center gap-2">
-                        <i class="mdi mdi-alert-circle text-2xl"></i>
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100/50 border-2 border-orange-200 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300">
+                    <h3 class="text-lg font-bold text-orange-900 mb-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
+                            <i class="mdi mdi-alert-circle text-xl text-white"></i>
+                        </div>
                         Entreprises en attente de validation
                     </h3>
                     <div class="space-y-3">
                         @foreach($pendingCompanies as $company)
-                            <a href="{{ route('admin.companies.show', $company) }}" class="block bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <a href="{{ route('admin.companies.show', $company) }}" class="block bg-white rounded-xl p-4 hover:shadow-lg hover:scale-102 transition-all duration-200 border border-orange-100 group">
                                 <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-semibold text-gray-900">{{ $company->name }}</h4>
-                                        <p class="text-sm text-gray-600">{{ $company->created_at->diffForHumans() }}</p>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center">
+                                            <i class="mdi mdi-office-building text-lg text-orange-600"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">{{ $company->name }}</h4>
+                                            <p class="text-sm text-gray-500">{{ $company->created_at->diffForHumans() }}</p>
+                                        </div>
                                     </div>
-                                    <i class="mdi mdi-chevron-right text-2xl text-gray-400"></i>
+                                    <i class="mdi mdi-chevron-right text-2xl text-gray-400 group-hover:text-orange-600 transition-colors"></i>
                                 </div>
                             </a>
                         @endforeach
@@ -313,28 +343,33 @@
 
             @if($stats['pending_diploma_verifications'] > 0)
                 <!-- Pending Diploma Verifications -->
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                    <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                        <i class="mdi mdi-certificate text-2xl"></i>
-                        Vérifications de diplômes en attente
-                        <span class="ml-auto bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                <div class="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300">
+                    <h3 class="text-lg font-bold text-primary-dark mb-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-md">
+                            <i class="mdi mdi-certificate text-xl text-white"></i>
+                        </div>
+                        <span class="flex-1">Vérifications de diplômes en attente</span>
+                        <span class="bg-gradient-to-r from-primary to-primary-dark text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
                             {{ $stats['pending_diploma_verifications'] }}
                         </span>
                     </h3>
                     <div class="space-y-3">
                         @foreach($pendingDiplomaApplications as $application)
-                            <div class="block bg-white rounded-lg p-4">
+                            <a href="{{ route('admin.applications.show', $application->id) }}" class="block bg-white rounded-xl p-4 hover:shadow-lg hover:scale-102 transition-all duration-200 border border-primary/20 group">
                                 <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="font-semibold text-gray-900">{{ $application->user->name }}</h4>
-                                        <p class="text-sm text-gray-600">{{ $application->job->title ?? 'N/A' }}</p>
-                                        <p class="text-xs text-gray-500 mt-1">{{ $application->job->company->name ?? 'N/A' }}</p>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+                                            <i class="mdi mdi-account-school text-lg text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">{{ $application->user->name }}</h4>
+                                            <p class="text-sm text-gray-600">{{ $application->job->title ?? 'N/A' }}</p>
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $application->job->company->name ?? 'N/A' }}</p>
+                                        </div>
                                     </div>
-                                    <a href="{{ route('admin.applications.show', $application->id) }}" class="text-blue-600 hover:text-blue-700">
-                                        <i class="mdi mdi-chevron-right text-2xl"></i>
-                                    </a>
+                                    <i class="mdi mdi-chevron-right text-2xl text-gray-400 group-hover:text-primary transition-colors"></i>
                                 </div>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                 </div>
@@ -362,9 +397,9 @@
                         0 // You can add rejected count if available
                     ],
                     backgroundColor: [
-                        '#F59E0B', // Orange
-                        '#10B981', // Green
-                        '#EF4444'  // Red
+                        '#F59E0B', // Orange - En attente
+                        '#059669', // Primary Green - Acceptées
+                        '#dc2626'  // Tertiary Red - Rejetées
                     ],
                     borderWidth: 0,
                     hoverOffset: 10
@@ -422,10 +457,10 @@
                         0 // Add draft count if available
                     ],
                     backgroundColor: [
-                        '#0091D5', // Blue
-                        '#F59E0B', // Orange
-                        '#6B7280', // Gray
-                        '#E5E7EB'  // Light Gray
+                        '#059669', // Primary Green - Publiées
+                        '#F59E0B', // Orange - En attente
+                        '#6B7280', // Gray - Expirées
+                        '#E5E7EB'  // Light Gray - Brouillons
                     ],
                     borderRadius: 8,
                     barThickness: 40
@@ -489,12 +524,12 @@
                         {{ $stats['total_recruiters'] }}
                     ],
                     backgroundColor: [
-                        'rgba(227, 30, 36, 0.8)',  // Primary Red
-                        'rgba(123, 31, 162, 0.8)'  // Tertiary Purple
+                        'rgba(5, 150, 105, 0.8)',  // Primary Green - Candidats
+                        'rgba(68, 136, 88, 0.8)'   // Secondary Green - Recruteurs
                     ],
                     borderColor: [
-                        '#E31E24',
-                        '#7B1FA2'
+                        '#059669',
+                        '#448858'
                     ],
                     borderWidth: 2,
                     borderRadius: 8,

@@ -42,7 +42,8 @@
                     <h4 style="margin-bottom: 1rem; font-weight: 600;">Informations Générales</h4>
                     <p><strong>Email:</strong> {{ $company->email }}</p>
                     <p><strong>Téléphone:</strong> {{ $company->phone ?? 'N/A' }}</p>
-                    <p><strong>Secteur:</strong> {{ $company->sector }}</p>
+                    <p><strong>Domaine:</strong> {{ $company->domain ?? 'N/A' }}</p>
+                    <p><strong>Secteur:</strong> {{ $company->sector ?? 'N/A' }}</p>
                     <p><strong>Site web:</strong>
                         @if($company->website)
                             <a href="{{ $company->website }}" target="_blank">{{ $company->website }}</a>
@@ -119,6 +120,37 @@
                     <a href="{{ route('admin.companies.edit', $company) }}" style="color: #004085; text-decoration: underline;">
                         Cliquez ici pour les ajouter
                     </a>
+                </p>
+            </div>
+            @endif
+
+            <!-- Company Photos Gallery Section -->
+            @if($company->photos && count($company->photos) > 0)
+            <div style="margin-top: 2rem;">
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">📸 Photos de l'Entreprise ({{ count($company->photos) }})</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    @foreach($company->photos_urls as $index => $photoUrl)
+                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; background: #f8f9fa;">
+                            <img src="{{ $photoUrl }}"
+                                 alt="Photo {{ $index + 1 }} - {{ $company->name }}"
+                                 style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;"
+                                 onclick="window.open('{{ $photoUrl }}', '_blank')"
+                                 onerror="this.parentElement.innerHTML='<div style=\'display: flex; align-items: center; justify-content: center; height: 200px; color: #dc3545;\'>❌ Erreur de chargement</div>'">
+                            <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                Photo {{ $index + 1 }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
+                    💡 Cliquez sur une photo pour l'agrandir dans un nouvel onglet
+                </p>
+            </div>
+            @else
+            <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f8f9fa; border-left: 4px solid #6c757d; border-radius: 8px;">
+                <h4 style="margin-bottom: 0.5rem; color: #495057;">📸 Aucune photo disponible</h4>
+                <p style="margin: 0; color: #6c757d;">
+                    Cette entreprise n'a pas encore ajouté de photos de présentation.
                 </p>
             </div>
             @endif

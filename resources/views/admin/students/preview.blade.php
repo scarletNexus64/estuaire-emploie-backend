@@ -169,9 +169,9 @@
                 ← Retour au Formulaire
             </a>
             <div style="display: flex; gap: 0.5rem;">
-                <form action="{{ route('admin.students.confirm') }}" method="POST">
+                <form action="{{ route('admin.students.confirm') }}" method="POST" id="confirmForm">
                     @csrf
-                    <button type="submit" class="btn btn-success" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
+                    <button type="submit" class="btn btn-success" id="confirmBtn" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
                         ✅ Confirmer et Créer l'Étudiant
                     </button>
                 </form>
@@ -180,3 +180,27 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('confirmForm');
+    const btn = document.getElementById('confirmBtn');
+    let isSubmitting = false;
+
+    form.addEventListener('submit', function(e) {
+        // Empêcher la double soumission
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        isSubmitting = true;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Création en cours...';
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+    });
+});
+</script>
+@endpush

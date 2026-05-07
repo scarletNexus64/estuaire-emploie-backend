@@ -149,6 +149,7 @@ class WalletController extends Controller
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
+            'provider' => 'required|in:freemopay,paypal',
         ]);
 
         if ($validator->fails()) {
@@ -161,6 +162,7 @@ class WalletController extends Controller
         try {
             $amount = (float) $request->amount;
             $description = $request->description;
+            $provider = $request->provider;
             $admin = $request->user();
 
             $transaction = $this->walletService->addBonus(
@@ -170,12 +172,14 @@ class WalletController extends Controller
                 [
                     'admin_id' => $admin->id,
                     'admin_name' => $admin->name,
-                ]
+                ],
+                $provider
             );
 
+            $providerName = $provider === 'paypal' ? 'PayPal' : 'Mobile Money (FreeMo)';
             return redirect()
                 ->route('admin.wallets.show', $user)
-                ->with('success', 'Bonus ajouté avec succès');
+                ->with('success', "Bonus de {$amount} FCFA ajouté avec succès via {$providerName}. Une notification push a été envoyée à l'utilisateur.");
         } catch (\Exception $e) {
             return redirect()
                 ->back()

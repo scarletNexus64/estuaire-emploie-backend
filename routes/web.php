@@ -266,6 +266,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/transactions/{transaction}/refund', [WalletController::class, 'refund'])->name('refund');
     });
 
+    // MONÉTISATION - Demandes de Retrait
+    Route::middleware('permission:manage_payments')->prefix('withdrawal-requests')->name('withdrawal-requests.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\WithdrawalRequestController::class, 'index'])->name('index');
+        Route::get('/{request}', [\App\Http\Controllers\Admin\WithdrawalRequestController::class, 'show'])->name('show');
+        Route::post('/{request}/respond', [\App\Http\Controllers\Admin\WithdrawalRequestController::class, 'respond'])->name('respond');
+    });
+
     // MONÉTISATION - Premium Services
     Route::middleware('permission:manage_premium_services')->prefix('premium-services')->name('premium-services.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\PremiumServiceController::class, 'index'])->name('index');
@@ -305,6 +312,20 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{examPack}/manage-papers', [\App\Http\Controllers\Admin\ExamPackController::class, 'managePapers'])->name('manage-papers');
         Route::post('/{examPack}/add-paper', [\App\Http\Controllers\Admin\ExamPackController::class, 'addPaper'])->name('add-paper');
         Route::delete('/{examPack}/remove-paper/{examPaper}', [\App\Http\Controllers\Admin\ExamPackController::class, 'removePaper'])->name('remove-paper');
+    });
+
+    // MONÉTISATION - Packs espace de stockage
+    Route::middleware('permission:manage_premium_services')->prefix('storage-packs')->name('storage-packs.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StoragePackController::class, 'index'])->name('index');
+        Route::get('/subscribers', [\App\Http\Controllers\Admin\StoragePackController::class, 'subscribers'])->name('subscribers');
+        Route::delete('/subscribers/{userStoragePack}', [\App\Http\Controllers\Admin\StoragePackController::class, 'destroySubscription'])->name('subscribers.destroy');
+        Route::get('/create', [\App\Http\Controllers\Admin\StoragePackController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\StoragePackController::class, 'store'])->name('store');
+        Route::get('/{storagePack}/edit', [\App\Http\Controllers\Admin\StoragePackController::class, 'edit'])->name('edit');
+        Route::put('/{storagePack}', [\App\Http\Controllers\Admin\StoragePackController::class, 'update'])->name('update');
+        Route::delete('/{storagePack}', [\App\Http\Controllers\Admin\StoragePackController::class, 'destroy'])->name('destroy');
+        Route::patch('/{storagePack}/toggle', [\App\Http\Controllers\Admin\StoragePackController::class, 'toggle'])->name('toggle');
+        Route::get('/{storagePack}', [\App\Http\Controllers\Admin\StoragePackController::class, 'show'])->name('show');
     });
 
     // CONTENU ÉTUDIANT - Épreuves individuelles (gestion interne uniquement, pas dans le menu)

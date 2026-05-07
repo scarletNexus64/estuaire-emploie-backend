@@ -244,4 +244,231 @@ class OtpController extends Controller
             'message' => 'Email vérifié avec succès.',
         ], 200);
     }
+
+    // ──────────────────────────────────────────────────────────────
+    // PASSWORD RESET — SMS & EMAIL
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Envoie un OTP pour le reset password (SMS ou email).
+     * Contrairement à sendOtp(), vérifie que l'utilisateur EXISTE.
+     */
+    public function sendPasswordResetOtp(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Détecter le canal
+        if ($request->filled('phone')) {
+            return $this->sendPasswordResetPhoneOtp($request->phone);
+        }
+
+        if ($request->filled('email')) {
+            return $this->sendPasswordResetEmailOtp($request->email);
+        }
+
+        return response()->json([
+            'message' => 'Veuillez fournir un numéro de téléphone ou une adresse email.',
+        ], 422);
+    }
+
+    /**
+     * Vérifie un OTP pour le reset password (SMS ou email).
+     */
+    public function verifyPasswordResetOtp(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email',
+            'code'  => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        if ($request->filled('phone')) {
+            return $this->verifyPasswordResetPhoneOtp($request->phone, $request->code);
+        }
+
+        if ($request->filled('email')) {
+            return $this->verifyPasswordResetEmailOtp($request->email, $request->code);
+        }
+
+        return response()->json([
+            'message' => 'Veuillez fournir un numéro de téléphone ou une adresse email.',
+        ], 422);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // PRIVÉ — PASSWORD RESET SMS
+    // ──────────────────────────────────────────────────────────────
+
+    private function sendPasswordResetPhoneOtp(string $phone): JsonResponse
+    {
+        // Nettoyer le numéro
+        $phone = preg_replace('/\s+/', '', $phone);
+
+        // Vérifier si le numéro existe dans la base
+        $user = User::where('phone', $phone)->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'Aucun compte trouvé avec ce numéro de téléphone.',
+            ], 404);
+        }
+
+        // Générer un code à 6 chiffres
+        $code = (string) random_int(100000, 999999);
+
+        // Sauvegarder en base (5 minutes)
+        PhoneOtp::updateOrCreate(
+            ['phone' => $phone],
+            [
+                'code'       => $code,
+                'expires_at' => Carbon::now()->addMinutes(5),
+                'verified'   => false,
+            ]
+        );
+
+        // Message OTP
+        $message = "Utilisez \"{$code}\" pour réinitialiser votre mot de passe.\nValable pendant 5 minutes. Ne le partagez avec personne.";
+
+        // Envoyer via Nexah
+        try {
+            $nexah = new NexahService();
+
+            // Envoi 1 : senderID = 'infos'
+            $result1 = $nexah->sendSms($phone, $message, 'infos');
+            Log::info("[PASSWORD RESET OTP] SMS 1 (senderID: infos) → {$phone}", ['result' => $result1]);
+
+            // Envoi 2 : senderID = celui de la config admin
+            $result2 = $nexah->sendSms($phone, $message);
+            Log::info("[PASSWORD RESET OTP] SMS 2 (senderID: config) → {$phone}", ['result' => $result2]);
+
+            if (!$result1['success'] && !$result2['success']) {
+                Log::error("[PASSWORD RESET OTP] Les deux envois SMS ont échoué pour {$phone}");
+                return response()->json([
+                    'message' => 'Impossible d\'envoyer le SMS. Veuillez réessayer.',
+                ], 500);
+            }
+
+            return response()->json([
+                'message' => 'Code de réinitialisation envoyé par SMS.',
+                'channel' => 'sms',
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error("[PASSWORD RESET OTP] Erreur envoi SMS : " . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de l\'envoi du SMS. Veuillez réessayer.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    private function verifyPasswordResetPhoneOtp(string $phone, string $code): JsonResponse
+    {
+        $phone = preg_replace('/\s+/', '', $phone);
+
+        $record = PhoneOtp::where('phone', $phone)
+            ->where('code', $code)
+            ->where('expires_at', '>', now())
+            ->where('verified', false)
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'message' => 'Code invalide ou expiré.',
+            ], 422);
+        }
+
+        $record->update(['verified' => true]);
+
+        return response()->json([
+            'message' => 'Code vérifié avec succès.',
+        ], 200);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // PRIVÉ — PASSWORD RESET EMAIL
+    // ──────────────────────────────────────────────────────────────
+
+    private function sendPasswordResetEmailOtp(string $email): JsonResponse
+    {
+        // Vérifier si l'email existe dans la base
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'Aucun compte trouvé avec cet email.',
+            ], 404);
+        }
+
+        // Générer un code à 6 chiffres
+        $code = random_int(100000, 999999);
+
+        // Sauvegarder en base (5 minutes)
+        EmailVerification::updateOrCreate(
+            ['email' => $email],
+            [
+                'code'       => $code,
+                'expires_at' => Carbon::now()->addMinutes(5),
+                'verified'   => false,
+            ]
+        );
+
+        try {
+            Mail::raw(
+                "Utilisez \"{$code}\" pour réinitialiser votre mot de passe.\nValable pendant 5 minutes. Ne le partagez avec personne.",
+                function ($message) use ($email) {
+                    $message->to($email)
+                        ->subject('Réinitialisation de mot de passe – Estuaire Emploie');
+                }
+            );
+
+            return response()->json([
+                'message' => 'Code de réinitialisation envoyé par email.',
+                'channel' => 'email',
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error("[PASSWORD RESET OTP] Erreur envoi email : " . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    private function verifyPasswordResetEmailOtp(string $email, string $code): JsonResponse
+    {
+        $record = EmailVerification::where('email', $email)
+            ->where('code', $code)
+            ->where('expires_at', '>', now())
+            ->where('verified', false)
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'message' => 'Code invalide ou expiré.',
+            ], 422);
+        }
+
+        $record->update(['verified' => true]);
+
+        return response()->json([
+            'message' => 'Code vérifié avec succès.',
+        ], 200);
+    }
 }

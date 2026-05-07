@@ -36,6 +36,34 @@ class StudentService
         DB::beginTransaction();
 
         try {
+            // 0. Vérification anti-doublon
+            $existingUser = User::where(function($query) use ($data) {
+                if (!empty($data['email'])) {
+                    $query->where('email', $data['email']);
+                }
+                if (!empty($data['phone'])) {
+                    $query->orWhere('phone', $data['phone']);
+                }
+            })
+            ->whereNull('deleted_at')
+            ->first();
+
+            if ($existingUser) {
+                DB::rollBack();
+                Log::warning("Attempted to create duplicate student", [
+                    'email' => $data['email'] ?? null,
+                    'phone' => $data['phone'] ?? null,
+                    'existing_user_id' => $existingUser->id,
+                ]);
+
+                return [
+                    'success' => false,
+                    'user' => null,
+                    'password' => null,
+                    'message' => 'Un utilisateur avec cet email ou ce téléphone existe déjà.',
+                ];
+            }
+
             // 1. Utiliser le mot de passe fourni ou en générer un nouveau
             $generatedPassword = $password ?? $this->generatePassword();
 
@@ -304,6 +332,7 @@ class StudentService
             'L1' => 'Licence 1ère année',
             'L2' => 'Licence 2ème année',
             'L3' => 'Licence 3ème année',
+            'LicencePro' => 'Licence Professionnelle',
             'M1' => 'Master 1ère année',
             'M2' => 'Master 2ème année',
             'Doctorat' => 'Doctorat',

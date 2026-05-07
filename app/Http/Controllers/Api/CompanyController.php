@@ -19,6 +19,29 @@ class CompanyController extends Controller
 {
     /**
      * @OA\Get(
+     *     path="/api/domains-sectors",
+     *     summary="Liste des domaines et secteurs d'activité",
+     *     tags={"Companies"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des domaines avec leurs secteurs",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function getDomainsSectors(): JsonResponse
+    {
+        $domainsSectors = config('domains_sectors');
+
+        return response()->json([
+            'data' => $domainsSectors,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
      *     path="/api/companies",
      *     summary="Liste des entreprises vérifiées",
      *     tags={"Companies"},
@@ -131,6 +154,9 @@ class CompanyController extends Controller
                 'phone' => 'required|string|max:20',
                 'description' => 'required|string',
                 'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
+                'photos' => 'required|array|min:2|max:4', // 2 à 4 photos obligatoires
+                'photos.*' => 'required|image|mimes:png,jpg,jpeg|max:2048', // Chaque photo max 2MB
+                'domain' => 'required|string|max:255',
                 'sector' => 'nullable|string|max:255',
                 'address' => 'nullable|string|max:255',
                 'city' => 'nullable|string|max:255',
@@ -155,6 +181,15 @@ class CompanyController extends Controller
                 $validated['logo'] = $request->file('logo')->store('logos', 'public');
             }
 
+            // Upload des photos (2 à 4 photos obligatoires)
+            $photoPaths = [];
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $photo) {
+                    $photoPaths[] = $photo->store('company_photos', 'public');
+                }
+                $validated['photos'] = $photoPaths;
+            }
+
             $company = Company::create(array_merge($validated, [
                 'status' => 'pending', // Admin doit vérifier
                 'country' => 'Cameroun',
@@ -169,6 +204,13 @@ class CompanyController extends Controller
                 'can_view_applications' => true,
                 'can_modify_company' => true,
             ]);
+
+            // 🎯 Changer automatiquement le rôle de l'utilisateur à "recruiter"
+            $user = auth()->user();
+            $user->role = 'recruiter';
+            $user->save();
+
+            \Log::info("[CompanyController] User {$user->id} role changed to 'recruiter' after company creation");
 
             return response()->json([
                 'message' => 'Entreprise créée avec succès. En attente de vérification.',
@@ -377,6 +419,12 @@ class CompanyController extends Controller
                 'phone' => 'sometimes|string|max:20',
                 'description' => 'sometimes|string',
                 'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
+                'photos' => 'sometimes|array|max:4', // Nouvelles photos (0 à 4)
+                'photos.*' => 'required|image|mimes:png,jpg,jpeg|max:2048', // Chaque photo max 2MB
+                'keep_photos' => 'sometimes|array|max:4', // URLs des photos existantes à conserver
+                'keep_photos.*' => 'string', // Chaque URL est une string
+                'clear_photos' => 'sometimes|in:true,false,1,0', // Accepter string ou int
+                'domain' => 'sometimes|string|max:255',
                 'sector' => 'nullable|string|max:255',
                 'address' => 'nullable|string|max:255',
                 'city' => 'nullable|string|max:255',
@@ -398,6 +446,86 @@ class CompanyController extends Controller
                 }
                 $validated['logo'] = $request->file('logo')->store('logos', 'public');
             }
+
+            // Gestion des photos
+            // 1. Si clear_photos = true, supprimer toutes les photos
+            // Accepter 'true' (string), true (booléen), 1, '1'
+            $clearPhotos = $request->input('clear_photos');
+            if ($request->has('clear_photos') && ($clearPhotos === true || $clearPhotos === 'true' || $clearPhotos === 1 || $clearPhotos === '1')) {
+                // Supprimer les anciennes photos du stockage
+                if ($company->photos && is_array($company->photos)) {
+                    foreach ($company->photos as $oldPhoto) {
+                        Storage::disk('public')->delete($oldPhoto);
+                    }
+                }
+                $validated['photos'] = []; // Vider le tableau de photos
+            }
+            // 2. Si keep_photos est fourni (avec ou sans nouvelles photos)
+            elseif ($request->has('keep_photos')) {
+                $keepPhotosUrls = $request->input('keep_photos', []);
+                $currentPhotos = $company->photos ?? [];
+
+                // Convertir les URLs complètes en chemins de stockage pour comparaison
+                $keepPhotosPaths = [];
+                foreach ($keepPhotosUrls as $url) {
+                    // Extraire le chemin de stockage depuis l'URL
+                    // Format URL: http://domain/storage/company_photos/xxx.jpg
+                    // On veut: company_photos/xxx.jpg
+                    if (strpos($url, '/storage/') !== false) {
+                        $path = substr($url, strpos($url, '/storage/') + 9);
+                        $keepPhotosPaths[] = $path;
+                    } else {
+                        // Si pas d'URL mais directement un chemin (fallback)
+                        $keepPhotosPaths[] = $url;
+                    }
+                }
+
+                // Supprimer les photos qui ne sont pas dans keep_photos
+                $photosToKeep = [];
+                foreach ($currentPhotos as $currentPhoto) {
+                    if (in_array($currentPhoto, $keepPhotosPaths)) {
+                        $photosToKeep[] = $currentPhoto;
+                    } else {
+                        // Supprimer la photo du stockage
+                        Storage::disk('public')->delete($currentPhoto);
+                    }
+                }
+
+                // Ajouter les nouvelles photos si présentes
+                if ($request->hasFile('photos')) {
+                    foreach ($request->file('photos') as $photo) {
+                        $photosToKeep[] = $photo->store('company_photos', 'public');
+                    }
+                }
+
+                // Valider que le total est entre 2 et 4 (ou 0 si on veut permettre de tout supprimer)
+                $totalPhotos = count($photosToKeep);
+                if ($totalPhotos > 0 && ($totalPhotos < 2 || $totalPhotos > 4)) {
+                    return response()->json([
+                        'message' => 'Le nombre total de photos doit être entre 2 et 4',
+                        'errors' => ['photos' => ['Vous devez avoir entre 2 et 4 photos']],
+                    ], 422);
+                }
+
+                $validated['photos'] = $photosToKeep;
+            }
+            // 3. Si seulement de nouvelles photos sont fournies (remplacement complet)
+            elseif ($request->hasFile('photos')) {
+                // Supprimer les anciennes photos
+                if ($company->photos && is_array($company->photos)) {
+                    foreach ($company->photos as $oldPhoto) {
+                        Storage::disk('public')->delete($oldPhoto);
+                    }
+                }
+
+                // Uploader les nouvelles photos
+                $photoPaths = [];
+                foreach ($request->file('photos') as $photo) {
+                    $photoPaths[] = $photo->store('company_photos', 'public');
+                }
+                $validated['photos'] = $photoPaths;
+            }
+            // 4. Sinon, garder les photos actuelles (ne rien faire)
 
             $company->update($validated);
 

@@ -21,7 +21,7 @@ class JobController extends Controller
     /**
      * @OA\Get(
      *     path="/api/jobs",
-     *     summary="Liste des offres d'emploi publiées",
+     *     summary="Liste des offres d'emploi publiées (optimisée pour 1 milliard+ d'offres)",
      *     tags={"Jobs"},
      *     @OA\Parameter(
      *         name="category_id",
@@ -72,13 +72,36 @@ class JobController extends Controller
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Numéro de la page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Nombre d'offres par page (max 50, défaut 10)",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=10, maximum=50)
+     *     ),
+     *     @OA\Parameter(
+     *         name="use_simple_pagination",
+     *         in="query",
+     *         description="Utiliser la pagination simple (plus rapide, pas de count total). Recommandé pour scroll infini. Défaut: true",
+     *         required=false,
+     *         @OA\Schema(type="boolean", default=true)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Liste des offres",
      *         @OA\JsonContent(
      *             @OA\Property(property="data", type="array", @OA\Items(type="object")),
      *             @OA\Property(property="meta", type="object"),
-     *             @OA\Property(property="links", type="object")
+     *             @OA\Property(property="links", type="object"),
+     *             @OA\Property(property="is_preview_mode", type="boolean"),
+     *             @OA\Property(property="pagination_type", type="string", enum={"simple", "full"})
      *         )
      *     )
      * )
@@ -188,11 +211,34 @@ class JobController extends Controller
         }
 
         // Utilisateurs avec abonnement ou recruteurs : accès complet
-        $jobs = $query->latest()
-            ->paginate(10);
 
-        $response = $jobs->toArray();
-        $response['is_preview_mode'] = false;
+        // 🚀 OPTIMISATION PAGINATION: Supporter per_page configurable (max 50 pour éviter surcharge)
+        $perPage = min((int) $request->input('per_page', 10), 50);
+
+        // 🚀 OPTIMISATION PERFORMANCE: Utiliser simplePaginate() par défaut pour éviter COUNT(*)
+        // Sur 1 milliard de lignes, COUNT(*) peut prendre plusieurs secondes
+        // simplePaginate() ne fait que vérifier s'il y a une page suivante (beaucoup plus rapide)
+        $useSimplePagination = $request->boolean('use_simple_pagination', true);
+
+        if ($useSimplePagination) {
+            // simplePaginate() : plus rapide, pas de "total" ni "last_page"
+            // Parfait pour le scroll infini (on a juste besoin de savoir s'il y a plus de données)
+            $jobs = $query->latest()
+                ->simplePaginate($perPage);
+
+            $response = $jobs->toArray();
+            $response['is_preview_mode'] = false;
+            $response['pagination_type'] = 'simple';
+        } else {
+            // paginate() : calcule le total (plus lent mais donne plus d'infos)
+            // À utiliser uniquement si on a besoin du nombre total de pages
+            $jobs = $query->latest()
+                ->paginate($perPage);
+
+            $response = $jobs->toArray();
+            $response['is_preview_mode'] = false;
+            $response['pagination_type'] = 'full';
+        }
 
         return response()->json($response);
     }
@@ -540,8 +586,15 @@ class JobController extends Controller
             $query->where('status', $request->status);
         }
 
-        $jobs = $query->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // 🚀 OPTIMISATION PAGINATION: Supporter per_page configurable
+        $perPage = min((int) $request->input('per_page', 10), 50);
+
+        // 🚀 OPTIMISATION PERFORMANCE: Utiliser simplePaginate() par défaut
+        $useSimplePagination = $request->boolean('use_simple_pagination', true);
+
+        $jobs = $useSimplePagination
+            ? $query->orderBy('created_at', 'desc')->simplePaginate($perPage)
+            : $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json($jobs);
     }
@@ -645,6 +698,19 @@ class JobController extends Controller
             ->limit(5)
             ->get();
 
+        // Offres en attente de validation (status = 'pending')
+        $pendingJobs = Job::where('company_id', $recruiter->company_id)
+            ->where('status', 'pending')
+            ->withCount('applications')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Compter le total des offres en attente
+        $pendingJobsCount = Job::where('company_id', $recruiter->company_id)
+            ->where('status', 'pending')
+            ->count();
+
         // 5 dernières candidatures EN ATTENTE uniquement (non traitées)
         $recentApplications = Application::whereHas('job', function ($q) use ($recruiter) {
             $q->where('company_id', $recruiter->company_id);
@@ -661,10 +727,13 @@ class JobController extends Controller
         $subscriptionInfo = $user->getSubscriptionInfo();
 
         return response()->json([
-            'statistics' => $stats,
+            'statistics' => array_merge($stats, [
+                'pending_jobs' => $pendingJobsCount,
+            ]),
             'analytics' => $analytics,
             'can_see_analytics' => $canSeeAnalytics,
             'active_jobs' => $activeJobs,
+            'pending_jobs' => $pendingJobs,
             'recent_applications' => $recentApplications,
             'subscription' => $subscriptionInfo,
         ]);

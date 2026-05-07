@@ -168,4 +168,66 @@ class FirebaseNotificationService
             'invalid_tokens' => $invalidTokens,
         ];
     }
+
+    /**
+     * Envoyer une notification push à un topic FCM
+     * Permet de notifier tous les utilisateurs abonnés à un topic spécifique
+     *
+     * @param string $topic Nom du topic (ex: 'forum', 'news', etc.)
+     * @param string $title Titre de la notification
+     * @param string $body Corps de la notification
+     * @param array $data Données supplémentaires
+     * @return bool
+     */
+    public function sendToTopic(string $topic, string $title, string $body, array $data = []): bool
+    {
+        try {
+            $message = CloudMessage::withTarget('topic', $topic)
+                ->withNotification(Notification::create($title, $body))
+                ->withData($data)
+                ->withApnsConfig(
+                    ApnsConfig::fromArray([
+                        'headers' => [
+                            'apns-priority' => '10',
+                        ],
+                        'payload' => [
+                            'aps' => [
+                                'alert' => [
+                                    'title' => $title,
+                                    'body' => $body,
+                                ],
+                                'sound' => 'default',
+                                'badge' => 1,
+                                'mutable-content' => 1,
+                            ],
+                        ],
+                    ])
+                )
+                ->withAndroidConfig(
+                    AndroidConfig::fromArray([
+                        'priority' => 'high',
+                        'notification' => [
+                            'sound' => 'default',
+                            'channel_id' => 'channel_id',
+                        ],
+                    ])
+                );
+
+            $result = $this->messaging->send($message);
+
+            Log::info('FCM topic notification sent successfully', [
+                'topic' => $topic,
+                'title' => $title,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('FCM topic notification failed', [
+                'topic' => $topic,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
 }

@@ -8,6 +8,7 @@ use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
 use App\Notifications\RegistedNotification;
+use App\Services\StoragePackService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,12 @@ use Illuminate\Validation\ValidationException;
  */
 class AuthController extends Controller
 {
+    protected StoragePackService $storagePackService;
+
+    public function __construct(StoragePackService $storagePackService)
+    {
+        $this->storagePackService = $storagePackService;
+    }
     /**
      * @OA\Post(
      *     path="/api/register",
@@ -115,6 +122,9 @@ class AuthController extends Controller
             'fcm_token_saved' => !empty($user->fcm_token),
             'has_referrer' => !empty($referrerId),
         ]);
+
+        // Attribuer automatiquement le pack gratuit de 50Mo
+        $this->storagePackService->assignFreePackToUser($user);
 
         // Charger les relations du user
         if ($user->isRecruiter()) {
@@ -703,29 +713,82 @@ public function login(Request $request)
      */
     public function resetPassword(Request $request): JsonResponse
     {
-        $request->validate([
-            'email' => 'required|email',
+        $validated = $request->validate([
+            'identifier' => 'required|string', // Email ou phone
             'password' => 'required|min:6|confirmed',
         ]);
 
-        // Vérifier si l'utilisateur existe
-        $user = User::where('email', $request->email)->first();
+        $identifier = $validated['identifier'];
+
+        // Déterminer si c'est un email ou un téléphone
+        $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+        $user = null;
+
+        if ($isEmail) {
+            // Vérifier que l'OTP email a été vérifié
+            $otpRecord = \App\Models\EmailVerification::where('email', $identifier)
+                ->where('verified', true)
+                ->where('expires_at', '>', now())
+                ->first();
+
+            if (!$otpRecord) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Veuillez d\'abord vérifier le code OTP envoyé à votre email.'
+                ], 422);
+            }
+
+            $user = User::where('email', $identifier)->first();
+        } else {
+            // C'est un téléphone
+            $cleanPhone = preg_replace('/\s+/', '', $identifier);
+
+            // Vérifier que l'OTP téléphone a été vérifié
+            $otpRecord = \App\Models\PhoneOtp::where('phone', $cleanPhone)
+                ->where('verified', true)
+                ->where('expires_at', '>', now())
+                ->first();
+
+            if (!$otpRecord) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Veuillez d\'abord vérifier le code OTP envoyé à votre téléphone.'
+                ], 422);
+            }
+
+            $user = User::where('phone', $cleanPhone)
+                ->orWhere('phone', $identifier)
+                ->first();
+        }
 
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucun compte trouvé avec cet email'
+                'message' => 'Aucun compte trouvé avec cet identifiant'
             ], 404);
         }
 
         // Mettre à jour le mot de passe
         $user->forceFill([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($validated['password']),
         ])->setRememberToken(Str::random(60));
 
         $user->save();
 
+        // Supprimer l'enregistrement OTP après utilisation pour des raisons de sécurité
+        if ($isEmail) {
+            \App\Models\EmailVerification::where('email', $identifier)->delete();
+        } else {
+            \App\Models\PhoneOtp::where('phone', preg_replace('/\s+/', '', $identifier))->delete();
+        }
+
         event(new PasswordReset($user));
+
+        Log::info('[PASSWORD RESET] Mot de passe réinitialisé avec succès', [
+            'user_id' => $user->id,
+            'identifier' => $identifier,
+            'channel' => $isEmail ? 'email' : 'phone',
+        ]);
 
         return response()->json([
             'success' => true,

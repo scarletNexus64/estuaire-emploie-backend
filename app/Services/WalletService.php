@@ -81,7 +81,7 @@ class WalletService
      * @param string|null $referenceType Type de référence (subscription, addon_service, etc.)
      * @param int|null $referenceId ID de la référence
      * @param array $metadata
-     * @param string $provider Provider OBLIGATOIRE (freemopay ou paypal)
+     * @param string $provider Provider (freemopay ou paypal)
      * @return WalletTransaction
      * @throws \Exception Si solde insuffisant ou provider invalide
      */
@@ -92,7 +92,7 @@ class WalletService
         ?string $referenceType = null,
         ?int $referenceId = null,
         array $metadata = [],
-        string $provider
+        string $provider = 'freemopay'
     ): WalletTransaction {
         return DB::transaction(function () use ($user, $amount, $description, $referenceType, $referenceId, $metadata, $provider) {
             // Valider le provider
@@ -187,19 +187,30 @@ class WalletService
      * @param float $amount
      * @param string $description
      * @param array $metadata
+     * @param string $provider Provider (freemopay ou paypal)
      * @return WalletTransaction
      */
     public function addBonus(
         User $user,
         float $amount,
         string $description = 'Bonus',
-        array $metadata = []
+        array $metadata = [],
+        string $provider = 'freemopay'
     ): WalletTransaction {
-        return DB::transaction(function () use ($user, $amount, $description, $metadata) {
-            $balanceBefore = $user->wallet_balance ?? 0;
+        return DB::transaction(function () use ($user, $amount, $description, $metadata, $provider) {
+            // Valider le provider
+            if (!in_array($provider, ['freemopay', 'paypal'])) {
+                throw new \Exception("Provider invalide. Doit être 'freemopay' ou 'paypal'.");
+            }
+
+            // Déterminer quel wallet mettre à jour
+            $walletField = $provider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+
+            $balanceBefore = $user->{$walletField} ?? 0;
             $balanceAfter = $balanceBefore + $amount;
 
-            $user->wallet_balance = $balanceAfter;
+            // Mettre à jour le solde du wallet spécifique
+            $user->{$walletField} = $balanceAfter;
             $user->save();
 
             $transaction = WalletTransaction::create([
@@ -211,13 +222,41 @@ class WalletService
                 'description' => $description,
                 'metadata' => $metadata,
                 'status' => 'completed',
+                'provider' => $provider,
             ]);
 
             Log::info("[WalletService] Bonus added", [
                 'user_id' => $user->id,
+                'provider' => $provider,
                 'amount' => $amount,
                 'balance_after' => $balanceAfter,
             ]);
+
+            // Envoyer une notification push à l'utilisateur
+            try {
+                $notificationService = app(NotificationService::class);
+                $providerName = $provider === 'paypal' ? 'PayPal' : 'Mobile Money (FreeMo)';
+
+                $notificationService->sendToUser(
+                    $user,
+                    'Bonus reçu !',
+                    "Vous avez reçu un bonus de " . number_format($amount, 0, ',', ' ') . " FCFA via {$providerName}. {$description}",
+                    'wallet_bonus',
+                    [
+                        'amount' => $amount,
+                        'provider' => $provider,
+                        'description' => $description,
+                        'balance_after' => $balanceAfter,
+                        'transaction_id' => $transaction->id,
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::warning("[WalletService] Failed to send bonus notification", [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Ne pas échouer la transaction si la notification échoue
+            }
 
             return $transaction;
         });
@@ -413,5 +452,157 @@ class WalletService
                     : "Solde total insuffisant. Il vous manque " . number_format($amount - $totalBalance, 0, ',', ' ') . " FCFA",
             ];
         }
+    }
+
+    /**
+     * Transfère de l'argent d'un utilisateur à un autre
+     * Les transferts doivent se faire entre wallets du même provider
+     * (PayPal → PayPal ou FreeMo → FreeMo uniquement)
+     *
+     * @param User $sender Utilisateur envoyeur
+     * @param User $recipient Utilisateur destinataire
+     * @param float $amount Montant à transférer
+     * @param string $provider Provider (freemopay ou paypal)
+     * @param string|null $note Note optionnelle pour le transfert
+     * @return array ['sender_transaction' => WalletTransaction, 'recipient_transaction' => WalletTransaction]
+     * @throws \Exception Si solde insuffisant, provider invalide, ou transfert à soi-même
+     */
+    public function transfer(
+        User $sender,
+        User $recipient,
+        float $amount,
+        string $provider,
+        ?string $note = null
+    ): array {
+        // Validations
+        if ($sender->id === $recipient->id) {
+            throw new \Exception("Vous ne pouvez pas transférer de l'argent à vous-même");
+        }
+
+        if (!in_array($provider, ['freemopay', 'paypal'])) {
+            throw new \Exception("Provider invalide. Doit être 'freemopay' ou 'paypal'");
+        }
+
+        if ($amount <= 0) {
+            throw new \Exception("Le montant doit être supérieur à 0");
+        }
+
+        return DB::transaction(function () use ($sender, $recipient, $amount, $provider, $note) {
+            $providerName = $provider === 'paypal' ? 'PayPal' : 'Mobile Money (FreeMo)';
+            $walletField = $provider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+
+            // Vérifier le solde de l'envoyeur
+            $senderBalance = $sender->{$walletField} ?? 0;
+            if ($senderBalance < $amount) {
+                throw new \Exception("Solde {$providerName} insuffisant. Solde actuel: " . number_format($senderBalance, 0, ',', ' ') . " FCFA");
+            }
+
+            // 1. Débiter l'envoyeur
+            $senderBalanceBefore = $senderBalance;
+            $senderBalanceAfter = $senderBalanceBefore - $amount;
+            $sender->{$walletField} = $senderBalanceAfter;
+            $sender->save();
+
+            $noteText = $note ? " - {$note}" : "";
+            $senderTransaction = WalletTransaction::create([
+                'user_id' => $sender->id,
+                'type' => 'debit',
+                'amount' => $amount,
+                'balance_before' => $senderBalanceBefore,
+                'balance_after' => $senderBalanceAfter,
+                'description' => "Transfert vers {$recipient->name} via {$providerName}{$noteText}",
+                'metadata' => [
+                    'transfer_type' => 'sent',
+                    'recipient_id' => $recipient->id,
+                    'recipient_name' => $recipient->name,
+                    'recipient_email' => $recipient->email,
+                    'note' => $note,
+                ],
+                'status' => 'completed',
+                'provider' => $provider,
+            ]);
+
+            // 2. Créditer le destinataire
+            $recipientBalanceBefore = $recipient->{$walletField} ?? 0;
+            $recipientBalanceAfter = $recipientBalanceBefore + $amount;
+            $recipient->{$walletField} = $recipientBalanceAfter;
+            $recipient->save();
+
+            $recipientTransaction = WalletTransaction::create([
+                'user_id' => $recipient->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'balance_before' => $recipientBalanceBefore,
+                'balance_after' => $recipientBalanceAfter,
+                'description' => "Transfert reçu de {$sender->name} via {$providerName}{$noteText}",
+                'metadata' => [
+                    'transfer_type' => 'received',
+                    'sender_id' => $sender->id,
+                    'sender_name' => $sender->name,
+                    'sender_email' => $sender->email,
+                    'note' => $note,
+                ],
+                'status' => 'completed',
+                'provider' => $provider,
+            ]);
+
+            Log::info("[WalletService] Transfer completed", [
+                'sender_id' => $sender->id,
+                'recipient_id' => $recipient->id,
+                'amount' => $amount,
+                'provider' => $provider,
+                'sender_balance_after' => $senderBalanceAfter,
+                'recipient_balance_after' => $recipientBalanceAfter,
+            ]);
+
+            // 3. Envoyer les notifications push
+            try {
+                $notificationService = app(NotificationService::class);
+
+                // Notification pour l'envoyeur
+                $notificationService->sendToUser(
+                    $sender,
+                    'Transfert envoyé',
+                    "Vous avez envoyé " . number_format($amount, 0, ',', ' ') . " FCFA à {$recipient->name} via {$providerName}",
+                    'wallet_transfer_sent',
+                    [
+                        'amount' => $amount,
+                        'provider' => $provider,
+                        'recipient_name' => $recipient->name,
+                        'recipient_id' => $recipient->id,
+                        'balance_after' => $senderBalanceAfter,
+                        'transaction_id' => $senderTransaction->id,
+                        'note' => $note,
+                    ]
+                );
+
+                // Notification pour le destinataire
+                $notificationService->sendToUser(
+                    $recipient,
+                    'Transfert reçu',
+                    "Vous avez reçu " . number_format($amount, 0, ',', ' ') . " FCFA de {$sender->name} via {$providerName}",
+                    'wallet_transfer_received',
+                    [
+                        'amount' => $amount,
+                        'provider' => $provider,
+                        'sender_name' => $sender->name,
+                        'sender_id' => $sender->id,
+                        'balance_after' => $recipientBalanceAfter,
+                        'transaction_id' => $recipientTransaction->id,
+                        'note' => $note,
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::warning("[WalletService] Failed to send transfer notifications", [
+                    'error' => $e->getMessage(),
+                ]);
+                // Ne pas échouer la transaction si la notification échoue
+            }
+
+            return [
+                'sender_transaction' => $senderTransaction,
+                'recipient_transaction' => $recipientTransaction,
+            ];
+        });
     }
 }

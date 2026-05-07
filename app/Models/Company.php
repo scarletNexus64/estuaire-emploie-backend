@@ -16,7 +16,9 @@ class Company extends Model
         'email',
         'phone',
         'logo',
+        'photos',
         'description',
+        'domain',
         'sector',
         'website',
         'address',
@@ -29,7 +31,7 @@ class Company extends Model
         'verified_at',
     ];
 
-    protected $appends = ['logo_url', 'is_verified'];
+    protected $appends = ['logo_url', 'is_verified', 'photos_urls'];
 
     protected function casts(): array
     {
@@ -37,6 +39,7 @@ class Company extends Model
             'verified_at' => 'datetime',
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
+            'photos' => 'array',
         ];
     }
 
@@ -64,6 +67,26 @@ class Company extends Model
 
         // Sinon, construire l'URL complète
         return url('storage/' . $this->logo);
+    }
+
+    /**
+     * Get the full URLs of the company photos
+     */
+    public function getPhotosUrlsAttribute(): array
+    {
+        if (!$this->photos || !is_array($this->photos)) {
+            return [];
+        }
+
+        return array_map(function ($photo) {
+            // Si la photo commence déjà par http:// ou https://, la retourner telle quelle
+            if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
+                return $photo;
+            }
+
+            // Sinon, construire l'URL complète
+            return url('storage/' . $photo);
+        }, $this->photos);
     }
 
     /**

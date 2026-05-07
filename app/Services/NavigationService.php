@@ -176,6 +176,18 @@ class NavigationService
                         'permission' => 'manage_subscription_plans',
                     ],
                     [
+                        'name' => 'Packs Espace de Stockage',
+                        'route' => 'admin.storage-packs.index',
+                        'icon' => 'fas fa-hdd',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Souscripteurs Packs Stockage',
+                        'route' => 'admin.storage-packs.subscribers',
+                        'icon' => 'fas fa-users',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
                         'name' => 'Attribution Manuelle',
                         'route' => 'admin.manual-subscriptions.index',
                         'icon' => 'fas fa-user-shield',
@@ -191,6 +203,12 @@ class NavigationService
                         'name' => 'Wallets',
                         'route' => 'admin.wallets.index',
                         'icon' => 'fas fa-wallet',
+                        'permission' => 'manage_payments',
+                    ],
+                    [
+                        'name' => 'Demandes de Retrait',
+                        'route' => 'admin.withdrawal-requests.index',
+                        'icon' => 'fas fa-hand-holding-usd',
                         'permission' => 'manage_payments',
                     ],
                     [
@@ -331,6 +349,8 @@ class NavigationService
             AdminRole::FINANCE_MANAGER->value => [
                 'admin.subscription-plans.recruiters.index',
                 'admin.subscription-plans.job-seekers.index',
+                'admin.storage-packs.index',
+                'admin.storage-packs.subscribers',
                 'admin.manual-subscriptions.index',
                 'admin.payments.index',
                 'admin.wallets.index',
