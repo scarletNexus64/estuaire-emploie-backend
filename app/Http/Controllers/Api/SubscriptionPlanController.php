@@ -1402,6 +1402,15 @@ class SubscriptionPlanController extends Controller
                 $paymentProvider
             );
 
+            // Commission de parrainage sur l'achat de l'abonnement
+            app(\App\Services\ReferralCommissionService::class)->processPurchaseCommission(
+                $user,
+                (float) $plan->price,
+                $paymentProvider,
+                "Abonnement {$plan->name}",
+                (string) $payment->id
+            );
+
             // Activer l'abonnement (logique similaire à activate())
             // Récupérer tous les abonnements pour calculer les cumuls
             $allSubscriptions = UserSubscriptionPlan::where('user_id', $user->id)

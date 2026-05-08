@@ -117,8 +117,9 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
+                        <input type="hidden" name="is_active" value="0">
                         <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
+                            <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" value="1"
                                    {{ old('is_active', $storagePack->is_active ?? true) ? 'checked' : '' }}>
                             <label class="custom-control-label" for="is_active">
                                 Pack Actif

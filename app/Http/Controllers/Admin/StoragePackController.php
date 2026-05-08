@@ -57,6 +57,8 @@ class StoragePackController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge(['is_active' => $request->boolean('is_active')]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:storage_packs,slug',
@@ -68,7 +70,6 @@ class StoragePackController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
         $validated['display_order'] = $validated['display_order'] ?? 0;
 
         StoragePack::create($validated);
@@ -98,6 +99,8 @@ class StoragePackController extends Controller
      */
     public function update(Request $request, StoragePack $storagePack)
     {
+        $request->merge(['is_active' => $request->boolean('is_active')]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:storage_packs,slug,' . $storagePack->id,
@@ -108,8 +111,6 @@ class StoragePackController extends Controller
             'display_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
-
-        $validated['is_active'] = $request->has('is_active');
 
         $storagePack->update($validated);
 

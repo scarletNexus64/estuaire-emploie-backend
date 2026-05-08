@@ -321,6 +321,15 @@ class WalletController extends Controller
                 $paymentProvider
             );
 
+            // Commission de parrainage sur l'achat (si l'acheteur a un parrain)
+            $this->referralCommissionService->processPurchaseCommission(
+                $user,
+                (float) $amount,
+                $paymentProvider,
+                $description,
+                (string) $transaction->id
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Paiement effectué avec succès',
@@ -839,9 +848,6 @@ class WalletController extends Controller
 
         // Envoyer notification FCM pour recharge
         $this->sendWalletRechargeNotification($payment, $user);
-
-        // Traiter la commission de parrainage si applicable
-        $this->referralCommissionService->processReferralCommission($user, $payment);
     }
 
     /**
