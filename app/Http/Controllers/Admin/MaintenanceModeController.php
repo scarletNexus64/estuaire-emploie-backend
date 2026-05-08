@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendMaintenanceNotificationJob;
+use App\Jobs\SendMaintenanceTopicNotification;
 use App\Models\MaintenanceMode;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -42,14 +43,20 @@ class MaintenanceModeController extends Controller
 
         $maintenanceMode->save();
 
-        // Dispatch job to send notifications to all users
-        $users = User::all();
-        foreach ($users as $user) {
-            SendMaintenanceNotificationJob::dispatch($user, $isActive, $message);
+        // 🔥 Envoyer notification FCM instantanée au topic 'maintenance'
+        // Plus efficace: 1 seule requête au lieu de N requêtes (où N = nombre d'users)
+        if ($isActive) {
+            SendMaintenanceTopicNotification::dispatch($isActive, $message);
         }
+
+        // Optionnel: Garder l'ancien système pour notifs individuelles (backup)
+        // $users = User::all();
+        // foreach ($users as $user) {
+        //     SendMaintenanceNotificationJob::dispatch($user, $isActive, $message);
+        // }
 
         $status = $isActive ? 'activé' : 'désactivé';
         return redirect()->route('admin.maintenance.index')
-            ->with('success', "Mode maintenance {$status} avec succès. Les notifications sont en cours d'envoi.");
+            ->with('success', "Mode maintenance {$status} avec succès. Notification FCM envoyée instantanément à tous les utilisateurs.");
     }
 }
