@@ -724,6 +724,6 @@ class User extends Authenticatable
      */
     public function isStudent(): bool
     {
-        return $this->isCandidate() && $this->hasPremiumService('student_mode');
+        return $this->hasPremiumService('student_mode');
     }
 }

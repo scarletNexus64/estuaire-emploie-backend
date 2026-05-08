@@ -213,7 +213,7 @@ class JobController extends Controller
         // Utilisateurs avec abonnement ou recruteurs : accès complet
 
         // 🚀 OPTIMISATION PAGINATION: Supporter per_page configurable (max 50 pour éviter surcharge)
-        $perPage = min((int) $request->input('per_page', 10), 50);
+        $perPage = min((int) $request->input('per_page', 50), 50);
 
         // 🚀 OPTIMISATION PERFORMANCE: Utiliser simplePaginate() par défaut pour éviter COUNT(*)
         // Sur 1 milliard de lignes, COUNT(*) peut prendre plusieurs secondes
@@ -587,7 +587,7 @@ class JobController extends Controller
         }
 
         // 🚀 OPTIMISATION PAGINATION: Supporter per_page configurable
-        $perPage = min((int) $request->input('per_page', 10), 50);
+        $perPage = min((int) $request->input('per_page', 50), 50);
 
         // 🚀 OPTIMISATION PERFORMANCE: Utiliser simplePaginate() par défaut
         $useSimplePagination = $request->boolean('use_simple_pagination', true);
