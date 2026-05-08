@@ -43,10 +43,20 @@ class MaintenanceModeController extends Controller
 
         $maintenanceMode->save();
 
+        \Log::info('🔥 [MAINTENANCE-CONTROLLER] ========================================');
+        \Log::info('🔥 [MAINTENANCE-CONTROLLER] Mode maintenance sauvegardé');
+        \Log::info('🔥 [MAINTENANCE-CONTROLLER] isActive: ' . ($isActive ? 'true' : 'false'));
+        \Log::info('🔥 [MAINTENANCE-CONTROLLER] message: ' . ($message ?? 'null'));
+        \Log::info('🔥 [MAINTENANCE-CONTROLLER] ========================================');
+
         // 🔥 Envoyer notification FCM instantanée au topic 'maintenance'
         // Plus efficace: 1 seule requête au lieu de N requêtes (où N = nombre d'users)
         if ($isActive) {
+            \Log::info('📤 [MAINTENANCE-CONTROLLER] Dispatch du job SendMaintenanceTopicNotification...');
             SendMaintenanceTopicNotification::dispatch($isActive, $message);
+            \Log::info('✅ [MAINTENANCE-CONTROLLER] Job dispatché avec succès');
+        } else {
+            \Log::info('ℹ️ [MAINTENANCE-CONTROLLER] Maintenance désactivée - pas de notification envoyée');
         }
 
         // Optionnel: Garder l'ancien système pour notifs individuelles (backup)
@@ -56,6 +66,10 @@ class MaintenanceModeController extends Controller
         // }
 
         $status = $isActive ? 'activé' : 'désactivé';
+        \Log::info('✅ [MAINTENANCE-CONTROLLER] ========================================');
+        \Log::info('✅ [MAINTENANCE-CONTROLLER] Redirection avec message de succès');
+        \Log::info('✅ [MAINTENANCE-CONTROLLER] ========================================');
+
         return redirect()->route('admin.maintenance.index')
             ->with('success', "Mode maintenance {$status} avec succès. Notification FCM envoyée instantanément à tous les utilisateurs.");
     }
