@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'fcm_token',
+        'device_id',
         'role',
         'available_roles',
         'wallet_balance', // Legacy - will be deprecated
@@ -725,5 +726,34 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->hasPremiumService('student_mode');
+    }
+
+    /**
+     * Relation vers les demandes de changement d'appareil de l'utilisateur
+     */
+    public function deviceChangeRequests(): HasMany
+    {
+        return $this->hasMany(DeviceChangeRequest::class);
+    }
+
+    /**
+     * Vérifie si l'utilisateur a une demande de changement d'appareil en attente
+     */
+    public function hasPendingDeviceChangeRequest(): bool
+    {
+        return $this->deviceChangeRequests()
+            ->where('status', 'pending')
+            ->exists();
+    }
+
+    /**
+     * Récupère la dernière demande de changement d'appareil en attente
+     */
+    public function pendingDeviceChangeRequest(): ?DeviceChangeRequest
+    {
+        return $this->deviceChangeRequests()
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
     }
 }

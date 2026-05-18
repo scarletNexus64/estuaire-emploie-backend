@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
 use App\Http\Controllers\Admin\SkillTestController;
 use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\Admin\ImportExportController;
+use App\Http\Controllers\Admin\PackPromotionController;
 use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -82,6 +83,20 @@ Route::get('/payment/cancel', [\App\Http\Controllers\PaymentCallbackController::
 // Public Portfolio View
 Route::get('/portfolio/{slug}', [PortfolioViewController::class, 'show'])->name('portfolio.show');
 
+// Public Job Share / Deeplink landing (No Auth - mode vitrine)
+Route::get('/jobs/{job}/share', [\App\Http\Controllers\JobShareController::class, 'show'])->name('jobs.share');
+
+// Deeplink association files (App Links Android / Universal Links iOS).
+// Servis via route pour garantir le Content-Type application/json.
+Route::get('/.well-known/assetlinks.json', function () {
+    return response()
+        ->file(public_path('.well-known/assetlinks.json'), ['Content-Type' => 'application/json']);
+});
+Route::get('/.well-known/apple-app-site-association', function () {
+    return response()
+        ->file(public_path('.well-known/apple-app-site-association'), ['Content-Type' => 'application/json']);
+});
+
 // Admin Auth Routes (Guest only)
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -136,6 +151,15 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
         Route::patch('applications/{application}/verify-diploma', [ApplicationController::class, 'verifyDiploma'])->name('applications.verify-diploma');
     });
+
+    // Users Devices Management (all admins)
+    Route::get('users-devices', [\App\Http\Controllers\Admin\UserDeviceController::class, 'index'])->name('users-devices.index');
+    Route::post('users-devices/{user}/reset', [\App\Http\Controllers\Admin\UserDeviceController::class, 'resetDevice'])->name('users-devices.reset');
+
+    // Device Change Requests Management (all admins)
+    Route::get('device-change-requests', [\App\Http\Controllers\Admin\DeviceChangeRequestController::class, 'index'])->name('device-change-requests.index');
+    Route::post('device-change-requests/{request}/approve', [\App\Http\Controllers\Admin\DeviceChangeRequestController::class, 'approve'])->name('device-change-requests.approve');
+    Route::post('device-change-requests/{request}/reject', [\App\Http\Controllers\Admin\DeviceChangeRequestController::class, 'reject'])->name('device-change-requests.reject');
 
     // Users (Candidates) Management
     Route::middleware('permission:manage_users')->group(function () {
@@ -523,4 +547,20 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/', [MaintenanceModeController::class, 'index'])->name('index');
         Route::post('/toggle', [MaintenanceModeController::class, 'toggle'])->name('toggle');
     });
+
+    // Pack Promotions Management
+    Route::prefix('pack-promotions')->name('pack-promotions.')->group(function () {
+        Route::get('/', [PackPromotionController::class, 'index'])->name('index');
+        Route::get('/create', [PackPromotionController::class, 'create'])->name('create');
+        Route::post('/', [PackPromotionController::class, 'store'])->name('store');
+        Route::get('/{id}', [PackPromotionController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PackPromotionController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PackPromotionController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PackPromotionController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle-active', [PackPromotionController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/{id}/stats', [PackPromotionController::class, 'stats'])->name('stats');
+    });
+
+    // AJAX API for Pack Promotions
+    Route::get('/api/packs/{type}', [PackPromotionController::class, 'getPacksByType'])->name('api.packs.by-type');
 });

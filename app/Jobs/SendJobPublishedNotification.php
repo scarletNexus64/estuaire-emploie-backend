@@ -35,16 +35,16 @@ class SendJobPublishedNotification implements ShouldQueue
     public function handle(NotificationService $notificationService): void
     {
         try {
-            $jobOffer = $this->jobOffer->load(['company', 'category', 'location']);
+            $jobOffer = $this->jobOffer->load(['company', 'category']);
 
             $title = "Nouvelle offre : {$jobOffer->title}";
-            $message = "{$jobOffer->company->name} recrute à {$jobOffer->location->name}";
+            $message = "{$jobOffer->company->name} recrute à {$jobOffer->company?->city}";
 
             $additionalData = [
                 'job_id' => $jobOffer->id,
                 'job_title' => $jobOffer->title,
                 'company_name' => $jobOffer->company->name,
-                'location' => $jobOffer->location->name,
+                'location' => $jobOffer->company?->city,
                 'category' => $jobOffer->category->name ?? null,
             ];
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -105,6 +106,30 @@ class Company extends Model
     public function recruiters(): HasMany
     {
         return $this->hasMany(Recruiter::class);
+    }
+
+    /**
+     * Get the categories associated with this company
+     */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(CompanyCategory::class, 'company_company_category');
+    }
+
+    /**
+     * Get the products/services associated with this company
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(CompanyProduct::class);
+    }
+
+    /**
+     * Get the product/service purchases made on this company's showcase
+     */
+    public function productPurchases(): HasMany
+    {
+        return $this->hasMany(CompanyProductPurchase::class);
     }
 
     public function isVerified(): bool

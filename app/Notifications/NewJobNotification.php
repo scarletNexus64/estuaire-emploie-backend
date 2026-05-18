@@ -41,7 +41,7 @@ class NewJobNotification extends Notification
     {
         $companyName = $this->job->company?->name ?? 'Une entreprise';
         $categoryName = $this->job->category?->name ?? '';
-        $locationName = $this->job->location?->name ?? '';
+        $locationName = $this->job->company?->city ?? '';
         $contractTypeName = $this->job->contractType?->name ?? '';
 
         return (new MailMessage)

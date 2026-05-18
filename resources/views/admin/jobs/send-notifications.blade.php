@@ -21,7 +21,7 @@
                         </h5>
                         <p class="mb-0">
                             <strong>Entreprise:</strong> {{ $job->company->name }}<br>
-                            <strong>Localisation:</strong> {{ $job->location->name }}
+                            <strong>Ville:</strong> {{ $job->company?->city ?? 'N/A' }}
                         </p>
                     </div>
 

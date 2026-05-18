@@ -8,7 +8,6 @@ use App\Jobs\SendJobPublishedNotification;
 use App\Models\Job;
 use App\Models\Company;
 use App\Models\Category;
-use App\Models\Location;
 use App\Models\ContractType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +19,7 @@ class JobController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Job::with(['company', 'category', 'location'])
+        $query = Job::with(['company', 'category'])
             ->withCount('applications');
 
         // Search filter
@@ -54,10 +53,9 @@ class JobController extends Controller
     {
         $companies = Company::where('status', 'verified')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
-        $locations = Location::orderBy('name')->get();
         $contractTypes = ContractType::orderBy('name')->get();
 
-        return view('admin.jobs.create', compact('companies', 'categories', 'locations', 'contractTypes'));
+        return view('admin.jobs.create', compact('companies', 'categories', 'contractTypes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -65,8 +63,6 @@ class JobController extends Controller
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'required|exists:categories,id',
-            'location_ids' => 'required|array|min:1',
-            'location_ids.*' => 'required|exists:locations,id',
             'contract_type_id' => 'required|exists:contract_types,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -75,13 +71,10 @@ class JobController extends Controller
             'salary_min' => 'nullable|string',
             'salary_max' => 'nullable|string',
             'experience_level' => 'nullable|string|max:50',
+            'visibility' => 'required|in:national,local',
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date|after:today',
         ]);
-
-        // Extraire les location_ids
-        $locationIds = $validated['location_ids'];
-        unset($validated['location_ids']);
 
         // Auteur de l'offre
         $validated['posted_by'] = Auth::id();
@@ -95,32 +88,22 @@ class JobController extends Controller
             $validated['published_at'] = now();
         }
 
-        // Créer un job pour chaque localisation sélectionnée
-        $createdJobs = [];
-        foreach ($locationIds as $locationId) {
-            $validated['location_id'] = $locationId;
-            $job = Job::create($validated);
-            $createdJobs[] = $job;
+        // Créer l'offre
+        $job = Job::create($validated);
 
-            // Dispatcher l'événement si le job est publié
-            if ($job->status === 'published') {
-                JobPublished::dispatch($job);
-            }
+        // Dispatcher l'événement si le job est publié
+        if ($job->status === 'published') {
+            JobPublished::dispatch($job);
         }
-
-        $count = count($createdJobs);
-        $message = $count > 1
-            ? "Offre créée avec succès dans {$count} villes"
-            : 'Offre créée avec succès';
 
         return redirect()
             ->route('admin.jobs.index')
-            ->with('success', $message);
+            ->with('success', 'Offre créée avec succès');
     }
 
     public function show(Job $job): View
     {
-        $job->load(['company', 'category', 'location', 'contractType', 'postedBy', 'applications.user']);
+        $job->load(['company', 'category', 'contractType', 'postedBy', 'applications.user']);
 
         return view('admin.jobs.show', compact('job'));
     }
@@ -129,10 +112,9 @@ class JobController extends Controller
     {
         $companies = Company::where('status', 'verified')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
-        $locations = Location::orderBy('name')->get();
         $contractTypes = ContractType::orderBy('name')->get();
 
-        return view('admin.jobs.edit', compact('job', 'companies', 'categories', 'locations', 'contractTypes'));
+        return view('admin.jobs.edit', compact('job', 'companies', 'categories', 'contractTypes'));
     }
 
     public function update(Request $request, Job $job): RedirectResponse
@@ -140,7 +122,6 @@ class JobController extends Controller
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'required|exists:categories,id',
-            'location_id' => 'required|exists:locations,id',
             'contract_type_id' => 'required|exists:contract_types,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -149,6 +130,7 @@ class JobController extends Controller
             'salary_min' => 'nullable|string',
             'salary_max' => 'nullable|string',
             'experience_level' => 'nullable|string|max:50',
+            'visibility' => 'required|in:national,local',
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date',
         ]);
@@ -210,7 +192,7 @@ class JobController extends Controller
      */
     public function showSendNotifications(Job $job): View
     {
-        $job->load(['company', 'location', 'category']);
+        $job->load(['company', 'category']);
 
         // Compter les utilisateurs pour les PUSH (candidats + recruteurs) sauf l'auteur
         $totalPushUsers = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
@@ -242,7 +224,7 @@ class JobController extends Controller
         $batchNumber = $validated['batch'];
         $batchSize = $validated['batch_size'];
 
-        $job->load(['company', 'location', 'category']);
+        $job->load(['company', 'category']);
 
         // Récupérer TOUS les utilisateurs (candidats + recruteurs) pour ce lot, SAUF l'auteur du job
         $users = \App\Models\User::whereIn('role', ['candidate', 'recruiter'])
@@ -267,7 +249,7 @@ class JobController extends Controller
         $notificationService = app(\App\Services\NotificationService::class);
 
         $title = "Nouvelle offre : {$job->title}";
-        $message = "{$job->company->name} recrute à {$job->location->name}";
+        $message = "{$job->company->name} recrute à {$job->company?->city}";
 
         $sent = 0;
         $failed = 0;
@@ -284,7 +266,7 @@ class JobController extends Controller
                         'job_id' => $job->id,
                         'job_title' => $job->title,
                         'company_name' => $job->company->name,
-                        'location' => $job->location->name,
+                        'location' => $job->company?->city,
                         'category' => $job->category->name ?? null,
                     ]
                 );
@@ -360,7 +342,7 @@ class JobController extends Controller
         $batchNumber = $validated['batch'];
         $batchSize = $validated['batch_size'];
 
-        $job->load(['company', 'location', 'category']);
+        $job->load(['company', 'category']);
 
         // Récupérer les candidats actifs avec email vérifié pour ce lot
         $users = \App\Models\User::where('role', 'candidate')

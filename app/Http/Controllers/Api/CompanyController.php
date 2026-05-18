@@ -54,12 +54,21 @@ class CompanyController extends Controller
      *     )
      * )
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $companies = Company::where('status', 'verified')
-            ->withCount('jobs')
-            ->latest()
-            ->paginate(20);
+        $query = Company::where('status', 'verified')
+            ->with('categories')
+            ->withCount('jobs');
+
+        // Filtre par domaine d'activité niveau 1 (CompanyCategory.level_1)
+        if ($request->filled('level_1')) {
+            $level1 = $request->input('level_1');
+            $query->whereHas('categories', function ($q) use ($level1) {
+                $q->where('level_1', $level1);
+            });
+        }
+
+        $companies = $query->latest()->paginate(20);
 
         return response()->json($companies);
     }
@@ -97,7 +106,7 @@ class CompanyController extends Controller
 
         $jobs = $company->jobs()
             ->where('status', 'published')
-            ->with(['category', 'location'])
+            ->with(['category'])
             ->latest()
             ->take(20)
             ->get();
@@ -153,18 +162,31 @@ class CompanyController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:companies,email',
                 'phone' => 'required|string|max:20',
-                'description' => 'required|string',
+                'description' => 'required|string|min:30',
                 'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', // Max 2MB
-                'photos' => 'required|array|min:2|max:4', // 2 à 4 photos obligatoires
+                'photos' => 'nullable|array|max:4', // 0 à 4 photos (optionnel)
                 'photos.*' => 'required|image|mimes:png,jpg,jpeg|max:2048', // Chaque photo max 2MB
-                'domain' => 'required|string|max:255',
+                'domain' => 'nullable|string|max:255', // Optional now (for backward compatibility)
                 'sector' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:255',
-                'city' => 'nullable|string|max:255',
+                'category_ids' => 'required|array|min:1', // Required: at least 1 category
+                'category_ids.*' => 'exists:company_categories,id', // Validate each ID exists
+                // Pas de max ici : l'adresse vient du reverse geocoding
+                // (peut être longue). Tronquée proprement plus bas pour
+                // ne jamais rejeter une création à cause de sa longueur.
+                'address' => 'nullable|string',
+                'city' => 'nullable|string',
                 'website' => 'nullable|url|max:255',
-                'latitude' => 'nullable|numeric|between:-90,90',
-                'longitude' => 'nullable|numeric|between:-180,180',
+                'latitude' => 'required|numeric|between:-90,90', // Required now
+                'longitude' => 'required|numeric|between:-180,180', // Required now
             ]);
+
+            // Tronquer address/city à la taille de colonne (VARCHAR 255).
+            if (isset($validated['address'])) {
+                $validated['address'] = mb_substr($validated['address'], 0, 255);
+            }
+            if (isset($validated['city'])) {
+                $validated['city'] = mb_substr($validated['city'], 0, 255);
+            }
 
             // Vérifier si l'utilisateur n'a pas déjà une entreprise
             $existingRecruiter = Recruiter::where('user_id', auth()->id())->first();
@@ -182,13 +204,21 @@ class CompanyController extends Controller
                 $validated['logo'] = $request->file('logo')->store('logos', 'public');
             }
 
-            // Upload des photos (2 à 4 photos obligatoires)
+            // Upload des photos (0 à 4 photos, optionnel)
             $photoPaths = [];
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $photo) {
                     $photoPaths[] = $photo->store('company_photos', 'public');
                 }
                 $validated['photos'] = $photoPaths;
+            }
+
+            // Set default values for backward compatibility
+            if (empty($validated['domain'])) {
+                $validated['domain'] = 'Général';
+            }
+            if (empty($validated['sector'])) {
+                $validated['sector'] = 'Divers';
             }
 
             $company = Company::create(array_merge($validated, [
@@ -206,12 +236,21 @@ class CompanyController extends Controller
                 'can_modify_company' => true,
             ]);
 
+            // Attach categories if provided
+            if (!empty($validated['category_ids'])) {
+                $company->categories()->attach($validated['category_ids']);
+                \Log::info("[CompanyController] Attached categories to company {$company->id}: " . implode(', ', $validated['category_ids']));
+            }
+
             // 🎯 Changer automatiquement le rôle de l'utilisateur à "recruiter"
             $user = auth()->user();
             $user->role = 'recruiter';
             $user->save();
 
             \Log::info("[CompanyController] User {$user->id} role changed to 'recruiter' after company creation");
+
+            // Load categories relationship for response
+            $company->load('categories');
 
             return response()->json([
                 'message' => 'Entreprise créée avec succès. En attente de vérification.',
@@ -305,13 +344,17 @@ class CompanyController extends Controller
 
         $company = $recruiter->company;
 
+        // Charger les catégories pour que le front puisse pré-remplir
+        // le sélecteur de catégories à l'édition de l'entreprise.
+        $company->load('categories');
+
         // Récupérer la liste des offres actives avec le compteur de candidatures
         // Filtre: uniquement les offres avec au moins 1 candidature
         $activeJobsList = $company->jobs()
             ->where('status', 'published')
             ->withCount('applications')
             ->has('applications', '>=', 1)
-            ->with(['category', 'location', 'contractType'])
+            ->with(['category', 'contractType'])
             ->latest()
             ->get();
 
@@ -346,6 +389,66 @@ class CompanyController extends Controller
                 'rejected_applications' => $rejectedApplications,
                 'new_applications' => $newApplications,
             ],
+        ]);
+    }
+
+    /**
+     * Récupérer les secteurs niveau 3 disponibles pour mon entreprise.
+     *
+     * L'entreprise stocke ses catégories au niveau 2 (table pivot). On
+     * retourne toutes les company_categories ayant un level_3 non nul dont
+     * le level_2 fait partie des niveaux 2 de l'entreprise. Le front s'en
+     * sert pour proposer le secteur niveau 3 d'un produit/service.
+     *
+     * GET /api/my-company/level3-sectors
+     */
+    public function myCompanyLevel3Sectors(): JsonResponse
+    {
+        $recruiter = auth()->user()->recruiter;
+
+        if (! $recruiter || ! $recruiter->company) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'avez pas d\'entreprise associée',
+            ], 404);
+        }
+
+        $company = $recruiter->company;
+        $company->load('categories');
+
+        // Niveaux 2 des catégories de l'entreprise
+        $companyLevel2 = $company->categories
+            ->pluck('level_2')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($companyLevel2->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $level3 = \App\Models\CompanyCategory::active()
+            ->whereIn('level_2', $companyLevel2)
+            ->whereNotNull('level_3')
+            ->orderBy('level_2')
+            ->orderBy('level_3')
+            ->get(['id', 'code', 'level_1', 'level_2', 'level_3'])
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'code' => $category->code,
+                    'level_1' => $category->level_1,
+                    'level_2' => $category->level_2,
+                    'level_3' => $category->level_3,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $level3,
         ]);
     }
 
@@ -427,12 +530,27 @@ class CompanyController extends Controller
                 'clear_photos' => 'sometimes|in:true,false,1,0', // Accepter string ou int
                 'domain' => 'sometimes|string|max:255',
                 'sector' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:255',
-                'city' => 'nullable|string|max:255',
+                'category_ids' => 'nullable|array', // New: Multiple category IDs
+                'category_ids.*' => 'exists:company_categories,id', // Validate each ID exists
+                // address/city : pas de max ici. La valeur vient du
+                // reverse geocoding (peut être longue). On tronque
+                // proprement à 255 plus bas pour ne JAMAIS rejeter une
+                // mise à jour à cause d'une adresse géocodée longue.
+                'address' => 'nullable|string',
+                'city' => 'nullable|string',
                 'website' => 'nullable|url|max:255',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
             ]);
+
+            // Tronquer address/city à la taille de colonne (VARCHAR 255)
+            // pour éviter une erreur SQL "Data too long".
+            if (isset($validated['address'])) {
+                $validated['address'] = mb_substr($validated['address'], 0, 255);
+            }
+            if (isset($validated['city'])) {
+                $validated['city'] = mb_substr($validated['city'], 0, 255);
+            }
 
             // Normaliser l'email en minuscules si présent
             if (isset($validated['email'])) {
@@ -530,9 +648,18 @@ class CompanyController extends Controller
 
             $company->update($validated);
 
+            // Sync categories if provided
+            if ($request->has('category_ids')) {
+                $company->categories()->sync($validated['category_ids'] ?? []);
+                \Log::info("[CompanyController] Synced categories for company {$company->id}: " . implode(', ', $validated['category_ids'] ?? []));
+            }
+
+            // Load categories relationship for response
+            $company->load('categories');
+
             return response()->json([
                 'message' => 'Entreprise mise à jour avec succès',
-                'data' => $recruiter->company->fresh(),
+                'data' => $company->fresh(['categories']),
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -632,6 +759,7 @@ class CompanyController extends Controller
                 'latitude' => 'required|numeric|between:-90,90',
                 'longitude' => 'required|numeric|between:-180,180',
                 'radius' => 'nullable|numeric|min:1|max:500', // Max 500km
+                'level_1' => 'nullable|string|max:255',
             ]);
 
             $latitude = $validated['latitude'];
@@ -639,9 +767,19 @@ class CompanyController extends Controller
             $radius = $validated['radius'] ?? 50; // Par défaut 50km
 
             // Utiliser le scope nearby du modèle Company
-            $companies = Company::nearby($latitude, $longitude, $radius)
-                ->withCount('jobs')
-                ->get();
+            $query = Company::nearby($latitude, $longitude, $radius)
+                ->with('categories')
+                ->withCount('jobs');
+
+            // Filtre par domaine d'activité niveau 1 (CompanyCategory.level_1)
+            if (! empty($validated['level_1'])) {
+                $level1 = $validated['level_1'];
+                $query->whereHas('categories', function ($q) use ($level1) {
+                    $q->where('level_1', $level1);
+                });
+            }
+
+            $companies = $query->get();
 
             return response()->json([
                 'data' => $companies,

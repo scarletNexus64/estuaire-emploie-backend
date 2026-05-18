@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\ContractType;
 use App\Models\Job;
-use App\Models\Location;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +18,7 @@ class ImportThemesStage extends Command
                             {file : Chemin absolu du fichier xlsx}
                             {--company-id=39 : ID de la company à utiliser}
                             {--posted-by=1 : ID de l\'utilisateur qui poste les offres}
-                            {--location-id=4 : ID de la Location (Bafoussam)}
+                            {--visibility=national : Visibilité des offres (national|local)}
                             {--contract-type-id=3 : ID du ContractType (Stage)}
                             {--experience-level=junior : Niveau par défaut si vide}
                             {--skip-duplicates : Ignore les jobs déjà existants (même titre + company)}
@@ -37,7 +36,9 @@ class ImportThemesStage extends Command
 
         $companyId = (int) $this->option('company-id');
         $postedBy = (int) $this->option('posted-by');
-        $locationId = (int) $this->option('location-id');
+        $visibility = in_array($this->option('visibility'), ['national', 'local'], true)
+            ? $this->option('visibility')
+            : 'national';
         $contractTypeId = (int) $this->option('contract-type-id');
         $defaultExp = $this->option('experience-level');
         $skipDuplicates = (bool) $this->option('skip-duplicates');
@@ -46,10 +47,6 @@ class ImportThemesStage extends Command
         $company = Company::find($companyId);
         if (!$company) {
             $this->error("Company id=$companyId introuvable");
-            return self::FAILURE;
-        }
-        if (!Location::find($locationId)) {
-            $this->error("Location id=$locationId introuvable");
             return self::FAILURE;
         }
         if (!ContractType::find($contractTypeId)) {
@@ -167,7 +164,7 @@ class ImportThemesStage extends Command
                 $payload = [
                     'company_id' => $companyId,
                     'category_id' => $categoryId,
-                    'location_id' => $locationId,
+                    'visibility' => $visibility,
                     'contract_type_id' => $contractTypeId,
                     'posted_by' => $postedBy,
                     'title' => $title,

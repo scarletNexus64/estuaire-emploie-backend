@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\CompanyCategory;
 use App\Models\ContractType;
-use App\Models\Location;
 use App\Models\ServiceCategory;
 use App\Models\Setting;
 use App\Models\Specialty;
@@ -18,10 +18,9 @@ use Illuminate\View\View;
 
 class SettingsController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $categories = Category::withCount('jobs')->get();
-        $locations = Location::withCount('jobs')->get();
         $contractTypes = ContractType::withCount('jobs')->get();
         $specialties = Specialty::withCount(['examPapers', 'examPacks'])->ordered()->get();
         $trainingCategories = TrainingCategory::withCount('trainingPacks')->ordered()->get();
@@ -38,25 +37,49 @@ class SettingsController extends Controller
             ->latest()
             ->paginate(20, ['*'], 'commissions_page');
 
+        // Company categories with search and filter
+        $companyCategoriesQuery = CompanyCategory::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $companyCategoriesQuery->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('level_1', 'like', "%{$search}%")
+                    ->orWhere('level_2', 'like', "%{$search}%")
+                    ->orWhere('level_3', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('level_1')) {
+            $companyCategoriesQuery->where('level_1', $request->input('level_1'));
+        }
+
+        if ($request->filled('is_active')) {
+            $companyCategoriesQuery->where('is_active', $request->input('is_active') === '1');
+        }
+
+        $companyCategories = $companyCategoriesQuery->orderBy('code')->paginate(20, ['*'], 'company_categories_page');
+        $level1Options = CompanyCategory::getLevel1Options();
+
         return view('admin.settings.index', compact(
             'categories',
-            'locations',
             'contractTypes',
             'specialties',
             'trainingCategories',
             'serviceCategories',
             'users',
-            'commissions'
+            'commissions',
+            'companyCategories',
+            'level1Options'
         ));
     }
 
     public function categories(): View
     {
         $categories = Category::withCount('jobs')->get();
-        $locations = Location::withCount('jobs')->get();
         $contractTypes = ContractType::withCount('jobs')->get();
 
-        return view('admin.settings.index', compact('categories', 'locations', 'contractTypes'));
+        return view('admin.settings.index', compact('categories', 'contractTypes'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -69,9 +92,13 @@ class SettingsController extends Controller
     public function storeCategory(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required_without:code|string|max:255',
+            'code' => 'required_if:type,company_category|string|max:50',
+            'level_1' => 'required_if:type,company_category|string|max:255',
+            'level_2' => 'nullable|string|max:255',
+            'level_3' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:category,location,contract_type,specialty,training_category,service_category',
+            'type' => 'required|in:category,location,contract_type,specialty,training_category,service_category,company_category',
             'id' => 'nullable|integer',
             'icon' => 'nullable|string|max:100',
             'color' => 'nullable|string|max:20',
@@ -96,23 +123,6 @@ class SettingsController extends Controller
                         'name' => $validated['name'],
                         'slug' => $slug,
                         'description' => $validated['description'] ?? null,
-                    ]);
-                }
-                break;
-
-            case 'location':
-                if ($isUpdate) {
-                    $location = Location::findOrFail($request->id);
-                    $location->update([
-                        'name' => $validated['name'],
-                        'slug' => $slug,
-                        'country' => $request->country ?? 'Cameroun',
-                    ]);
-                } else {
-                    Location::create([
-                        'name' => $validated['name'],
-                        'slug' => $slug,
-                        'country' => $request->country ?? 'Cameroun',
                     ]);
                 }
                 break;
@@ -188,6 +198,28 @@ class SettingsController extends Controller
                     ServiceCategory::create($data);
                 }
                 break;
+
+            case 'company_category':
+                $deepestLevel = $validated['level_3'] ?? ($validated['level_2'] ?? $validated['level_1']);
+                $categorySlug = Str::slug($deepestLevel);
+
+                $data = [
+                    'code' => $validated['code'],
+                    'level_1' => $validated['level_1'],
+                    'level_2' => $validated['level_2'] ?? null,
+                    'level_3' => $validated['level_3'] ?? null,
+                    'slug' => $categorySlug,
+                    'description' => $validated['description'] ?? null,
+                    'is_active' => $request->has('is_active'),
+                ];
+
+                if ($isUpdate) {
+                    $companyCategory = CompanyCategory::findOrFail($request->id);
+                    $companyCategory->update($data);
+                } else {
+                    CompanyCategory::create($data);
+                }
+                break;
         }
 
         $message = $isUpdate ? 'Élément modifié avec succès' : 'Élément ajouté avec succès';
@@ -205,10 +237,6 @@ class SettingsController extends Controller
                 Category::findOrFail($id)->delete();
                 break;
 
-            case 'location':
-                Location::findOrFail($id)->delete();
-                break;
-
             case 'contract_type':
                 ContractType::findOrFail($id)->delete();
                 break;
@@ -223,6 +251,10 @@ class SettingsController extends Controller
 
             case 'service_category':
                 ServiceCategory::findOrFail($id)->delete();
+                break;
+
+            case 'company_category':
+                CompanyCategory::findOrFail($id)->delete();
                 break;
         }
 

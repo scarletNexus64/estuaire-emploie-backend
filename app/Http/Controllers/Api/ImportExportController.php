@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\ContractType;
 use App\Models\Job;
-use App\Models\Location;
 use App\Models\QuickService;
 use App\Models\Resume;
 use App\Models\ServiceCategory;
@@ -31,7 +30,7 @@ class ImportExportController extends Controller
     {
         $request->validate([
             'columns' => 'required|array|min:1',
-            'columns.*' => 'string|in:title,description,requirements,benefits,salary_min,salary_max,salary_negotiable,experience_level,status,application_deadline,company_name,category_name,location_name,contract_type_name',
+            'columns.*' => 'string|in:title,description,requirements,benefits,salary_min,salary_max,salary_negotiable,experience_level,status,application_deadline,company_name,category_name,contract_type_name',
         ]);
 
         $columns = $request->input('columns');
@@ -362,7 +361,6 @@ class ImportExportController extends Controller
             'description' => 'nullable|string',
             'company_name' => 'required|string',
             'category_name' => 'nullable|string',
-            'location_name' => 'nullable|string',
             'contract_type_name' => 'nullable|string',
             'salary_min' => 'nullable|numeric|min:0',
             'salary_max' => 'nullable|numeric|min:0',
@@ -385,17 +383,11 @@ class ImportExportController extends Controller
                 ]
             );
 
-            // Trouver ou créer category, location, contract_type
+            // Trouver ou créer category, contract_type
             $categoryId = null;
             if (!empty($data['category_name'])) {
                 $category = Category::firstOrCreate(['name' => $data['category_name']]);
                 $categoryId = $category->id;
-            }
-
-            $locationId = null;
-            if (!empty($data['location_name'])) {
-                $location = Location::firstOrCreate(['name' => $data['location_name']]);
-                $locationId = $location->id;
             }
 
             $contractTypeId = null;
@@ -408,7 +400,6 @@ class ImportExportController extends Controller
             Job::create([
                 'company_id' => $company->id,
                 'category_id' => $categoryId,
-                'location_id' => $locationId,
                 'contract_type_id' => $contractTypeId,
                 'posted_by' => auth()->id() ?? 1, // User admin par défaut
                 'title' => $data['title'],
@@ -590,7 +581,6 @@ class ImportExportController extends Controller
             'application_deadline' => 'Date limite de candidature (YYYY-MM-DD)',
             'company_name' => 'Nom de l\'entreprise',
             'category_name' => 'Catégorie',
-            'location_name' => 'Localisation',
             'contract_type_name' => 'Type de contrat',
         ];
     }

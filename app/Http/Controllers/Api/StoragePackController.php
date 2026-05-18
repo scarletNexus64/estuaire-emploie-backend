@@ -29,7 +29,11 @@ class StoragePackController extends Controller
                 ->ordered()
                 ->get()
                 ->map(function ($pack) {
-                    return [
+                    // Vérifier si le pack est en promotion
+                    $promotion = $pack->getActivePromotion();
+                    $isPromotional = $promotion !== null;
+
+                    $data = [
                         'id' => $pack->id,
                         'name' => $pack->name,
                         'slug' => $pack->slug,
@@ -41,7 +45,19 @@ class StoragePackController extends Controller
                         'formatted_price' => $pack->formatted_price,
                         'description' => $pack->description,
                         'display_order' => $pack->display_order,
+                        'is_promotional' => $isPromotional,
+                        'promotional_price' => $isPromotional ? 0 : null,
                     ];
+
+                    if ($isPromotional) {
+                        $data['promotion_id'] = $promotion->id;
+                        $data['promotion_name'] = $promotion->name;
+                        $data['promotion_end_date'] = $promotion->end_date->toDateTimeString();
+                        $data['promotion_remaining_days'] = $promotion->remaining_days;
+                        $data['promotion_usage_duration_days'] = $promotion->usage_duration_days;
+                    }
+
+                    return $data;
                 });
 
             return response()->json([
@@ -67,6 +83,24 @@ class StoragePackController extends Controller
         try {
             $pack = StoragePack::findOrFail($id);
 
+            // Vérifier si le pack est en promotion
+            $promotion = $pack->getActivePromotion();
+            $promotionData = null;
+
+            if ($promotion) {
+                $promotionData = [
+                    'id' => $promotion->id,
+                    'name' => $promotion->name,
+                    'description' => $promotion->description,
+                    'promotional_price' => 0,
+                    'end_date' => $promotion->end_date->toDateTimeString(),
+                    'remaining_days' => $promotion->remaining_days,
+                    'usage_duration_days' => $promotion->usage_duration_days,
+                    'max_activations' => $promotion->max_activations,
+                    'remaining_activations' => $promotion->remaining_activations,
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -81,6 +115,8 @@ class StoragePackController extends Controller
                     'formatted_price' => $pack->formatted_price,
                     'description' => $pack->description,
                     'is_active' => $pack->is_active,
+                    'is_promotional' => $promotion !== null,
+                    'promotion' => $promotionData,
                 ],
             ]);
         } catch (\Exception $e) {

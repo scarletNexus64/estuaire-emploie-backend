@@ -535,7 +535,7 @@ class ApplicationController extends Controller
      */
     public function myApplications(Request $request): JsonResponse
     {
-        $query = Application::with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation', 'portfolio'])
+        $query = Application::with(['job.company', 'job.category', 'job.contractType', 'conversation', 'portfolio'])
             ->where('user_id', $request->user()->id);
 
         if ($request->has('status')) {
@@ -579,7 +579,7 @@ class ApplicationController extends Controller
             ], 403);
         }
 
-        $application->load(['job.company', 'job.category', 'job.location', 'portfolio']);
+        $application->load(['job.company', 'job.category', 'portfolio']);
 
         return response()->json([
             'data' => $application,
@@ -703,7 +703,7 @@ class ApplicationController extends Controller
         $query = Application::whereHas('user')  // Exclure les candidatures dont l'utilisateur a été supprimé
             ->whereHas('job', function ($q) use ($recruiter) {
                 $q->where('company_id', $recruiter->company_id);
-            })->with(['job.company', 'job.location', 'job.category', 'job.contractType', 'conversation', 'portfolio']);
+            })->with(['job.company', 'job.category', 'job.contractType', 'conversation', 'portfolio']);
 
         // Charger les infos utilisateur de base (sans contact sensible)
         $query->with(['user' => function ($q) {

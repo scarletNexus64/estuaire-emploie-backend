@@ -11,8 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // Configuration de base
             CategorySeeder::class,
-            LocationSeeder::class,
             ContractTypeSeeder::class,
+            CurrencySeeder::class, // Devises mondiales (XAF, USD, EUR...)
 
             // Monétisation - Plans et services
             SubscriptionPlanSeeder::class, // Forfaits recruteurs (ARGENT, OR, PLATINUM)

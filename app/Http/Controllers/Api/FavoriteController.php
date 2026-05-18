@@ -65,10 +65,6 @@ class FavoriteController extends Controller
      *                         @OA\Property(property="id", type="integer"),
      *                         @OA\Property(property="name", type="string")
      *                     ),
-     *                     @OA\Property(property="location", type="object",
-     *                         @OA\Property(property="id", type="integer"),
-     *                         @OA\Property(property="name", type="string")
-     *                     ),
      *                     @OA\Property(property="contract_type", type="object",
      *                         @OA\Property(property="id", type="integer"),
      *                         @OA\Property(property="name", type="string")
@@ -92,7 +88,7 @@ class FavoriteController extends Controller
     {
         $query = auth()->user()
             ->favoriteJobs()
-            ->with(['company', 'category', 'location', 'contractType'])
+            ->with(['company', 'category', 'contractType'])
             ->orderBy('favorites.created_at', 'desc');
 
         // Recherche par mots-clés

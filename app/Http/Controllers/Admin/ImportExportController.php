@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\ContractType;
 use App\Models\Job;
-use App\Models\Location;
 use App\Models\QuickService;
 use App\Models\Resume;
 use App\Models\ServiceCategory;
@@ -365,12 +364,6 @@ class ImportExportController extends Controller
                 $categoryId = $category->id;
             }
 
-            $locationId = null;
-            if (!empty($data['location_name'])) {
-                $location = Location::firstOrCreate(['name' => $data['location_name']]);
-                $locationId = $location->id;
-            }
-
             $contractTypeId = null;
             if (!empty($data['contract_type_name'])) {
                 $contractType = ContractType::firstOrCreate(['name' => $data['contract_type_name']]);
@@ -380,7 +373,6 @@ class ImportExportController extends Controller
             Job::create([
                 'company_id' => $company->id,
                 'category_id' => $categoryId,
-                'location_id' => $locationId,
                 'contract_type_id' => $contractTypeId,
                 'posted_by' => auth()->id() ?? 1,
                 'title' => $data['title'],
@@ -518,7 +510,6 @@ class ImportExportController extends Controller
             'application_deadline' => 'Date limite de candidature (YYYY-MM-DD)',
             'company_name' => 'Nom de l\'entreprise',
             'category_name' => 'Catégorie',
-            'location_name' => 'Localisation',
             'contract_type_name' => 'Type de contrat',
         ];
     }

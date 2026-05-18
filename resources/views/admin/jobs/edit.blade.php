@@ -69,16 +69,12 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Localisation *</label>
-                <select name="location_id" class="form-control" required>
-                    <option value="">Sélectionner une localisation</option>
-                    @foreach($locations as $location)
-                        <option value="{{ $location->id }}" {{ old('location_id', $job->location_id) == $location->id ? 'selected' : '' }}>
-                            {{ $location->name }}
-                        </option>
-                    @endforeach
+                <label class="form-label">Visibilité *</label>
+                <select name="visibility" class="form-control" required>
+                    <option value="national" {{ old('visibility', $job->visibility) === 'national' ? 'selected' : '' }}>Nationale (visible partout)</option>
+                    <option value="local" {{ old('visibility', $job->visibility) === 'local' ? 'selected' : '' }}>Locale (ville de l'entreprise uniquement)</option>
                 </select>
-                @error('location_id')
+                @error('visibility')
                     <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
                 @enderror
             </div>

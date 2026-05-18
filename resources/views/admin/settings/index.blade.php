@@ -17,6 +17,15 @@
                 <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">4</span>
             </button>
             <button
+                id="tab-btn-companies"
+                class="tab-button"
+                onclick="switchSettingsTab('companies')"
+                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+            >
+                <i class="mdi mdi-domain"></i> Catégories Entreprises
+                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">{{ $companyCategories->total() }}</span>
+            </button>
+            <button
                 id="tab-btn-academic"
                 class="tab-button"
                 onclick="switchSettingsTab('academic')"
@@ -41,9 +50,13 @@
             <!-- Tab: Configuration Emplois -->
             <div id="tab-content-jobs" class="settings-tab-content" style="display: block;">
                 @include('admin.settings.partials.job-categories', ['categories' => $categories])
-                @include('admin.settings.partials.locations', ['locations' => $locations])
                 @include('admin.settings.partials.contract-types', ['contractTypes' => $contractTypes])
                 @include('admin.settings.partials.service-categories', ['serviceCategories' => $serviceCategories])
+            </div>
+
+            <!-- Tab: Catégories Entreprises -->
+            <div id="tab-content-companies" class="settings-tab-content" style="display: none;">
+                @include('admin.settings.partials.company-categories', ['companyCategories' => $companyCategories, 'level1Options' => $level1Options])
             </div>
 
             <!-- Tab: Configuration Académique -->
@@ -147,8 +160,17 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Settings page loaded');
-            // Make sure first tab is active
-            switchSettingsTab('jobs');
+
+            // Check if there's a tab parameter in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+
+            if (tabParam && ['jobs', 'companies', 'academic', 'referral'].includes(tabParam)) {
+                switchSettingsTab(tabParam);
+            } else {
+                // Make sure first tab is active
+                switchSettingsTab('jobs');
+            }
         });
     </script>
 @endsection

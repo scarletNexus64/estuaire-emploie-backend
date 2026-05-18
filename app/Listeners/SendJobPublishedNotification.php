@@ -26,7 +26,7 @@ class SendJobPublishedNotification implements ShouldQueue
         $job = $event->job;
 
         // Charger les relations nécessaires
-        $job->load(['company', 'category', 'location', 'contractType']);
+        $job->load(['company', 'category', 'contractType']);
 
         $sentCount = 0;
         $failedCount = 0;

@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "MVNNT5L9VD.com.insam.estuaire_emploie",
+        "paths": ["/jobs/*/share"]
+      }
+    ]
+  }
+}

@@ -92,9 +92,24 @@ class CompanyController extends Controller
 
     public function show(Company $company): View
     {
-        $company->load(['jobs', 'recruiters.user']);
+        $company->load([
+            'jobs',
+            'recruiters.user',
+            'categories',
+            'products' => fn ($q) => $q->with('category')->latest(),
+            'productPurchases' => fn ($q) => $q->with(['product', 'buyer'])->latest(),
+        ]);
 
-        return view('admin.companies.show', compact('company'));
+        $showcaseStats = [
+            'total'    => $company->products->count(),
+            'products' => $company->products->where('type', 'product')->count(),
+            'services' => $company->products->where('type', 'service')->count(),
+            'active'   => $company->products->where('is_active', true)->count(),
+            'sales'    => $company->productPurchases->where('status', 'paid')->count(),
+            'revenue'  => $company->productPurchases->where('status', 'paid')->sum('amount'),
+        ];
+
+        return view('admin.companies.show', compact('company', 'showcaseStats'));
     }
 
     public function edit(Company $company): View
@@ -157,10 +172,28 @@ class CompanyController extends Controller
 
     public function destroy(Company $company): RedirectResponse
     {
-        $company->delete();
+        try {
+            \DB::transaction(function () use ($company) {
+                // Supprimer les recruteurs associés pour libérer les utilisateurs
+                // (la vérification API se base sur la présence d'un Recruiter)
+                $company->recruiters()->delete();
 
-        return redirect()->route('admin.companies.index')
-            ->with('success', 'Entreprise supprimée avec succès');
+                // forceDelete car Company utilise SoftDeletes : un simple delete()
+                // laisserait l'entreprise en base et l'utilisateur resterait bloqué
+                $company->forceDelete();
+            });
+
+            return redirect()->route('admin.companies.index')
+                ->with('success', 'Entreprise supprimée avec succès');
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la suppression d\'entreprise', [
+                'company_id' => $company->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
     }
 
     public function verify(Company $company): RedirectResponse
@@ -207,7 +240,17 @@ class CompanyController extends Controller
                 return redirect()->back()->with('error', 'Aucun élément sélectionné');
             }
 
-            $count = Company::whereIn('id', $ids)->delete();
+            $count = 0;
+            \DB::transaction(function () use ($ids, &$count) {
+                $companies = Company::whereIn('id', $ids)->get();
+                foreach ($companies as $company) {
+                    // Libérer les utilisateurs en supprimant les recruteurs associés
+                    $company->recruiters()->delete();
+                    // forceDelete pour ne pas laisser l'entreprise en soft delete
+                    $company->forceDelete();
+                    $count++;
+                }
+            });
 
             return redirect()->back()->with('success', "$count élément(s) supprimé(s) avec succès");
         } catch (\Exception $e) {

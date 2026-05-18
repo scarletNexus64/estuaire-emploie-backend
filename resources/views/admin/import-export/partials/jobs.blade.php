@@ -13,7 +13,6 @@
         { key: 'application_deadline', label: 'Date limite' },
         { key: 'company_name', label: 'Entreprise' },
         { key: 'category_name', label: 'Catégorie' },
-        { key: 'location_name', label: 'Localisation' },
         { key: 'contract_type_name', label: 'Type de contrat' }
     ],
     toggleColumn(key) {

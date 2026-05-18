@@ -195,7 +195,7 @@
                                 <div class="flex items-center gap-4 mt-2">
                                     <span class="inline-flex items-center gap-1 text-xs text-gray-500">
                                         <i class="mdi mdi-map-marker text-sm"></i>
-                                        {{ is_object($job->location) ? $job->location->name : ($job->location ?? 'Non spécifié') }}
+                                        {{ $job->company?->city ?? 'Non spécifié' }}
                                     </span>
                                     <span class="inline-flex items-center gap-1 text-xs text-gray-500">
                                         <i class="mdi mdi-briefcase-account text-sm"></i>

@@ -31,13 +31,6 @@ class JobController extends Controller
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Parameter(
-     *         name="location_id",
-     *         in="query",
-     *         description="Filtrer par localisation",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
      *         name="contract_type_id",
      *         in="query",
      *         description="Filtrer par type de contrat",
@@ -111,7 +104,6 @@ class JobController extends Controller
         $query = Job::with([
                 'company',
                 'category',
-                'location',
                 'contractType',
                 'skillTests' => function ($query) {
                     $query->where('is_active', true)
@@ -123,13 +115,18 @@ class JobController extends Controller
             }])
             ->where('status', 'published');
 
+        // Visibilité géographique :
+        // - offres nationales : toujours visibles
+        // - offres locales : visibles uniquement si la ville du candidat
+        //   (déduite de son GPS côté app, paramètre `candidate_city`)
+        //   correspond à la ville de l'entreprise.
+        // Sans ville candidat, seules les offres nationales sont retournées.
+        $candidateCity = $request->input('candidate_city');
+        $query->visibleFor(is_string($candidateCity) ? $candidateCity : null);
+
         // Filtres de base
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->has('location_id')) {
-            $query->where('location_id', $request->location_id);
         }
 
         if ($request->has('contract_type_id')) {
@@ -311,7 +308,6 @@ class JobController extends Controller
         $job->load([
             'company',
             'category',
-            'location',
             'contractType',
             'postedBy',
             'skillTests' => function ($query) {
@@ -341,7 +337,7 @@ class JobController extends Controller
      */
     public function featured(): JsonResponse
     {
-        $jobs = Job::with(['company', 'category', 'location', 'contractType'])
+        $jobs = Job::with(['company', 'category', 'contractType'])
             ->where('status', 'published')
             ->where('is_featured', true)
             ->latest()
@@ -364,11 +360,10 @@ class JobController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"title","description","category_id","location_id","contract_type_id","experience_level"},
+     *             required={"title","description","category_id","contract_type_id","experience_level"},
      *             @OA\Property(property="title", type="string", example="Développeur Full Stack Senior"),
      *             @OA\Property(property="description", type="string", example="Nous recherchons un développeur Full Stack avec expertise Laravel et Vue.js"),
      *             @OA\Property(property="category_id", type="integer", example=1),
-     *             @OA\Property(property="location_id", type="integer", example=1),
      *             @OA\Property(property="contract_type_id", type="integer", example=1),
      *             @OA\Property(property="salary_min", type="number", example=500000, nullable=true),
      *             @OA\Property(property="salary_max", type="number", example=800000, nullable=true),
@@ -435,7 +430,7 @@ class JobController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'location_id' => 'required|exists:locations,id',
+            'visibility' => 'required|in:national,local',
             'contract_type_id' => 'required|exists:contract_types,id',
             'salary_min' => 'nullable|numeric|min:0',
             'salary_max' => 'nullable|numeric|min:0',
@@ -445,6 +440,18 @@ class JobController extends Controller
             'benefits' => 'nullable|string',
             'application_deadline' => 'nullable|date|after:today',
         ]);
+
+        // Une offre "locale" n'est visible que dans la ville de l'entreprise :
+        // sans ville renseignée, elle serait invisible — on refuse.
+        if ($validated['visibility'] === 'local' && empty($recruiter->company?->city)) {
+            return response()->json([
+                'message' => "Votre entreprise n'a pas de ville renseignée. "
+                    . "Renseignez la localisation de l'entreprise ou choisissez une visibilité nationale.",
+                'errors' => [
+                    'visibility' => ["Ville de l'entreprise manquante pour une offre locale."],
+                ],
+            ], 422);
+        }
 
         $job = Job::create(array_merge($validated, [
             'company_id' => $recruiter->company_id,
@@ -458,7 +465,7 @@ class JobController extends Controller
 
         return response()->json([
             'message' => 'Offre créée avec succès. En attente de validation.',
-            'data' => $job->load(['company', 'category', 'location', 'contractType']),
+            'data' => $job->load(['company', 'category', 'contractType']),
         ], 201);
     }
 
@@ -503,7 +510,6 @@ class JobController extends Controller
         $job = Job::with([
                 'company',
                 'category',
-                'location',
                 'contractType',
                 'postedBy',
                 'skillTests' => function ($query) {
@@ -575,7 +581,7 @@ class JobController extends Controller
         }
 
         $query = Job::where('company_id', $recruiter->company_id)
-            ->with(['category', 'location', 'contractType', 'skillTests' => function ($query) {
+            ->with(['category', 'contractType', 'skillTests' => function ($query) {
                 $query->where('is_active', true)
                       ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score', 'is_active');
             }])
@@ -760,7 +766,6 @@ class JobController extends Controller
      *             @OA\Property(property="title", type="string", example="Développeur Full Stack Senior"),
      *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="category_id", type="integer"),
-     *             @OA\Property(property="location_id", type="integer"),
      *             @OA\Property(property="contract_type_id", type="integer"),
      *             @OA\Property(property="salary_min", type="number", nullable=true),
      *             @OA\Property(property="salary_max", type="number", nullable=true),
@@ -817,7 +822,7 @@ class JobController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
             'category_id' => 'sometimes|required|exists:categories,id',
-            'location_id' => 'sometimes|required|exists:locations,id',
+            'visibility' => 'sometimes|required|in:national,local',
             'contract_type_id' => 'sometimes|required|exists:contract_types,id',
             'salary_min' => 'nullable|numeric|min:0',
             'salary_max' => 'nullable|numeric|min:0',
@@ -828,11 +833,22 @@ class JobController extends Controller
             'application_deadline' => 'nullable|date|after:today',
         ]);
 
+        // Une offre "locale" exige une ville d'entreprise renseignée.
+        if (($validated['visibility'] ?? null) === 'local' && empty($recruiter->company?->city)) {
+            return response()->json([
+                'message' => "Votre entreprise n'a pas de ville renseignée. "
+                    . "Renseignez la localisation de l'entreprise ou choisissez une visibilité nationale.",
+                'errors' => [
+                    'visibility' => ["Ville de l'entreprise manquante pour une offre locale."],
+                ],
+            ], 422);
+        }
+
         $job->update($validated);
 
         return response()->json([
             'message' => 'Offre mise à jour avec succès',
-            'data' => $job->load(['company', 'category', 'location', 'contractType']),
+            'data' => $job->load(['company', 'category', 'contractType']),
         ]);
     }
     /**
@@ -874,7 +890,7 @@ class JobController extends Controller
             ], 403);
         }
 
-        $job = Job::with(['company', 'category', 'location', 'contractType', 'postedBy'])
+        $job = Job::with(['company', 'category', 'contractType', 'postedBy'])
             ->withCount('applications')
             ->find($id);
 

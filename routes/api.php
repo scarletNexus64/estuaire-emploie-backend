@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\CompanyCategoryController;
+use App\Http\Controllers\Api\CompanyProductController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\OtpController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Api\TestNotificationController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\CurrencyController;
+use App\Http\Controllers\Api\CurrencyReferenceController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\RecruiterServicePurchaseController;
@@ -26,6 +29,7 @@ use App\Http\Controllers\Api\CandidatePremiumServiceController;
 use App\Http\Controllers\Api\ExamPaperApiController;
 use App\Http\Controllers\Api\QuickServiceController;
 use App\Http\Controllers\Api\ImportExportController;
+use App\Http\Controllers\Api\DeviceChangeRequestController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -56,6 +60,10 @@ Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
 Route::post('/otp/password-reset/send', [OtpController::class, 'sendPasswordResetOtp']);
 Route::post('/otp/password-reset/verify', [OtpController::class, 'verifyPasswordResetOtp']);
 
+// Demandes de changement d'appareil (publiques)
+Route::post('/device-change-requests', [DeviceChangeRequestController::class, 'store']);
+Route::post('/device-change-requests/status', [DeviceChangeRequestController::class, 'status']);
+
 // Maintenance Mode Status
 Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeController::class, 'status']);
 
@@ -69,11 +77,25 @@ Route::get('/companies', [CompanyController::class, 'index']);
 Route::get('/companies/nearby', [CompanyController::class, 'getNearbyCompanies']); // Récupérer les entreprises à proximité par GPS
 Route::get('/companies/{company}', [CompanyController::class, 'show']);
 
+// Produits/Services d'entreprises (publics)
+Route::get('/companies/{companyId}/products', [CompanyProductController::class, 'index']); // Liste des produits d'une entreprise
+Route::get('/company-products/{id}', [CompanyProductController::class, 'show']); // Détail d'un produit
+
 // Catégories et filtres (données de référence)
 Route::get('/categories', [CategoryController::class, 'categories']);
-Route::get('/locations', [CategoryController::class, 'locations']);
 Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
 Route::get('/domains-sectors', [CompanyController::class, 'getDomainsSectors']); // Domaines et secteurs d'activité
+
+// Company Categories (new hierarchical structure)
+Route::get('/company-categories', [CompanyCategoryController::class, 'index']);
+Route::get('/company-categories/level1', [CompanyCategoryController::class, 'getLevel1Options']);
+Route::get('/company-categories/level2', [CompanyCategoryController::class, 'getLevel2Options']);
+Route::get('/company-categories/hierarchical', [CompanyCategoryController::class, 'getHierarchical']);
+Route::get('/company-categories/grouped', [CompanyCategoryController::class, 'getSubCategoriesGrouped']); // For frontend multi-select
+Route::get('/company-categories/search', [CompanyCategoryController::class, 'search']);
+
+// Référentiel complet des devises mondiales (pour le choix de devise produit)
+Route::get('/currencies/all', [CurrencyReferenceController::class, 'index']);
 
 // Plans d'abonnement publics (consultation)
 Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
@@ -334,8 +356,28 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::post('/companies', [CompanyController::class, 'store']);
     // Récupérer mon entreprise
     Route::get('/my-company', [CompanyController::class, 'myCompany']);
+    // Secteurs niveau 3 disponibles pour mon entreprise (selon ses niveaux 2)
+    Route::get('/my-company/level3-sectors', [CompanyController::class, 'myCompanyLevel3Sectors']);
     // Mettre à jour mon entreprise
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
+
+    // ------------------
+    // RECRUTEUR - GESTION PRODUITS/SERVICES
+    // ------------------
+    // Ajouter plusieurs produits/services (pour vitrine initiale)
+    Route::post('/company-products/bulk', [CompanyProductController::class, 'storeMultiple']);
+    // Ajouter un produit/service
+    Route::post('/company-products', [CompanyProductController::class, 'store']);
+    // Boutique virtuelle : acheter un produit / ouvrir une conversation
+    Route::post('/company-products/{id}/purchase', [CompanyProductController::class, 'purchase']);
+    Route::post('/company-products/{id}/inquiry', [CompanyProductController::class, 'inquiry']);
+    // Facture PDF d'un achat (génère si besoin, renvoie l'URL)
+    Route::get('/company-product-purchases/{id}/invoice', [CompanyProductController::class, 'invoice']);
+    // Modifier un produit/service
+    Route::put('/company-products/{id}', [CompanyProductController::class, 'update']);
+    Route::post('/company-products/{id}', [CompanyProductController::class, 'update']); // For multipart/form-data
+    // Supprimer un produit/service
+    Route::delete('/company-products/{id}', [CompanyProductController::class, 'destroy']);
 
     // ------------------
     // RECRUTEUR - ABONNEMENTS & PAIEMENTS
@@ -418,6 +460,16 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/admin/withdrawal-requests/{id}', [\App\Http\Controllers\Api\Admin\WithdrawalRequestController::class, 'show'])->middleware('admin');
     // Approuver ou refuser une demande (Admin)
     Route::post('/admin/withdrawal-requests/{id}/respond', [\App\Http\Controllers\Api\Admin\WithdrawalRequestController::class, 'respond'])->middleware('admin');
+
+    // ------------------
+    // ADMIN - GESTION DES DEMANDES DE CHANGEMENT D'APPAREIL
+    // ------------------
+    // Liste toutes les demandes de changement d'appareil (Admin)
+    Route::get('/admin/device-change-requests', [DeviceChangeRequestController::class, 'index'])->middleware('admin');
+    // Approuver une demande (Admin)
+    Route::post('/admin/device-change-requests/{requestId}/approve', [DeviceChangeRequestController::class, 'approve'])->middleware('admin');
+    // Rejeter une demande (Admin)
+    Route::post('/admin/device-change-requests/{requestId}/reject', [DeviceChangeRequestController::class, 'reject'])->middleware('admin');
 
     // ------------------
     // PACKS ESPACE DE STOCKAGE (Actions protégées)
@@ -605,6 +657,23 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     Route::post('/broadcasting/auth', function () {
         return Broadcast::auth(request());
+    });
+
+    // ------------------
+    // PROMOTIONS DE PACKS
+    // ------------------
+    Route::prefix('promotions')->group(function () {
+        // Liste des packs en promotion
+        Route::get('/packs', [\App\Http\Controllers\Api\PackPromotionApiController::class, 'getActivePromotions']);
+
+        // Vérifier si un pack spécifique est en promo
+        Route::get('/check/{type}/{id}', [\App\Http\Controllers\Api\PackPromotionApiController::class, 'checkPromotion']);
+
+        // Activer une promotion pour l'utilisateur connecté
+        Route::post('/{promotionId}/activate', [\App\Http\Controllers\Api\PackPromotionApiController::class, 'activatePromotion']);
+
+        // Mes promotions activées
+        Route::get('/my-activations', [\App\Http\Controllers\Api\PackPromotionApiController::class, 'myActivations']);
     });
 });
 

@@ -103,6 +103,30 @@ class SubscriptionPlan extends Model
     }
 
     /**
+     * Relation : Promotions pour ce plan d'abonnement
+     */
+    public function promotions()
+    {
+        return $this->morphMany(PackPromotion::class, 'promotionable');
+    }
+
+    /**
+     * Vérifie si le plan est actuellement en promotion
+     */
+    public function hasActivePromotion(): bool
+    {
+        return $this->promotions()->available()->exists();
+    }
+
+    /**
+     * Obtient la promotion active pour ce plan
+     */
+    public function getActivePromotion(): ?PackPromotion
+    {
+        return $this->promotions()->available()->first();
+    }
+
+    /**
      * Scope pour les plans actifs uniquement
      */
     public function scopeActive($query)

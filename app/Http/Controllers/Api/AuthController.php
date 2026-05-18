@@ -76,6 +76,7 @@ class AuthController extends Controller
             'password'  => 'required|string|min:6',
             'phone'     => 'nullable|string|max:20',
             'fcm_token' => 'nullable|string',
+            'device_id' => 'required|string', // Identifiant unique de l'appareil
             'referral_code' => 'nullable|string|exists:users,referral_code',
         ]);
 
@@ -101,6 +102,7 @@ class AuthController extends Controller
             'phone'             => $validated['phone'] ?? 'N/A',
             'fcm_token_present' => !empty($validated['fcm_token']),
             'fcm_token'         => $validated['fcm_token'] ?? 'N/A',
+            'device_id'         => $validated['device_id'] ?? 'N/A',
             'referral_code'     => $validated['referral_code'] ?? 'N/A',
             'referred_by_id'    => $referrerId ?? 'N/A',
         ]);
@@ -111,6 +113,7 @@ class AuthController extends Controller
             'password'         => Hash::make($validated['password']),
             'phone'            => $validated['phone'] ?? null,
             'fcm_token'        => $validated['fcm_token'] ?? null,
+            'device_id'        => $validated['device_id'], // Associer l'appareil au compte
             'role'             => 'candidate',
             'available_roles'  => ['candidate'], // ✅ Initialiser avec le rôle par défaut
             'email_verified_at'=> !empty($validated['email']) ? now() : null,
@@ -181,12 +184,15 @@ public function login(Request $request)
         'identifier' => 'required|string', // Email ou téléphone
         'password' => 'required',
         'fcm_token' => 'nullable|string',
+        'device_id' => 'required|string', // Identifiant unique de l'appareil
     ]);
 
     $identifier = $credentials['identifier'];
+    $deviceId = $credentials['device_id'];
 
     Log::info('🔐 [LOGIN] Tentative de connexion', [
         'identifier' => $identifier,
+        'device_id' => $deviceId,
         'fcm_token_present' => !empty($credentials['fcm_token']),
     ]);
 
@@ -211,12 +217,45 @@ public function login(Request $request)
         return response()->json(['message' => 'Identifiant ou mot de passe incorrect.'], 401);
     }
 
-    Log::info('✅ [LOGIN] Connexion réussie', [
+    Log::info('✅ [LOGIN] Identifiants corrects', [
         'user_id' => $user->id,
-        'email' => $user->email
+        'email' => $user->email,
+        'current_device_id' => $user->device_id,
+        'login_device_id' => $deviceId,
     ]);
 
-    // 4. Si un fcm_token a été envoyé, on l'enregistre
+    // 4. VÉRIFICATION DU DEVICE_ID
+    if (empty($user->device_id)) {
+        // Premier login ou ancien compte sans device_id -> Associer cet appareil
+        Log::info('📱 [LOGIN] Premier appareil associé au compte', ['user_id' => $user->id]);
+        $user->update(['device_id' => $deviceId]);
+    } elseif ($user->device_id !== $deviceId) {
+        // L'appareil est différent de celui enregistré
+        Log::warning('⚠️ [LOGIN] Tentative de connexion depuis un appareil différent', [
+            'user_id' => $user->id,
+            'registered_device' => $user->device_id,
+            'attempting_device' => $deviceId,
+        ]);
+
+        // Vérifier s'il y a déjà une demande en attente
+        if ($user->hasPendingDeviceChangeRequest()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce compte est lié à un autre appareil. Vous avez déjà une demande de changement en cours de traitement.',
+                'requires_device_change' => true,
+                'has_pending_request' => true,
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Ce compte est lié à un autre appareil. Veuillez lancer une demande de changement d\'appareil qui sera validée par un administrateur.',
+            'requires_device_change' => true,
+            'has_pending_request' => false,
+        ], 403);
+    }
+
+    // 5. Si un fcm_token a été envoyé, on l'enregistre
     if ($request->filled('fcm_token')) {
         Log::info('📲 [LOGIN] Enregistrement du FCM token', [
             'user_id' => $user->id,
@@ -235,7 +274,7 @@ public function login(Request $request)
         Log::warning('⚠️ [LOGIN] Aucun FCM token fourni', ['user_id' => $user->id]);
     }
 
-    // 5. Charger les relations nécessaires
+    // 6. Charger les relations nécessaires
     if ($user->isRecruiter()) {
         $user->load(['recruiter.company']);
     }
@@ -243,14 +282,16 @@ public function login(Request $request)
     $user->applications_count = $user->applications()->count();
     $user->favorites_count = $user->favorites()->count();
 
-    // 6. Créer et renvoyer le token d'API (Sanctum)
+    // 7. Créer et renvoyer le token d'API (Sanctum)
     $token = $user->createToken('auth-token-mobile')->plainTextToken;
+
+    Log::info('✅ [LOGIN] Connexion réussie', ['user_id' => $user->id]);
 
     return response()->json([
         'message' => 'Connexion réussie',
         'token' => $token,
         'user' => $user,
-        'must_change_password' => (bool) $user->must_change_password, // Flag visible pour le front
+        'must_change_password' => (bool) $user->must_change_password,
     ]);
 }
 

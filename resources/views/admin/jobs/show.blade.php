@@ -47,7 +47,8 @@
                     <h4 style="margin-bottom: 1rem; font-weight: 600;">Informations</h4>
                     <p><strong>Entreprise:</strong> {{ $job->company?->name ?? 'N/A' }}</p>
                     <p><strong>Catégorie:</strong> {{ $job->category?->name ?? 'N/A' }}</p>
-                    <p><strong>Localisation:</strong> {{ $job->location?->name ?? 'N/A' }}</p>
+                    <p><strong>Ville (entreprise):</strong> {{ $job->company?->city ?? 'N/A' }}</p>
+                    <p><strong>Visibilité:</strong> {{ $job->visibility === 'local' ? 'Locale' : 'Nationale' }}</p>
                     <p><strong>Type de contrat:</strong> {{ $job->contractType?->name ?? 'N/A' }}</p>
                     <p><strong>Niveau d'expérience:</strong> {{ ucfirst($job->experience_level ?? 'N/A') }}</p>
 

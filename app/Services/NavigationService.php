@@ -188,6 +188,12 @@ class NavigationService
                         'permission' => 'manage_premium_services',
                     ],
                     [
+                        'name' => 'Promotions de Packs',
+                        'route' => 'admin.pack-promotions.index',
+                        'icon' => 'fas fa-gift',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
                         'name' => 'Attribution Manuelle',
                         'route' => 'admin.manual-subscriptions.index',
                         'icon' => 'fas fa-user-shield',
@@ -275,6 +281,18 @@ class NavigationService
                         'route' => 'admin.fcm-tokens.index',
                         'icon' => 'fas fa-bell',
                         'permission' => null, // All admins can view FCM tokens
+                    ],
+                    [
+                        'name' => 'Users Devices',
+                        'route' => 'admin.users-devices.index',
+                        'icon' => 'fas fa-mobile',
+                        'permission' => null, // All admins can view devices
+                    ],
+                    [
+                        'name' => 'Device Management',
+                        'route' => 'admin.device-change-requests.index',
+                        'icon' => 'fas fa-mobile-alt',
+                        'permission' => null, // All admins can manage device requests
                     ],
                     [
                         'name' => 'Mode Maintenance',

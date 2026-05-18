@@ -40,6 +40,8 @@ class ChatController extends Controller
                     'sender_photo' => $msg->user->profile_photo,
                     'message' => $msg->message,
                     'status' => $msg->status,
+                    'company_product_id' => $msg->company_product_id,
+                    'metadata' => $msg->metadata,
                     'created_at' => $msg->created_at?->toDateTimeString(),
                     'updated_at' => $msg->updated_at?->toDateTimeString(),
                 ];
@@ -59,6 +61,7 @@ class ChatController extends Controller
         $validated = $request->validate([
             'conversation_id' => 'required|exists:conversations,id',
             'message' => 'required|string|max:5000',
+            'company_product_id' => 'nullable|exists:company_products,id',
         ]);
 
         // Vérifier que l'utilisateur fait partie de cette conversation
@@ -75,11 +78,31 @@ class ChatController extends Controller
             'user_two' => $conversation->user_two,
         ]);
 
+        $productMeta = null;
+        if (!empty($validated['company_product_id'])) {
+            $taggedProduct = \App\Models\CompanyProduct::find($validated['company_product_id']);
+            if ($taggedProduct) {
+                $productMeta = [
+                    'product' => [
+                        'id' => $taggedProduct->id,
+                        'name' => $taggedProduct->name,
+                        'price' => $taggedProduct->price,
+                        'currency' => $taggedProduct->currency,
+                        'billing_type' => $taggedProduct->billing_type,
+                        'type' => $taggedProduct->type,
+                        'image' => $taggedProduct->first_image_url,
+                    ],
+                ];
+            }
+        }
+
         $message = Message::create([
             'conversation_id' => $validated['conversation_id'],
             'sender_id' => Auth::id(),
             'message' => $validated['message'],
             'status' => 'sent',
+            'company_product_id' => $validated['company_product_id'] ?? null,
+            'metadata' => $productMeta,
         ]);
 
         \Log::info('💬 📤 [SEND] Message created in DB', [

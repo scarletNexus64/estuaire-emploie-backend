@@ -65,6 +65,7 @@ class SubscriptionPlanController extends Controller
 
         if ($planType === 'recruiter') {
             $plans = $query->recruiter()->get($this->getPlanFields());
+            $plans = $this->addPromotionInfo($plans);
             return response()->json([
                 'success' => true,
                 'message' => 'Plans d\'abonnement recruteurs récupérés avec succès',
@@ -72,6 +73,7 @@ class SubscriptionPlanController extends Controller
             ]);
         } elseif ($planType === 'job_seeker') {
             $plans = $query->jobSeeker()->get($this->getPlanFields());
+            $plans = $this->addPromotionInfo($plans);
             return response()->json([
                 'success' => true,
                 'message' => 'Plans d\'abonnement chercheurs d\'emploi récupérés avec succès',
@@ -94,8 +96,8 @@ class SubscriptionPlanController extends Controller
             'success' => true,
             'message' => 'Plans d\'abonnement récupérés avec succès',
             'data' => [
-                'recruiter_plans' => $recruiterPlans,
-                'job_seeker_plans' => $jobSeekerPlans,
+                'recruiter_plans' => $this->addPromotionInfo($recruiterPlans),
+                'job_seeker_plans' => $this->addPromotionInfo($jobSeekerPlans),
             ],
         ]);
     }
@@ -126,6 +128,31 @@ class SubscriptionPlanController extends Controller
             'color',
             'icon',
         ];
+    }
+
+    /**
+     * Ajoute les informations promotionnelles aux plans
+     */
+    private function addPromotionInfo($plans)
+    {
+        return $plans->map(function ($plan) {
+            $promotion = $plan->getActivePromotion();
+
+            if ($promotion) {
+                $plan->is_promotional = true;
+                $plan->promotional_price = 0;
+                $plan->promotion_id = $promotion->id;
+                $plan->promotion_name = $promotion->name;
+                $plan->promotion_end_date = $promotion->end_date->toDateTimeString();
+                $plan->promotion_remaining_days = $promotion->remaining_days;
+                $plan->promotion_usage_duration_days = $promotion->usage_duration_days;
+            } else {
+                $plan->is_promotional = false;
+                $plan->promotional_price = null;
+            }
+
+            return $plan;
+        });
     }
 
     /**
@@ -192,10 +219,35 @@ class SubscriptionPlanController extends Controller
             ], 404);
         }
 
+        // Vérifier si le plan est en promotion
+        $promotion = $plan->getActivePromotion();
+        $promotionData = null;
+
+        if ($promotion) {
+            $promotionData = [
+                'id' => $promotion->id,
+                'name' => $promotion->name,
+                'description' => $promotion->description,
+                'promotional_price' => 0,
+                'end_date' => $promotion->end_date->toDateTimeString(),
+                'remaining_days' => $promotion->remaining_days,
+                'usage_duration_days' => $promotion->usage_duration_days,
+                'max_activations' => $promotion->max_activations,
+                'remaining_activations' => $promotion->remaining_activations,
+            ];
+
+            $plan->is_promotional = true;
+            $plan->promotional_price = 0;
+        } else {
+            $plan->is_promotional = false;
+            $plan->promotional_price = null;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Plan d\'abonnement récupéré avec succès',
             'data' => $plan,
+            'promotion' => $promotionData,
         ]);
     }
 

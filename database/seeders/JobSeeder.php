@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Job;
 use App\Models\Company;
 use App\Models\Category;
-use App\Models\Location;
 use App\Models\ContractType;
 use App\Models\Recruiter;
 use Illuminate\Database\Seeder;
@@ -16,7 +15,6 @@ class JobSeeder extends Seeder
     {
         $companies = Company::where('status', 'verified')->get();
         $categories = Category::all();
-        $locations = Location::all();
         $contractTypes = ContractType::all();
 
         $jobs = [
@@ -86,7 +84,7 @@ class JobSeeder extends Seeder
                 Job::create(array_merge($jobData, [
                     'company_id' => $company->id,
                     'category_id' => $categories->random()->id,
-                    'location_id' => $locations->random()->id,
+                    'visibility' => collect(['national', 'local'])->random(),
                     'contract_type_id' => $contractTypes->random()->id,
                     'posted_by' => $recruiter->user_id,
                     'application_deadline' => now()->addDays(rand(30, 90)),

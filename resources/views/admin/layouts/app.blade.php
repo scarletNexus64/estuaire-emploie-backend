@@ -1647,6 +1647,8 @@
                     'fas fa-list' => 'mdi-format-list-bulleted',
                     'fas fa-user-shield' => 'mdi-shield-account',
                     'fas fa-bell' => 'mdi-bell',
+                    'fas fa-mobile' => 'mdi-cellphone',
+                    'fas fa-mobile-alt' => 'mdi-cellphone-link',
                     'fas fa-cog' => 'mdi-cog',
                     'fas fa-wrench' => 'mdi-wrench',
                 ];
@@ -1692,6 +1694,13 @@
                             {{-- Badges --}}
                             @if(isset($item['route']) && $item['route'] === 'admin.applications.index' && isset($pendingApplications) && $pendingApplications > 0)
                                 <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingApplications }}</span>
+                            @endif
+
+                            @if(isset($item['route']) && $item['route'] === 'admin.device-change-requests.index' && class_exists('\App\Models\DeviceChangeRequest'))
+                                @php $pendingDeviceRequests = \App\Models\DeviceChangeRequest::where('status', 'pending')->count(); @endphp
+                                @if($pendingDeviceRequests > 0)
+                                    <span class="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingDeviceRequests }}</span>
+                                @endif
                             @endif
 
                             @if(isset($item['route']) && $item['route'] === 'admin.subscriptions.index' && class_exists('\App\Models\Subscription'))

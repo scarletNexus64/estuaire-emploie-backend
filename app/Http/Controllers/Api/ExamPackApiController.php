@@ -52,7 +52,7 @@ class ExamPackApiController extends Controller
                       ->orderBy('created_at', 'desc')
                       ->paginate($perPage);
 
-        // Ajouter les informations d'achat pour l'utilisateur connecté
+        // Ajouter les informations d'achat et promotionnelles pour l'utilisateur connecté
         if (Auth::check()) {
             $userId = Auth::id();
             $user = Auth::user();
@@ -65,6 +65,40 @@ class ExamPackApiController extends Controller
                                                   ->active()
                                                   ->exists();
                 $pack->is_free_for_student = $isStudent;
+
+                // Vérifier si le pack est en promotion
+                $promotion = $pack->getActivePromotion();
+                if ($promotion) {
+                    $pack->is_promotional = true;
+                    $pack->promotional_price = 0;
+                    $pack->promotion_id = $promotion->id;
+                    $pack->promotion_name = $promotion->name;
+                    $pack->promotion_end_date = $promotion->end_date->toDateTimeString();
+                    $pack->promotion_remaining_days = $promotion->remaining_days;
+                    $pack->promotion_usage_duration_days = $promotion->usage_duration_days;
+                } else {
+                    $pack->is_promotional = false;
+                    $pack->promotional_price = null;
+                }
+
+                return $pack;
+            });
+        } else {
+            // Même si l'utilisateur n'est pas connecté, afficher les infos promo
+            $packs->getCollection()->transform(function ($pack) {
+                $promotion = $pack->getActivePromotion();
+                if ($promotion) {
+                    $pack->is_promotional = true;
+                    $pack->promotional_price = 0;
+                    $pack->promotion_id = $promotion->id;
+                    $pack->promotion_name = $promotion->name;
+                    $pack->promotion_end_date = $promotion->end_date->toDateTimeString();
+                    $pack->promotion_remaining_days = $promotion->remaining_days;
+                    $pack->promotion_usage_duration_days = $promotion->usage_duration_days;
+                } else {
+                    $pack->is_promotional = false;
+                    $pack->promotional_price = null;
+                }
                 return $pack;
             });
         }
@@ -102,12 +136,31 @@ class ExamPackApiController extends Controller
             $isFreeForStudent = $user->isStudent();
         }
 
+        // Vérifier si le pack est en promotion
+        $promotionData = null;
+        $promotion = $pack->getActivePromotion();
+        if ($promotion) {
+            $promotionData = [
+                'id' => $promotion->id,
+                'name' => $promotion->name,
+                'description' => $promotion->description,
+                'promotional_price' => 0,
+                'end_date' => $promotion->end_date->toDateTimeString(),
+                'remaining_days' => $promotion->remaining_days,
+                'usage_duration_days' => $promotion->usage_duration_days,
+                'max_activations' => $promotion->max_activations,
+                'remaining_activations' => $promotion->remaining_activations,
+            ];
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
                 'pack' => $pack,
                 'is_purchased' => $isPurchased,
                 'is_free_for_student' => $isFreeForStudent,
+                'is_promotional' => $promotion !== null,
+                'promotion' => $promotionData,
             ],
         ]);
     }

@@ -100,6 +100,30 @@ class TrainingPack extends Model
     }
 
     /**
+     * Relation : Promotions pour ce pack
+     */
+    public function promotions()
+    {
+        return $this->morphMany(PackPromotion::class, 'promotionable');
+    }
+
+    /**
+     * Vérifie si le pack est actuellement en promotion
+     */
+    public function hasActivePromotion(): bool
+    {
+        return $this->promotions()->available()->exists();
+    }
+
+    /**
+     * Obtient la promotion active pour ce pack
+     */
+    public function getActivePromotion(): ?PackPromotion
+    {
+        return $this->promotions()->available()->first();
+    }
+
+    /**
      * Scope pour les packs actifs
      */
     public function scopeActive($query)
