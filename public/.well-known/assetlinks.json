@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.insam.estuaire_emploie",
       "sha256_cert_fingerprints": [
-        "REMPLACER_PAR_LE_SHA256_DU_CERTIFICAT_DE_SIGNATURE"
+        "F0:DA:4E:6B:8F:CD:47:80:04:23:0C:D2:9A:4A:DA:F2:E8:F5:D9:4E:7D:9C:D9:B4:00:7C:F5:6B:CF:39:C2:89",
+        "A3:8D:12:BF:A2:23:A8:0A:11:16:CC:2F:DC:FC:71:31:A2:04:F8:93:AB:2C:4B:58:93:6E:78:0F:84:FD:A3:DD"
       ]
     }
   }

@@ -9,3 +9,24 @@
 
    INFO  Starting server on 0.0.0.0:6001 (api.estuaireemploi.com).  
 
+
+   RedisException 
+
+  Connection refused
+
+  at vendor/laravel/framework/src/Illuminate/Redis/Connectors/PhpRedisConnector.php:175
+    171▕         if (version_compare(phpversion('redis'), '5.3.0', '>=') && ! is_null($context = Arr::get($config, 'context'))) {
+    172▕             $parameters[] = $context;
+    173▕         }
+    174▕ 
+  ➜ 175▕         $client->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+    176▕     }
+    177▕ 
+    178▕     /**
+    179▕      * Create a new redis cluster instance.
+
+      [2m+28 vendor frames [22m
+
+  29  artisan:11
+      Illuminate\Foundation\Application::handleCommand()
+

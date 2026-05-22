@@ -437,11 +437,12 @@
     @foreach($portfolios as $portfolio)
     <div class="portfolio-card">
         <div class="portfolio-header template-{{ $portfolio->template_id }}">
+            @php($userName = $portfolio->user?->name ?? 'Utilisateur supprimé')
             @if($portfolio->photo_url)
-                <img src="{{ $portfolio->photo_url }}" alt="{{ $portfolio->user->name }}" class="portfolio-avatar">
+                <img src="{{ $portfolio->photo_url }}" alt="{{ $userName }}" class="portfolio-avatar">
             @else
                 <div class="portfolio-avatar">
-                    {{ strtoupper(substr($portfolio->user->name, 0, 1)) }}
+                    {{ strtoupper(substr($userName, 0, 1)) }}
                 </div>
             @endif
             <h3 class="portfolio-title">{{ $portfolio->title }}</h3>
@@ -449,7 +450,7 @@
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                {{ $portfolio->user->name }}
+                {{ $userName }}
             </div>
         </div>
 
