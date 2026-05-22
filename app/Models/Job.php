@@ -62,9 +62,11 @@ class Job extends Model
         return $this->belongsTo(Company::class);
     }
 
+    // category_id référence désormais une company_category de niveau 3
+    // (secteur choisi par le recruteur), et non plus la table `categories`.
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(CompanyCategory::class, 'category_id');
     }
 
     public function contractType(): BelongsTo
