@@ -360,7 +360,7 @@ class JobController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"title","description","category_id","contract_type_id","experience_level"},
+     *             required={"title","description","contract_type_id","experience_level"},
      *             @OA\Property(property="title", type="string", example="Développeur Full Stack Senior"),
      *             @OA\Property(property="description", type="string", example="Nous recherchons un développeur Full Stack avec expertise Laravel et Vue.js"),
      *             @OA\Property(property="category_id", type="integer", example=1),
@@ -429,7 +429,9 @@ class JobController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
+            // category_id référence une company_category de niveau 3
+            // (secteur de l'entreprise). Optionnel.
+            'category_id' => 'nullable|exists:company_categories,id',
             'visibility' => 'required|in:national,local',
             'contract_type_id' => 'required|exists:contract_types,id',
             'salary_min' => 'nullable|numeric|min:0',
@@ -821,7 +823,7 @@ class JobController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
-            'category_id' => 'sometimes|required|exists:categories,id',
+            'category_id' => 'sometimes|nullable|exists:company_categories,id',
             'visibility' => 'sometimes|required|in:national,local',
             'contract_type_id' => 'sometimes|required|exists:contract_types,id',
             'salary_min' => 'nullable|numeric|min:0',
