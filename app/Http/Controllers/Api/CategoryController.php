@@ -31,10 +31,16 @@ class CategoryController extends Controller
      */
     public function categories(): JsonResponse
     {
-        $categories = Category::withCount('jobs')->get();
+        $categories = Category::with('translations')->withCount('jobs')->get();
 
         return response()->json([
-            'data' => $categories,
+            'data' => $categories->map(fn ($category) => [
+                'id' => $category->id,
+                'name' => $category->t('name'),
+                'slug' => $category->slug,
+                'description' => $category->t('description'),
+                'jobs_count' => $category->jobs_count,
+            ]),
         ]);
     }
 
@@ -54,10 +60,15 @@ class CategoryController extends Controller
      */
     public function contractTypes(): JsonResponse
     {
-        $contractTypes = ContractType::withCount('jobs')->get();
+        $contractTypes = ContractType::with('translations')->withCount('jobs')->get();
 
         return response()->json([
-            'data' => $contractTypes,
+            'data' => $contractTypes->map(fn ($type) => [
+                'id' => $type->id,
+                'name' => $type->t('name'),
+                'slug' => $type->slug,
+                'jobs_count' => $type->jobs_count,
+            ]),
         ]);
     }
 }

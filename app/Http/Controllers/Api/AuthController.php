@@ -83,8 +83,8 @@ class AuthController extends Controller
         // Au moins un identifiant (email ou téléphone) est requis
         if (empty($validated['email']) && empty($validated['phone'])) {
             return response()->json([
-                'message' => 'Un email ou un numéro de téléphone est requis.',
-                'errors'  => ['identifier' => ['Veuillez fournir un email ou un numéro de téléphone.']],
+                'message' => __('auth.identifier_required'),
+                'errors'  => ['identifier' => [__('auth.identifier_required_short')]],
             ], 422);
         }
 
@@ -131,7 +131,7 @@ class AuthController extends Controller
 
         // Charger les relations du user
         if ($user->isRecruiter()) {
-            $user->load(['recruiter.company']);
+            $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
         $user->load(['unreadNotifications']);
 
@@ -144,7 +144,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'message' => 'Inscription réussie',
+            'message' => __('auth.registration_success'),
         ], 201);
     }
 
@@ -214,7 +214,7 @@ public function login(Request $request)
     // 3. Vérifier si l'utilisateur existe et le mot de passe est correct
     if (!$user || !Hash::check($credentials['password'], $user->password)) {
         Log::warning('❌ [LOGIN] Échec de connexion', ['identifier' => $identifier]);
-        return response()->json(['message' => 'Identifiant ou mot de passe incorrect.'], 401);
+        return response()->json(['message' => __('auth.login_failed')], 401);
     }
 
     Log::info('✅ [LOGIN] Identifiants corrects', [
@@ -241,7 +241,7 @@ public function login(Request $request)
         if ($user->hasPendingDeviceChangeRequest()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ce compte est lié à un autre appareil. Vous avez déjà une demande de changement en cours de traitement.',
+                'message' => __('auth.device_locked_pending'),
                 'requires_device_change' => true,
                 'has_pending_request' => true,
             ], 403);
@@ -249,7 +249,7 @@ public function login(Request $request)
 
         return response()->json([
             'success' => false,
-            'message' => 'Ce compte est lié à un autre appareil. Veuillez lancer une demande de changement d\'appareil qui sera validée par un administrateur.',
+            'message' => __('auth.device_locked'),
             'requires_device_change' => true,
             'has_pending_request' => false,
         ], 403);
@@ -276,7 +276,7 @@ public function login(Request $request)
 
     // 6. Charger les relations nécessaires
     if ($user->isRecruiter()) {
-        $user->load(['recruiter.company']);
+        $user->load(['recruiter.company', 'companies', 'currentCompany']);
     }
     $user->load(['unreadNotifications']);
     $user->applications_count = $user->applications()->count();
@@ -288,7 +288,7 @@ public function login(Request $request)
     Log::info('✅ [LOGIN] Connexion réussie', ['user_id' => $user->id]);
 
     return response()->json([
-        'message' => 'Connexion réussie',
+        'message' => __('auth.login_success'),
         'token' => $token,
         'user' => $user,
         'must_change_password' => (bool) $user->must_change_password,
@@ -331,7 +331,7 @@ public function login(Request $request)
         $user->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Déconnexion réussie',
+            'message' => __('auth.logout_success'),
         ]);
     }
 
@@ -389,7 +389,7 @@ public function login(Request $request)
             ]);
 
             return response()->json([
-                'message' => 'Vous êtes déjà en mode ' . ($newRole === 'recruiter' ? 'recruteur' : 'candidat'),
+                'message' => $newRole === 'recruiter' ? __('auth.already_in_role_recruiter') : __('auth.already_in_role_candidate'),
                 'user' => $user,
                 'previous_role' => $previousRole,
                 'new_role' => $newRole,
@@ -403,7 +403,7 @@ public function login(Request $request)
 
         // Recharger les relations si nécessaire
         if ($user->isRecruiter()) {
-            $user->load(['recruiter.company']);
+            $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
         $user->load(['unreadNotifications']);
 
@@ -418,7 +418,7 @@ public function login(Request $request)
         ]);
 
         return response()->json([
-            'message' => 'Rôle changé avec succès',
+            'message' => __('auth.role_switched'),
             'user' => $user,
             'previous_role' => $previousRole,
             'new_role' => $newRole,
@@ -448,7 +448,7 @@ public function login(Request $request)
 
         // Charger les relations du user
         if ($user->isRecruiter()) {
-            $user->load(['recruiter.company']);
+            $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
         $user->load(['unreadNotifications']);
 
@@ -488,6 +488,29 @@ public function login(Request $request)
      *     @OA\Response(response=422, description="Erreur de validation")
      * )
      */
+    /**
+     * Persist the user's preferred locale (fr/en/es/ar).
+     * Used for push notifications, transactional emails, and as a fallback
+     * when no Accept-Language header is sent.
+     */
+    public function updateLocale(Request $request): JsonResponse
+    {
+        $supported = config('translations.locales', ['fr', 'en', 'es', 'ar']);
+
+        $validated = $request->validate([
+            'locale' => ['required', 'string', 'in:' . implode(',', $supported)],
+        ]);
+
+        $user = $request->user();
+        $user->locale = $validated['locale'];
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'locale' => $user->locale,
+        ]);
+    }
+
     public function updateRole(Request $request): JsonResponse
     {
         $request->validate([
@@ -500,7 +523,7 @@ public function login(Request $request)
 
         // Charger les relations du user
         if ($user->isRecruiter()) {
-            $user->load(['recruiter.company']);
+            $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
         $user->load(['unreadNotifications']);
 
@@ -509,7 +532,7 @@ public function login(Request $request)
         $user->favorites_count = $user->favorites()->count();
 
         return response()->json([
-            'message' => 'Rôle mis à jour avec succès',
+            'message' => __('auth.role_updated'),
             'user' => $user,
         ]);
     }
@@ -577,7 +600,7 @@ public function login(Request $request)
 
         // Charger les relations du user
         if ($user->isRecruiter()) {
-            $user->load(['recruiter.company']);
+            $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
         $user->load(['unreadNotifications']);
 
@@ -586,7 +609,7 @@ public function login(Request $request)
         $user->favorites_count = $user->favorites()->count();
 
         return response()->json([
-            'message' => 'Profil mis à jour avec succès',
+            'message' => __('auth.profile_updated'),
             'user' => $user,
         ]);
     }
@@ -620,9 +643,9 @@ public function login(Request $request)
         $user = auth()->user();
 
         if ($user->isRecruiter()) {
-            $recruiter = $user->recruiter;
+            $companyId = $user->current_company_id;
 
-            if (! $recruiter) {
+            if (! $companyId) {
                 return response()->json([
                     'statistics' => [
                         'total_jobs' => 0,
@@ -635,17 +658,17 @@ public function login(Request $request)
             }
 
             $stats = [
-                'total_jobs' => Job::where('company_id', $recruiter->company_id)->count(),
-                'active_jobs' => Job::where('company_id', $recruiter->company_id)
+                'total_jobs' => Job::where('company_id', $companyId)->count(),
+                'active_jobs' => Job::where('company_id', $companyId)
                     ->where('status', 'published')
                     ->count(),
-                'total_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
-                    $q->where('company_id', $recruiter->company_id);
+                'total_applications' => Application::whereHas('job', function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId);
                 })->count(),
-                'new_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
-                    $q->where('company_id', $recruiter->company_id);
+                'new_applications' => Application::whereHas('job', function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId);
                 })->where('status', 'pending')->count(),
-                'total_views' => Job::where('company_id', $recruiter->company_id)
+                'total_views' => Job::where('company_id', $companyId)
                     ->sum('views_count'),
             ];
         } else {
@@ -706,14 +729,14 @@ public function login(Request $request)
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucun compte trouvé avec cet email'
+                'message' => __('auth.no_account_with_email')
             ], 404);
         }
 
         // L'utilisateur existe, on autorise la réinitialisation
         return response()->json([
             'success' => true,
-            'message' => 'Email vérifié avec succès',
+            'message' => __('auth.email_verified'),
             'email' => $request->email
         ], 200);
     }
@@ -775,7 +798,7 @@ public function login(Request $request)
             if (!$otpRecord) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Veuillez d\'abord vérifier le code OTP envoyé à votre email.'
+                    'message' => __('auth.verify_email_otp_first')
                 ], 422);
             }
 
@@ -793,7 +816,7 @@ public function login(Request $request)
             if (!$otpRecord) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Veuillez d\'abord vérifier le code OTP envoyé à votre téléphone.'
+                    'message' => __('auth.verify_phone_otp_first')
                 ], 422);
             }
 
@@ -805,7 +828,7 @@ public function login(Request $request)
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucun compte trouvé avec cet identifiant'
+                'message' => __('auth.no_account_with_identifier')
             ], 404);
         }
 
@@ -833,7 +856,7 @@ public function login(Request $request)
 
         return response()->json([
             'success' => true,
-            'message' => 'Mot de passe réinitialisé avec succès'
+            'message' => __('auth.password_reset_success')
         ], 200);
     }
 
@@ -989,7 +1012,7 @@ public function login(Request $request)
 
             return response()->json([
                 'success' => false,
-                'message' => 'Mot de passe incorrect',
+                'message' => __('auth.incorrect_password'),
             ], 401);
         }
 
@@ -1002,38 +1025,37 @@ public function login(Request $request)
         try {
             \DB::beginTransaction();
 
-            // 1. Supprimer l'entreprise si l'utilisateur est recruiter
-            if ($user->isRecruiter() && $user->recruiter) {
-                $recruiter = $user->recruiter;
-                $company = $recruiter->company;
+            // 1. Supprimer les entreprises si l'utilisateur est recruiter
+            // Multi-entreprises : on parcourt TOUTES les entreprises où l'user est membre.
+            // En itération 1, pas d'invitations → chaque entreprise n'a que ce membre.
+            if ($user->isRecruiter()) {
+                $companies = $user->companies()->get();
 
-                if ($company) {
+                foreach ($companies as $company) {
                     Log::info('🏢 [DELETE ACCOUNT] Suppression de l\'entreprise', [
                         'company_id' => $company->id,
                         'company_name' => $company->name,
                         'recruiters_count' => $company->recruiters()->count(),
                     ]);
 
-                    // Supprimer tous les jobs de l'entreprise
                     $company->jobs()->each(function ($job) {
-                        // Supprimer les candidatures liées aux jobs
                         $job->applications()->forceDelete();
-                        // Supprimer les favoris liés aux jobs
                         $job->favorites()->detach();
-                        // Supprimer le job
                         $job->forceDelete();
                     });
 
-                    // Supprimer tous les recruteurs de l'entreprise
                     $company->recruiters()->forceDelete();
 
-                    // Supprimer l'entreprise
                     if ($company->logo) {
                         Storage::disk('public')->delete($company->logo);
                     }
                     $company->forceDelete();
+                }
 
-                    Log::info('✅ [DELETE ACCOUNT] Entreprise et données associées supprimées');
+                if ($companies->isNotEmpty()) {
+                    Log::info('✅ [DELETE ACCOUNT] Entreprises et données associées supprimées', [
+                        'count' => $companies->count(),
+                    ]);
                 }
             }
 
@@ -1108,7 +1130,7 @@ public function login(Request $request)
 
             return response()->json([
                 'success' => true,
-                'message' => 'Compte supprimé avec succès',
+                'message' => __('auth.account_deleted'),
             ]);
 
         } catch (\Exception $e) {
@@ -1122,7 +1144,7 @@ public function login(Request $request)
 
             return response()->json([
                 'success' => false,
-                'message' => 'Une erreur est survenue lors de la suppression du compte',
+                'message' => __('auth.account_delete_error'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -1196,7 +1218,7 @@ public function login(Request $request)
         if (empty($validated['email']) && empty($validated['phone'])) {
             return response()->json([
                 'available' => false,
-                'message' => 'Veuillez fournir un email ou un numéro de téléphone',
+                'message' => __('auth.provide_email_or_phone'),
             ], 422);
         }
 
@@ -1207,7 +1229,7 @@ public function login(Request $request)
                 return response()->json([
                     'available' => false,
                     'field' => 'email',
-                    'message' => 'Cette adresse email est déjà utilisée',
+                    'message' => __('auth.email_already_used'),
                 ], 200);
             }
         }
@@ -1219,7 +1241,7 @@ public function login(Request $request)
                 return response()->json([
                     'available' => false,
                     'field' => 'phone',
-                    'message' => 'Ce numéro de téléphone est déjà utilisé',
+                    'message' => __('auth.phone_already_used'),
                 ], 200);
             }
         }
@@ -1227,7 +1249,7 @@ public function login(Request $request)
         // Disponible
         return response()->json([
             'available' => true,
-            'message' => 'Disponible',
+            'message' => __('auth.available'),
         ], 200);
     }
 
@@ -1250,7 +1272,7 @@ public function login(Request $request)
         if (!Hash::check($validated['old_password'], $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'L\'ancien mot de passe est incorrect',
+                'message' => __('auth.old_password_incorrect'),
             ], 422);
         }
 
@@ -1258,7 +1280,7 @@ public function login(Request $request)
         if (Hash::check($validated['new_password'], $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Le nouveau mot de passe doit être différent de l\'ancien',
+                'message' => __('auth.new_password_must_differ'),
             ], 422);
         }
 
@@ -1271,7 +1293,7 @@ public function login(Request $request)
 
         return response()->json([
             'success' => true,
-            'message' => 'Mot de passe changé avec succès',
+            'message' => __('auth.password_changed'),
         ], 200);
     }
 }

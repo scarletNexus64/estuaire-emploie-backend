@@ -30,22 +30,14 @@ class RecruiterServicePurchaseController extends Controller
 
         $user = Auth::user();
 
-        // Vérifier que l'utilisateur est un recruteur
-        if (!$user->recruiter) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vous devez être un recruteur pour acheter ce service',
-            ], 403);
-        }
-
-        $recruiter = $user->recruiter;
-        $company = $recruiter->company;
+        $company = $user->currentCompany;
 
         if (!$company) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise pour acheter ce service',
-            ], 403);
+                'message' => __('recruiter_service.select_active_company_for_purchase'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         $application = Application::with(['user', 'job'])->findOrFail($request->application_id);
@@ -54,7 +46,7 @@ class RecruiterServicePurchaseController extends Controller
         if ($application->job->company_id !== $company->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette candidature n\'appartient pas à votre entreprise',
+                'message' => __('recruiter_service.application_not_in_company'),
             ], 403);
         }
 
@@ -82,22 +74,14 @@ class RecruiterServicePurchaseController extends Controller
 
         $user = Auth::user();
 
-        // Vérifier que l'utilisateur est un recruteur
-        if (!$user->recruiter) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vous devez être un recruteur pour acheter ce service',
-            ], 403);
-        }
-
-        $recruiter = $user->recruiter;
-        $company = $recruiter->company;
+        $company = $user->currentCompany;
 
         if (!$company) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise pour acheter ce service',
-            ], 403);
+                'message' => __('recruiter_service.select_active_company_for_purchase'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         $application = Application::with(['user', 'job'])->findOrFail($request->application_id);
@@ -106,7 +90,7 @@ class RecruiterServicePurchaseController extends Controller
         if ($application->job->company_id !== $company->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette candidature n\'appartient pas à votre entreprise',
+                'message' => __('recruiter_service.application_not_in_company'),
             ], 403);
         }
 
@@ -133,22 +117,14 @@ class RecruiterServicePurchaseController extends Controller
 
         $user = Auth::user();
 
-        // Vérifier que l'utilisateur est un recruteur
-        if (!$user->recruiter) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vous devez être un recruteur pour acheter ce service',
-            ], 403);
-        }
-
-        $recruiter = $user->recruiter;
-        $company = $recruiter->company;
+        $company = $user->currentCompany;
 
         if (!$company) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise pour acheter ce service',
-            ], 403);
+                'message' => __('recruiter_service.select_active_company_for_purchase'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         $result = $this->purchaseService->purchaseSkillsTest(
@@ -169,22 +145,14 @@ class RecruiterServicePurchaseController extends Controller
     {
         $user = Auth::user();
 
-        // Vérifier que l'utilisateur est un recruteur
-        if (!$user->recruiter) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
-        }
-
-        $recruiter = $user->recruiter;
-        $company = $recruiter->company;
+        $company = $user->currentCompany;
 
         if (!$company) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être associé à une entreprise',
-            ], 403);
+                'message' => __('recruiter_service.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         // Get application_id if provided to check candidate-specific access

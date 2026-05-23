@@ -78,6 +78,14 @@ class QuickServiceController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Seuls les recruteurs peuvent publier un service rapide
+        if (auth()->user()->role !== 'recruiter') {
+            return response()->json([
+                'success' => false,
+                'message' => __('quick_service.only_recruiters_can_publish'),
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'service_category_id' => 'required|exists:service_categories,id',
             'title' => 'required|string|max:255',
@@ -98,7 +106,7 @@ class QuickServiceController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur de validation',
+                'message' => __('common.validation_error'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -138,7 +146,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Service créé avec succès. Il sera publié après approbation par un administrateur.',
+            'message' => __('quick_service.created'),
             'data' => $service,
         ], 201);
     }
@@ -171,7 +179,7 @@ class QuickServiceController extends Controller
         if ($service->user_id !== auth()->id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'êtes pas autorisé à modifier ce service',
+                'message' => __('quick_service.not_authorized_modify'),
             ], 403);
         }
 
@@ -196,7 +204,7 @@ class QuickServiceController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur de validation',
+                'message' => __('common.validation_error'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -223,7 +231,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Service mis à jour avec succès',
+            'message' => __('quick_service.updated'),
             'data' => $service,
         ]);
     }
@@ -239,7 +247,7 @@ class QuickServiceController extends Controller
         if ($service->user_id !== auth()->id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'êtes pas autorisé à supprimer ce service',
+                'message' => __('quick_service.not_authorized_delete'),
             ], 403);
         }
 
@@ -254,7 +262,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Service supprimé avec succès',
+            'message' => __('quick_service.deleted'),
         ]);
     }
 
@@ -269,7 +277,7 @@ class QuickServiceController extends Controller
         if (!$service->isOpen()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ce service n\'accepte plus de réponses',
+                'message' => __('quick_service.no_more_responses'),
             ], 422);
         }
 
@@ -277,7 +285,7 @@ class QuickServiceController extends Controller
         if ($service->user_id === auth()->id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous ne pouvez pas répondre à votre propre service',
+                'message' => __('quick_service.cannot_respond_own'),
             ], 422);
         }
 
@@ -289,7 +297,7 @@ class QuickServiceController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur de validation',
+                'message' => __('common.validation_error'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -305,7 +313,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Réponse envoyée avec succès',
+            'message' => __('quick_service.response_sent'),
             'data' => $response,
         ], 201);
     }
@@ -321,7 +329,7 @@ class QuickServiceController extends Controller
         if ($service->user_id !== auth()->id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'êtes pas autorisé à accepter cette réponse',
+                'message' => __('quick_service.not_authorized_accept'),
             ], 403);
         }
 
@@ -334,7 +342,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Réponse acceptée avec succès',
+            'message' => __('quick_service.response_accepted'),
             'data' => $response,
         ]);
     }
@@ -350,7 +358,7 @@ class QuickServiceController extends Controller
         if ($service->user_id !== auth()->id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'êtes pas autorisé à rejeter cette réponse',
+                'message' => __('quick_service.not_authorized_reject'),
             ], 403);
         }
 
@@ -362,7 +370,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Réponse rejetée',
+            'message' => __('quick_service.response_rejected'),
         ]);
     }
 
@@ -406,12 +414,23 @@ class QuickServiceController extends Controller
     {
         $categories = ServiceCategory::active()
             ->ordered()
+            ->with('translations')
             ->withCount('quickServices')
             ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $categories,
+            'data' => $categories->map(fn ($category) => [
+                'id' => $category->id,
+                'name' => $category->t('name'),
+                'slug' => $category->slug,
+                'description' => $category->t('description'),
+                'icon' => $category->icon,
+                'color' => $category->color,
+                'display_order' => $category->display_order,
+                'is_active' => $category->is_active,
+                'quick_services_count' => $category->quick_services_count,
+            ]),
         ]);
     }
 

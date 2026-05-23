@@ -74,7 +74,7 @@ class AnnouncementController extends Controller
             if ($channel === 'push') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cet utilisateur n\'a pas de token FCM. Veuillez choisir "Email uniquement".'
+                    'message' => __('announcement.no_fcm_token')
                 ], 400);
             }
             // Si c'est "both" et pas de token, on envoie juste l'email
@@ -156,12 +156,12 @@ class AnnouncementController extends Controller
                 $channelText = $sentPush && $sentEmail ? 'Push + Email' : ($sentPush ? 'Push' : 'Email');
                 return response()->json([
                     'success' => true,
-                    'message' => "Notification envoyée via $channelText à {$user->name}" . (!empty($errors) ? ' (avec erreurs partielles)' : ''),
+                    'message' => !empty($errors) ? __('announcement.sent_via_channel_partial', ['channel' => $channelText, 'user' => $user->name]) : __('announcement.sent_via_channel', ['channel' => $channelText, 'user' => $user->name]),
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Échec d\'envoi : ' . implode(', ', $errors),
+                    'message' => __('announcement.send_failed', ['errors' => implode(', ', $errors)]),
                 ], 500);
             }
         } catch (\Exception $e) {
@@ -172,7 +172,7 @@ class AnnouncementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'envoi : ' . $e->getMessage(),
+                'message' => __('announcement.send_error', ['error' => $e->getMessage()]),
             ], 500);
         }
     }
@@ -228,7 +228,7 @@ class AnnouncementController extends Controller
             return response()->json([
                 'success' => true,
                 'completed' => true,
-                'message' => 'Tous les utilisateurs ont reçu la notification',
+                'message' => __('announcement.all_users_notified'),
                 'sent' => 0,
                 'failed' => 0
             ]);

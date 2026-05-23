@@ -27,16 +27,17 @@ class RecruiterSkillTestController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
+                'message' => __('skill_test.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        $tests = RecruiterSkillTest::where('company_id', $recruiter->company_id)
+        $tests = RecruiterSkillTest::where('company_id', $companyId)
             ->with(['job:id,title', 'results'])
             ->withCount('results')
             ->orderBy('created_at', 'desc')
@@ -70,16 +71,17 @@ class RecruiterSkillTestController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
+                'message' => __('skill_test.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
+        $test = RecruiterSkillTest::where('company_id', $companyId)
             ->with(['job:id,title', 'results.application.user'])
             ->findOrFail($id);
 
@@ -118,13 +120,14 @@ class RecruiterSkillTestController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
+                'message' => __('skill_test.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         $request->validate([
@@ -143,20 +146,20 @@ class RecruiterSkillTestController extends Controller
         // Verify job belongs to company if provided
         if ($request->job_id) {
             $job = \App\Models\Job::where('id', $request->job_id)
-                ->where('company_id', $recruiter->company_id)
+                ->where('company_id', $companyId)
                 ->first();
 
             if (!$job) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cette offre n\'appartient pas à votre entreprise',
+                    'message' => __('skill_test.job_not_in_company'),
                 ], 403);
             }
         }
 
         // Create test as draft (is_active = false) - no payment required yet
         $test = RecruiterSkillTest::create([
-            'company_id' => $recruiter->company_id,
+            'company_id' => $companyId,
             'job_id' => $request->job_id,
             'title' => $request->title,
             'description' => $request->description,
@@ -168,7 +171,7 @@ class RecruiterSkillTestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Test créé en brouillon avec succès',
+            'message' => __('skill_test.created_draft'),
             'test' => $test,
         ], 201);
     }
@@ -180,33 +183,34 @@ class RecruiterSkillTestController extends Controller
     public function publish(Request $request, $id)
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
+                'message' => __('skill_test.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
+        $test = RecruiterSkillTest::where('company_id', $companyId)
             ->findOrFail($id);
 
         // Check if already active
         if ($test->is_active) {
             return response()->json([
                 'success' => true,
-                'message' => 'Le test est déjà actif',
+                'message' => __('skill_test.already_active'),
                 'test' => $test,
             ]);
         }
 
         // Check if company has skills test access (payment required)
-        $company = \App\Models\Company::find($recruiter->company_id);
+        $company = \App\Models\Company::find($companyId);
         if (!$this->purchaseService->hasSkillsTestAccess($company)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez acheter l\'accès aux tests de compétences pour publier ce test',
+                'message' => __('skill_test.must_purchase_access'),
                 'requires_payment' => true,
                 'price' => 2000, // From AddonServiceConfigSeeder
             ], 403);
@@ -217,7 +221,7 @@ class RecruiterSkillTestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Test publié avec succès',
+            'message' => __('skill_test.published'),
             'test' => $test->fresh(),
         ]);
     }
@@ -235,23 +239,22 @@ class RecruiterSkillTestController extends Controller
         ]);
 
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        \Log::info('User & Recruiter check', [
+        \Log::info('User & current company check', [
             'user_id' => $user->id ?? null,
-            'recruiter_id' => $recruiter->id ?? null,
-            'company_id' => $recruiter->company_id ?? null,
+            'company_id' => $companyId,
         ]);
 
-        if (!$recruiter) {
-            \Log::warning('UPDATE FAILED: User is not a recruiter');
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
+                'message' => __('skill_test.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
+        $test = RecruiterSkillTest::where('company_id', $companyId)
             ->findOrFail($id);
 
         \Log::info('Test found', [
@@ -290,13 +293,13 @@ class RecruiterSkillTestController extends Controller
         // Verify job belongs to company if provided
         if ($request->has('job_id') && $request->job_id) {
             $job = \App\Models\Job::where('id', $request->job_id)
-                ->where('company_id', $recruiter->company_id)
+                ->where('company_id', $companyId)
                 ->first();
 
             if (!$job) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cette offre n\'appartient pas à votre entreprise',
+                    'message' => __('skill_test.job_not_in_company'),
                 ], 403);
             }
         }
@@ -330,7 +333,7 @@ class RecruiterSkillTestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Test mis à jour avec succès',
+            'message' => __('skill_test.updated'),
             'test' => $freshTest,
         ]);
     }
@@ -342,23 +345,24 @@ class RecruiterSkillTestController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez être un recruteur',
-            ], 403);
+                'message' => __('skill_test.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        $test = RecruiterSkillTest::where('company_id', $recruiter->company_id)
+        $test = RecruiterSkillTest::where('company_id', $companyId)
             ->findOrFail($id);
 
         $test->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Test supprimé avec succès',
+            'message' => __('skill_test.deleted'),
         ]);
     }
 
@@ -389,7 +393,7 @@ class RecruiterSkillTestController extends Controller
         if ($existing) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà soumis ce test',
+                'message' => __('skill_test.already_submitted'),
             ], 400);
         }
 
@@ -417,7 +421,7 @@ class RecruiterSkillTestController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Test soumis avec succès',
+                'message' => __('skill_test.submitted'),
                 'result' => [
                     'score' => $result->score,
                     'passed' => $result->passed,
@@ -430,7 +434,7 @@ class RecruiterSkillTestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la soumission du test',
+                'message' => __('skill_test.submit_error'),
             ], 500);
         }
     }

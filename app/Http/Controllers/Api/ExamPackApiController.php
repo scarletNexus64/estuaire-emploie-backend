@@ -136,6 +136,16 @@ class ExamPackApiController extends Controller
             $isFreeForStudent = $user->isStudent();
         }
 
+        // Mode vitrine : exposer is_preview au top level sur chaque épreuve
+        // et identifier la 1ère épreuve preview du pack (preview_paper_id)
+        $previewPaperId = null;
+        foreach ($pack->examPapers as $paper) {
+            $paper->is_preview = (bool) ($paper->pivot->is_preview ?? false);
+            if ($previewPaperId === null && $paper->is_preview) {
+                $previewPaperId = $paper->id;
+            }
+        }
+
         // Vérifier si le pack est en promotion
         $promotionData = null;
         $promotion = $pack->getActivePromotion();
@@ -159,6 +169,7 @@ class ExamPackApiController extends Controller
                 'pack' => $pack,
                 'is_purchased' => $isPurchased,
                 'is_free_for_student' => $isFreeForStudent,
+                'preview_paper_id' => $previewPaperId,
                 'is_promotional' => $promotion !== null,
                 'promotion' => $promotionData,
             ],
@@ -225,7 +236,7 @@ class ExamPackApiController extends Controller
         if ($existingPurchase) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà acheté ce pack',
+                'message' => __('exam_pack.already_purchased'),
             ], 400);
         }
 
@@ -238,7 +249,7 @@ class ExamPackApiController extends Controller
         if ($price <= 0 && !$isStudent) {
             return response()->json([
                 'success' => false,
-                'message' => 'Prix invalide pour ce pack',
+                'message' => __('exam_pack.invalid_price'),
             ], 400);
         }
 
@@ -269,7 +280,7 @@ class ExamPackApiController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pack obtenu gratuitement avec le Mode Étudiant',
+                    'message' => __('exam_pack.free_with_student_mode'),
                     'data' => [
                         'purchase' => $purchase,
                         'pack' => $pack,
@@ -288,7 +299,7 @@ class ExamPackApiController extends Controller
             if ($currentBalance < $price) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Solde insuffisant dans votre wallet " . ucfirst($paymentProvider),
+                    'message' => __('exam_pack.insufficient_wallet', ['provider' => ucfirst($paymentProvider)]),
                     'required' => $price,
                     'available' => $currentBalance,
                 ], 400);
@@ -337,7 +348,7 @@ class ExamPackApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pack acheté avec succès',
+                'message' => __('exam_pack.purchased'),
                 'data' => [
                     'purchase' => $purchase,
                     'pack' => $pack,
@@ -349,7 +360,7 @@ class ExamPackApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'achat du pack',
+                'message' => __('exam_pack.purchase_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

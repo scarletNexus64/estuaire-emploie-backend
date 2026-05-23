@@ -43,7 +43,7 @@ class DeviceChangeRequestController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Compte introuvable.',
+                'message' => __('device_change.account_not_found'),
             ], 404);
         }
 
@@ -51,7 +51,7 @@ class DeviceChangeRequestController extends Controller
         if (!\Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Mot de passe incorrect.',
+                'message' => __('device_change.incorrect_password'),
             ], 401);
         }
 
@@ -59,7 +59,7 @@ class DeviceChangeRequestController extends Controller
         if ($user->hasPendingDeviceChangeRequest()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà une demande de changement d\'appareil en cours de traitement.',
+                'message' => __('device_change.pending_request'),
             ], 422);
         }
 
@@ -83,7 +83,7 @@ class DeviceChangeRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Demande de changement d\'appareil soumise avec succès. Un administrateur la traitera prochainement.',
+            'message' => __('device_change.request_submitted'),
             'request' => $deviceChangeRequest,
         ], 201);
     }
@@ -113,7 +113,7 @@ class DeviceChangeRequestController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Compte introuvable.',
+                'message' => __('device_change.account_not_found'),
             ], 404);
         }
 
@@ -137,7 +137,7 @@ class DeviceChangeRequestController extends Controller
         if (!$user->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé.',
+                'message' => __('device_change.unauthorized'),
             ], 403);
         }
 
@@ -167,7 +167,7 @@ class DeviceChangeRequestController extends Controller
         if (!$admin->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé.',
+                'message' => __('device_change.unauthorized'),
             ], 403);
         }
 
@@ -180,14 +180,14 @@ class DeviceChangeRequestController extends Controller
         if (!$deviceChangeRequest) {
             return response()->json([
                 'success' => false,
-                'message' => 'Demande introuvable.',
+                'message' => __('device_change.request_not_found'),
             ], 404);
         }
 
         if ($deviceChangeRequest->status !== 'pending') {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette demande a déjà été traitée.',
+                'message' => __('device_change.already_processed'),
             ], 422);
         }
 
@@ -216,7 +216,7 @@ class DeviceChangeRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Demande approuvée avec succès. L\'utilisateur peut maintenant se connecter avec son nouvel appareil.',
+            'message' => __('device_change.approved'),
             'request' => $deviceChangeRequest->fresh(['user', 'reviewer']),
         ]);
     }
@@ -232,7 +232,7 @@ class DeviceChangeRequestController extends Controller
         if (!$admin->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé.',
+                'message' => __('device_change.unauthorized'),
             ], 403);
         }
 
@@ -245,14 +245,14 @@ class DeviceChangeRequestController extends Controller
         if (!$deviceChangeRequest) {
             return response()->json([
                 'success' => false,
-                'message' => 'Demande introuvable.',
+                'message' => __('device_change.request_not_found'),
             ], 404);
         }
 
         if ($deviceChangeRequest->status !== 'pending') {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette demande a déjà été traitée.',
+                'message' => __('device_change.already_processed'),
             ], 422);
         }
 
@@ -276,7 +276,7 @@ class DeviceChangeRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Demande rejetée.',
+            'message' => __('device_change.rejected'),
             'request' => $deviceChangeRequest->fresh(['user', 'reviewer']),
         ]);
     }

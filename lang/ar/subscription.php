@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'recruiter_plans_fetched' => 'تم جلب خطط اشتراك المسؤولين عن التوظيف بنجاح',
+    'jobseeker_plans_fetched' => 'تم جلب خطط اشتراك الباحثين عن العمل بنجاح',
+    'plans_fetched' => 'تم جلب خطط الاشتراك بنجاح',
+    'plan_not_found' => 'خطة الاشتراك غير موجودة',
+    'plan_fetched' => 'تم جلب خطة الاشتراك بنجاح',
+    'plan_not_found_or_inactive' => 'خطة الاشتراك غير موجودة أو غير نشطة',
+    'payment_not_found' => 'لم يتم العثور على الدفعة',
+    'subscription_already_active' => 'الاشتراك نشط بالفعل بهذه الدفعة',
+    'payment_used_not_confirmed' => 'تم استخدام هذه الدفعة بالفعل ولكنها غير مؤكدة',
+    'payment_not_confirmed' => 'الدفعة غير مؤكدة',
+    'activation_error' => 'حدث خطأ أثناء تفعيل الاشتراك',
+    'no_active_subscription' => 'لا يوجد اشتراك نشط',
+    'active_subscription_fetched' => 'تم جلب الاشتراك النشط',
+    'history_fetched' => 'تم جلب سجل الاشتراكات',
+    'paypal_initiated' => 'تم بدء الدفع عبر PayPal بنجاح. يرجى إكمال الدفع عبر الرابط.',
+    'status_retrieved' => 'تم جلب الحالة',
+    'payment_already_completed' => 'تم إكمال الدفعة بالفعل',
+    'paypal_completed' => 'تم إكمال الدفع عبر PayPal بنجاح! يمكنك الآن تفعيل اشتراكك.',
+    'payment_not_approved' => 'لم تتم الموافقة على الدفع',
+    'payment_execution_error' => 'حدث خطأ أثناء تنفيذ الدفع: :error',
+    'insufficient_provider_balance' => 'رصيد :provider غير كافٍ',
+];

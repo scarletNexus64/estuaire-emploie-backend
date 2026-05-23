@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\CompanyCategory;
 use App\Models\ContractType;
 use App\Models\Job;
 use App\Models\QuickService;
 use App\Models\Resume;
 use App\Models\ServiceCategory;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +96,7 @@ class ImportExportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le fichier est vide',
+                    'message' => __('import_export.file_empty'),
                 ], 400);
             }
 
@@ -102,14 +104,22 @@ class ImportExportController extends Controller
             $headerMap = $this->mapHeaders($headers, $this->getJobsColumnHeaders());
 
             $results = [
-                'total' => count($rows),
+                'total' => 0,
                 'imported' => 0,
                 'failed' => 0,
+                'skipped' => 0,
                 'errors' => [],
             ];
 
             foreach ($rows as $index => $row) {
                 $rowNumber = $index + 2;
+
+                if ($this->isRowEmpty($row)) {
+                    $results['skipped']++;
+                    continue;
+                }
+
+                $results['total']++;
 
                 try {
                     $data = $this->mapRowToData($row, $headerMap);
@@ -119,7 +129,7 @@ class ImportExportController extends Controller
                     $results['failed']++;
                     $results['errors'][] = [
                         'row' => $rowNumber,
-                        'error' => $e->getMessage(),
+                        'error' => $this->toUtf8($e->getMessage()),
                         'data' => $this->getSafeRowPreview($row, $headerMap),
                     ];
                 }
@@ -127,7 +137,8 @@ class ImportExportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Import terminé: {$results['imported']} importés, {$results['failed']} échecs",
+                'message' => __('import_export.import_complete', ['imported' => $results['imported'], 'failed' => $results['failed']])
+                    . ($results['skipped'] > 0 ? ", {$results['skipped']} lignes vides ignorées" : ''),
                 'results' => $results,
             ]);
 
@@ -135,7 +146,7 @@ class ImportExportController extends Controller
             Log::error('Jobs import error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'import: ' . $e->getMessage(),
+                'message' => __('import_export.import_error', ['error' => $this->toUtf8($e->getMessage())]),
             ], 500);
         }
     }
@@ -158,7 +169,7 @@ class ImportExportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le fichier est vide',
+                    'message' => __('import_export.file_empty'),
                 ], 400);
             }
 
@@ -166,14 +177,22 @@ class ImportExportController extends Controller
             $headerMap = $this->mapHeaders($headers, $this->getResumesColumnHeaders());
 
             $results = [
-                'total' => count($rows),
+                'total' => 0,
                 'imported' => 0,
                 'failed' => 0,
+                'skipped' => 0,
                 'errors' => [],
             ];
 
             foreach ($rows as $index => $row) {
                 $rowNumber = $index + 2;
+
+                if ($this->isRowEmpty($row)) {
+                    $results['skipped']++;
+                    continue;
+                }
+
+                $results['total']++;
 
                 try {
                     $data = $this->mapRowToData($row, $headerMap);
@@ -183,7 +202,7 @@ class ImportExportController extends Controller
                     $results['failed']++;
                     $results['errors'][] = [
                         'row' => $rowNumber,
-                        'error' => $e->getMessage(),
+                        'error' => $this->toUtf8($e->getMessage()),
                         'data' => $this->getSafeRowPreview($row, $headerMap),
                     ];
                 }
@@ -191,7 +210,8 @@ class ImportExportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Import terminé: {$results['imported']} importés, {$results['failed']} échecs",
+                'message' => __('import_export.import_complete', ['imported' => $results['imported'], 'failed' => $results['failed']])
+                    . ($results['skipped'] > 0 ? ", {$results['skipped']} lignes vides ignorées" : ''),
                 'results' => $results,
             ]);
 
@@ -199,7 +219,7 @@ class ImportExportController extends Controller
             Log::error('Resumes import error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'import: ' . $e->getMessage(),
+                'message' => __('import_export.import_error', ['error' => $this->toUtf8($e->getMessage())]),
             ], 500);
         }
     }
@@ -222,7 +242,7 @@ class ImportExportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le fichier est vide',
+                    'message' => __('import_export.file_empty'),
                 ], 400);
             }
 
@@ -230,14 +250,22 @@ class ImportExportController extends Controller
             $headerMap = $this->mapHeaders($headers, $this->getQuickServicesColumnHeaders());
 
             $results = [
-                'total' => count($rows),
+                'total' => 0,
                 'imported' => 0,
                 'failed' => 0,
+                'skipped' => 0,
                 'errors' => [],
             ];
 
             foreach ($rows as $index => $row) {
                 $rowNumber = $index + 2;
+
+                if ($this->isRowEmpty($row)) {
+                    $results['skipped']++;
+                    continue;
+                }
+
+                $results['total']++;
 
                 try {
                     $data = $this->mapRowToData($row, $headerMap);
@@ -247,7 +275,7 @@ class ImportExportController extends Controller
                     $results['failed']++;
                     $results['errors'][] = [
                         'row' => $rowNumber,
-                        'error' => $e->getMessage(),
+                        'error' => $this->toUtf8($e->getMessage()),
                         'data' => $this->getSafeRowPreview($row, $headerMap),
                     ];
                 }
@@ -255,7 +283,8 @@ class ImportExportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Import terminé: {$results['imported']} importés, {$results['failed']} échecs",
+                'message' => __('import_export.import_complete', ['imported' => $results['imported'], 'failed' => $results['failed']])
+                    . ($results['skipped'] > 0 ? ", {$results['skipped']} lignes vides ignorées" : ''),
                 'results' => $results,
             ]);
 
@@ -263,7 +292,7 @@ class ImportExportController extends Controller
             Log::error('Quick Services import error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'import: ' . $e->getMessage(),
+                'message' => __('import_export.import_error', ['error' => $this->toUtf8($e->getMessage())]),
             ], 500);
         }
     }
@@ -310,7 +339,7 @@ class ImportExportController extends Controller
     {
         $map = [];
         foreach ($fileHeaders as $index => $header) {
-            $header = trim($header);
+            $header = trim($this->toUtf8($header));
             $key = array_search($header, $expectedHeaders, true);
             if ($key !== false) {
                 $map[$key] = $index;
@@ -323,9 +352,29 @@ class ImportExportController extends Controller
     {
         $data = [];
         foreach ($headerMap as $key => $index) {
-            $data[$key] = $row[$index] ?? null;
+            $value = $row[$index] ?? null;
+            $data[$key] = is_string($value) ? $this->toUtf8($value) : $value;
         }
         return $data;
+    }
+
+    /**
+     * Returns true if the row has no usable content (all cells null or empty/whitespace).
+     * PhpSpreadsheet's toArray() often returns trailing empty rows when the worksheet
+     * has formatted-but-empty cells.
+     */
+    private function isRowEmpty(array $row): bool
+    {
+        foreach ($row as $value) {
+            if ($value === null) {
+                continue;
+            }
+            if (is_string($value) && trim($value) === '') {
+                continue;
+            }
+            return false;
+        }
+        return true;
     }
 
     private function getSafeRowPreview(array $row, array $headerMap): array
@@ -334,10 +383,50 @@ class ImportExportController extends Controller
         $count = 0;
         foreach ($headerMap as $key => $index) {
             if ($count >= 5) break;
-            $preview[$key] = isset($row[$index]) ? substr($row[$index], 0, 50) : null;
+            if (isset($row[$index])) {
+                $value = is_string($row[$index]) ? $this->toUtf8($row[$index]) : (string) $row[$index];
+                $preview[$key] = mb_substr($value, 0, 50, 'UTF-8');
+            } else {
+                $preview[$key] = null;
+            }
             $count++;
         }
         return $preview;
+    }
+
+    /**
+     * Convert a string to valid UTF-8.
+     *
+     * Handles files exported from Windows Excel (Windows-1252/ISO-8859-1)
+     * or any other non-UTF-8 encoded source so response()->json() doesn't
+     * throw "Malformed UTF-8 characters" errors.
+     */
+    private function toUtf8($value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        $value = (string) $value;
+
+        if ($value === '' || mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+
+        $encoding = mb_detect_encoding($value, ['UTF-8', 'Windows-1252', 'ISO-8859-1', 'ISO-8859-15', 'ASCII'], true);
+
+        if ($encoding === false) {
+            $encoding = 'Windows-1252';
+        }
+
+        $converted = @mb_convert_encoding($value, 'UTF-8', $encoding);
+
+        if ($converted === false || !mb_check_encoding($converted, 'UTF-8')) {
+            // Last-resort: strip any remaining invalid bytes
+            $converted = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        }
+
+        return $converted;
     }
 
     private function importJobRow(array $data): void
@@ -353,37 +442,32 @@ class ImportExportController extends Controller
 
         DB::beginTransaction();
         try {
-            $company = Company::firstOrCreate(
-                ['name' => $data['company_name']],
-                ['email' => 'import@example.com', 'status' => 'active']
-            );
+            $company = $this->findOrCreateCompany($data['company_name']);
 
             $categoryId = null;
             if (!empty($data['category_name'])) {
-                $category = Category::firstOrCreate(['name' => $data['category_name']]);
-                $categoryId = $category->id;
+                $categoryId = $this->findOrCreateCompanyCategory($data['category_name'])->id;
             }
 
             $contractTypeId = null;
             if (!empty($data['contract_type_name'])) {
-                $contractType = ContractType::firstOrCreate(['name' => $data['contract_type_name']]);
-                $contractTypeId = $contractType->id;
+                $contractTypeId = $this->findOrCreateContractType($data['contract_type_name'])->id;
             }
 
             Job::create([
                 'company_id' => $company->id,
                 'category_id' => $categoryId,
                 'contract_type_id' => $contractTypeId,
-                'posted_by' => auth()->id() ?? 1,
+                'posted_by' => $this->resolvePostedBy(),
                 'title' => $data['title'],
-                'description' => $data['description'] ?? '',
-                'requirements' => $data['requirements'] ?? '',
-                'benefits' => $data['benefits'] ?? '',
+                'description' => !empty($data['description']) ? $data['description'] : ' ',
+                'requirements' => $data['requirements'] ?? null,
+                'benefits' => $data['benefits'] ?? null,
                 'salary_min' => $data['salary_min'] ?? null,
                 'salary_max' => $data['salary_max'] ?? null,
-                'salary_negotiable' => $data['salary_negotiable'] ?? false,
-                'experience_level' => $data['experience_level'] ?? 'entry',
-                'status' => $data['status'] ?? 'pending',
+                'salary_negotiable' => $this->parseBool($data['salary_negotiable'] ?? null),
+                'experience_level' => $this->normalizeExperienceLevel($data['experience_level'] ?? null),
+                'status' => $this->normalizeJobStatus($data['status'] ?? null),
                 'application_deadline' => !empty($data['application_deadline']) ? $data['application_deadline'] : null,
             ]);
 
@@ -394,23 +478,179 @@ class ImportExportController extends Controller
         }
     }
 
+    /**
+     * Find or create a Company, providing all NOT NULL columns and a
+     * unique email when one is missing (the `email` column is unique).
+     */
+    private function findOrCreateCompany(string $name): Company
+    {
+        $name = trim($name);
+        $company = Company::where('name', $name)->first();
+        if ($company) {
+            return $company;
+        }
+
+        $slugBase = Str::slug($name) ?: 'imported-' . Str::random(6);
+        $email = $slugBase . '+' . Str::lower(Str::random(6)) . '@imported.local';
+
+        // Defensive: ensure uniqueness in the unlikely event of a collision.
+        while (Company::where('email', $email)->exists()) {
+            $email = $slugBase . '+' . Str::lower(Str::random(8)) . '@imported.local';
+        }
+
+        return Company::create([
+            'name' => $name,
+            'email' => $email,
+            'sector' => 'Non renseigné',
+            'status' => 'pending',
+            'subscription_plan' => 'free',
+            'country' => 'Cameroun',
+        ]);
+    }
+
+    /**
+     * Find or create a CompanyCategory (level 3) by name (level_3 or level_1).
+     */
+    private function findOrCreateCompanyCategory(string $name): CompanyCategory
+    {
+        $name = trim($name);
+
+        $existing = CompanyCategory::where('level_3', $name)
+            ->orWhere('level_2', $name)
+            ->orWhere('level_1', $name)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $code = 'IMP.' . str_pad((string) (CompanyCategory::max('id') + 1), 4, '0', STR_PAD_LEFT);
+
+        return CompanyCategory::create([
+            'code' => $code,
+            'level_1' => 'Importé',
+            'level_2' => null,
+            'level_3' => $name,
+            'slug' => Str::slug($name) . '-' . Str::lower(Str::random(4)),
+            'is_active' => true,
+        ]);
+    }
+
+    private function findOrCreateContractType(string $name): ContractType
+    {
+        $name = trim($name);
+        $existing = ContractType::where('name', $name)->first();
+        if ($existing) {
+            return $existing;
+        }
+
+        $slug = Str::slug($name) ?: 'contract-' . Str::random(6);
+        while (ContractType::where('slug', $slug)->exists()) {
+            $slug = Str::slug($name) . '-' . Str::lower(Str::random(4));
+        }
+
+        return ContractType::create(['name' => $name, 'slug' => $slug]);
+    }
+
+    private function resolvePostedBy(): int
+    {
+        $authId = auth()->id();
+        if ($authId && User::whereKey($authId)->exists()) {
+            return $authId;
+        }
+
+        $admin = User::where('role', 'admin')->orderBy('id')->first();
+        if ($admin) {
+            return $admin->id;
+        }
+
+        $any = User::orderBy('id')->first();
+        if (!$any) {
+            throw new \Exception("Aucun utilisateur disponible pour 'posted_by'. Créez au moins un utilisateur admin.");
+        }
+
+        return $any->id;
+    }
+
+    private function parseBool($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        $v = Str::lower(trim((string) $value));
+        return in_array($v, ['1', 'true', 'yes', 'oui', 'y', 'o'], true);
+    }
+
+    private function normalizeExperienceLevel($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $allowed = ['junior', 'intermediaire', 'senior', 'expert'];
+        $aliases = [
+            'entry' => 'junior',
+            'débutant' => 'junior',
+            'debutant' => 'junior',
+            'mid' => 'intermediaire',
+            'intermediate' => 'intermediaire',
+            'intermédiaire' => 'intermediaire',
+        ];
+        $v = Str::lower(trim((string) $value));
+        if (in_array($v, $allowed, true)) {
+            return $v;
+        }
+        return $aliases[$v] ?? null;
+    }
+
+    private function normalizeJobStatus($value): string
+    {
+        $allowed = ['draft', 'pending', 'published', 'closed', 'expired'];
+        $v = Str::lower(trim((string) ($value ?? '')));
+        return in_array($v, $allowed, true) ? $v : 'pending';
+    }
+
     private function importResumeRow(array $data): void
     {
-        $validator = Validator::make($data, [
-            'title' => 'required|string|max:255',
-            'email' => 'required|email',
-            'name' => 'required|string|max:255',
-        ]);
+        // Auto-derive title from name/email if missing — we only truly need
+        // *something* identifying for the resume row to be useful.
+        $name = !empty($data['name']) ? trim($data['name']) : null;
+        $email = !empty($data['email']) ? trim($data['email']) : null;
+        $title = !empty($data['title']) ? trim($data['title']) : null;
 
-        if ($validator->fails()) {
-            throw new \Exception('Validation échouée: ' . implode(', ', $validator->errors()->all()));
+        if (!$title && !$name && !$email) {
+            throw new \Exception('Ligne sans titre, nom ni email — impossible de créer un CV');
         }
+
+        if (!$email) {
+            $slugSource = $name ?: $title ?: 'cv';
+            $email = Str::slug($slugSource) . '+' . Str::lower(Str::random(6)) . '@imported.local';
+            while (User::where('email', $email)->exists()) {
+                $email = Str::slug($slugSource) . '+' . Str::lower(Str::random(8)) . '@imported.local';
+            }
+        } else {
+            $validator = Validator::make(['email' => $email], ['email' => 'email']);
+            if ($validator->fails()) {
+                throw new \Exception('Email invalide: ' . $email);
+            }
+        }
+
+        if (!$name) {
+            $name = $title ?: Str::before($email, '@');
+        }
+
+        if (!$title) {
+            $title = 'CV de ' . $name;
+        }
+
+        $data['name'] = $name;
+        $data['email'] = $email;
+        $data['title'] = $title;
 
         DB::beginTransaction();
         try {
             $user = User::firstOrCreate(
                 ['email' => $data['email']],
-                ['name' => $data['name'], 'password' => bcrypt('password'), 'role' => 'candidate']
+                ['name' => $data['name'], 'password' => bcrypt(Str::random(16)), 'role' => 'candidate']
             );
 
             $personalInfo = [
@@ -426,20 +666,23 @@ class ImportExportController extends Controller
             if (!empty($data['skills'])) {
                 $skillsList = explode(',', $data['skills']);
                 foreach ($skillsList as $skill) {
-                    $skills[] = ['name' => trim($skill), 'level' => 'intermediate'];
+                    $skill = trim($skill);
+                    if ($skill !== '') {
+                        $skills[] = ['name' => $skill, 'level' => 'intermediate'];
+                    }
                 }
             }
 
             Resume::create([
                 'user_id' => $user->id,
                 'title' => $data['title'],
-                'template_type' => $data['template_type'] ?? 'modern',
-                'professional_summary' => $data['professional_summary'] ?? '',
+                'template_type' => !empty($data['template_type']) ? $data['template_type'] : 'modern',
+                'professional_summary' => $data['professional_summary'] ?? null,
                 'personal_info' => $personalInfo,
                 'skills' => $skills,
                 'education' => [],
                 'experiences' => [],
-                'is_public' => $data['is_public'] ?? false,
+                'is_public' => $this->parseBool($data['is_public'] ?? null),
             ]);
 
             DB::commit();
@@ -469,22 +712,27 @@ class ImportExportController extends Controller
                 throw new \Exception("Utilisateur avec l'email {$data['user_email']} non trouvé");
             }
 
-            $category = ServiceCategory::firstOrCreate(
-                ['name' => $data['category_name']],
-                ['description' => '']
-            );
+            $category = $this->findOrCreateServiceCategory($data['category_name']);
 
             QuickService::create([
                 'user_id' => $user->id,
                 'service_category_id' => $category->id,
                 'title' => $data['title'],
-                'description' => $data['description'] ?? '',
-                'price_type' => $data['price_type'] ?? 'negotiable',
+                'description' => !empty($data['description']) ? $data['description'] : ' ',
+                'price_type' => $this->normalizeEnum($data['price_type'] ?? null, ['fixed', 'range', 'negotiable'], 'negotiable'),
                 'price_min' => $data['price_min'] ?? null,
                 'price_max' => $data['price_max'] ?? null,
+                'latitude' => is_numeric($data['latitude'] ?? null) ? (float) $data['latitude'] : 0,
+                'longitude' => is_numeric($data['longitude'] ?? null) ? (float) $data['longitude'] : 0,
                 'location_name' => $data['location_name'] ?? null,
-                'urgency' => $data['urgency'] ?? 'medium',
-                'status' => $data['status'] ?? 'pending',
+                'urgency' => $this->normalizeUrgency($data['urgency'] ?? null),
+                'desired_date' => !empty($data['desired_date']) ? $data['desired_date'] : null,
+                'estimated_duration' => $data['estimated_duration'] ?? null,
+                'status' => $this->normalizeEnum(
+                    $data['status'] ?? null,
+                    ['pending', 'approved', 'open', 'in_progress', 'completed', 'cancelled'],
+                    'pending'
+                ),
                 'views_count' => 0,
             ]);
 
@@ -493,6 +741,49 @@ class ImportExportController extends Controller
             DB::rollBack();
             throw $e;
         }
+    }
+
+    private function findOrCreateServiceCategory(string $name): ServiceCategory
+    {
+        $name = trim($name);
+        $existing = ServiceCategory::where('name', $name)->first();
+        if ($existing) {
+            return $existing;
+        }
+
+        $slug = Str::slug($name) ?: 'service-' . Str::random(6);
+        while (ServiceCategory::where('slug', $slug)->exists()) {
+            $slug = Str::slug($name) . '-' . Str::lower(Str::random(4));
+        }
+
+        return ServiceCategory::create([
+            'name' => $name,
+            'slug' => $slug,
+            'is_active' => true,
+            'display_order' => 0,
+        ]);
+    }
+
+    private function normalizeUrgency($value): string
+    {
+        $allowed = ['urgent', 'this_week', 'this_month', 'flexible'];
+        $aliases = [
+            'high' => 'urgent',
+            'medium' => 'this_week',
+            'low' => 'flexible',
+            'normal' => 'this_week',
+        ];
+        $v = Str::lower(trim((string) ($value ?? '')));
+        if (in_array($v, $allowed, true)) {
+            return $v;
+        }
+        return $aliases[$v] ?? 'flexible';
+    }
+
+    private function normalizeEnum($value, array $allowed, string $default): string
+    {
+        $v = Str::lower(trim((string) ($value ?? '')));
+        return in_array($v, $allowed, true) ? $v : $default;
     }
 
     private function getJobsColumnHeaders(): array
@@ -505,8 +796,8 @@ class ImportExportController extends Controller
             'salary_min' => 'Salaire minimum',
             'salary_max' => 'Salaire maximum',
             'salary_negotiable' => 'Salaire négociable (oui/non)',
-            'experience_level' => 'Niveau d\'expérience (entry/junior/mid/senior/expert)',
-            'status' => 'Statut (draft/pending/published/closed)',
+            'experience_level' => 'Niveau d\'expérience (junior/intermediaire/senior/expert)',
+            'status' => 'Statut (draft/pending/published/closed/expired)',
             'application_deadline' => 'Date limite de candidature (YYYY-MM-DD)',
             'company_name' => 'Nom de l\'entreprise',
             'category_name' => 'Catégorie',
@@ -543,7 +834,7 @@ class ImportExportController extends Controller
             'location_name' => 'Localisation',
             'latitude' => 'Latitude',
             'longitude' => 'Longitude',
-            'urgency' => 'Urgence (low/medium/high/urgent)',
+            'urgency' => 'Urgence (urgent/this_week/this_month/flexible)',
             'desired_date' => 'Date souhaitée (YYYY-MM-DD)',
             'estimated_duration' => 'Durée estimée',
             'status' => 'Statut (pending/approved/open/in_progress/completed/cancelled)',

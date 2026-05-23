@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AdminRole;
 use App\Models\Traits\UserFeatures;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -25,11 +26,13 @@ class User extends Authenticatable
         'fcm_token',
         'device_id',
         'role',
+        'current_company_id',
         'available_roles',
         'wallet_balance', // Legacy - will be deprecated
         'freemopay_wallet_balance',
         'paypal_wallet_balance',
         'preferred_currency', // XAF, USD, EUR
+        'locale',
         'password',
         'must_change_password',
         'profile_photo',
@@ -78,6 +81,37 @@ class User extends Authenticatable
     public function recruiter(): HasOne
     {
         return $this->hasOne(Recruiter::class);
+    }
+
+    public function recruiters(): HasMany
+    {
+        return $this->hasMany(Recruiter::class);
+    }
+
+    public function companies(): BelongsToMany
+    {
+        return $this->belongsToMany(Company::class, 'recruiters')
+            ->withPivot(['position', 'can_publish', 'can_view_applications', 'can_modify_company'])
+            ->withTimestamps();
+    }
+
+    public function currentCompany(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'current_company_id');
+    }
+
+    public function recruiterFor(?int $companyId): ?Recruiter
+    {
+        if (! $companyId) {
+            return null;
+        }
+
+        return $this->recruiters()->where('company_id', $companyId)->first();
+    }
+
+    public function currentRecruiter(): ?Recruiter
+    {
+        return $this->recruiterFor($this->current_company_id);
     }
 
     public function portfolio(): HasOne

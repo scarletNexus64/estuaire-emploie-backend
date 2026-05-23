@@ -24,7 +24,7 @@ class WithdrawalRequestController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -40,7 +40,7 @@ class WithdrawalRequestController extends Controller
             if ($amount > $availableBalance) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Solde insuffisant. Disponible: ' . number_format($availableBalance, 0, ',', ' ') . ' FCFA',
+                    'message' => __('withdrawal.insufficient_balance', ['amount' => number_format($availableBalance, 0, ',', ' ')]),
                 ], 400);
             }
 
@@ -61,7 +61,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Votre demande de retrait a été soumise avec succès. Un administrateur la traitera bientôt.',
+                'message' => __('withdrawal.submitted'),
                 'data' => [
                     'id' => $withdrawalRequest->id,
                     'amount' => $withdrawalRequest->amount,
@@ -76,7 +76,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la soumission de la demande',
+                'message' => __('withdrawal.submit_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -120,7 +120,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des demandes',
+                'message' => __('withdrawal.requests_fetch_error'),
             ], 500);
         }
     }
@@ -143,7 +143,7 @@ class WithdrawalRequestController extends Controller
             if (!$withdrawalRequest) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Demande non trouvée',
+                    'message' => __('withdrawal.request_not_found'),
                 ], 404);
             }
 
@@ -157,7 +157,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération de la demande',
+                'message' => __('withdrawal.request_fetch_error'),
             ], 500);
         }
     }

@@ -21,7 +21,7 @@ class PortfolioController extends Controller
         if (!$portfolio) {
             return response()->json([
                 'success' => false,
-                'message' => 'Portfolio non trouvé',
+                'message' => __('portfolio.not_found'),
             ], 404);
         }
 
@@ -97,7 +97,7 @@ class PortfolioController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreurs de validation',
+                'message' => __('portfolio.validation_errors'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -124,7 +124,7 @@ class PortfolioController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Portfolio enregistré avec succès',
+            'message' => __('portfolio.saved'),
             'data' => $portfolio,
         ]);
     }
@@ -139,7 +139,7 @@ class PortfolioController extends Controller
         if (!$portfolio) {
             return response()->json([
                 'success' => false,
-                'message' => 'Portfolio non trouvé',
+                'message' => __('portfolio.not_found'),
             ], 404);
         }
 
@@ -155,7 +155,7 @@ class PortfolioController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Portfolio supprimé avec succès',
+            'message' => __('portfolio.deleted'),
         ]);
     }
 
@@ -172,7 +172,7 @@ class PortfolioController extends Controller
         if (!$portfolio) {
             return response()->json([
                 'success' => false,
-                'message' => 'Portfolio non trouvé ou privé',
+                'message' => __('portfolio.not_found_or_private'),
             ], 404);
         }
 
@@ -200,7 +200,7 @@ class PortfolioController extends Controller
         if (!$portfolio) {
             return response()->json([
                 'success' => false,
-                'message' => 'Portfolio non trouvé',
+                'message' => __('portfolio.not_found'),
             ], 404);
         }
 
@@ -209,7 +209,7 @@ class PortfolioController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Visibilité du portfolio mise à jour',
+            'message' => __('portfolio.visibility_updated'),
             'data' => [
                 'is_public' => $portfolio->is_public,
             ],
@@ -226,7 +226,7 @@ class PortfolioController extends Controller
         if (!$portfolio) {
             return response()->json([
                 'success' => false,
-                'message' => 'Portfolio non trouvé',
+                'message' => __('portfolio.not_found'),
             ], 404);
         }
 

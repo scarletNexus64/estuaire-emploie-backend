@@ -72,7 +72,7 @@ class ExamPack extends Model
     public function examPapers()
     {
         return $this->belongsToMany(ExamPaper::class, 'exam_pack_papers')
-                    ->withPivot('display_order')
+                    ->withPivot(['display_order', 'is_preview'])
                     ->withTimestamps()
                     ->orderBy('exam_pack_papers.display_order');
     }

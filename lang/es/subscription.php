@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'recruiter_plans_fetched' => 'Planes de suscripción para reclutadores obtenidos con éxito',
+    'jobseeker_plans_fetched' => 'Planes de suscripción para buscadores de empleo obtenidos con éxito',
+    'plans_fetched' => 'Planes de suscripción obtenidos con éxito',
+    'plan_not_found' => 'Plan de suscripción no encontrado',
+    'plan_fetched' => 'Plan de suscripción obtenido con éxito',
+    'plan_not_found_or_inactive' => 'Plan de suscripción no encontrado o inactivo',
+    'payment_not_found' => 'Pago no encontrado',
+    'subscription_already_active' => 'Suscripción ya activa con este pago',
+    'payment_used_not_confirmed' => 'Este pago ya ha sido utilizado pero no está confirmado',
+    'payment_not_confirmed' => 'Pago no confirmado',
+    'activation_error' => 'Error al activar la suscripción',
+    'no_active_subscription' => 'Sin suscripción activa',
+    'active_subscription_fetched' => 'Suscripción activa obtenida',
+    'history_fetched' => 'Historial de suscripciones obtenido',
+    'paypal_initiated' => 'Pago PayPal iniciado con éxito. Por favor, complete el pago a través del enlace.',
+    'status_retrieved' => 'Estado obtenido',
+    'payment_already_completed' => 'Pago ya completado',
+    'paypal_completed' => 'Pago PayPal completado con éxito. Ahora puede activar su suscripción.',
+    'payment_not_approved' => 'El pago no fue aprobado',
+    'payment_execution_error' => 'Error al ejecutar el pago: :error',
+    'insufficient_provider_balance' => 'Saldo :provider insuficiente',
+];

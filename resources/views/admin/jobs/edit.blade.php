@@ -40,7 +40,7 @@
 
             <div class="form-group">
                 <label class="form-label">Entreprise *</label>
-                <select name="company_id" class="form-control" required>
+                <select name="company_id" id="company_id" class="form-control" required>
                     <option value="">Sélectionner une entreprise</option>
                     @foreach($companies as $company)
                         <option value="{{ $company->id }}" {{ old('company_id', $job->company_id) == $company->id ? 'selected' : '' }}>
@@ -54,17 +54,15 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Catégorie *</label>
-                <select name="category_id" class="form-control" required>
-                    <option value="">Sélectionner une catégorie</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id', $job->category_id) == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
+                <label class="form-label">Secteur (niveau 3)</label>
+                <select name="category_id" id="category_id" class="form-control">
+                    <option value="">— Aucun —</option>
                 </select>
+                <small id="categoryHint" style="color: #6b7280;">
+                    Les secteurs proposés correspondent aux niveaux 2 des catégories de l'entreprise.
+                </small>
                 @error('category_id')
-                    <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+                    <small style="color: var(--danger); font-size: 0.875rem; display: block;">{{ $message }}</small>
                 @enderror
             </div>
 
@@ -187,4 +185,47 @@
         </div>
     </form>
 </div>
+
+<script>
+const companyLevel3Map = @json($companyLevel3Map);
+const oldCategoryId = @json(old('category_id', $job->category_id));
+
+const companySelect = document.getElementById('company_id');
+const categorySelect = document.getElementById('category_id');
+const categoryHint = document.getElementById('categoryHint');
+
+function updateCategoryOptions() {
+    const cid = companySelect.value;
+    categorySelect.innerHTML = '';
+    if (!cid) {
+        categorySelect.innerHTML = '<option value="">— Sélectionnez d\'abord une entreprise —</option>';
+        categoryHint.textContent = 'Les secteurs proposés correspondent aux niveaux 2 des catégories de l\'entreprise.';
+        categoryHint.style.color = '#6b7280';
+        return;
+    }
+    const options = companyLevel3Map[cid] || [];
+    if (options.length === 0) {
+        categorySelect.innerHTML = '<option value="">— Aucun secteur niveau 3 disponible —</option>';
+        categoryHint.textContent = 'Cette entreprise n\'a aucun secteur niveau 3 rattaché. Ajoutez des catégories à l\'entreprise.';
+        categoryHint.style.color = '#dc2626';
+        return;
+    }
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '— Aucun (optionnel) —';
+    categorySelect.appendChild(placeholder);
+    options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.id;
+        o.textContent = opt.label;
+        if (String(opt.id) === String(oldCategoryId)) o.selected = true;
+        categorySelect.appendChild(o);
+    });
+    categoryHint.textContent = `${options.length} secteur(s) niveau 3 disponible(s).`;
+    categoryHint.style.color = '#10b981';
+}
+
+companySelect.addEventListener('change', updateCategoryOptions);
+updateCategoryOptions();
+</script>
 @endsection

@@ -124,21 +124,45 @@
                                 Vous pouvez également gérer les épreuves après création du pack
                             </small>
 
+                            <small class="form-text text-info" style="margin-bottom: 0.5rem; display: block;">
+                                <i class="fa fa-eye"></i> Cochez « Aperçu » sur <strong>une seule épreuve</strong> pour la rendre accessible en mode vitrine (avant achat du Pack Étudiant).
+                            </small>
+
+                            @php
+                                $currentPreviewId = null;
+                                if (isset($examPack)) {
+                                    $previewPaper = $examPack->examPapers->first(fn($p) => (bool) ($p->pivot->is_preview ?? false));
+                                    $currentPreviewId = $previewPaper?->id;
+                                }
+                            @endphp
+
                             <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 1rem;">
                                 @foreach($examPapers as $paper)
-                                    <div class="form-check" style="margin-bottom: 0.5rem;">
-                                        <input class="form-check-input" type="checkbox" name="exam_papers[]" value="{{ $paper->id }}" id="paper_{{ $paper->id }}"
-                                               {{ (isset($examPack) && $examPack->examPapers->contains($paper->id)) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="paper_{{ $paper->id }}">
-                                            <strong>{{ $paper->title }}</strong>
-                                            <small class="text-muted">
-                                                - {{ $paper->subject }} ({{ $paper->level_name }})
-                                                @if($paper->year) - {{ $paper->year }} @endif
-                                            </small>
+                                    <div class="form-check d-flex align-items-center justify-content-between" style="margin-bottom: 0.5rem;">
+                                        <div style="flex: 1;">
+                                            <input class="form-check-input" type="checkbox" name="exam_papers[]" value="{{ $paper->id }}" id="paper_{{ $paper->id }}"
+                                                   {{ (isset($examPack) && $examPack->examPapers->contains($paper->id)) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="paper_{{ $paper->id }}">
+                                                <strong>{{ $paper->title }}</strong>
+                                                <small class="text-muted">
+                                                    - {{ $paper->subject }} ({{ $paper->level_name }})
+                                                    @if($paper->year) - {{ $paper->year }} @endif
+                                                </small>
+                                            </label>
+                                        </div>
+                                        <label class="form-check-label" style="margin-left: 1rem; white-space: nowrap;" title="Cette épreuve sera accessible en mode vitrine">
+                                            <input class="form-check-input" type="radio" name="preview_paper_id" value="{{ $paper->id }}"
+                                                   {{ old('preview_paper_id', $currentPreviewId) == $paper->id ? 'checked' : '' }}>
+                                            <small><i class="fa fa-eye"></i> Aperçu</small>
                                         </label>
                                     </div>
                                 @endforeach
                             </div>
+
+                            <button type="button" class="btn btn-sm btn-link" style="margin-top: 0.5rem;"
+                                    onclick="document.querySelectorAll('input[name=preview_paper_id]').forEach(r => r.checked = false);">
+                                Aucun aperçu
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'fetch_error' => 'Error al recuperar los productos/servicios',
+    'no_company' => 'No hay empresa asociada a este usuario',
+    'add_error' => 'Error al agregar los productos/servicios',
+    'created' => 'Producto/servicio creado con éxito',
+    'create_error' => 'Error al crear el producto/servicio',
+    'not_found' => 'Producto/servicio no encontrado',
+    'updated' => 'Producto/servicio actualizado con éxito',
+    'update_error' => 'Error al actualizar',
+    'deleted' => 'Producto/servicio eliminado con éxito',
+    'delete_error' => 'Error al eliminar',
+    'not_purchasable' => 'Este producto/servicio no está disponible para compra directa. Contacte a la empresa.',
+    'not_available' => 'Este producto/servicio ya no está disponible',
+    'no_beneficiary' => 'No se puede encontrar al beneficiario de esta empresa',
+    'cannot_buy_own' => 'No puede comprar su propio producto',
+    'purchase_success' => 'Compra realizada con éxito',
+    'purchase_error' => 'Error durante la compra',
+    'no_contact' => 'Esta empresa no tiene contacto disponible',
+    'cannot_chat_self' => 'No puede conversar consigo mismo',
+    'conversation_opened' => 'Conversación abierta',
+    'conversation_error' => 'Error al abrir la conversación',
+    'invoice_error' => 'Error al generar la factura',
+];

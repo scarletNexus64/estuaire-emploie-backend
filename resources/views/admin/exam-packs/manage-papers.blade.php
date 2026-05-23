@@ -22,6 +22,9 @@
             </div>
             <div class="card-body">
                 @if($examPack->examPapers->count() > 0)
+                    <div class="alert alert-info" style="margin-bottom: 1rem;">
+                        <i class="fa fa-info-circle"></i> Marquez <strong>une seule</strong> épreuve comme « Aperçu » : elle sera accessible en mode vitrine (avant l'achat du Pack Étudiant).
+                    </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
@@ -30,16 +33,33 @@
                                     <th>Matière</th>
                                     <th>Niveau</th>
                                     <th>Année</th>
+                                    <th>Aperçu</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($examPack->examPapers->sortBy('pivot.display_order') as $paper)
-                                    <tr>
+                                    @php $isPreview = (bool) ($paper->pivot->is_preview ?? false); @endphp
+                                    <tr @if($isPreview) class="table-success" @endif>
                                         <td><strong>{{ $paper->title }}</strong></td>
                                         <td>{{ $paper->subject }}</td>
                                         <td>{{ $paper->level_name }}</td>
                                         <td>{{ $paper->year ?? '-' }}</td>
+                                        <td>
+                                            <form action="{{ route('admin.exam-packs.toggle-preview', [$examPack, $paper]) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('PATCH')
+                                                @if($isPreview)
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Désactiver l'aperçu">
+                                                        <i class="fa fa-eye"></i> Aperçu ON
+                                                    </button>
+                                                @else
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Activer comme aperçu">
+                                                        <i class="fa fa-eye-slash"></i> Définir
+                                                    </button>
+                                                @endif
+                                            </form>
+                                        </td>
                                         <td>
                                             <form action="{{ route('admin.exam-packs.remove-paper', [$examPack, $paper]) }}" method="POST" style="display: inline;" onsubmit="return confirm('Retirer cette épreuve du pack ?')">
                                                 @csrf

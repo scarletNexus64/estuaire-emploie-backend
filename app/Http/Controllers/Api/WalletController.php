@@ -42,7 +42,7 @@ class WalletController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des statistiques',
+                'message' => __('wallet.stats_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -69,7 +69,7 @@ class WalletController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des transactions',
+                'message' => __('wallet.transactions_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -100,7 +100,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -150,7 +150,7 @@ class WalletController extends Controller
 
                     return response()->json([
                         'success' => true,
-                        'message' => 'Recharge effectuée avec succès',
+                        'message' => __('wallet.recharge_success'),
                         'data' => [
                             'payment_id' => $payment->id,
                             'payment_url' => null, // Pas d'URL pour FreeMoPay
@@ -209,7 +209,7 @@ class WalletController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Recharge initiée avec succès',
+                    'message' => __('wallet.recharge_initiated'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'payment_url' => $paymentUrl,
@@ -227,7 +227,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'initiation de la recharge',
+                'message' => __('wallet.recharge_init_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -248,7 +248,7 @@ class WalletController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -265,7 +265,7 @@ class WalletController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la vérification',
+                'message' => __('wallet.verification_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -289,7 +289,7 @@ class WalletController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -332,7 +332,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Paiement effectué avec succès',
+                'message' => __('wallet.payment_success'),
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'amount_paid' => $amount,
@@ -379,7 +379,7 @@ class WalletController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Paiement non trouvé',
+                    'message' => __('wallet.payment_not_found'),
                 ], 404);
             }
 
@@ -445,7 +445,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Statut récupéré',
+                'message' => __('wallet.status_retrieved'),
                 'data' => [
                     'payment_id' => $payment->id,
                     'reference' => $payment->provider_reference,
@@ -467,7 +467,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la vérification du statut',
+                'message' => __('wallet.status_verification_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -497,7 +497,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -528,7 +528,7 @@ class WalletController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Paiement non trouvé',
+                    'message' => __('wallet.payment_not_found'),
                 ], 404);
             }
 
@@ -536,7 +536,7 @@ class WalletController extends Controller
             if ($payment->payment_method !== 'paypal' && $payment->provider !== 'paypal') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Ce paiement n\'est pas un paiement PayPal',
+                    'message' => __('wallet.payment_not_paypal'),
                 ], 400);
             }
 
@@ -548,7 +548,7 @@ class WalletController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Paiement déjà complété',
+                    'message' => __('wallet.payment_already_completed'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'status' => $payment->status,
@@ -572,7 +572,7 @@ class WalletController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Paiement effectué avec succès',
+                    'message' => __('wallet.payment_success'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'amount' => $payment->amount,
@@ -585,7 +585,7 @@ class WalletController extends Controller
             // Si échec
             return response()->json([
                 'success' => false,
-                'message' => 'Le paiement a échoué',
+                'message' => __('wallet.payment_failed'),
                 'data' => [
                     'payment_id' => $payment->id,
                     'status' => $payment->status,
@@ -602,7 +602,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'exécution du paiement',
+                'message' => __('wallet.payment_execution_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -626,7 +626,7 @@ class WalletController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -668,7 +668,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Ordre PayPal créé avec succès',
+                'message' => __('wallet.paypal_order_created'),
                 'data' => [
                     'payment_id' => $payment->id,
                     'order_id' => $orderData['order_id'],
@@ -687,7 +687,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création de l\'ordre PayPal',
+                'message' => __('wallet.paypal_order_create_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -712,7 +712,7 @@ class WalletController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -736,7 +736,7 @@ class WalletController extends Controller
             if (!$payment) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Paiement non trouvé',
+                    'message' => __('wallet.payment_not_found'),
                 ], 404);
             }
 
@@ -744,7 +744,7 @@ class WalletController extends Controller
             if ($payment->status === 'completed') {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Paiement déjà complété',
+                    'message' => __('wallet.payment_already_completed'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'new_balance' => $user->wallet_balance,
@@ -767,7 +767,7 @@ class WalletController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Paiement effectué avec succès',
+                    'message' => __('wallet.payment_success'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'amount' => $payment->amount,
@@ -789,7 +789,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la capture du paiement',
+                'message' => __('wallet.paypal_capture_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -947,7 +947,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des soldes',
+                'message' => __('wallet.balances_fetch_error'),
             ], 500);
         }
     }
@@ -977,7 +977,7 @@ class WalletController extends Controller
             \Log::warning("[WalletController] ❌ Validation failed", $validator->errors()->toArray());
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -998,7 +998,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Solde FreeMoPay insuffisant. Disponible: ' . number_format($availableBalance, 0, ',', ' ') . ' FCFA',
+                'message' => __('wallet.insufficient_freemopay_balance', ['amount' => number_format($availableBalance, 0, ',', ' ')]),
             ], 400);
         }
 
@@ -1097,14 +1097,14 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Retrait en cours de traitement. Vous recevrez une notification une fois terminé.',
+                'message' => __('wallet.withdrawal_processing'),
                 'data' => [
                     'withdrawal_id' => $withdrawal->id,
                     'transaction_reference' => $withdrawal->transaction_reference,
                     'freemopay_reference' => $reference,
                     'amount' => $withdrawal->amount_requested,
                     'status' => 'processing',
-                    'message' => 'Le retrait est en cours. Vous recevrez une notification push dès qu\'il sera complété (environ 1-2 minutes).',
+                    'message' => __('wallet.withdrawal_processing_detail'),
                 ],
             ]);
 
@@ -1144,7 +1144,7 @@ class WalletController extends Controller
             \Log::warning("[WalletController] ❌ Validation failed", $validator->errors()->toArray());
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -1169,7 +1169,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Solde PayPal insuffisant. Disponible: ' . number_format($availableBalance, 0, ',', ' ') . ' FCFA (~' . number_format($availableBalance / $exchangeRate, 2) . ' USD)',
+                'message' => __('wallet.insufficient_paypal_balance', ['amount' => number_format($availableBalance, 0, ',', ' '), 'usd' => number_format($availableBalance / $exchangeRate, 2)]),
             ], 400);
         }
 
@@ -1271,7 +1271,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Retrait PayPal en cours de traitement. Vous recevrez une notification une fois terminé.',
+                'message' => __('wallet.paypal_withdrawal_processing'),
                 'data' => [
                     'withdrawal_id' => $withdrawal->id,
                     'transaction_reference' => $withdrawal->transaction_reference,
@@ -1279,7 +1279,7 @@ class WalletController extends Controller
                     'amount_usd' => $withdrawal->amount_sent,
                     'amount_xaf' => $withdrawal->amount_requested,
                     'status' => 'processing',
-                    'message' => 'Le retrait PayPal est en cours. Vous recevrez une notification push dès qu\'il sera complété (environ 2-3 minutes).',
+                    'message' => __('wallet.paypal_withdrawal_processing_detail'),
                 ],
             ]);
 
@@ -1312,7 +1312,7 @@ class WalletController extends Controller
             if (!$withdrawal) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Retrait non trouvé',
+                    'message' => __('wallet.withdrawal_not_found'),
                 ], 404);
             }
 
@@ -1338,7 +1338,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la vérification du statut',
+                'message' => __('wallet.status_verification_error'),
             ], 500);
         }
     }
@@ -1385,7 +1385,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération de l\'historique',
+                'message' => __('wallet.history_fetch_error'),
             ], 500);
         }
     }
@@ -1736,7 +1736,7 @@ class WalletController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur de validation',
+                'message' => __('common.validation_error'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -1754,7 +1754,7 @@ class WalletController extends Controller
             if (!$recipient) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Utilisateur destinataire introuvable',
+                    'message' => __('wallet.recipient_not_found'),
                 ], 404);
             }
 
@@ -1771,7 +1771,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Transfert de " . number_format($amount, 0, ',', ' ') . " FCFA effectué avec succès via {$providerName}",
+                'message' => __('wallet.transfer_success', ['amount' => number_format($amount, 0, ',', ' '), 'provider' => $providerName]),
                 'data' => [
                     'sender_transaction' => [
                         'id' => $result['sender_transaction']->id,
@@ -1849,7 +1849,7 @@ class WalletController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des utilisateurs',
+                'message' => __('wallet.users_fetch_error'),
             ], 500);
         }
     }

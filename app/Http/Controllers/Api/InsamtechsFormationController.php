@@ -88,7 +88,7 @@ class InsamtechsFormationController extends Controller
         if (!$pricing) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette formation est gratuite ou non disponible à l\'achat',
+                'message' => __('insamtechs_formation.not_purchasable'),
             ], 400);
         }
 
@@ -97,7 +97,7 @@ class InsamtechsFormationController extends Controller
         if ($price <= 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Prix invalide pour cette formation',
+                'message' => __('insamtechs_formation.invalid_price'),
             ], 400);
         }
 
@@ -110,7 +110,7 @@ class InsamtechsFormationController extends Controller
         if ($existing) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà acheté cette formation',
+                'message' => __('insamtechs_formation.already_purchased'),
             ], 400);
         }
 
@@ -125,7 +125,7 @@ class InsamtechsFormationController extends Controller
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => "Solde insuffisant dans votre wallet " . ucfirst($paymentProvider),
+                    'message' => __('insamtechs_formation.insufficient_wallet', ['provider' => ucfirst($paymentProvider)]),
                     'required' => $price,
                     'available' => $currentBalance,
                 ], 400);
@@ -170,7 +170,7 @@ class InsamtechsFormationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Formation achetée avec succès',
+                'message' => __('insamtechs_formation.purchased'),
                 'data' => [
                     'purchase' => $purchase,
                 ],
@@ -179,7 +179,7 @@ class InsamtechsFormationController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'achat: ' . $e->getMessage(),
+                'message' => __('insamtechs_formation.purchase_error', ['error' => $e->getMessage()]),
             ], 500);
         }
     }

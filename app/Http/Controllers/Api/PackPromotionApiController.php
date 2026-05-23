@@ -73,7 +73,7 @@ class PackPromotionApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Promotions actives récupérées avec succès',
+                'message' => __('pack_promotion.active_promotions_fetched'),
                 'data' => $result->values(),
             ]);
 
@@ -82,7 +82,7 @@ class PackPromotionApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des promotions',
+                'message' => __('pack_promotion.fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -104,7 +104,7 @@ class PackPromotionApiController extends Controller
             if (!isset($typeMap[$type])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Type de pack invalide',
+                    'message' => __('pack_promotion.invalid_pack_type'),
                 ], 400);
             }
 
@@ -154,7 +154,7 @@ class PackPromotionApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la vérification de la promotion',
+                'message' => __('pack_promotion.check_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -173,7 +173,7 @@ class PackPromotionApiController extends Controller
             if (!$promotion->canActivate($user)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Vous ne pouvez pas activer cette promotion. Elle est soit expirée, soit vous l\'avez déjà activée, soit la limite d\'activations est atteinte.',
+                    'message' => __('pack_promotion.cannot_activate'),
                 ], 400);
             }
 
@@ -190,7 +190,7 @@ class PackPromotionApiController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Promotion activée avec succès ! Profitez-en jusqu\'au ' . $activation->expires_at->format('d/m/Y'),
+                    'message' => __('pack_promotion.activated', ['date' => $activation->expires_at->format('d/m/Y')]),
                     'data' => [
                         'activation_id' => $activation->id,
                         'activated_at' => $activation->activated_at->toDateTimeString(),
@@ -215,7 +215,7 @@ class PackPromotionApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'activation de la promotion',
+                'message' => __('pack_promotion.activation_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -256,7 +256,7 @@ class PackPromotionApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Activations récupérées avec succès',
+                'message' => __('pack_promotion.activations_fetched'),
                 'data' => $result,
             ]);
 
@@ -265,7 +265,7 @@ class PackPromotionApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération de vos activations',
+                'message' => __('pack_promotion.activations_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

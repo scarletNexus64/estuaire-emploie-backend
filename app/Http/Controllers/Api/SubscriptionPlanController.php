@@ -68,7 +68,7 @@ class SubscriptionPlanController extends Controller
             $plans = $this->addPromotionInfo($plans);
             return response()->json([
                 'success' => true,
-                'message' => 'Plans d\'abonnement recruteurs récupérés avec succès',
+                'message' => __('subscription.recruiter_plans_fetched'),
                 'data' => $plans,
             ]);
         } elseif ($planType === 'job_seeker') {
@@ -76,7 +76,7 @@ class SubscriptionPlanController extends Controller
             $plans = $this->addPromotionInfo($plans);
             return response()->json([
                 'success' => true,
-                'message' => 'Plans d\'abonnement chercheurs d\'emploi récupérés avec succès',
+                'message' => __('subscription.jobseeker_plans_fetched'),
                 'data' => $plans,
             ]);
         }
@@ -94,7 +94,7 @@ class SubscriptionPlanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Plans d\'abonnement récupérés avec succès',
+            'message' => __('subscription.plans_fetched'),
             'data' => [
                 'recruiter_plans' => $this->addPromotionInfo($recruiterPlans),
                 'job_seeker_plans' => $this->addPromotionInfo($jobSeekerPlans),
@@ -136,6 +136,10 @@ class SubscriptionPlanController extends Controller
     private function addPromotionInfo($plans)
     {
         return $plans->map(function ($plan) {
+            $plan->loadMissing('translations');
+            $plan->name = $plan->t('name');
+            $plan->description = $plan->t('description');
+
             $promotion = $plan->getActivePromotion();
 
             if ($promotion) {
@@ -215,7 +219,7 @@ class SubscriptionPlanController extends Controller
         if (!$plan) {
             return response()->json([
                 'success' => false,
-                'message' => 'Plan d\'abonnement non trouvé',
+                'message' => __('subscription.plan_not_found'),
             ], 404);
         }
 
@@ -245,7 +249,7 @@ class SubscriptionPlanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Plan d\'abonnement récupéré avec succès',
+            'message' => __('subscription.plan_fetched'),
             'data' => $plan,
             'promotion' => $promotionData,
         ]);
@@ -343,7 +347,7 @@ class SubscriptionPlanController extends Controller
         if (!$plan) {
             return response()->json([
                 'success' => false,
-                'message' => 'Plan d\'abonnement non trouvé ou inactif',
+                'message' => __('subscription.plan_not_found_or_inactive'),
             ], 404);
         }
 
@@ -355,7 +359,7 @@ class SubscriptionPlanController extends Controller
         if (!$payment) {
             return response()->json([
                 'success' => false,
-                'message' => 'Paiement non trouvé',
+                'message' => __('subscription.payment_not_found'),
             ], 404);
         }
 
@@ -367,14 +371,14 @@ class SubscriptionPlanController extends Controller
             if ($payment->isCompleted()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Abonnement déjà actif avec ce paiement',
+                    'message' => __('subscription.subscription_already_active'),
                     'data' => $this->formatSubscriptionResponse($subscriptionWithThisPayment),
                 ]);
             }
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ce paiement a déjà été utilisé mais n\'est pas confirmé',
+                'message' => __('subscription.payment_used_not_confirmed'),
                 'payment_status' => $payment->status,
             ], 400);
         }
@@ -383,7 +387,7 @@ class SubscriptionPlanController extends Controller
         if (!$payment->isCompleted()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Paiement non confirmé',
+                'message' => __('subscription.payment_not_confirmed'),
                 'payment_status' => $payment->status,
             ], 400);
         }
@@ -548,7 +552,7 @@ class SubscriptionPlanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'activation de l\'abonnement',
+                'message' => __('subscription.activation_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -600,7 +604,7 @@ class SubscriptionPlanController extends Controller
         if (!$subscription) {
             return response()->json([
                 'success' => true,
-                'message' => 'Aucun abonnement actif',
+                'message' => __('subscription.no_active_subscription'),
                 'has_active_subscription' => false,
                 'data' => null,
             ]);
@@ -608,7 +612,7 @@ class SubscriptionPlanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Abonnement actif récupéré',
+            'message' => __('subscription.active_subscription_fetched'),
             'has_active_subscription' => $subscription->isValid(),
             'data' => $this->formatSubscriptionResponse($subscription),
         ]);
@@ -651,7 +655,7 @@ class SubscriptionPlanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Historique des abonnements récupéré',
+            'message' => __('subscription.history_fetched'),
             'data' => $subscriptions,
         ]);
     }
@@ -746,7 +750,7 @@ class SubscriptionPlanController extends Controller
         if (!$plan) {
             return response()->json([
                 'success' => false,
-                'message' => 'Plan d\'abonnement non trouvé ou inactif',
+                'message' => __('subscription.plan_not_found_or_inactive'),
             ], 404);
         }
 
@@ -792,7 +796,7 @@ class SubscriptionPlanController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Paiement PayPal initié avec succès. Veuillez compléter le paiement via le lien.',
+                    'message' => __('subscription.paypal_initiated'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'reference' => $payment->provider_reference,
@@ -919,7 +923,7 @@ class SubscriptionPlanController extends Controller
             Log::warning("[SubscriptionPlanController] ❌ Payment not found - Payment ID: {$id}, User ID: {$user->id}");
             return response()->json([
                 'success' => false,
-                'message' => 'Paiement non trouvé',
+                'message' => __('subscription.payment_not_found'),
             ], 404);
         }
 
@@ -961,7 +965,7 @@ class SubscriptionPlanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Statut récupéré',
+            'message' => __('subscription.status_retrieved'),
             'data' => [
                 'payment_id' => $payment->id,
                 'reference' => $payment->provider_reference,
@@ -1216,14 +1220,14 @@ class SubscriptionPlanController extends Controller
         if (!$payment) {
             return response()->json([
                 'success' => false,
-                'message' => 'Paiement non trouvé',
+                'message' => __('subscription.payment_not_found'),
             ], 404);
         }
 
         if ($payment->isCompleted()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Paiement déjà complété',
+                'message' => __('subscription.payment_already_completed'),
                 'data' => [
                     'payment_id' => $payment->id,
                     'status' => $payment->status,
@@ -1245,7 +1249,7 @@ class SubscriptionPlanController extends Controller
             if ($payment->isCompleted()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Paiement PayPal complété avec succès! Vous pouvez maintenant activer votre abonnement.',
+                    'message' => __('subscription.paypal_completed'),
                     'data' => [
                         'payment_id' => $payment->id,
                         'status' => $payment->status,
@@ -1257,7 +1261,7 @@ class SubscriptionPlanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Le paiement n\'a pas été approuvé',
+                'message' => __('subscription.payment_not_approved'),
                 'data' => [
                     'payment_id' => $payment->id,
                     'status' => $payment->status,
@@ -1269,7 +1273,7 @@ class SubscriptionPlanController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'exécution du paiement: ' . $e->getMessage(),
+                'message' => __('subscription.payment_execution_error', ['error' => $e->getMessage()]),
             ], 500);
         }
     }
@@ -1390,7 +1394,7 @@ class SubscriptionPlanController extends Controller
         if (!$plan) {
             return response()->json([
                 'success' => false,
-                'message' => 'Plan d\'abonnement non trouvé ou inactif',
+                'message' => __('subscription.plan_not_found_or_inactive'),
             ], 404);
         }
 
@@ -1405,7 +1409,7 @@ class SubscriptionPlanController extends Controller
         if ($walletBalance < $plan->price) {
             return response()->json([
                 'success' => false,
-                'message' => "Solde {$providerName} insuffisant",
+                'message' => __('subscription.insufficient_provider_balance', ['provider' => $providerName]),
                 'required_amount' => $plan->price,
                 'current_balance' => $walletBalance,
                 'missing_amount' => $plan->price - $walletBalance,

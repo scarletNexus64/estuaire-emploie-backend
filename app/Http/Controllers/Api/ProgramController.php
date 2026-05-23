@@ -78,7 +78,7 @@ class ProgramController extends Controller
         if (!$hasAccess) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'avez pas accès à ce programme',
+                'message' => __('program.no_access'),
                 'required_packs' => $program->required_packs ?? [],
                 'current_pack' => $userPack,
             ], 403);
@@ -126,7 +126,7 @@ class ProgramController extends Controller
             return response()->json([
                 'success' => false,
                 'has_access' => false,
-                'message' => 'Non authentifié',
+                'message' => __('common.not_authenticated'),
             ], 401);
         }
 
@@ -136,7 +136,7 @@ class ProgramController extends Controller
             return response()->json([
                 'success' => true,
                 'has_access' => false,
-                'message' => 'Aucun abonnement actif',
+                'message' => __('program.no_active_subscription'),
                 'current_pack' => null,
             ]);
         }

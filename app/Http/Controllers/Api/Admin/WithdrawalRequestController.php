@@ -52,7 +52,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des demandes',
+                'message' => __('withdrawal.requests_fetch_error'),
             ], 500);
         }
     }
@@ -71,7 +71,7 @@ class WithdrawalRequestController extends Controller
             if (!$withdrawalRequest) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Demande non trouvée',
+                    'message' => __('withdrawal.request_not_found'),
                 ], 404);
             }
 
@@ -85,7 +85,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération de la demande',
+                'message' => __('withdrawal.request_fetch_error'),
             ], 500);
         }
     }
@@ -105,7 +105,7 @@ class WithdrawalRequestController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -122,14 +122,14 @@ class WithdrawalRequestController extends Controller
             if (!$withdrawalRequest) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Demande non trouvée',
+                    'message' => __('withdrawal.request_not_found'),
                 ], 404);
             }
 
             if ($withdrawalRequest->status !== 'pending') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cette demande a déjà été traitée',
+                    'message' => __('withdrawal.already_processed'),
                 ], 400);
             }
 
@@ -182,8 +182,8 @@ class WithdrawalRequestController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $action === 'approve'
-                    ? 'Demande approuvée et retrait effectué avec succès'
-                    : 'Demande refusée',
+                    ? __('withdrawal.approved_processed')
+                    : __('withdrawal.rejected'),
                 'data' => $withdrawalRequest->fresh(),
             ]);
 
@@ -194,7 +194,7 @@ class WithdrawalRequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors du traitement de la demande',
+                'message' => __('withdrawal.process_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

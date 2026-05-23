@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'recruiter_plans_fetched' => 'Recruiter subscription plans retrieved successfully',
+    'jobseeker_plans_fetched' => 'Job seeker subscription plans retrieved successfully',
+    'plans_fetched' => 'Subscription plans retrieved successfully',
+    'plan_not_found' => 'Subscription plan not found',
+    'plan_fetched' => 'Subscription plan retrieved successfully',
+    'plan_not_found_or_inactive' => 'Subscription plan not found or inactive',
+    'payment_not_found' => 'Payment not found',
+    'subscription_already_active' => 'Subscription already active with this payment',
+    'payment_used_not_confirmed' => 'This payment has already been used but is not confirmed',
+    'payment_not_confirmed' => 'Payment not confirmed',
+    'activation_error' => 'Error while activating the subscription',
+    'no_active_subscription' => 'No active subscription',
+    'active_subscription_fetched' => 'Active subscription retrieved',
+    'history_fetched' => 'Subscription history retrieved',
+    'paypal_initiated' => 'PayPal payment initiated successfully. Please complete the payment via the link.',
+    'status_retrieved' => 'Status retrieved',
+    'payment_already_completed' => 'Payment already completed',
+    'paypal_completed' => 'PayPal payment completed successfully! You can now activate your subscription.',
+    'payment_not_approved' => 'The payment was not approved',
+    'payment_execution_error' => 'Error executing the payment: :error',
+    'insufficient_provider_balance' => 'Insufficient :provider balance',
+];

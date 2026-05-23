@@ -11,14 +11,12 @@ class CompanyCategoryController extends Controller
 {
     /**
      * Get all active company categories
-     *
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $query = CompanyCategory::active();
+        $query = CompanyCategory::active()->with('translations');
 
-        // Filter by search keyword
+        // Search still hits the canonical FR columns; cross-locale search is out of scope here.
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -29,23 +27,12 @@ class CompanyCategoryController extends Controller
             });
         }
 
-        // Filter by level 1
         if ($request->filled('level_1')) {
             $query->where('level_1', $request->input('level_1'));
         }
 
         $categories = $query->orderBy('code')->get()->map(function ($category) {
-            return [
-                'id' => $category->id,
-                'code' => $category->code,
-                'level_1' => $category->level_1,
-                'level_2' => $category->level_2,
-                'level_3' => $category->level_3,
-                'full_name' => $category->full_name,
-                'deepest_level' => $category->deepest_level,
-                'slug' => $category->slug,
-                'description' => $category->description,
-            ];
+            return $this->presentCategory($category);
         });
 
         return response()->json([
@@ -55,29 +42,35 @@ class CompanyCategoryController extends Controller
     }
 
     /**
-     * Get all unique level 1 options (main sectors)
-     *
-     * @return JsonResponse
+     * Get all unique level 1 options (main sectors), localized.
      */
     public function getLevel1Options(): JsonResponse
     {
-        $level1Options = CompanyCategory::active()
-            ->distinct('level_1')
+        $rows = CompanyCategory::active()
+            ->with('translations')
+            ->whereNotNull('level_1')
             ->orderBy('level_1')
-            ->pluck('level_1');
+            ->get();
+
+        $options = collect();
+        $seen = [];
+        foreach ($rows as $row) {
+            $key = $row->level_1;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $options->push($row->t('level_1'));
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $level1Options,
+            'data' => $options->values(),
         ]);
     }
 
     /**
-     * Get level 2 options for given level 1 values
-     * Can accept multiple level_1 values separated by comma
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * Get level 2 options for given level 1 values, localized.
      */
     public function getLevel2Options(Request $request): JsonResponse
     {
@@ -85,22 +78,29 @@ class CompanyCategoryController extends Controller
             'level_1' => 'required|string',
         ]);
 
-        // Support multiple level_1 values separated by comma
         $level1Values = array_map('trim', explode(',', $request->input('level_1')));
 
-        $level2Options = CompanyCategory::active()
+        $rows = CompanyCategory::active()
+            ->with('translations')
             ->whereIn('level_1', $level1Values)
             ->whereNotNull('level_2')
-            ->distinct('level_2')
             ->orderBy('level_2')
-            ->get(['level_2', 'level_1', 'code'])
-            ->map(function ($category) {
-                return [
-                    'level_1' => $category->level_1,
-                    'level_2' => $category->level_2,
-                    'code' => $category->code,
-                ];
-            });
+            ->get();
+
+        $seen = [];
+        $level2Options = [];
+        foreach ($rows as $category) {
+            $key = $category->level_1.'|'.$category->level_2;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $level2Options[] = [
+                'level_1' => $category->t('level_1'),
+                'level_2' => $category->t('level_2'),
+                'code' => $category->code,
+            ];
+        }
 
         return response()->json([
             'success' => true,
@@ -109,14 +109,12 @@ class CompanyCategoryController extends Controller
     }
 
     /**
-     * Get hierarchical structure of all categories
-     * Organized by level_1 -> level_2 -> items
-     *
-     * @return JsonResponse
+     * Hierarchical structure level_1 -> level_2 -> items (localized).
      */
     public function getHierarchical(): JsonResponse
     {
         $categories = CompanyCategory::active()
+            ->with('translations')
             ->orderBy('level_1')
             ->orderBy('level_2')
             ->orderBy('level_3')
@@ -125,52 +123,49 @@ class CompanyCategoryController extends Controller
         $hierarchical = [];
 
         foreach ($categories as $category) {
-            $level1 = $category->level_1;
+            $level1Localized = $category->t('level_1');
+            $level1Key = $category->level_1; // group by canonical FR key
 
-            if (!isset($hierarchical[$level1])) {
-                $hierarchical[$level1] = [
-                    'name' => $level1,
+            if (! isset($hierarchical[$level1Key])) {
+                $hierarchical[$level1Key] = [
+                    'name' => $level1Localized,
                     'level_2' => [],
+                    'items' => [],
                 ];
             }
 
             if ($category->level_2) {
-                $level2 = $category->level_2;
+                $level2Key = $category->level_2;
 
-                if (!isset($hierarchical[$level1]['level_2'][$level2])) {
-                    $hierarchical[$level1]['level_2'][$level2] = [
-                        'name' => $level2,
+                if (! isset($hierarchical[$level1Key]['level_2'][$level2Key])) {
+                    $hierarchical[$level1Key]['level_2'][$level2Key] = [
+                        'name' => $category->t('level_2'),
                         'items' => [],
                     ];
                 }
 
-                $hierarchical[$level1]['level_2'][$level2]['items'][] = [
+                $hierarchical[$level1Key]['level_2'][$level2Key]['items'][] = [
                     'id' => $category->id,
                     'code' => $category->code,
-                    'level_3' => $category->level_3,
-                    'full_name' => $category->full_name,
+                    'level_3' => $category->t('level_3'),
+                    'full_name' => $this->localizedFullName($category),
                 ];
             } else {
-                // Category without level_2
-                $hierarchical[$level1]['items'][] = [
+                $hierarchical[$level1Key]['items'][] = [
                     'id' => $category->id,
                     'code' => $category->code,
-                    'full_name' => $category->full_name,
+                    'full_name' => $this->localizedFullName($category),
                 ];
             }
         }
 
-        // Convert to indexed array
         $result = [];
-        foreach ($hierarchical as $level1Name => $level1Data) {
-            $level2Array = [];
-            foreach ($level1Data['level_2'] as $level2Name => $level2Data) {
-                $level2Array[] = $level2Data;
-            }
+        foreach ($hierarchical as $level1Data) {
+            $level2Array = array_values($level1Data['level_2']);
             $result[] = [
-                'name' => $level1Name,
+                'name' => $level1Data['name'],
                 'level_2' => $level2Array,
-                'items' => $level1Data['items'] ?? [],
+                'items' => $level1Data['items'],
             ];
         }
 
@@ -181,10 +176,7 @@ class CompanyCategoryController extends Controller
     }
 
     /**
-     * Search categories by keyword
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * Search categories by keyword (canonical FR columns).
      */
     public function search(Request $request): JsonResponse
     {
@@ -195,6 +187,7 @@ class CompanyCategoryController extends Controller
         $keyword = $request->input('q');
 
         $categories = CompanyCategory::active()
+            ->with('translations')
             ->where(function ($query) use ($keyword) {
                 $query->where('code', 'like', "%{$keyword}%")
                     ->orWhere('level_1', 'like', "%{$keyword}%")
@@ -205,17 +198,7 @@ class CompanyCategoryController extends Controller
             ->orderBy('code')
             ->limit(50)
             ->get()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'code' => $category->code,
-                    'level_1' => $category->level_1,
-                    'level_2' => $category->level_2,
-                    'level_3' => $category->level_3,
-                    'full_name' => $category->full_name,
-                    'deepest_level' => $category->deepest_level,
-                ];
-            });
+            ->map(fn ($category) => $this->presentCategory($category, withDescription: false));
 
         return response()->json([
             'success' => true,
@@ -224,15 +207,13 @@ class CompanyCategoryController extends Controller
     }
 
     /**
-     * Get sub-categories (level_2) grouped by sectors (level_1)
-     * Optimized for frontend multi-selection
-     *
-     * @return JsonResponse
+     * Sub-categories grouped by sectors (localized).
      */
     public function getSubCategoriesGrouped(): JsonResponse
     {
         $categories = CompanyCategory::active()
-            ->whereNotNull('level_2') // Only categories with level_2
+            ->with('translations')
+            ->whereNotNull('level_2')
             ->orderBy('level_1')
             ->orderBy('level_2')
             ->get();
@@ -240,31 +221,62 @@ class CompanyCategoryController extends Controller
         $grouped = [];
 
         foreach ($categories as $category) {
-            $level1 = $category->level_1;
+            $level1Key = $category->level_1;
 
-            if (!isset($grouped[$level1])) {
-                $grouped[$level1] = [
-                    'sector' => $level1,
+            if (! isset($grouped[$level1Key])) {
+                $grouped[$level1Key] = [
+                    'sector' => $category->t('level_1'),
                     'subcategories' => [],
                 ];
             }
 
-            $grouped[$level1]['subcategories'][] = [
+            $level2 = $category->t('level_2');
+            $level3 = $category->t('level_3');
+
+            $grouped[$level1Key]['subcategories'][] = [
                 'id' => $category->id,
                 'code' => $category->code,
-                'level_1' => $category->level_1, // Include level_1 for frontend
-                'level_2' => $category->level_2,
-                'level_3' => $category->level_3,
-                'display_name' => $category->level_3 ? "{$category->level_2} > {$category->level_3}" : $category->level_2,
+                'level_1' => $category->t('level_1'),
+                'level_2' => $level2,
+                'level_3' => $level3,
+                'display_name' => $level3 ? "{$level2} > {$level3}" : $level2,
             ];
         }
 
-        // Convert to indexed array
-        $result = array_values($grouped);
-
         return response()->json([
             'success' => true,
-            'data' => $result,
+            'data' => array_values($grouped),
         ]);
+    }
+
+    private function presentCategory(CompanyCategory $category, bool $withDescription = true): array
+    {
+        $payload = [
+            'id' => $category->id,
+            'code' => $category->code,
+            'level_1' => $category->t('level_1'),
+            'level_2' => $category->t('level_2'),
+            'level_3' => $category->t('level_3'),
+            'full_name' => $this->localizedFullName($category),
+            'deepest_level' => $category->t('level_3') ?? $category->t('level_2') ?? $category->t('level_1'),
+            'slug' => $category->slug,
+        ];
+
+        if ($withDescription) {
+            $payload['description'] = $category->t('description');
+        }
+
+        return $payload;
+    }
+
+    private function localizedFullName(CompanyCategory $category): string
+    {
+        $parts = array_filter([
+            $category->t('level_1'),
+            $category->t('level_2'),
+            $category->t('level_3'),
+        ]);
+
+        return implode(' > ', $parts);
     }
 }

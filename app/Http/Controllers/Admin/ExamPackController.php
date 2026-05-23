@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExamPack;
 use App\Models\ExamPaper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -92,6 +93,7 @@ class ExamPackController extends Controller
             'display_order' => 'nullable|integer',
             'exam_papers' => 'nullable|array',
             'exam_papers.*' => 'exists:exam_papers,id',
+            'preview_paper_id' => 'nullable|integer|exists:exam_papers,id',
         ]);
 
         // Définir les prix par défaut à 0 s'ils ne sont pas fournis (gratuit pour étudiants)
@@ -113,11 +115,15 @@ class ExamPackController extends Controller
         // Créer le pack
         $examPack = ExamPack::create($validated);
 
-        // Attacher les épreuves sélectionnées
+        // Attacher les épreuves sélectionnées (avec flag is_preview)
         if ($request->filled('exam_papers')) {
+            $previewPaperId = $request->input('preview_paper_id');
             $papers = [];
             foreach ($request->exam_papers as $index => $paperId) {
-                $papers[$paperId] = ['display_order' => $index];
+                $papers[$paperId] = [
+                    'display_order' => $index,
+                    'is_preview' => ((int) $previewPaperId === (int) $paperId),
+                ];
             }
             $examPack->examPapers()->attach($papers);
         }
@@ -169,6 +175,7 @@ class ExamPackController extends Controller
             'display_order' => 'nullable|integer',
             'exam_papers' => 'nullable|array',
             'exam_papers.*' => 'exists:exam_papers,id',
+            'preview_paper_id' => 'nullable|integer|exists:exam_papers,id',
         ]);
 
         // Définir les prix par défaut à 0 s'ils ne sont pas fournis (gratuit pour étudiants)
@@ -195,11 +202,15 @@ class ExamPackController extends Controller
         // Mettre à jour le pack
         $examPack->update($validated);
 
-        // Synchroniser les épreuves
+        // Synchroniser les épreuves (avec flag is_preview)
         if ($request->has('exam_papers')) {
+            $previewPaperId = $request->input('preview_paper_id');
             $papers = [];
             foreach ($request->exam_papers as $index => $paperId) {
-                $papers[$paperId] = ['display_order' => $index];
+                $papers[$paperId] = [
+                    'display_order' => $index,
+                    'is_preview' => ((int) $previewPaperId === (int) $paperId),
+                ];
             }
             $examPack->examPapers()->sync($papers);
         } else {
@@ -280,5 +291,34 @@ class ExamPackController extends Controller
         $examPack->examPapers()->detach($examPaper->id);
 
         return redirect()->back()->with('success', 'Épreuve retirée du pack avec succès');
+    }
+
+    /**
+     * Basculer le flag « aperçu » d'une épreuve dans le pack.
+     * Une seule épreuve peut être en aperçu par pack : activer ici désactive les autres.
+     */
+    public function togglePreview(ExamPack $examPack, ExamPaper $examPaper)
+    {
+        $current = (bool) $examPack->examPapers()
+                                    ->where('exam_paper_id', $examPaper->id)
+                                    ->first()
+                                    ?->pivot
+                                    ?->is_preview;
+
+        if ($current) {
+            // Désactiver l'aperçu sur cette épreuve
+            $examPack->examPapers()->updateExistingPivot($examPaper->id, ['is_preview' => false]);
+            $message = 'Aperçu désactivé pour cette épreuve';
+        } else {
+            // Désactiver tous les autres aperçus du pack
+            DB::table('exam_pack_papers')
+                ->where('exam_pack_id', $examPack->id)
+                ->update(['is_preview' => false]);
+            // Activer l'aperçu sur cette épreuve
+            $examPack->examPapers()->updateExistingPivot($examPaper->id, ['is_preview' => true]);
+            $message = 'Épreuve définie comme aperçu (mode vitrine)';
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 }

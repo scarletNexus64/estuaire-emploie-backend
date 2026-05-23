@@ -67,7 +67,7 @@ class StoragePackController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des packs de stockage',
+                'message' => __('storage.packs_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -122,7 +122,7 @@ class StoragePackController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Pack de stockage non trouvé',
+                'message' => __('storage.pack_not_found'),
                 'error' => $e->getMessage(),
             ], 404);
         }
@@ -143,7 +143,7 @@ class StoragePackController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Données de validation invalides',
+                    'message' => __('storage.invalid_validation_data'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -160,7 +160,7 @@ class StoragePackController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pack de stockage acheté avec succès',
+                'message' => __('storage.pack_purchased'),
                 'data' => [
                     'id' => $userStoragePack->id,
                     'storage_pack' => [
@@ -240,7 +240,7 @@ class StoragePackController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des packs',
+                'message' => __('storage.packs_fetch_error_alt'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -264,7 +264,7 @@ class StoragePackController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des statistiques',
+                'message' => __('storage.stats_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -286,7 +286,7 @@ class StoragePackController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Données de validation invalides',
+                    'message' => __('storage.invalid_validation_data'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -314,7 +314,7 @@ class StoragePackController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Une erreur est survenue lors de l\'upgrade',
+                'message' => __('storage.upgrade_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

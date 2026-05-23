@@ -33,7 +33,7 @@ class CurrencyController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des devises',
+                'message' => __('currency.fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -56,7 +56,7 @@ class CurrencyController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des taux',
+                'message' => __('currency.rates_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -79,7 +79,7 @@ class CurrencyController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -105,7 +105,7 @@ class CurrencyController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la conversion',
+                'message' => __('currency.conversion_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -126,7 +126,7 @@ class CurrencyController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Devise invalide',
+                'message' => __('currency.invalid_currency'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -140,7 +140,7 @@ class CurrencyController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Devise mise à jour avec succès',
+                'message' => __('currency.updated'),
                 'data' => [
                     'preferred_currency' => $currency,
                     'currency_symbol' => \App\Models\CurrencyRate::getCurrencySymbol($currency),
@@ -150,7 +150,7 @@ class CurrencyController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la mise à jour',
+                'message' => __('currency.update_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

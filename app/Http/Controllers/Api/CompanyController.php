@@ -33,10 +33,28 @@ class CompanyController extends Controller
      */
     public function getDomainsSectors(): JsonResponse
     {
-        $domainsSectors = config('domains_sectors');
+        $domains = \App\Models\Domain::active()
+            ->ordered()
+            ->with(['sectors' => function ($q) {
+                $q->active()->ordered()->with('translations');
+            }, 'translations'])
+            ->get();
+
+        if ($domains->isEmpty()) {
+            // Fallback to legacy config if the table hasn't been seeded yet.
+            return response()->json([
+                'data' => config('domains_sectors', []),
+            ]);
+        }
+
+        $payload = [];
+        foreach ($domains as $domain) {
+            $domainName = $domain->t('name');
+            $payload[$domainName] = $domain->sectors->map(fn ($sector) => $sector->t('name'))->values()->all();
+        }
 
         return response()->json([
-            'data' => $domainsSectors,
+            'data' => $payload,
         ]);
     }
 
@@ -100,7 +118,7 @@ class CompanyController extends Controller
     {
         if ($company->status !== 'verified') {
             return response()->json([
-                'message' => 'Entreprise non disponible',
+                'message' => __('company.company_unavailable'),
             ], 404);
         }
 
@@ -188,13 +206,10 @@ class CompanyController extends Controller
                 $validated['city'] = mb_substr($validated['city'], 0, 255);
             }
 
-            // Vérifier si l'utilisateur n'a pas déjà une entreprise
-            $existingRecruiter = Recruiter::where('user_id', auth()->id())->first();
-            if ($existingRecruiter) {
-                return response()->json([
-                    'message' => 'Vous avez déjà une entreprise associée à votre compte',
-                ], 422);
-            }
+            // Multi-entreprises : un user peut créer plusieurs entreprises.
+            // On garde simplement le compte existant pour décider si celle-ci
+            // doit devenir l'entreprise active par défaut (1ère création).
+            $isFirstCompany = Recruiter::where('user_id', auth()->id())->doesntExist();
 
             // Normaliser l'email en minuscules
             $validated['email'] = strtolower($validated['email']);
@@ -243,23 +258,27 @@ class CompanyController extends Controller
             }
 
             // 🎯 Changer automatiquement le rôle de l'utilisateur à "recruiter"
+            // et définir l'entreprise active si c'est la première créée.
             $user = auth()->user();
             $user->role = 'recruiter';
+            if ($isFirstCompany) {
+                $user->current_company_id = $company->id;
+            }
             $user->save();
 
-            \Log::info("[CompanyController] User {$user->id} role changed to 'recruiter' after company creation");
+            \Log::info("[CompanyController] User {$user->id} role changed to 'recruiter' after company creation (first_company={$isFirstCompany}, current_company_id={$user->current_company_id})");
 
             // Load categories relationship for response
             $company->load('categories');
 
             return response()->json([
-                'message' => 'Entreprise créée avec succès. En attente de vérification.',
+                'message' => __('company.created'),
                 'data' => $company,
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'message' => 'Erreur de validation',
+                'message' => __('common.validation_error'),
                 'errors' => $e->errors(),
             ], 422);
 
@@ -272,7 +291,7 @@ class CompanyController extends Controller
                 ]);
 
                 return response()->json([
-                    'message' => 'Cet email est déjà utilisé par une autre entreprise',
+                    'message' => __('company.email_already_used'),
                     'errors' => [
                         'email' => ['Cet email est déjà utilisé par une autre entreprise']
                     ]
@@ -289,7 +308,7 @@ class CompanyController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Erreur lors de la création de l\'entreprise',
+                'message' => __('company.create_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -334,15 +353,25 @@ class CompanyController extends Controller
      */
     public function myCompany(): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $user = auth()->user();
+        $company = $user->currentCompany;
 
-        if (! $recruiter) {
-            return response()->json([
-                'message' => 'Vous n\'avez pas d\'entreprise associée',
-            ], 404);
+        // Fallback : si current_company_id n'est pas défini mais l'user a
+        // au moins une entreprise, on prend la première et on la persiste.
+        if (! $company) {
+            $firstRecruiter = $user->recruiters()->with('company')->first();
+            if ($firstRecruiter && $firstRecruiter->company) {
+                $company = $firstRecruiter->company;
+                $user->current_company_id = $company->id;
+                $user->save();
+            }
         }
 
-        $company = $recruiter->company;
+        if (! $company) {
+            return response()->json([
+                'message' => __('company.no_company_associated'),
+            ], 404);
+        }
 
         // Charger les catégories pour que le front puisse pré-remplir
         // le sélecteur de catégories à l'édition de l'entreprise.
@@ -404,51 +433,60 @@ class CompanyController extends Controller
      */
     public function myCompanyLevel3Sectors(): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $company = auth()->user()->currentCompany;
 
-        if (! $recruiter || ! $recruiter->company) {
+        if (! $company) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'avez pas d\'entreprise associée',
+                'message' => __('company.no_company_associated'),
             ], 404);
         }
+        // load() doit inclure les translations pour que ->t('level_3') marche
+        // sans N+1 (en complément du hook retrieved auto-localizer).
+        $company->load(['categories.translations']);
 
-        $company = $recruiter->company;
-        $company->load('categories');
-
-        // Niveaux 2 des catégories de l'entreprise
+        // Niveaux 2 (canoniques) des catégories de l'entreprise. On garde la
+        // colonne `level_2` brute pour faire le whereIn DB — comparer sur le
+        // canonique évite que la traduction casse le filtrage.
         $companyLevel2 = $company->categories
-            ->pluck('level_2')
+            ->map(fn ($cat) => $cat->getRawOriginal('level_2'))
             ->filter()
             ->unique()
             ->values();
 
-        if ($companyLevel2->isEmpty()) {
-            return response()->json([
-                'success' => true,
-                'data' => [],
-            ]);
+        // Fallback : si l'entreprise n'a aucune catégorie level_2 enregistrée,
+        // on renvoie l'ensemble des catégories level_3 actives (au lieu d'une
+        // liste vide). Le front peut ainsi laisser le user choisir librement
+        // pendant l'onboarding ou si la company n'a pas finalisé ses
+        // catégories.
+        $query = \App\Models\CompanyCategory::active()
+            ->with('translations')
+            ->whereNotNull('level_3');
+
+        if ($companyLevel2->isNotEmpty()) {
+            $query->whereIn('level_2', $companyLevel2);
         }
 
-        $level3 = \App\Models\CompanyCategory::active()
-            ->whereIn('level_2', $companyLevel2)
-            ->whereNotNull('level_3')
+        $level3 = $query
             ->orderBy('level_2')
             ->orderBy('level_3')
             ->get(['id', 'code', 'level_1', 'level_2', 'level_3'])
             ->map(function ($category) {
+                // ->t() : utilise la locale courante (middleware SetLocale)
+                // avec fallback automatique vers fr / colonne canonique.
                 return [
                     'id' => $category->id,
                     'code' => $category->code,
-                    'level_1' => $category->level_1,
-                    'level_2' => $category->level_2,
-                    'level_3' => $category->level_3,
+                    'level_1' => $category->t('level_1'),
+                    'level_2' => $category->t('level_2'),
+                    'level_3' => $category->t('level_3'),
                 ];
             });
 
         return response()->json([
             'success' => true,
             'data' => $level3,
+            'filtered_by_company' => $companyLevel2->isNotEmpty(),
         ]);
     }
 
@@ -501,21 +539,22 @@ class CompanyController extends Controller
     public function updateMyCompany(Request $request): JsonResponse
     {
         try {
-            $recruiter = auth()->user()->recruiter;
+            $user = auth()->user();
+            $company = $user->currentCompany;
 
-            if (! $recruiter) {
+            if (! $company) {
                 return response()->json([
-                    'message' => 'Vous n\'avez pas d\'entreprise associée',
+                    'message' => __('company.no_company_associated'),
                 ], 404);
             }
 
-            if (! $recruiter->can_modify_company) {
+            $recruiter = $user->recruiterFor($company->id);
+
+            if (! $recruiter || ! $recruiter->can_modify_company) {
                 return response()->json([
-                    'message' => 'Vous n\'êtes pas autorisé à modifier cette entreprise',
+                    'message' => __('company.not_authorized_modify'),
                 ], 403);
             }
-
-            $company = $recruiter->company;
 
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
@@ -621,7 +660,7 @@ class CompanyController extends Controller
                 $totalPhotos = count($photosToKeep);
                 if ($totalPhotos > 0 && ($totalPhotos < 2 || $totalPhotos > 4)) {
                     return response()->json([
-                        'message' => 'Le nombre total de photos doit être entre 2 et 4',
+                        'message' => __('company.photos_count_invalid'),
                         'errors' => ['photos' => ['Vous devez avoir entre 2 et 4 photos']],
                     ], 422);
                 }
@@ -658,29 +697,112 @@ class CompanyController extends Controller
             $company->load('categories');
 
             return response()->json([
-                'message' => 'Entreprise mise à jour avec succès',
+                'message' => __('company.updated'),
                 'data' => $company->fresh(['categories']),
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'message' => 'Erreur de validation',
+                'message' => __('common.validation_error'),
                 'errors' => $e->errors(),
             ], 422);
 
         } catch (\Exception $e) {
             \Log::error('Erreur lors de la mise à jour d\'entreprise', [
                 'user_id' => auth()->id(),
-                'company_id' => $recruiter->company->id ?? null,
+                'company_id' => $company->id ?? null,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
-                'message' => 'Erreur lors de la mise à jour de l\'entreprise',
+                'message' => __('company.update_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Liste toutes les entreprises de l'utilisateur authentifié.
+     * Inclut les permissions du pivot recruiters pour chaque entreprise.
+     *
+     * GET /api/my-companies
+     */
+    public function myCompanies(): JsonResponse
+    {
+        $user = auth()->user();
+
+        $companies = $user->companies()
+            ->with('categories')
+            ->withCount('jobs')
+            ->get()
+            ->map(function (Company $company) {
+                return [
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'email' => $company->email,
+                    'phone' => $company->phone,
+                    'logo' => $company->logo,
+                    'photos' => $company->photos,
+                    'description' => $company->description,
+                    'sector' => $company->sector,
+                    'domain' => $company->domain,
+                    'website' => $company->website,
+                    'address' => $company->address,
+                    'city' => $company->city,
+                    'country' => $company->country,
+                    'status' => $company->status,
+                    'subscription_plan' => $company->subscription_plan,
+                    'jobs_count' => $company->jobs_count,
+                    'categories' => $company->categories,
+                    'permissions' => [
+                        'position' => $company->pivot->position,
+                        'can_publish' => (bool) $company->pivot->can_publish,
+                        'can_view_applications' => (bool) $company->pivot->can_view_applications,
+                        'can_modify_company' => (bool) $company->pivot->can_modify_company,
+                    ],
+                ];
+            });
+
+        return response()->json([
+            'data' => $companies,
+            'current_company_id' => $user->current_company_id,
+        ]);
+    }
+
+    /**
+     * Bascule l'entreprise active de l'utilisateur authentifié.
+     * Valide que l'user est bien recruiter dans cette entreprise.
+     *
+     * POST /api/companies/{company}/switch
+     */
+    public function switchCompany(Company $company): JsonResponse
+    {
+        $user = auth()->user();
+        $recruiter = $user->recruiterFor($company->id);
+
+        if (! $recruiter) {
+            return response()->json([
+                'message' => __('company.not_a_member'),
+            ], 403);
+        }
+
+        $user->current_company_id = $company->id;
+        $user->save();
+
+        $company->load('categories');
+
+        return response()->json([
+            'message' => __('company.active_company_updated'),
+            'current_company_id' => $company->id,
+            'company' => $company,
+            'permissions' => [
+                'position' => $recruiter->position,
+                'can_publish' => (bool) $recruiter->can_publish,
+                'can_view_applications' => (bool) $recruiter->can_view_applications,
+                'can_modify_company' => (bool) $recruiter->can_modify_company,
+            ],
+        ]);
     }
 
     /**
@@ -795,7 +917,7 @@ class CompanyController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'message' => 'Paramètres invalides',
+                'message' => __('company.invalid_params'),
                 'errors' => $e->errors(),
             ], 422);
 
@@ -806,7 +928,7 @@ class CompanyController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Erreur lors de la récupération des entreprises',
+                'message' => __('company.fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

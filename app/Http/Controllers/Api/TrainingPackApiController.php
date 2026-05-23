@@ -223,7 +223,7 @@ class TrainingPackApiController extends Controller
         if ($existingPurchase) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà acheté ce pack de formation',
+                'message' => __('training_pack.already_purchased'),
             ], 400);
         }
 
@@ -236,7 +236,7 @@ class TrainingPackApiController extends Controller
         if ($price <= 0 && !$isStudent) {
             return response()->json([
                 'success' => false,
-                'message' => 'Prix invalide pour ce pack',
+                'message' => __('training_pack.invalid_price'),
             ], 400);
         }
 
@@ -272,7 +272,7 @@ class TrainingPackApiController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pack obtenu gratuitement avec le Mode Étudiant',
+                    'message' => __('training_pack.free_with_student_mode'),
                     'data' => [
                         'purchase' => $purchase,
                         'pack' => $pack,
@@ -292,7 +292,7 @@ class TrainingPackApiController extends Controller
             if ($currentBalance < $price) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Solde insuffisant dans votre wallet " . ucfirst($paymentProvider),
+                    'message' => __('training_pack.insufficient_wallet', ['provider' => ucfirst($paymentProvider)]),
                     'required' => $price,
                     'available' => $currentBalance,
                 ], 400);
@@ -341,7 +341,7 @@ class TrainingPackApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pack de formation acheté avec succès',
+                'message' => __('training_pack.purchased'),
                 'data' => [
                     'purchase' => $purchase,
                     'pack' => $pack,
@@ -354,7 +354,7 @@ class TrainingPackApiController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'achat du pack',
+                'message' => __('training_pack.purchase_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -476,7 +476,7 @@ class TrainingPackApiController extends Controller
         if (!$hasAccess && !$video->is_preview) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez acheter ce pack pour accéder à cette vidéo',
+                'message' => __('training_pack.must_purchase_for_video'),
             ], 403);
         }
 
@@ -512,7 +512,7 @@ class TrainingPackApiController extends Controller
         if (!$hasAccess && !$video->is_preview) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez acheter ce pack pour accéder à cette vidéo',
+                'message' => __('training_pack.must_purchase_for_video'),
             ], 403);
         }
 
@@ -520,7 +520,7 @@ class TrainingPackApiController extends Controller
         if ($video->video_type !== 'upload' || !$video->video_path) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette vidéo n\'est pas disponible en streaming',
+                'message' => __('training_pack.video_not_streamable'),
             ], 400);
         }
 
@@ -530,7 +530,7 @@ class TrainingPackApiController extends Controller
         if (!file_exists($path)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Fichier vidéo introuvable',
+                'message' => __('training_pack.video_file_not_found'),
             ], 404);
         }
 
@@ -587,7 +587,7 @@ class TrainingPackApiController extends Controller
             ->exists();
 
         if (!$hasAccess) {
-            return response()->json(['success' => false, 'message' => 'Accès non autorisé'], 403);
+            return response()->json(['success' => false, 'message' => __('common.unauthorized_access')], 403);
         }
 
         $video = TrainingVideo::findOrFail($videoId);
@@ -603,7 +603,7 @@ class TrainingPackApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Vidéo marquée comme terminée',
+            'message' => __('training_pack.video_marked_completed'),
             'data' => ['completions_count' => $video->fresh()->completions_count]
         ]);
     }
@@ -648,7 +648,7 @@ class TrainingPackApiController extends Controller
         if (!$hasAccess && !$video->is_preview) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous devez acheter un pack contenant cette vidéo pour y accéder',
+                'message' => __('training_pack.must_purchase_for_video_alt'),
             ], 403);
         }
 
@@ -656,7 +656,7 @@ class TrainingPackApiController extends Controller
         if ($video->video_type !== 'upload' || !$video->video_path) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette vidéo n\'est pas disponible en streaming',
+                'message' => __('training_pack.video_not_streamable'),
             ], 400);
         }
 
@@ -666,7 +666,7 @@ class TrainingPackApiController extends Controller
         if (!file_exists($path)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Fichier vidéo introuvable',
+                'message' => __('training_pack.video_file_not_found'),
             ], 404);
         }
 

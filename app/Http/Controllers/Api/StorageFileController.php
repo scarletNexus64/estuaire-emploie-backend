@@ -172,7 +172,7 @@ class StorageFileController extends Controller
             if (!$parentFolder) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dossier parent invalide',
+                    'message' => __('storage.invalid_parent_folder'),
                 ], 400);
             }
         }
@@ -187,7 +187,7 @@ class StorageFileController extends Controller
         if ($existingFolder) {
             return response()->json([
                 'success' => false,
-                'message' => 'Un dossier avec ce nom existe déjà',
+                'message' => __('storage.folder_exists'),
             ], 400);
         }
 
@@ -203,7 +203,7 @@ class StorageFileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Dossier créé avec succès',
+            'message' => __('storage.folder_created'),
             'data' => $this->formatItemData($folder),
         ]);
     }
@@ -231,7 +231,7 @@ class StorageFileController extends Controller
             if (!$parentFolder) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dossier parent invalide',
+                    'message' => __('storage.invalid_parent_folder'),
                 ], 400);
             }
         }
@@ -244,7 +244,7 @@ class StorageFileController extends Controller
         if ($activePacks->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous n\'avez pas de pack de stockage actif',
+                'message' => __('storage.no_active_pack'),
             ], 400);
         }
 
@@ -257,7 +257,7 @@ class StorageFileController extends Controller
         if ($fileSizeMb > $totalAvailable) {
             return response()->json([
                 'success' => false,
-                'message' => "Espace insuffisant. Fichier: {$fileSizeMb} Mo, Disponible: {$totalAvailable} Mo",
+                'message' => __('storage.insufficient_space', ['file_size' => $fileSizeMb, 'available' => $totalAvailable]),
             ], 400);
         }
 
@@ -299,7 +299,7 @@ class StorageFileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Fichier uploadé avec succès',
+            'message' => __('storage.uploaded'),
             'data' => [
                 'id' => $storageFile->id,
                 'name' => $storageFile->name,
@@ -433,7 +433,7 @@ class StorageFileController extends Controller
         if ($files->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucun fichier trouvé ou accès non autorisé',
+                'message' => __('storage.no_file_or_unauthorized'),
             ], 404);
         }
 
@@ -473,7 +473,7 @@ class StorageFileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "{$deletedCount} fichier(s) supprimé(s) avec succès",
+            'message' => __('storage.files_deleted', ['count' => $deletedCount]),
             'deleted_count' => $deletedCount,
             'space_freed_mb' => $totalSizeFreedMb,
         ]);
@@ -508,7 +508,7 @@ class StorageFileController extends Controller
         if ($existingItem) {
             return response()->json([
                 'success' => false,
-                'message' => 'Un élément avec ce nom existe déjà dans ce dossier',
+                'message' => __('storage.item_exists_in_folder'),
             ], 400);
         }
 
@@ -553,7 +553,7 @@ class StorageFileController extends Controller
             if (!$destinationFolder) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dossier de destination invalide',
+                    'message' => __('storage.invalid_destination_folder'),
                 ], 400);
             }
 
@@ -561,7 +561,7 @@ class StorageFileController extends Controller
             if ($item->is_folder && $this->isDescendant($destinationFolderId, $id)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Impossible de déplacer un dossier dans un de ses sous-dossiers',
+                    'message' => __('storage.cannot_move_into_subfolder'),
                 ], 400);
             }
         }
@@ -576,7 +576,7 @@ class StorageFileController extends Controller
         if ($existingItem) {
             return response()->json([
                 'success' => false,
-                'message' => 'Un élément avec ce nom existe déjà dans le dossier de destination',
+                'message' => __('storage.item_exists_in_destination'),
             ], 400);
         }
 
@@ -622,7 +622,7 @@ class StorageFileController extends Controller
             if (!$destinationFolder) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dossier de destination invalide',
+                    'message' => __('storage.invalid_destination_folder'),
                 ], 400);
             }
         }
@@ -633,7 +633,7 @@ class StorageFileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Dossier copié',
+                'message' => __('storage.folder_copied'),
                 'data' => $this->formatItemData($copiedFolder),
             ]);
         } else {
@@ -650,7 +650,7 @@ class StorageFileController extends Controller
             if ($fileSizeMb > $totalAvailable) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Espace insuffisant pour copier ce fichier",
+                    'message' => __('storage.insufficient_space_copy'),
                 ], 400);
             }
 
@@ -691,7 +691,7 @@ class StorageFileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Fichier copié',
+                'message' => __('storage.file_copied'),
                 'data' => $this->formatItemData($copiedFile),
             ]);
         }
