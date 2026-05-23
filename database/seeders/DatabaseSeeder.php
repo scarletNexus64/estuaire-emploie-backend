@@ -49,6 +49,11 @@ class DatabaseSeeder extends Seeder
             // 1082 libellés distincts). Mapping volumineux externalisé dans
             // database/seeders/data/company_categories_level{1,2,3}.php
             CompanyCategoriesTranslationsSeeder::class,
+
+            // Traductions des programmes professionnels (Program + ProgramStep).
+            // Idempotent : à lancer après ProgramSeeder (créé manuellement via
+            // `php artisan db:seed --class=ProgramSeeder`).
+            ProgramsTranslationsSeeder::class,
         ]);
     }
 }

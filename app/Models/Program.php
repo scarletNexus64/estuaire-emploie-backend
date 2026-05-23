@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Program extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTranslations;
     protected $fillable = [
         'title',
         'slug',
@@ -28,6 +29,13 @@ class Program extends Model
         'order' => 'integer',
         'required_packs' => 'array',
     ];
+
+    /**
+     * Champs traduisibles via la table polymorphe `translations`.
+     * Le type lui-même (clé d'enum) n'est pas traduit ; son rendu humain
+     * passe par getTypeDisplayAttribute() (à déplacer en tr() côté frontend).
+     */
+    protected array $translatable = ['title', 'description', 'objectives'];
 
     /**
      * Relation avec les étapes du programme

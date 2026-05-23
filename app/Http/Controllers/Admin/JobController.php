@@ -294,7 +294,7 @@ class JobController extends Controller
             return response()->json([
                 'success' => true,
                 'completed' => true,
-                'message' => 'Tous les utilisateurs ont reçu la notification',
+                'message' => __('job.all_users_notified'),
                 'sent' => 0,
                 'failed' => 0,
             ]);
@@ -410,7 +410,7 @@ class JobController extends Controller
             return response()->json([
                 'success' => true,
                 'completed' => true,
-                'message' => 'Toutes les notifications ont été envoyées',
+                'message' => __('job.all_notifications_sent'),
                 'sent' => 0,
                 'failed' => 0,
             ]);

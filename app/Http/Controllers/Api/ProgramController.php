@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Program;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class ProgramController extends Controller
 {
@@ -52,6 +53,7 @@ class ProgramController extends Controller
 
         return response()->json([
             'success' => true,
+            'locale' => App::getLocale(),
             'programs' => $transformedPrograms,
             'user_subscription' => [
                 'plan_slug' => $userPlanSlug,
@@ -89,6 +91,7 @@ class ProgramController extends Controller
 
         return response()->json([
             'success' => true,
+            'locale' => App::getLocale(),
             'program' => [
                 'id' => $program->id,
                 'title' => $program->title,

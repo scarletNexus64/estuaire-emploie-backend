@@ -90,7 +90,7 @@ class AdvertisementController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Impression enregistrée',
+            'message' => __('advertisement.impression_recorded'),
         ]);
     }
 
@@ -119,7 +119,7 @@ class AdvertisementController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Clic enregistré',
+            'message' => __('advertisement.click_recorded'),
         ]);
     }
 }

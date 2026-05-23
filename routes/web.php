@@ -166,6 +166,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::middleware('permission:manage_users')->group(function () {
         Route::delete('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk-delete');
         Route::resource('users', UserController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
+
+        // Désactivation (soft) des abonnements / packs / services d'un utilisateur
+        Route::delete('users/{user}/subscriptions/{subscription}', [UserController::class, 'revokeSubscription'])->name('users.subscriptions.revoke');
+        Route::delete('users/{user}/premium-services/{service}', [UserController::class, 'revokePremiumService'])->name('users.premium-services.revoke');
+        Route::delete('users/{user}/addon-services/{addon}', [UserController::class, 'revokeAddonService'])->name('users.addon-services.revoke');
+        Route::delete('users/{user}/storage-packs/{pack}', [UserController::class, 'revokeStoragePack'])->name('users.storage-packs.revoke');
+        Route::delete('users/{user}/pack-purchases/{purchase}', [UserController::class, 'revokePackPurchase'])->name('users.pack-purchases.revoke');
     });
 
     // Recruiters Management

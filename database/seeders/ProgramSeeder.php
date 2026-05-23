@@ -57,7 +57,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en anglais', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en anglais', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -70,7 +70,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en marketing', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en marketing', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -83,7 +83,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de développement personnel', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de développement personnel', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -96,7 +96,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation Microsoft', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation Microsoft', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -109,7 +109,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation RH', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation RH', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -122,7 +122,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en automatisme', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en automatisme', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -135,7 +135,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en comptabilité', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en comptabilité', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -148,7 +148,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en dessin technique', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en dessin technique', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -161,7 +161,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en infographie', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en infographie', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -174,7 +174,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en e-commerce', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en e-commerce', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -187,7 +187,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en électronique', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en électronique', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -200,7 +200,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en gestion de projets', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en gestion de projets', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -213,7 +213,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en programmation', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en programmation', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -226,7 +226,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en systèmes informatiques', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en systèmes informatiques', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -239,7 +239,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en IA', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en IA', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -252,7 +252,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en crypto', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en crypto', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -265,7 +265,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation DJ', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation DJ', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -278,7 +278,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en pédagogie', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en pédagogie', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
 
@@ -291,7 +291,7 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 30,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Vidéos de formation en réseaux', 'url' => 'https://insamtechs.com', 'type' => 'video'],
+                    ['title' => 'Vidéos de formation en réseaux', 'url' => 'https://insamtechs.com/', 'type' => 'video'],
                 ],
             ],
         ];
@@ -332,10 +332,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 5,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide d\'auto-évaluation professionnelle', 'url' => 'https://docs.google.com/document/d/guide-evaluation', 'type' => 'document'],
-                    ['title' => 'Vidéo: Comment définir son projet professionnel', 'url' => 'https://www.youtube.com/watch?v=projet-pro', 'type' => 'video'],
+                    ['title' => 'Guide d\'auto-évaluation professionnelle', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Comment définir son projet professionnel', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
                     ['title' => 'Test de personnalité MBTI', 'url' => 'https://www.16personalities.com/fr', 'type' => 'link'],
-                    ['title' => 'Grille de cartographie des compétences', 'url' => 'https://docs.google.com/grille-competences', 'type' => 'document'],
+                    ['title' => 'Grille de cartographie des compétences', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -348,10 +348,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 5,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Modèles de CV professionnels 2026', 'url' => 'https://canva.com/templates/cv-professionnel', 'type' => 'document'],
-                    ['title' => 'Guide: Optimiser son profil LinkedIn', 'url' => 'https://docs.google.com/guide-linkedin', 'type' => 'document'],
-                    ['title' => 'Vidéo: Les erreurs fatales dans un CV', 'url' => 'https://www.youtube.com/watch?v=erreurs-cv', 'type' => 'video'],
-                    ['title' => 'Templates de lettres de motivation', 'url' => 'https://docs.google.com/templates-lettre-motivation', 'type' => 'document'],
+                    ['title' => 'Modèles de CV professionnels 2026', 'url' => 'https://www.canva.com/templates/', 'type' => 'document'],
+                    ['title' => 'Guide: Optimiser son profil LinkedIn', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Les erreurs fatales dans un CV', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Templates de lettres de motivation', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -364,9 +364,9 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 7,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Annuaire des entreprises partenaires 2026', 'url' => 'https://drive.google.com/entreprises-partenaires', 'type' => 'document'],
-                    ['title' => 'Vidéo: Réussir son entretien d\'embauche', 'url' => 'https://www.youtube.com/watch?v=entretien-embauche', 'type' => 'video'],
-                    ['title' => 'Guide des secteurs porteurs au Cameroun', 'url' => 'https://docs.google.com/secteurs-porteurs-cameroun', 'type' => 'document'],
+                    ['title' => 'Annuaire des entreprises partenaires 2026', 'url' => 'https://drive.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Réussir son entretien d\'embauche', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Guide des secteurs porteurs au Cameroun', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -379,10 +379,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 5,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide des bonnes pratiques en entreprise camerounaise', 'url' => 'https://docs.google.com/guide-entreprise-cameroun', 'type' => 'document'],
-                    ['title' => 'Vidéo: Les codes de l\'entreprise en Afrique', 'url' => 'https://www.youtube.com/watch?v=codes-entreprise-afrique', 'type' => 'video'],
-                    ['title' => 'Checklist de préparation à l\'immersion', 'url' => 'https://trello.com/checklist-immersion', 'type' => 'document'],
-                    ['title' => 'Guide: Maîtriser les outils collaboratifs', 'url' => 'https://docs.google.com/guide-outils-collaboratifs', 'type' => 'document'],
+                    ['title' => 'Guide des bonnes pratiques en entreprise camerounaise', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Les codes de l\'entreprise en Afrique', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Checklist de préparation à l\'immersion', 'url' => 'https://trello.com/templates', 'type' => 'document'],
+                    ['title' => 'Guide: Maîtriser les outils collaboratifs', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -395,9 +395,9 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 28,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Modèle de journal de bord professionnel', 'url' => 'https://notion.so/journal-bord-template', 'type' => 'document'],
-                    ['title' => 'Checklist d\'intégration en entreprise', 'url' => 'https://docs.google.com/checklist-integration', 'type' => 'document'],
-                    ['title' => 'Guide: Comment créer de la valeur dès la 1ère semaine', 'url' => 'https://medium.com/creer-valeur-semaine1', 'type' => 'article'],
+                    ['title' => 'Modèle de journal de bord professionnel', 'url' => 'https://www.notion.so/templates', 'type' => 'document'],
+                    ['title' => 'Checklist d\'intégration en entreprise', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Guide: Comment créer de la valeur dès la 1ère semaine', 'url' => 'https://medium.com/', 'type' => 'article'],
                 ],
             ],
 
@@ -410,9 +410,9 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 28,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide: Gérer son premier projet en entreprise', 'url' => 'https://docs.google.com/guide-premier-projet', 'type' => 'document'],
-                    ['title' => 'Vidéo: Comment se rendre indispensable en stage', 'url' => 'https://www.youtube.com/watch?v=indispensable-stage', 'type' => 'video'],
-                    ['title' => 'Template de rapport de projet', 'url' => 'https://docs.google.com/template-rapport-projet', 'type' => 'document'],
+                    ['title' => 'Guide: Gérer son premier projet en entreprise', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Comment se rendre indispensable en stage', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Template de rapport de projet', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -425,10 +425,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 7,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide du networking professionnel au Cameroun', 'url' => 'https://docs.google.com/networking-cameroun', 'type' => 'document'],
-                    ['title' => 'Vidéo: L\'art du networking en Afrique', 'url' => 'https://www.youtube.com/watch?v=networking-afrique', 'type' => 'video'],
-                    ['title' => 'Liste des événements professionnels au Cameroun 2026', 'url' => 'https://airtable.com/evenements-pro-cameroun', 'type' => 'link'],
-                    ['title' => 'Templates de messages de networking', 'url' => 'https://docs.google.com/templates-networking', 'type' => 'document'],
+                    ['title' => 'Guide du networking professionnel au Cameroun', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: L\'art du networking en Afrique', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Liste des événements professionnels au Cameroun 2026', 'url' => 'https://airtable.com/', 'type' => 'link'],
+                    ['title' => 'Templates de messages de networking', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -441,10 +441,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 7,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Modèle de rapport d\'immersion professionnelle', 'url' => 'https://docs.google.com/rapport-immersion-template', 'type' => 'document'],
-                    ['title' => 'Grille d\'auto-évaluation des compétences', 'url' => 'https://airtable.com/evaluation-competences', 'type' => 'document'],
-                    ['title' => 'Guide: Valoriser son expérience en entretien', 'url' => 'https://blog.estuaire-emplois.com/valoriser-experience', 'type' => 'article'],
-                    ['title' => 'Template de plan de carrière personnalisé', 'url' => 'https://docs.google.com/plan-carriere-template', 'type' => 'document'],
+                    ['title' => 'Modèle de rapport d\'immersion professionnelle', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Grille d\'auto-évaluation des compétences', 'url' => 'https://airtable.com/', 'type' => 'document'],
+                    ['title' => 'Guide: Valoriser son expérience en entretien', 'url' => 'https://www.estuaireemploi.com/', 'type' => 'article'],
+                    ['title' => 'Template de plan de carrière personnalisé', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
         ];
@@ -485,10 +485,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 5,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Livre: \"L\'entrepreneur africain\" (résumé)', 'url' => 'https://docs.google.com/entrepreneur-africain', 'type' => 'document'],
-                    ['title' => 'Vidéo: Les habitudes des entrepreneurs à succès', 'url' => 'https://www.youtube.com/watch?v=habitudes-entrepreneurs', 'type' => 'video'],
-                    ['title' => 'Podcast: Témoignages d\'entrepreneurs camerounais', 'url' => 'https://open.spotify.com/show/entrepreneurs-cameroun', 'type' => 'link'],
-                    ['title' => 'Template: Vision Board entrepreneuriale', 'url' => 'https://canva.com/template/vision-board', 'type' => 'document'],
+                    ['title' => 'Livre: \"L\'entrepreneur africain\" (résumé)', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Les habitudes des entrepreneurs à succès', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Podcast: Témoignages d\'entrepreneurs camerounais', 'url' => 'https://open.spotify.com/', 'type' => 'link'],
+                    ['title' => 'Template: Vision Board entrepreneuriale', 'url' => 'https://www.canva.com/templates/', 'type' => 'document'],
                 ],
             ],
 
@@ -501,10 +501,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 10,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Template Business Model Canvas (français)', 'url' => 'https://miro.com/templates/business-model-canvas', 'type' => 'document'],
-                    ['title' => 'Vidéo: Comment valider son idée de business en Afrique', 'url' => 'https://www.youtube.com/watch?v=validation-idee-afrique', 'type' => 'video'],
-                    ['title' => 'Guide complet d\'étude de marché au Cameroun', 'url' => 'https://docs.google.com/etude-marche-cameroun', 'type' => 'document'],
-                    ['title' => 'Questionnaire de validation client', 'url' => 'https://typeform.com/questionnaire-validation', 'type' => 'link'],
+                    ['title' => 'Template Business Model Canvas (français)', 'url' => 'https://miro.com/templates/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Comment valider son idée de business en Afrique', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Guide complet d\'étude de marché au Cameroun', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Questionnaire de validation client', 'url' => 'https://www.typeform.com/templates/', 'type' => 'link'],
                 ],
             ],
 
@@ -517,10 +517,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 12,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Template Business Plan Complet 2026', 'url' => 'https://docs.google.com/business-plan-template', 'type' => 'document'],
-                    ['title' => 'Calculateur de prévisions financières', 'url' => 'https://sheets.google.com/calculateur-previsions', 'type' => 'link'],
-                    ['title' => 'Formation: Créer un business plan gagnant', 'url' => 'https://www.udemy.com/business-plan-gagnant', 'type' => 'video'],
-                    ['title' => 'Exemples de business plans financés au Cameroun', 'url' => 'https://drive.google.com/exemples-bp-finances', 'type' => 'document'],
+                    ['title' => 'Template Business Plan Complet 2026', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Calculateur de prévisions financières', 'url' => 'https://www.google.com/sheets/about/', 'type' => 'link'],
+                    ['title' => 'Formation: Créer un business plan gagnant', 'url' => 'https://www.udemy.com/', 'type' => 'video'],
+                    ['title' => 'Exemples de business plans financés au Cameroun', 'url' => 'https://drive.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -533,10 +533,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 10,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide complet des statuts juridiques au Cameroun', 'url' => 'https://docs.google.com/statuts-juridiques-cameroun', 'type' => 'document'],
-                    ['title' => 'Checklist administrative création entreprise', 'url' => 'https://notion.so/checklist-creation-entreprise', 'type' => 'document'],
-                    ['title' => 'Modèles de statuts SARL/SARLU personnalisables', 'url' => 'https://drive.google.com/modeles-statuts', 'type' => 'document'],
-                    ['title' => 'Calendrier fiscal de l\'entrepreneur camerounais', 'url' => 'https://docs.google.com/calendrier-fiscal-cameroun', 'type' => 'document'],
+                    ['title' => 'Guide complet des statuts juridiques au Cameroun', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Checklist administrative création entreprise', 'url' => 'https://www.notion.so/templates', 'type' => 'document'],
+                    ['title' => 'Modèles de statuts SARL/SARLU personnalisables', 'url' => 'https://drive.google.com/', 'type' => 'document'],
+                    ['title' => 'Calendrier fiscal de l\'entrepreneur camerounais', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -549,10 +549,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 10,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Formation: Comptabilité SYSCOHADA pour entrepreneurs', 'url' => 'https://www.youtube.com/playlist?list=compta-syscohada', 'type' => 'video'],
-                    ['title' => 'Tableur de gestion financière automatisé', 'url' => 'https://sheets.google.com/tableur-gestion-finance', 'type' => 'document'],
-                    ['title' => 'Guide: Survivre les 12 premiers mois financièrement', 'url' => 'https://docs.google.com/survivre-12-mois', 'type' => 'document'],
-                    ['title' => 'Templates de factures et devis', 'url' => 'https://canva.com/templates/factures-devis', 'type' => 'document'],
+                    ['title' => 'Formation: Comptabilité SYSCOHADA pour entrepreneurs', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Tableur de gestion financière automatisé', 'url' => 'https://www.google.com/sheets/about/', 'type' => 'document'],
+                    ['title' => 'Guide: Survivre les 12 premiers mois financièrement', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Templates de factures et devis', 'url' => 'https://www.canva.com/templates/', 'type' => 'document'],
                 ],
             ],
 
@@ -565,10 +565,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 12,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide: Marketing digital pour PME africaines', 'url' => 'https://blog.estuaire-emplois.com/marketing-digital-pme', 'type' => 'article'],
-                    ['title' => 'Formation: Facebook Ads de A à Z', 'url' => 'https://www.udemy.com/facebook-ads-masterclass', 'type' => 'video'],
-                    ['title' => 'Guide: WhatsApp Business pour entrepreneurs', 'url' => 'https://docs.google.com/whatsapp-business-guide', 'type' => 'document'],
-                    ['title' => 'Templates de posts réseaux sociaux', 'url' => 'https://canva.com/templates/social-media-posts', 'type' => 'link'],
+                    ['title' => 'Guide: Marketing digital pour PME africaines', 'url' => 'https://www.estuaireemploi.com/', 'type' => 'article'],
+                    ['title' => 'Formation: Facebook Ads de A à Z', 'url' => 'https://www.udemy.com/', 'type' => 'video'],
+                    ['title' => 'Guide: WhatsApp Business pour entrepreneurs', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Templates de posts réseaux sociaux', 'url' => 'https://www.canva.com/templates/', 'type' => 'link'],
                 ],
             ],
 
@@ -581,10 +581,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 8,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Template Pitch Deck Investisseur', 'url' => 'https://slides.google.com/pitch-deck-template', 'type' => 'document'],
-                    ['title' => 'Liste complète des financeurs au Cameroun 2026', 'url' => 'https://airtable.com/financeurs-cameroun-2026', 'type' => 'document'],
-                    ['title' => 'Vidéo: L\'art du pitch qui convainc', 'url' => 'https://www.youtube.com/watch?v=art-pitch-convaincant', 'type' => 'video'],
-                    ['title' => 'Guide: Monter un dossier bancaire au Cameroun', 'url' => 'https://docs.google.com/dossier-bancaire-cameroun', 'type' => 'document'],
+                    ['title' => 'Template Pitch Deck Investisseur', 'url' => 'https://www.google.com/slides/about/', 'type' => 'document'],
+                    ['title' => 'Liste complète des financeurs au Cameroun 2026', 'url' => 'https://airtable.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: L\'art du pitch qui convainc', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Guide: Monter un dossier bancaire au Cameroun', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -597,10 +597,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 7,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide: Recruter au Cameroun - droit du travail', 'url' => 'https://docs.google.com/recruter-cameroun-droit-travail', 'type' => 'document'],
-                    ['title' => 'Vidéo: Manager une équipe quand on est jeune entrepreneur', 'url' => 'https://www.youtube.com/watch?v=manager-jeune-entrepreneur', 'type' => 'video'],
-                    ['title' => 'Templates de fiches de poste', 'url' => 'https://docs.google.com/templates-fiches-poste', 'type' => 'document'],
-                    ['title' => 'Grille salariale du marché camerounais 2026', 'url' => 'https://airtable.com/grille-salariale-cameroun', 'type' => 'document'],
+                    ['title' => 'Guide: Recruter au Cameroun - droit du travail', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Manager une équipe quand on est jeune entrepreneur', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Templates de fiches de poste', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Grille salariale du marché camerounais 2026', 'url' => 'https://airtable.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -613,10 +613,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 7,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Guide: Les 20 outils gratuits pour entrepreneurs', 'url' => 'https://docs.google.com/20-outils-gratuits-entrepreneurs', 'type' => 'document'],
-                    ['title' => 'Vidéo: Digitaliser son business au Cameroun', 'url' => 'https://www.youtube.com/watch?v=digitaliser-business-cameroun', 'type' => 'video'],
-                    ['title' => 'Formation: Créer son site web en 1 journée', 'url' => 'https://www.youtube.com/watch?v=site-web-1-jour', 'type' => 'video'],
-                    ['title' => 'Guide: Mobile Money pour les entreprises', 'url' => 'https://docs.google.com/mobile-money-entreprises', 'type' => 'document'],
+                    ['title' => 'Guide: Les 20 outils gratuits pour entrepreneurs', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Vidéo: Digitaliser son business au Cameroun', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Formation: Créer son site web en 1 journée', 'url' => 'https://www.youtube.com/', 'type' => 'video'],
+                    ['title' => 'Guide: Mobile Money pour les entreprises', 'url' => 'https://docs.google.com/', 'type' => 'document'],
                 ],
             ],
 
@@ -629,10 +629,10 @@ class ProgramSeeder extends Seeder
                 'estimated_duration_days' => 21,
                 'is_required' => true,
                 'resources' => [
-                    ['title' => 'Checklist complète de lancement d\'entreprise', 'url' => 'https://notion.so/checklist-lancement-startup', 'type' => 'document'],
-                    ['title' => 'Tableau de bord de suivi d\'activité (KPIs)', 'url' => 'https://airtable.com/tableau-bord-kpis', 'type' => 'link'],
-                    ['title' => 'Guide: Les 100 premiers jours de votre entreprise', 'url' => 'https://docs.google.com/100-premiers-jours', 'type' => 'document'],
-                    ['title' => 'Communauté WhatsApp des entrepreneurs du programme', 'url' => 'https://chat.whatsapp.com/estuaire-entrepreneurs', 'type' => 'link'],
+                    ['title' => 'Checklist complète de lancement d\'entreprise', 'url' => 'https://www.notion.so/templates', 'type' => 'document'],
+                    ['title' => 'Tableau de bord de suivi d\'activité (KPIs)', 'url' => 'https://airtable.com/', 'type' => 'link'],
+                    ['title' => 'Guide: Les 100 premiers jours de votre entreprise', 'url' => 'https://docs.google.com/', 'type' => 'document'],
+                    ['title' => 'Communauté WhatsApp des entrepreneurs du programme', 'url' => 'https://www.whatsapp.com/', 'type' => 'link'],
                 ],
             ],
         ];
