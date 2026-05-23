@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,13 +10,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Resume extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
+
+    /**
+     * Champs traduisibles via le système polymorphe `translations`.
+     * Les champs JSON (experiences, education, skills, etc.) ne sont PAS
+     * traduisibles ici : ils sont conservés tels quels (langue d'origine,
+     * cf. colonne `language`). Pour les traduire, il faudrait soit refondre
+     * le schéma, soit stocker le JSON traduit comme valeur unique.
+     */
+    protected array $translatable = ['title', 'professional_summary'];
 
     protected $appends = ['pdf_url'];
 
     protected $fillable = [
         'user_id',
         'title',
+        'language',
         'template_type',
         'personal_info',
         'professional_summary',

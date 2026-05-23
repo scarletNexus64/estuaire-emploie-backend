@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Job extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
+
+    protected array $translatable = ['title', 'description', 'requirements', 'benefits'];
 
     /**
      * Attributs calculés exposés automatiquement dans les réponses JSON
@@ -30,6 +33,7 @@ class Job extends Model
         'contract_type_id',
         'posted_by',
         'title',
+        'language',
         'description',
         'requirements',
         'benefits',

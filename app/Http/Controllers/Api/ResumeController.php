@@ -63,6 +63,7 @@ class ResumeController extends Controller
 
         $validator = Validator::make($data, [
             'title' => 'required|string|max:255',
+            'language' => 'nullable|in:fr,en,es,ar',
             'template_type' => 'required|string|in:modern,classic,creative,professional,minimalist',
             'personal_info' => 'required|array',
             'personal_info.name' => 'required|string',
@@ -134,6 +135,7 @@ class ResumeController extends Controller
 
         $resume = $user->resumes()->create([
             'title' => $data['title'],
+            'language' => $data['language'] ?? 'fr',
             'template_type' => $data['template_type'],
             'personal_info' => $personalInfo,
             'professional_summary' => $data['professional_summary'] ?? null,
@@ -222,6 +224,7 @@ class ResumeController extends Controller
 
         $validator = Validator::make($data, [
             'title' => 'sometimes|required|string|max:255',
+            'language' => 'sometimes|in:fr,en,es,ar',
             'template_type' => 'sometimes|required|string|in:modern,classic,creative,professional,minimalist',
             'personal_info' => 'sometimes|required|array',
             'professional_summary' => 'nullable|string',
@@ -298,6 +301,7 @@ class ResumeController extends Controller
 
         $resume->update(array_filter([
             'title' => $data['title'] ?? null,
+            'language' => $data['language'] ?? null,
             'template_type' => $data['template_type'] ?? null,
             'personal_info' => $data['personal_info'] ?? null,
             'professional_summary' => $data['professional_summary'] ?? null,

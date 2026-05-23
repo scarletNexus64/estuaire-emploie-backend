@@ -89,6 +89,7 @@ class QuickServiceController extends Controller
         $validator = Validator::make($request->all(), [
             'service_category_id' => 'required|exists:service_categories,id',
             'title' => 'required|string|max:255',
+            'language' => 'nullable|in:fr,en,es,ar',
             'description' => 'required|string',
             'price_type' => 'required|in:fixed,range,negotiable',
             'price_min' => 'required_if:price_type,fixed,range|nullable|numeric|min:0',
@@ -127,6 +128,7 @@ class QuickServiceController extends Controller
             'user_id' => auth()->id(),
             'service_category_id' => $request->service_category_id,
             'title' => $request->title,
+            'language' => $request->input('language', 'fr'),
             'description' => $request->description,
             'price_type' => $request->price_type,
             'price_min' => $request->price_min,
@@ -186,6 +188,7 @@ class QuickServiceController extends Controller
         $validator = Validator::make($request->all(), [
             'service_category_id' => 'sometimes|exists:service_categories,id',
             'title' => 'sometimes|string|max:255',
+            'language' => 'sometimes|in:fr,en,es,ar',
             'description' => 'sometimes|string',
             'price_type' => 'sometimes|in:fixed,range,negotiable',
             'price_min' => 'nullable|numeric|min:0',

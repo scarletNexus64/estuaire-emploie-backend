@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +11,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class QuickService extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
+
+    protected array $translatable = ['title', 'description'];
 
     protected $fillable = [
         'user_id',
         'service_category_id',
         'title',
+        'language',
         'description',
         'price_type',
         'price_min',

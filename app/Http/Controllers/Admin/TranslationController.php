@@ -8,7 +8,10 @@ use App\Models\CompanyCategory;
 use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Domain;
+use App\Models\Job;
 use App\Models\ProficiencyLevel;
+use App\Models\QuickService;
+use App\Models\Resume;
 use App\Models\Sector;
 use App\Models\ServiceCategory;
 use App\Models\SubscriptionPlan;
@@ -80,6 +83,24 @@ class TranslationController extends Controller
             'label' => 'Niveaux (skill / langue / formation)',
             'fields' => ['name'],
             'order' => 'rank',
+        ],
+        'jobs' => [
+            'model' => Job::class,
+            'label' => 'Offres d\'emploi',
+            'fields' => ['title', 'description', 'requirements', 'benefits'],
+            'order' => 'id',
+        ],
+        'quick-services' => [
+            'model' => QuickService::class,
+            'label' => 'Services rapides',
+            'fields' => ['title', 'description'],
+            'order' => 'id',
+        ],
+        'resumes' => [
+            'model' => Resume::class,
+            'label' => 'CVs (titre & résumé)',
+            'fields' => ['title', 'professional_summary'],
+            'order' => 'id',
         ],
     ];
 

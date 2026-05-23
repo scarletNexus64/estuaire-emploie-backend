@@ -437,6 +437,7 @@ class JobController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'language' => 'nullable|in:fr,en,es,ar',
             'description' => 'required|string',
             // category_id référence une company_category de niveau 3
             // (secteur de l'entreprise). Optionnel.
@@ -451,6 +452,8 @@ class JobController extends Controller
             'benefits' => 'nullable|string',
             'application_deadline' => 'nullable|date|after:today',
         ]);
+
+        $validated['language'] = $validated['language'] ?? 'fr';
 
         // Une offre "locale" n'est visible que dans la ville de l'entreprise :
         // sans ville renseignée, elle serait invisible — on refuse.
@@ -840,6 +843,7 @@ class JobController extends Controller
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
+            'language' => 'sometimes|in:fr,en,es,ar',
             'description' => 'sometimes|required|string',
             'category_id' => 'sometimes|nullable|exists:company_categories,id',
             'visibility' => 'sometimes|required|in:national,local',
