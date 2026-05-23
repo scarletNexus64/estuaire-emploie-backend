@@ -31,7 +31,7 @@ class ForumController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des messages',
+                'message' => __('forum.fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -52,7 +52,7 @@ class ForumController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation échouée',
+                    'message' => __('common.validation_failed'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -79,7 +79,7 @@ class ForumController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création du message',
+                'message' => __('forum.create_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

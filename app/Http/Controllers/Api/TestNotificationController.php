@@ -14,7 +14,7 @@ class TestNotificationController extends Controller
 
         if (!$user) {
             return response()->json([
-                'message' => 'Aucun utilisateur avec un token FCM'
+                'message' => __('notification.no_user_with_fcm')
             ], 404);
         }
 
@@ -29,7 +29,7 @@ class TestNotificationController extends Controller
         );
 
         return response()->json([
-            'message' => 'Notification envoyée avec succès'
+            'message' => __('notification.sent')
         ]);
     }
 }

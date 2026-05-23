@@ -210,7 +210,7 @@ class NotificationController extends Controller
         Auth::user()->unreadNotifications->each->markAsRead();
 
         return response()->json([
-            'message' => 'Toutes les notifications marquées comme lues',
+            'message' => __('notification.all_marked_read'),
             // 'count' => $count,
         ]);
     }
@@ -258,7 +258,7 @@ class NotificationController extends Controller
         $notification->delete();
 
         return response()->json([
-            'message' => 'Notification supprimée',
+            'message' => __('notification.deleted'),
         ]);
     }
 }
