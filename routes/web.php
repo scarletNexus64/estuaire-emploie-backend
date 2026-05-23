@@ -458,6 +458,11 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/resumes/export-template', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportResumesTemplate'])->name('resumes.export-template');
         Route::post('/quick-services/export-template', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportQuickServicesTemplate'])->name('quick-services.export-template');
 
+        // Export Data (réel : lignes BDD)
+        Route::post('/jobs/export-data', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportJobsData'])->name('jobs.export-data');
+        Route::post('/resumes/export-data', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportResumesData'])->name('resumes.export-data');
+        Route::post('/quick-services/export-data', [\App\Http\Controllers\Admin\ImportExportController::class, 'exportQuickServicesData'])->name('quick-services.export-data');
+
         // Import Data
         Route::post('/jobs/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'importJobs'])->name('jobs.import');
         Route::post('/resumes/import', [\App\Http\Controllers\Admin\ImportExportController::class, 'importResumes'])->name('resumes.import');

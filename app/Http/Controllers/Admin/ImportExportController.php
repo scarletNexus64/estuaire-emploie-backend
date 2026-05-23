@@ -77,6 +77,118 @@ class ImportExportController extends Controller
     }
 
     /**
+     * Export RÉEL des données Jobs (lignes BDD) selon colonnes sélectionnées
+     */
+    public function exportJobsData(Request $request): StreamedResponse
+    {
+        $request->validate([
+            'columns' => 'required|array|min:1',
+            'columns.*' => 'string',
+        ]);
+
+        $columns = $request->input('columns');
+        $headers = $this->getJobsColumnHeaders();
+
+        $query = Job::query()->with(['company', 'category', 'contractType'])->orderBy('id');
+
+        return $this->streamDataExport('jobs', $columns, $headers, $query, function (Job $job) {
+            return [
+                'title' => $job->title,
+                'description' => $job->description,
+                'requirements' => $job->requirements,
+                'benefits' => $job->benefits,
+                'salary_min' => $job->salary_min,
+                'salary_max' => $job->salary_max,
+                'salary_negotiable' => $job->salary_negotiable ? 'oui' : 'non',
+                'experience_level' => $job->experience_level,
+                'status' => $job->status,
+                'application_deadline' => optional($job->application_deadline)->format('Y-m-d'),
+                'company_name' => optional($job->company)->name,
+                'category_name' => optional($job->category)->name,
+                'contract_type_name' => optional($job->contractType)->name,
+            ];
+        });
+    }
+
+    /**
+     * Export RÉEL des données Resumes (lignes BDD) selon colonnes sélectionnées
+     */
+    public function exportResumesData(Request $request): StreamedResponse
+    {
+        $request->validate([
+            'columns' => 'required|array|min:1',
+            'columns.*' => 'string',
+        ]);
+
+        $columns = $request->input('columns');
+        $headers = $this->getResumesColumnHeaders();
+
+        $query = Resume::query()->with('user')->orderBy('id');
+
+        return $this->streamDataExport('resumes', $columns, $headers, $query, function (Resume $resume) {
+            $info = is_array($resume->personal_info) ? $resume->personal_info : [];
+
+            $skills = '';
+            if (is_array($resume->skills)) {
+                $skills = collect($resume->skills)
+                    ->map(fn ($s) => is_array($s) ? ($s['name'] ?? '') : (string) $s)
+                    ->filter()
+                    ->implode(', ');
+            }
+
+            return [
+                'title' => $resume->title,
+                'template_type' => $resume->template_type,
+                'professional_summary' => $resume->professional_summary,
+                'name' => $info['name'] ?? optional($resume->user)->name,
+                'email' => $info['email'] ?? optional($resume->user)->email,
+                'phone' => $info['phone'] ?? null,
+                'address' => $info['address'] ?? null,
+                'linkedin' => $info['linkedin'] ?? null,
+                'website' => $info['website'] ?? null,
+                'skills' => $skills,
+                'languages' => '',
+                'is_public' => $resume->is_public ? 'oui' : 'non',
+            ];
+        });
+    }
+
+    /**
+     * Export RÉEL des données Quick Services (lignes BDD) selon colonnes sélectionnées
+     */
+    public function exportQuickServicesData(Request $request): StreamedResponse
+    {
+        $request->validate([
+            'columns' => 'required|array|min:1',
+            'columns.*' => 'string',
+        ]);
+
+        $columns = $request->input('columns');
+        $headers = $this->getQuickServicesColumnHeaders();
+
+        $query = QuickService::query()->with(['user', 'category'])->orderBy('id');
+
+        return $this->streamDataExport('quick_services', $columns, $headers, $query, function (QuickService $service) {
+            return [
+                'title' => $service->title,
+                'description' => $service->description,
+                'price_type' => $service->price_type,
+                'price_min' => $service->price_min,
+                'price_max' => $service->price_max,
+                'location_name' => $service->location_name,
+                'latitude' => $service->latitude,
+                'longitude' => $service->longitude,
+                'urgency' => $service->urgency,
+                'desired_date' => optional($service->desired_date)->format('Y-m-d'),
+                'estimated_duration' => $service->estimated_duration,
+                'status' => $service->status,
+                'user_email' => optional($service->user)->email,
+                'category_name' => optional($service->category)->name,
+            ];
+        });
+    }
+
+    /**
      * Import Jobs depuis CSV/Excel
      */
     public function importJobs(Request $request): JsonResponse
@@ -297,6 +409,72 @@ class ImportExportController extends Controller
         }
 
         $filename = $type . '_template_' . date('Y-m-d_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    /**
+     * Stream un XLSX peuplé : 1ère ligne = en-têtes, lignes suivantes = données.
+     * $query : Builder à parcourir en chunks (mémoire safe).
+     * $rowExtractor : fn(Model $model): array<columnKey, value>
+     */
+    private function streamDataExport(
+        string $type,
+        array $columns,
+        array $allHeaders,
+        \Illuminate\Database\Eloquent\Builder $query,
+        \Closure $rowExtractor
+    ): StreamedResponse {
+        $columns = array_values(array_filter($columns, fn ($k) => isset($allHeaders[$k])));
+
+        if (empty($columns)) {
+            abort(422, 'Aucune colonne valide sélectionnée');
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $columnLetter = 'A';
+        foreach ($columns as $key) {
+            $sheet->setCellValue($columnLetter . '1', $allHeaders[$key]);
+            $columnLetter++;
+        }
+
+        $sheet->getStyle('1:1')->getFont()->setBold(true);
+        $sheet->getStyle('1:1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFE0E0E0');
+
+        $rowIndex = 2;
+        $query->chunk(500, function ($models) use (&$rowIndex, $sheet, $columns, $rowExtractor) {
+            foreach ($models as $model) {
+                $extracted = $rowExtractor($model);
+                $columnLetter = 'A';
+                foreach ($columns as $key) {
+                    $value = $extracted[$key] ?? '';
+                    $sheet->setCellValueExplicit(
+                        $columnLetter . $rowIndex,
+                        (string) ($value ?? ''),
+                        \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+                    );
+                    $columnLetter++;
+                }
+                $rowIndex++;
+            }
+        });
+
+        $columnLetter = 'A';
+        for ($i = 0; $i < count($columns); $i++) {
+            $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            $columnLetter++;
+        }
+
+        $filename = $type . '_data_' . date('Y-m-d_His') . '.xlsx';
 
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);

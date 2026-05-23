@@ -70,11 +70,18 @@
             </span>
         </div>
 
-        <button @click="window.exportTemplate('jobs', selectedColumns)"
-                class="w-full btn btn-primary">
-            <i class="fas fa-file-download"></i>
-            Télécharger le Template Excel
-        </button>
+        <div class="flex flex-col sm:flex-row gap-2">
+            <button @click="window.exportTemplate('jobs', selectedColumns, 'template')"
+                    class="flex-1 btn btn-primary">
+                <i class="fas fa-file-download"></i>
+                Template (vide)
+            </button>
+            <button @click="window.exportTemplate('jobs', selectedColumns, 'data')"
+                    class="flex-1 btn btn-success">
+                <i class="fas fa-database"></i>
+                Exporter les données
+            </button>
+        </div>
     </div>
 
     <!-- Import Data -->

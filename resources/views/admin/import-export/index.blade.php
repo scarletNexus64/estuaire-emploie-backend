@@ -123,15 +123,20 @@
 </div>
 
 <script>
-// Global export function
-window.exportTemplate = async function(type, selectedColumns) {
+// Global export function (template vide OU données réelles)
+// mode: 'template' (par défaut) ou 'data'
+window.exportTemplate = async function(type, selectedColumns, mode = 'template') {
     if (selectedColumns.length === 0) {
         alert('Veuillez sélectionner au moins une colonne');
         return;
     }
 
+    const endpoint = mode === 'data' ? 'export-data' : 'export-template';
+    const fileSuffix = mode === 'data' ? 'data' : 'template';
+    const errorLabel = mode === 'data' ? 'l\'export des données' : 'l\'export du template';
+
     try {
-        const response = await fetch(`/admin/import-export/${type}/export-template`, {
+        const response = await fetch(`/admin/import-export/${type}/${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -145,18 +150,18 @@ window.exportTemplate = async function(type, selectedColumns) {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${type}_template_${new Date().toISOString().split('T')[0]}.xlsx`;
+            a.download = `${type}_${fileSuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             a.remove();
         } else {
             const errorData = await response.json().catch(() => ({ message: 'Erreur inconnue' }));
-            alert('Erreur lors de l\'export du template: ' + (errorData.message || 'Erreur inconnue'));
+            alert('Erreur lors de ' + errorLabel + ': ' + (errorData.message || 'Erreur inconnue'));
         }
     } catch (error) {
         console.error('Export error:', error);
-        alert('Erreur lors de l\'export du template: ' + error.message);
+        alert('Erreur lors de ' + errorLabel + ': ' + error.message);
     }
 };
 
