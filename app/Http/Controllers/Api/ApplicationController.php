@@ -63,7 +63,7 @@ class ApplicationController extends Controller
     {
         if ($job->status !== 'published') {
             return response()->json([
-                'message' => 'Cette offre n\'est plus disponible',
+                'message' => __('application.job_unavailable'),
             ], 404);
         }
 
@@ -76,7 +76,7 @@ class ApplicationController extends Controller
         // Si une candidature active existe, bloquer
         if ($existingApplication && !$existingApplication->trashed()) {
             return response()->json([
-                'message' => 'Vous avez déjà postulé à cette offre',
+                'message' => __('application.already_applied'),
             ], 400);
         }
 
@@ -187,12 +187,12 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'data' => $application,
-                'message' => 'Candidature soumise avec succès',
+                'message' => __('application.application_submitted'),
             ], 201);
         } catch (\Exception $e) {
             Log::error('Erreur lors de la création de la candidature: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Erreur lors de la soumission de la candidature',
+                'message' => __('application.submit_error'),
             ], 500);
         }
     }
@@ -255,7 +255,7 @@ class ApplicationController extends Controller
         if ($job->status !== 'published') {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette offre n\'est plus disponible',
+                'message' => __('application.job_unavailable'),
             ], 404);
         }
 
@@ -268,7 +268,7 @@ class ApplicationController extends Controller
         if ($existingApplication && !$existingApplication->trashed()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà postulé à cette offre',
+                'message' => __('application.already_applied'),
             ], 400);
         }
 
@@ -309,7 +309,7 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Score insuffisant pour postuler à cette offre',
+                'message' => __('application.insufficient_score'),
                 'test_failed' => true,
                 'score' => $score,
                 'passing_score' => $test->passing_score,
@@ -421,7 +421,7 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Candidature soumise avec succès',
+                'message' => __('application.application_submitted'),
                 'data' => $application,
                 'test_result' => [
                     'score' => $score,
@@ -441,7 +441,7 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la soumission de la candidature',
+                'message' => __('application.submit_error'),
             ], 500);
         }
     }
@@ -575,7 +575,7 @@ class ApplicationController extends Controller
     {
         if ($application->user_id !== $request->user()->id) {
             return response()->json([
-                'message' => 'Non autorisé',
+                'message' => __('common.unauthorized'),
             ], 403);
         }
 
@@ -628,81 +628,27 @@ class ApplicationController extends Controller
     public function receivedApplications(Request $request): JsonResponse
     {
         $user = auth()->user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('application.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         // Vérifier l'abonnement actif
         if (!$user->hasActiveSubscription()) {
             return response()->json([
-                'message' => 'Vous devez avoir un abonnement actif pour voir les candidatures',
+                'message' => __('application.subscription_required'),
                 'error_code' => 'NO_SUBSCRIPTION',
                 'subscription_required' => true,
             ], 403);
         }
 
-        // === DEBUG LOGS ===
-        \Log::info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        \Log::info('[ReceivedApplications] 🔍 DEBUG INFO');
-        \Log::info('[ReceivedApplications] User ID: ' . $user->id);
-        \Log::info('[ReceivedApplications] User Name: ' . $user->name);
-        \Log::info('[ReceivedApplications] Recruiter ID: ' . ($recruiter->id ?? 'NULL'));
-        \Log::info('[ReceivedApplications] Company ID: ' . ($recruiter->company_id ?? 'NULL'));
-
-        // Vérifier combien de jobs existent pour cette company
-        $jobsCount = \App\Models\Job::where('company_id', $recruiter->company_id)->count();
-        \Log::info('[ReceivedApplications] Jobs count for company: ' . $jobsCount);
-
-        // Vérifier combien d'applications existent au total
-        $totalApplications = \App\Models\Application::count();
-        \Log::info('[ReceivedApplications] Total applications in DB: ' . $totalApplications);
-
-        // Vérifier les applications pour les jobs de cette company
-        $applicationsForCompanyJobs = \App\Models\Application::whereHas('job', function ($q) use ($recruiter) {
-            $q->where('company_id', $recruiter->company_id);
-        })->count();
-        \Log::info('[ReceivedApplications] Applications for company jobs: ' . $applicationsForCompanyJobs);
-
-        // Lister les job_ids qui ont des candidatures
-        $jobIdsWithApplications = \App\Models\Application::whereHas('job', function ($q) use ($recruiter) {
-            $q->where('company_id', $recruiter->company_id);
-        })->pluck('job_id')->unique()->toArray();
-        \Log::info('[ReceivedApplications] Job IDs with applications: ' . json_encode($jobIdsWithApplications));
-
-        // Vérifier si le job_id demandé existe et appartient à cette company
-        if ($request->has('job_id')) {
-            $requestedJobBelongsToCompany = \App\Models\Job::where('id', $request->job_id)
-                ->where('company_id', $recruiter->company_id)
-                ->exists();
-            \Log::info('[ReceivedApplications] Job ID ' . $request->job_id . ' belongs to company: ' . ($requestedJobBelongsToCompany ? 'YES' : 'NO'));
-        }
-
-        // Vérifier si la candidature a un utilisateur valide
-        $applicationsWithUsers = \App\Models\Application::whereHas('user')
-            ->whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
-            })->count();
-        \Log::info('[ReceivedApplications] Applications with valid users: ' . $applicationsWithUsers);
-
-        // Vérifier les candidatures SANS utilisateur (utilisateurs supprimés)
-        $applicationsWithoutUsers = \App\Models\Application::whereDoesntHave('user')
-            ->whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
-            })->count();
-        \Log::info('[ReceivedApplications] Applications with deleted users: ' . $applicationsWithoutUsers);
-
-        \Log::info('[ReceivedApplications] Request job_id filter: ' . ($request->job_id ?? 'NULL'));
-        \Log::info('[ReceivedApplications] Request status filter: ' . ($request->status ?? 'NULL'));
-        \Log::info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        // === END DEBUG LOGS ===
-
         $query = Application::whereHas('user')  // Exclure les candidatures dont l'utilisateur a été supprimé
-            ->whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
+            ->whereHas('job', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
             })->with(['job.company', 'job.category', 'job.contractType', 'conversation', 'portfolio']);
 
         // Charger les infos utilisateur de base (sans contact sensible)
@@ -725,7 +671,7 @@ class ApplicationController extends Controller
 
         // Check access to full candidate info (if recruiter purchased candidate_contact service)
         $purchaseService = app(RecruiterServicePurchaseService::class);
-        $company = $recruiter->company;
+        $company = $user->currentCompany;
 
         // Transform applications to add access info
         $applications->getCollection()->transform(function ($application) use ($company, $purchaseService) {
@@ -807,18 +753,19 @@ class ApplicationController extends Controller
      */
     public function updateStatus(Request $request, Application $application): JsonResponse
     {
-        $recruiter = auth()->user()->recruiter;
+        $companyId = auth()->user()->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('application.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        // Vérifier que la candidature concerne l'entreprise du recruteur
-        if ($application->job->company_id !== $recruiter->company_id) {
+        // Vérifier que la candidature concerne l'entreprise active
+        if ($application->job->company_id !== $companyId) {
             return response()->json([
-                'message' => 'Cette candidature ne concerne pas votre entreprise',
+                'message' => __('application.not_your_application'),
             ], 403);
         }
 
@@ -900,7 +847,7 @@ class ApplicationController extends Controller
         }
 
         return response()->json([
-            'message' => 'Statut de la candidature mis à jour',
+            'message' => __('application.status_updated'),
             'data' => $application->fresh(['user', 'job']),
         ]);
     }
@@ -941,25 +888,26 @@ class ApplicationController extends Controller
     public function unlockContact(Application $application): JsonResponse
     {
         $user = auth()->user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('application.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        // Vérifier que la candidature concerne l'entreprise du recruteur
-        if ($application->job->company_id !== $recruiter->company_id) {
+        // Vérifier que la candidature concerne l'entreprise active
+        if ($application->job->company_id !== $companyId) {
             return response()->json([
-                'message' => 'Cette candidature ne concerne pas votre entreprise',
+                'message' => __('application.not_your_application'),
             ], 403);
         }
 
         // Vérifier l'abonnement actif
         if (!$user->hasActiveSubscription()) {
             return response()->json([
-                'message' => 'Vous devez avoir un abonnement actif pour voir les coordonnées des candidats',
+                'message' => __('application.subscription_required_for_contacts'),
                 'error_code' => 'NO_SUBSCRIPTION',
                 'subscription_required' => true,
             ], 403);
@@ -977,7 +925,7 @@ class ApplicationController extends Controller
             $candidate = $application->user;
             return response()->json([
                 'success' => true,
-                'message' => 'Coordonnées déjà débloquées',
+                'message' => __('application.contacts_already_unlocked'),
                 'contact' => [
                     'name' => $candidate->name,
                     'email' => $candidate->email,
@@ -992,7 +940,7 @@ class ApplicationController extends Controller
         if (!$user->canViewContact()) {
             $plan = $user->currentPlan();
             return response()->json([
-                'message' => "Vous avez atteint la limite de {$plan->contacts_limit} contacts de votre plan {$plan->name} ce mois-ci. Passez à un plan supérieur pour voir plus de contacts.",
+                'message' => __('application.contacts_limit_reached', ['limit' => $plan->contacts_limit, 'plan' => $plan->name]),
                 'error_code' => 'CONTACTS_LIMIT_REACHED',
                 'limit' => $plan->contacts_limit,
                 'used' => $user->viewedContacts()
@@ -1018,7 +966,7 @@ class ApplicationController extends Controller
         $candidate = $application->user;
         return response()->json([
             'success' => true,
-            'message' => 'Coordonnées débloquées avec succès',
+            'message' => __('application.contacts_unlocked'),
             'contact' => [
                 'name' => $candidate->name,
                 'email' => $candidate->email,
@@ -1059,18 +1007,18 @@ class ApplicationController extends Controller
     public function contactStatus(Application $application): JsonResponse
     {
         $user = auth()->user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('application.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        // Vérifier que la candidature concerne l'entreprise du recruteur
-        if ($application->job->company_id !== $recruiter->company_id) {
+        if ($application->job->company_id !== $companyId) {
             return response()->json([
-                'message' => 'Cette candidature ne concerne pas votre entreprise',
+                'message' => __('application.not_your_application'),
             ], 403);
         }
 
@@ -1140,7 +1088,7 @@ class ApplicationController extends Controller
         // Vérifier que c'est bien le candidat qui a créé cette candidature
         if ($application->user_id !== $request->user()->id) {
             return response()->json([
-                'message' => 'Non autorisé. Cette candidature ne vous appartient pas.',
+                'message' => __('application.not_your_application_owner'),
             ], 403);
         }
 
@@ -1148,7 +1096,7 @@ class ApplicationController extends Controller
         // On ne peut pas supprimer une candidature déjà acceptée/rejetée
         if ($application->status !== 'pending') {
             return response()->json([
-                'message' => 'Vous ne pouvez supprimer que les candidatures en attente. Cette candidature a déjà été traitée.',
+                'message' => __('application.only_pending_can_delete'),
                 'current_status' => $application->status,
             ], 403);
         }
@@ -1171,13 +1119,13 @@ class ApplicationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Candidature supprimée avec succès',
+                'message' => __('application.application_deleted'),
             ]);
 
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression de la candidature: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Erreur lors de la suppression de la candidature',
+                'message' => __('application.delete_error'),
             ], 500);
         }
     }

@@ -203,7 +203,7 @@ class JobController extends Controller
                 'per_page' => $previewLimit,
                 'total' => $previewLimit,
                 'is_preview_mode' => true,
-                'message' => 'Souscrivez à un forfait pour accéder à toutes les offres d\'emploi',
+                'message' => __('job.subscribe_for_all_offers'),
             ]);
         }
 
@@ -396,11 +396,20 @@ class JobController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
+
+        if (! $companyId) {
+            return response()->json([
+                'message' => __('job.select_active_company_for_publish'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
+        }
+
+        $recruiter = $user->recruiterFor($companyId);
 
         if (! $recruiter || ! $recruiter->can_publish) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à publier des offres',
+                'message' => __('job.not_authorized_publish'),
             ], 403);
         }
 
@@ -408,7 +417,7 @@ class JobController extends Controller
         $subscription = $user->activeSubscription($user->role);
         if (!$subscription || !$subscription->isValid()) {
             return response()->json([
-                'message' => 'Vous devez avoir un abonnement actif pour publier des offres',
+                'message' => __('job.subscription_required_publish'),
                 'error_code' => 'NO_SUBSCRIPTION',
                 'subscription_required' => true,
             ], 403);
@@ -418,7 +427,7 @@ class JobController extends Controller
         if (!$subscription->canPostJob()) {
             $effectiveJobsLimit = $subscription->getEffectiveJobsLimit();
             return response()->json([
-                'message' => "Vous avez atteint la limite de {$effectiveJobsLimit} offres. Passez à un plan supérieur pour publier plus d'offres.",
+                'message' => __('job.jobs_limit_reached', ['limit' => $effectiveJobsLimit]),
                 'error_code' => 'JOBS_LIMIT_REACHED',
                 'limit' => $effectiveJobsLimit,
                 'used' => $subscription->jobs_used,
@@ -445,18 +454,17 @@ class JobController extends Controller
 
         // Une offre "locale" n'est visible que dans la ville de l'entreprise :
         // sans ville renseignée, elle serait invisible — on refuse.
-        if ($validated['visibility'] === 'local' && empty($recruiter->company?->city)) {
+        if ($validated['visibility'] === 'local' && empty($user->currentCompany?->city)) {
             return response()->json([
-                'message' => "Votre entreprise n'a pas de ville renseignée. "
-                    . "Renseignez la localisation de l'entreprise ou choisissez une visibilité nationale.",
+                'message' => __('job.company_no_city'),
                 'errors' => [
-                    'visibility' => ["Ville de l'entreprise manquante pour une offre locale."],
+                    'visibility' => [__('job.company_city_missing_for_local')],
                 ],
             ], 422);
         }
 
         $job = Job::create(array_merge($validated, [
-            'company_id' => $recruiter->company_id,
+            'company_id' => $companyId,
             'posted_by' => Auth::id(),
             'status' => 'pending', // Admin doit approuver
         ]));
@@ -466,7 +474,7 @@ class JobController extends Controller
         $subscription->incrementJobsUsed();
 
         return response()->json([
-            'message' => 'Offre créée avec succès. En attente de validation.',
+            'message' => __('job.created'),
             'data' => $job->load(['company', 'category', 'contractType']),
         ], 201);
     }
@@ -501,12 +509,13 @@ class JobController extends Controller
     public function showRecruiterJob(int $id): JsonResponse
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('job.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         $job = Job::with([
@@ -524,14 +533,14 @@ class JobController extends Controller
 
         if (!$job) {
             return response()->json([
-                'message' => 'Offre non trouvée',
+                'message' => __('job.not_found'),
             ], 404);
         }
 
-        // Vérifier que l'offre appartient à l'entreprise du recruteur
-        if ($job->company_id !== $recruiter->company_id) {
+        // Vérifier que l'offre appartient à l'entreprise active
+        if ($job->company_id !== $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à voir cette offre',
+                'message' => __('job.not_authorized_view'),
             ], 403);
         }
 
@@ -574,15 +583,16 @@ class JobController extends Controller
      */
     public function myJobs(Request $request): JsonResponse
     {
-        $recruiter = Auth::user()->recruiter;
+        $companyId = Auth::user()->current_company_id;
 
-        if (! $recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('job.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
-        $query = Job::where('company_id', $recruiter->company_id)
+        $query = Job::where('company_id', $companyId)
             ->with(['category', 'contractType', 'skillTests' => function ($query) {
                 $query->where('is_active', true)
                       ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score', 'is_active');
@@ -640,18 +650,19 @@ class JobController extends Controller
     public function dashboard(): JsonResponse
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        if (! $recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas recruteur',
-            ], 403);
+                'message' => __('job.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         // Vérifier l'abonnement actif
         if (!$user->hasActiveSubscription()) {
             return response()->json([
-                'message' => 'Vous devez avoir un abonnement actif pour accéder au dashboard',
+                'message' => __('job.subscription_required_dashboard'),
                 'error_code' => 'NO_SUBSCRIPTION',
                 'subscription_required' => true,
             ], 403);
@@ -659,21 +670,21 @@ class JobController extends Controller
 
         // Statistiques de base (toujours disponibles)
         $stats = [
-            'total_jobs' => Job::where('company_id', $recruiter->company_id)->count(),
-            'active_jobs' => Job::where('company_id', $recruiter->company_id)
+            'total_jobs' => Job::where('company_id', $companyId)->count(),
+            'active_jobs' => Job::where('company_id', $companyId)
                 ->where('status', 'published')
                 ->count(),
-            'total_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
+            'total_applications' => Application::whereHas('job', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
             })->count(),
-            'new_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
+            'new_applications' => Application::whereHas('job', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
             })->where('status', 'pending')->count(),
-            'accepted_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
+            'accepted_applications' => Application::whereHas('job', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
             })->where('status', 'accepted')->count(),
-            'rejected_applications' => Application::whereHas('job', function ($q) use ($recruiter) {
-                $q->where('company_id', $recruiter->company_id);
+            'rejected_applications' => Application::whereHas('job', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
             })->where('status', 'rejected')->count(),
         ];
 
@@ -682,15 +693,15 @@ class JobController extends Controller
         $analytics = null;
 
         if ($canSeeAnalytics) {
-            $totalViews = Job::where('company_id', $recruiter->company_id)->sum('views_count');
+            $totalViews = Job::where('company_id', $companyId)->sum('views_count');
 
             $analytics = [
                 'total_views' => $totalViews,
-                'views_this_month' => Job::where('company_id', $recruiter->company_id)
+                'views_this_month' => Job::where('company_id', $companyId)
                     ->whereMonth('created_at', now()->month)
                     ->sum('views_count'),
-                'applications_this_month' => Application::whereHas('job', function ($q) use ($recruiter) {
-                    $q->where('company_id', $recruiter->company_id);
+                'applications_this_month' => Application::whereHas('job', function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId);
                 })->whereMonth('created_at', now()->month)->count(),
                 'conversion_rate' => $totalViews > 0
                     ? round(($stats['total_applications'] / $totalViews) * 100, 2)
@@ -699,7 +710,7 @@ class JobController extends Controller
         }
 
         // Top 5 offres actives avec nombre de candidatures
-        $activeJobs = Job::where('company_id', $recruiter->company_id)
+        $activeJobs = Job::where('company_id', $companyId)
             ->where('status', 'published')
             ->withCount('applications')
             ->orderBy('created_at', 'desc')
@@ -707,7 +718,7 @@ class JobController extends Controller
             ->get();
 
         // Offres en attente de validation (status = 'pending')
-        $pendingJobs = Job::where('company_id', $recruiter->company_id)
+        $pendingJobs = Job::where('company_id', $companyId)
             ->where('status', 'pending')
             ->withCount('applications')
             ->orderBy('created_at', 'desc')
@@ -715,13 +726,13 @@ class JobController extends Controller
             ->get();
 
         // Compter le total des offres en attente
-        $pendingJobsCount = Job::where('company_id', $recruiter->company_id)
+        $pendingJobsCount = Job::where('company_id', $companyId)
             ->where('status', 'pending')
             ->count();
 
         // 5 dernières candidatures EN ATTENTE uniquement (non traitées)
-        $recentApplications = Application::whereHas('job', function ($q) use ($recruiter) {
-            $q->where('company_id', $recruiter->company_id);
+        $recentApplications = Application::whereHas('job', function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
         })
             ->where('status', 'pending')
             ->with(['user' => function ($q) {
@@ -795,28 +806,35 @@ class JobController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        // Vérifier que l'utilisateur est recruteur
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à modifier des offres',
+                'message' => __('job.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
+        }
+
+        $recruiter = $user->recruiterFor($companyId);
+
+        if (! $recruiter) {
+            return response()->json([
+                'message' => __('job.not_authorized_modify'),
             ], 403);
         }
 
         $job = Job::find($id);
 
-        // Vérifier que l'offre existe
         if (!$job) {
             return response()->json([
-                'message' => 'Offre non trouvée',
+                'message' => __('job.not_found'),
             ], 404);
         }
 
-        // Vérifier que l'offre appartient à l'entreprise du recruteur
-        if ($job->company_id !== $recruiter->company_id) {
+        // Vérifier que l'offre appartient à l'entreprise active
+        if ($job->company_id !== $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à modifier cette offre',
+                'message' => __('job.not_authorized_modify_this'),
             ], 403);
         }
 
@@ -836,12 +854,11 @@ class JobController extends Controller
         ]);
 
         // Une offre "locale" exige une ville d'entreprise renseignée.
-        if (($validated['visibility'] ?? null) === 'local' && empty($recruiter->company?->city)) {
+        if (($validated['visibility'] ?? null) === 'local' && empty($user->currentCompany?->city)) {
             return response()->json([
-                'message' => "Votre entreprise n'a pas de ville renseignée. "
-                    . "Renseignez la localisation de l'entreprise ou choisissez une visibilité nationale.",
+                'message' => __('job.company_no_city'),
                 'errors' => [
-                    'visibility' => ["Ville de l'entreprise manquante pour une offre locale."],
+                    'visibility' => [__('job.company_city_missing_for_local')],
                 ],
             ], 422);
         }
@@ -849,7 +866,7 @@ class JobController extends Controller
         $job->update($validated);
 
         return response()->json([
-            'message' => 'Offre mise à jour avec succès',
+            'message' => __('job.updated'),
             'data' => $job->load(['company', 'category', 'contractType']),
         ]);
     }
@@ -883,30 +900,29 @@ class JobController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $user = Auth::user();
-        $recruiter = $user->recruiter;
+        $companyId = $user->current_company_id;
 
-        // Vérifier que l'utilisateur est recruteur
-        if (!$recruiter) {
+        if (! $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à supprimer des offres',
-            ], 403);
+                'message' => __('job.select_active_company'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
         }
 
         $job = Job::with(['company', 'category', 'contractType', 'postedBy'])
             ->withCount('applications')
             ->find($id);
 
-        // Vérifier que l'offre existe
         if (!$job) {
             return response()->json([
-                'message' => 'Offre non trouvée',
+                'message' => __('job.not_found'),
             ], 404);
         }
 
-        // Vérifier que l'offre appartient à l'entreprise du recruteur
-        if ($job->company_id !== $recruiter->company_id) {
+        // Vérifier que l'offre appartient à l'entreprise active
+        if ($job->company_id !== $companyId) {
             return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à supprimer cette offre',
+                'message' => __('job.not_authorized_delete_this'),
             ], 403);
         }
 
@@ -919,7 +935,7 @@ class JobController extends Controller
         $job->delete();
 
         return response()->json([
-            'message' => 'Offre supprimée avec succès',
+            'message' => __('job.deleted'),
             'usage' => $subscription ? [
                 'jobs_used' => $subscription->jobs_used,
                 'jobs_limit' => $subscription->getEffectiveJobsLimit(),

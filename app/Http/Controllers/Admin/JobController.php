@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendJobPublishedNotification;
 use App\Models\Job;
 use App\Models\Company;
-use App\Models\Category;
+use App\Models\CompanyCategory;
 use App\Models\ContractType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,18 +51,57 @@ class JobController extends Controller
 
     public function create(): View
     {
-        $companies = Company::where('status', 'verified')->orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
+        $companies = Company::where('status', 'verified')
+            ->with(['categories:id,level_1,level_2,level_3'])
+            ->orderBy('name')
+            ->get();
         $contractTypes = ContractType::orderBy('name')->get();
 
-        return view('admin.jobs.create', compact('companies', 'categories', 'contractTypes'));
+        // Carte company_id => liste des CompanyCategory level_3 dont le level_2
+        // fait partie des catégories de l'entreprise (même règle que API
+        // myCompanyLevel3Sectors). Sérialisée en JSON dans la vue pour le filtre JS.
+        $companyLevel3Map = $this->buildCompanyLevel3Map($companies);
+
+        return view('admin.jobs.create', compact('companies', 'contractTypes', 'companyLevel3Map'));
+    }
+
+    /**
+     * Construit une map [company_id => [CompanyCategory level_3...]] pour le JS,
+     * en se basant sur les niveau 2 des catégories rattachées à chaque entreprise.
+     */
+    private function buildCompanyLevel3Map($companies): array
+    {
+        $map = [];
+        // Pré-charger tous les level_3 actifs une seule fois pour éviter N+1
+        $allLevel3 = CompanyCategory::where('is_active', true)
+            ->whereNotNull('level_3')
+            ->orderBy('level_2')
+            ->orderBy('level_3')
+            ->get(['id', 'level_1', 'level_2', 'level_3']);
+
+        foreach ($companies as $company) {
+            $companyLevel2 = $company->categories->pluck('level_2')->filter()->unique()->values();
+            if ($companyLevel2->isEmpty()) {
+                $map[$company->id] = [];
+                continue;
+            }
+            $map[$company->id] = $allLevel3
+                ->whereIn('level_2', $companyLevel2)
+                ->map(fn ($c) => [
+                    'id' => $c->id,
+                    'label' => trim(($c->level_2 ? $c->level_2 . ' — ' : '') . $c->level_3),
+                ])
+                ->values()
+                ->all();
+        }
+        return $map;
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:company_categories,id',
             'contract_type_id' => 'required|exists:contract_types,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -70,7 +109,7 @@ class JobController extends Controller
             'benefits' => 'nullable|string',
             'salary_min' => 'nullable|string',
             'salary_max' => 'nullable|string',
-            'experience_level' => 'nullable|string|max:50',
+            'experience_level' => 'nullable|in:junior,intermediaire,senior,expert',
             'visibility' => 'required|in:national,local',
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date|after:today',
@@ -96,9 +135,21 @@ class JobController extends Controller
             JobPublished::dispatch($job);
         }
 
+        // Rediriger vers la page de proposition de test de compétences
+        // (équivalent du dialog "Configurer un test ?" côté Flutter)
         return redirect()
-            ->route('admin.jobs.index')
-            ->with('success', 'Offre créée avec succès');
+            ->route('admin.jobs.skill-test-prompt', $job)
+            ->with('success', 'Offre créée avec succès. Voulez-vous y associer un test de compétences ?');
+    }
+
+    /**
+     * Affiche la page proposant de créer un test de compétences pour le job
+     * qui vient d'être créé (équivalent du dialog Flutter post-publication).
+     */
+    public function skillTestPrompt(Job $job): View
+    {
+        $job->load('company');
+        return view('admin.jobs.skill-test-prompt', compact('job'));
     }
 
     public function show(Job $job): View
@@ -110,18 +161,21 @@ class JobController extends Controller
 
     public function edit(Job $job): View
     {
-        $companies = Company::where('status', 'verified')->orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
+        $companies = Company::where('status', 'verified')
+            ->with(['categories:id,level_1,level_2,level_3'])
+            ->orderBy('name')
+            ->get();
         $contractTypes = ContractType::orderBy('name')->get();
+        $companyLevel3Map = $this->buildCompanyLevel3Map($companies);
 
-        return view('admin.jobs.edit', compact('job', 'companies', 'categories', 'contractTypes'));
+        return view('admin.jobs.edit', compact('job', 'companies', 'contractTypes', 'companyLevel3Map'));
     }
 
     public function update(Request $request, Job $job): RedirectResponse
     {
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:company_categories,id',
             'contract_type_id' => 'required|exists:contract_types,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -129,7 +183,7 @@ class JobController extends Controller
             'benefits' => 'nullable|string',
             'salary_min' => 'nullable|string',
             'salary_max' => 'nullable|string',
-            'experience_level' => 'nullable|string|max:50',
+            'experience_level' => 'nullable|in:junior,intermediaire,senior,expert',
             'visibility' => 'required|in:national,local',
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date',

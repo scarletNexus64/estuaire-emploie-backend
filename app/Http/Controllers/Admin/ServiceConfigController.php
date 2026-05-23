@@ -331,7 +331,7 @@ class ServiceConfigController extends Controller
         if (!$config || !$config->isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration WhatsApp invalide ou incomplète'
+                'message' => __('service_config.whatsapp_invalid')
             ], 400);
         }
 
@@ -380,7 +380,7 @@ class ServiceConfigController extends Controller
         if (!$config || !$config->isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration Nexah invalide ou incomplète'
+                'message' => __('service_config.nexah_invalid')
             ], 400);
         }
 
@@ -429,7 +429,7 @@ class ServiceConfigController extends Controller
         if (!$config || !$config->isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration FreeMoPay invalide ou incomplète'
+                'message' => __('service_config.freemopay_invalid')
             ], 400);
         }
 
@@ -488,7 +488,7 @@ class ServiceConfigController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides: ' . $validator->errors()->first()
+                'message' => __('service_config.invalid_data', ['error' => $validator->errors()->first()])
             ], 400);
         }
 
@@ -497,7 +497,7 @@ class ServiceConfigController extends Controller
         if (!$config) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucune configuration WhatsApp trouvée. Veuillez d\'abord sauvegarder la configuration.'
+                'message' => __('service_config.whatsapp_not_saved')
             ], 400);
         }
 
@@ -506,7 +506,7 @@ class ServiceConfigController extends Controller
         if (!empty($errors)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration incomplète. Champs manquants: ' . implode(', ', $errors),
+                'message' => __('service_config.config_incomplete', ['fields' => implode(', ', $errors)]),
                 'errors' => $errors,
                 'config_debug' => [
                     'has_token' => !empty($config->whatsapp_api_token),
@@ -528,7 +528,7 @@ class ServiceConfigController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur: ' . $e->getMessage()
+                'message' => __('service_config.error', ['error' => $e->getMessage()])
             ], 500);
         }
     }
@@ -581,7 +581,7 @@ class ServiceConfigController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides: ' . $validator->errors()->first()
+                'message' => __('service_config.invalid_data', ['error' => $validator->errors()->first()])
             ], 400);
         }
 
@@ -590,7 +590,7 @@ class ServiceConfigController extends Controller
         if (!$config || !$config->isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration Nexah invalide ou incomplète. Veuillez d\'abord configurer le service.'
+                'message' => __('service_config.nexah_invalid_full')
             ], 400);
         }
 
@@ -605,7 +605,7 @@ class ServiceConfigController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur: ' . $e->getMessage()
+                'message' => __('service_config.error', ['error' => $e->getMessage()])
             ], 500);
         }
     }
@@ -620,7 +620,7 @@ class ServiceConfigController extends Controller
         if (!$config || !$config->isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Configuration PayPal invalide ou incomplète'
+                'message' => __('service_config.paypal_invalid')
             ], 400);
         }
 

@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ContractTypeSeeder::class,
             CurrencySeeder::class, // Devises mondiales (XAF, USD, EUR...)
+            ServiceCategorySeeder::class, // Catégories des services rapides (Plomberie, Électricité…)
+            DomainsAndSectorsSeeder::class, // Domaines + secteurs depuis config/domains_sectors.php
+            ProficiencyLevelsSeeder::class, // Niveaux skill / language / training
 
             // Monétisation - Plans et services
             SubscriptionPlanSeeder::class, // Forfaits recruteurs (ARGENT, OR, PLATINUM)
@@ -36,6 +39,16 @@ class DatabaseSeeder extends Seeder
             TrainingVideoSeeder::class, // Vidéos de formation (YouTube)
             TrainingPackSeeder::class, // Packs de formation payants
             ExamPaperBulkSeeder::class, // Épreuves réelles + Packs d'épreuves (1000-2500 XAF)
+
+            // Traductions multilingues FR / EN / ES / AR
+            // À LANCER EN DERNIER : peuple la table `translations` pour toutes
+            // les données de référence créées par les seeders ci-dessus.
+            TranslationsSeeder::class,
+
+            // Traductions spécifiques des Catégories d'entreprise (885 entrées,
+            // 1082 libellés distincts). Mapping volumineux externalisé dans
+            // database/seeders/data/company_categories_level{1,2,3}.php
+            CompanyCategoriesTranslationsSeeder::class,
         ]);
     }
 }

@@ -47,7 +47,7 @@ class OtpController extends Controller
         }
 
         return response()->json([
-            'message' => 'Veuillez fournir un numéro de téléphone ou une adresse email.',
+            'message' => __('otp.provide_phone_or_email'),
         ], 422);
     }
 
@@ -82,7 +82,7 @@ class OtpController extends Controller
         }
 
         return response()->json([
-            'message' => 'Veuillez fournir un numéro de téléphone ou une adresse email.',
+            'message' => __('otp.provide_phone_or_email'),
         ], 422);
     }
 
@@ -98,7 +98,7 @@ class OtpController extends Controller
         // Vérifier si le numéro est déjà utilisé
         if (User::where('phone', $phone)->exists()) {
             return response()->json([
-                'message' => 'Ce numéro de téléphone est déjà associé à un compte.',
+                'message' => __('otp.phone_already_used'),
             ], 422);
         }
 
@@ -134,19 +134,19 @@ class OtpController extends Controller
             if (!$result1['success'] && !$result2['success']) {
                 Log::error("[OTP] Les deux envois SMS ont échoué pour {$phone}");
                 return response()->json([
-                    'message' => 'Impossible d\'envoyer le SMS. Veuillez réessayer.',
+                    'message' => __('otp.sms_send_failed'),
                 ], 500);
             }
 
             return response()->json([
-                'message' => 'Code OTP envoyé par SMS.',
+                'message' => __('otp.sms_sent'),
                 'channel' => 'sms',
             ], 200);
 
         } catch (\Exception $e) {
             Log::error("[OTP] Erreur envoi SMS : " . $e->getMessage());
             return response()->json([
-                'message' => 'Erreur lors de l\'envoi du SMS. Veuillez réessayer.',
+                'message' => __('otp.sms_send_error'),
                 'error'   => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -164,14 +164,14 @@ class OtpController extends Controller
 
         if (!$record) {
             return response()->json([
-                'message' => 'Code invalide ou expiré.',
+                'message' => __('otp.code_invalid_or_expired'),
             ], 422);
         }
 
         $record->update(['verified' => true]);
 
         return response()->json([
-            'message' => 'Numéro vérifié avec succès.',
+            'message' => __('otp.phone_verified'),
         ], 200);
     }
 
@@ -184,7 +184,7 @@ class OtpController extends Controller
         // Vérifier si l'email est déjà utilisé
         if (User::where('email', $email)->exists()) {
             return response()->json([
-                'message' => 'Cet email est déjà associé à un compte.',
+                'message' => __('otp.email_already_used'),
             ], 422);
         }
 
@@ -211,14 +211,14 @@ class OtpController extends Controller
             );
 
             return response()->json([
-                'message' => 'Code OTP envoyé par email.',
+                'message' => __('otp.email_sent'),
                 'channel' => 'email',
             ], 200);
 
         } catch (\Exception $e) {
             Log::error("[OTP] Erreur envoi email : " . $e->getMessage());
             return response()->json([
-                'message' => 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer.',
+                'message' => __('otp.email_send_error'),
                 'error'   => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -234,14 +234,14 @@ class OtpController extends Controller
 
         if (!$record) {
             return response()->json([
-                'message' => 'Code invalide ou expiré.',
+                'message' => __('otp.code_invalid_or_expired'),
             ], 422);
         }
 
         $record->update(['verified' => true]);
 
         return response()->json([
-            'message' => 'Email vérifié avec succès.',
+            'message' => __('otp.email_verified'),
         ], 200);
     }
 
@@ -277,7 +277,7 @@ class OtpController extends Controller
         }
 
         return response()->json([
-            'message' => 'Veuillez fournir un numéro de téléphone ou une adresse email.',
+            'message' => __('otp.provide_phone_or_email'),
         ], 422);
     }
 
@@ -308,7 +308,7 @@ class OtpController extends Controller
         }
 
         return response()->json([
-            'message' => 'Veuillez fournir un numéro de téléphone ou une adresse email.',
+            'message' => __('otp.provide_phone_or_email'),
         ], 422);
     }
 
@@ -325,7 +325,7 @@ class OtpController extends Controller
         $user = User::where('phone', $phone)->first();
         if (!$user) {
             return response()->json([
-                'message' => 'Aucun compte trouvé avec ce numéro de téléphone.',
+                'message' => __('otp.no_account_with_phone'),
             ], 404);
         }
 
@@ -360,19 +360,19 @@ class OtpController extends Controller
             if (!$result1['success'] && !$result2['success']) {
                 Log::error("[PASSWORD RESET OTP] Les deux envois SMS ont échoué pour {$phone}");
                 return response()->json([
-                    'message' => 'Impossible d\'envoyer le SMS. Veuillez réessayer.',
+                    'message' => __('otp.sms_send_failed'),
                 ], 500);
             }
 
             return response()->json([
-                'message' => 'Code de réinitialisation envoyé par SMS.',
+                'message' => __('otp.reset_sms_sent'),
                 'channel' => 'sms',
             ], 200);
 
         } catch (\Exception $e) {
             Log::error("[PASSWORD RESET OTP] Erreur envoi SMS : " . $e->getMessage());
             return response()->json([
-                'message' => 'Erreur lors de l\'envoi du SMS. Veuillez réessayer.',
+                'message' => __('otp.sms_send_error'),
                 'error'   => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -390,14 +390,14 @@ class OtpController extends Controller
 
         if (!$record) {
             return response()->json([
-                'message' => 'Code invalide ou expiré.',
+                'message' => __('otp.code_invalid_or_expired'),
             ], 422);
         }
 
         $record->update(['verified' => true]);
 
         return response()->json([
-            'message' => 'Code vérifié avec succès.',
+            'message' => __('otp.code_verified'),
         ], 200);
     }
 
@@ -411,7 +411,7 @@ class OtpController extends Controller
         $user = User::where('email', $email)->first();
         if (!$user) {
             return response()->json([
-                'message' => 'Aucun compte trouvé avec cet email.',
+                'message' => __('otp.no_account_with_email'),
             ], 404);
         }
 
@@ -438,14 +438,14 @@ class OtpController extends Controller
             );
 
             return response()->json([
-                'message' => 'Code de réinitialisation envoyé par email.',
+                'message' => __('otp.reset_email_sent'),
                 'channel' => 'email',
             ], 200);
 
         } catch (\Exception $e) {
             Log::error("[PASSWORD RESET OTP] Erreur envoi email : " . $e->getMessage());
             return response()->json([
-                'message' => 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer.',
+                'message' => __('otp.email_send_error'),
                 'error'   => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -461,14 +461,14 @@ class OtpController extends Controller
 
         if (!$record) {
             return response()->json([
-                'message' => 'Code invalide ou expiré.',
+                'message' => __('otp.code_invalid_or_expired'),
             ], 422);
         }
 
         $record->update(['verified' => true]);
 
         return response()->json([
-            'message' => 'Code vérifié avec succès.',
+            'message' => __('otp.code_verified'),
         ], 200);
     }
 }

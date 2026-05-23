@@ -5,8 +5,11 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
             <h3 class="card-title">Liste des Tests de Compétences</h3>
+            <a href="{{ route('admin.skill-tests.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouveau test
+            </a>
         </div>
 
         <div class="card-body">

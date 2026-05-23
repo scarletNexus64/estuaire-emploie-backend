@@ -33,7 +33,7 @@ class EmailVerificationController extends Controller
         // Vérifier si l'email existe déjà dans la table users
         if (User::where('email', $email)->exists()) {
             return response()->json([
-                'message' => 'Cet email est déjà utilisé par un autre compte.',
+                'message' => __('email_verification.email_already_used'),
             ], 422);
         }
 
@@ -61,11 +61,11 @@ class EmailVerificationController extends Controller
             );
 
             return response()->json([
-                'message' => 'Code envoyé par email',
+                'message' => __('email_verification.code_sent'),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer.',
+                'message' => __('email_verification.send_error'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
@@ -96,7 +96,7 @@ class EmailVerificationController extends Controller
 
         if (!$record) {
             return response()->json([
-                'message' => 'Code invalide ou expiré',
+                'message' => __('email_verification.invalid_or_expired'),
             ], 422);
         }
 
@@ -104,7 +104,7 @@ class EmailVerificationController extends Controller
         $record->update(['verified' => true]);
 
         return response()->json([
-            'message' => 'Email vérifié avec succès',
+            'message' => __('email_verification.verified'),
         ], 200);
     }
 }

@@ -13,35 +13,21 @@ enum AdminRole: string
     case BULK_ANNOUNCEMENTS_MANAGER = 'bulk_announcements_manager';
 
     /**
-     * Get the display label for the role
+     * Get the display label for the role.
+     * Localized via lang/{locale}/admin_roles.php
      */
     public function label(): string
     {
-        return match($this) {
-            self::SUPER_ADMIN => 'Super Administrateur',
-            self::CANDIDATE_RECRUITER_MANAGER => 'Gestionnaire Candidats et Recruteurs',
-            self::TRAINING_PROGRAMS_MANAGER => 'Gestionnaire des Programmes de Formation',
-            self::STUDENT_SPACE_MANAGER => 'Gestionnaire de l\'Espace Étudiant',
-            self::ADVERTISING_MANAGER => 'Gestionnaire des Publicités',
-            self::FINANCE_MANAGER => 'Gestionnaire des Finances',
-            self::BULK_ANNOUNCEMENTS_MANAGER => 'Gestionnaire des Annonces Bulk',
-        };
+        return __('admin_roles.labels.'.$this->value);
     }
 
     /**
-     * Get the description for the role
+     * Get the description for the role.
+     * Localized via lang/{locale}/admin_roles.php
      */
     public function description(): string
     {
-        return match($this) {
-            self::SUPER_ADMIN => 'Accès complet à toutes les fonctionnalités du système',
-            self::CANDIDATE_RECRUITER_MANAGER => 'Gestion des utilisateurs, entreprises, offres d\'emploi, services rapides, candidatures, tests de compétences, portfolios et recruteurs',
-            self::TRAINING_PROGRAMS_MANAGER => 'Gestion de la section Programmes de formation',
-            self::STUDENT_SPACE_MANAGER => 'Gestion des packs d\'épreuves, épreuves, packs de formation et vidéos de formation',
-            self::ADVERTISING_MANAGER => 'Gestion des annonces push et espaces publicitaires',
-            self::FINANCE_MANAGER => 'Gestion complète de la monétisation: plans d\'abonnement, paiements, wallets, services',
-            self::BULK_ANNOUNCEMENTS_MANAGER => 'Gestion des annonces push en masse',
-        };
+        return __('admin_roles.descriptions.'.$this->value);
     }
 
     /**

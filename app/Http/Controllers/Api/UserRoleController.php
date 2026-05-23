@@ -99,7 +99,7 @@ class UserRoleController extends Controller
         if (!$user->hasRole($newRole)) {
             return response()->json([
                 'success' => false,
-                'message' => "Ce rôle n'est pas disponible pour votre compte",
+                'message' => __('user_role.role_unavailable'),
                 'available_roles' => $user->getAvailableRoles(),
             ], 400);
         }
@@ -109,7 +109,7 @@ class UserRoleController extends Controller
         if (!$success) {
             return response()->json([
                 'success' => false,
-                'message' => 'Impossible de changer de rôle',
+                'message' => __('user_role.cannot_change_role'),
             ], 500);
         }
 
@@ -117,7 +117,7 @@ class UserRoleController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Rôle changé vers {$newRole} avec succès",
+            'message' => __('user_role.role_changed', ['role' => $newRole]),
             'data' => [
                 'current_role' => $user->role,
                 'available_roles' => $user->getAvailableRoles(),
@@ -173,7 +173,7 @@ class UserRoleController extends Controller
         if (!$user->hasRole($role)) {
             return response()->json([
                 'success' => false,
-                'message' => "Vous n'avez pas accès au rôle '{$role}'",
+                'message' => __('user_role.no_access_to_role', ['role' => $role]),
             ], 403);
         }
 
@@ -256,7 +256,7 @@ class UserRoleController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Features synchronisées avec succès',
+            'message' => __('user_role.features_synced'),
             'data' => [
                 'recruiter_features' => $user->getFeaturesInfo('recruiter'),
                 'candidate_features' => $user->getFeaturesInfo('candidate'),

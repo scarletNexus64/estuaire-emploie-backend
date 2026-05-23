@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'recruiter_plans_fetched' => 'Plans d\'abonnement recruteurs récupérés avec succès',
+    'jobseeker_plans_fetched' => 'Plans d\'abonnement chercheurs d\'emploi récupérés avec succès',
+    'plans_fetched' => 'Plans d\'abonnement récupérés avec succès',
+    'plan_not_found' => 'Plan d\'abonnement non trouvé',
+    'plan_fetched' => 'Plan d\'abonnement récupéré avec succès',
+    'plan_not_found_or_inactive' => 'Plan d\'abonnement non trouvé ou inactif',
+    'payment_not_found' => 'Paiement non trouvé',
+    'subscription_already_active' => 'Abonnement déjà actif avec ce paiement',
+    'payment_used_not_confirmed' => 'Ce paiement a déjà été utilisé mais n\'est pas confirmé',
+    'payment_not_confirmed' => 'Paiement non confirmé',
+    'activation_error' => 'Erreur lors de l\'activation de l\'abonnement',
+    'no_active_subscription' => 'Aucun abonnement actif',
+    'active_subscription_fetched' => 'Abonnement actif récupéré',
+    'history_fetched' => 'Historique des abonnements récupéré',
+    'paypal_initiated' => 'Paiement PayPal initié avec succès. Veuillez compléter le paiement via le lien.',
+    'status_retrieved' => 'Statut récupéré',
+    'payment_already_completed' => 'Paiement déjà complété',
+    'paypal_completed' => 'Paiement PayPal complété avec succès! Vous pouvez maintenant activer votre abonnement.',
+    'payment_not_approved' => 'Le paiement n\'a pas été approuvé',
+    'payment_execution_error' => 'Erreur lors de l\'exécution du paiement: :error',
+    'insufficient_provider_balance' => 'Solde :provider insuffisant',
+];

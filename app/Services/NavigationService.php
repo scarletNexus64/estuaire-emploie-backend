@@ -283,6 +283,12 @@ class NavigationService
                         'permission' => null, // All admins can view FCM tokens
                     ],
                     [
+                        'name' => 'FCM Topics',
+                        'route' => 'admin.fcm-topics.index',
+                        'icon' => 'fas fa-bullhorn',
+                        'permission' => null,
+                    ],
+                    [
                         'name' => 'Users Devices',
                         'route' => 'admin.users-devices.index',
                         'icon' => 'fas fa-mobile',
@@ -304,6 +310,12 @@ class NavigationService
                         'name' => 'Paramètres',
                         'route' => 'admin.settings.index',
                         'icon' => 'fas fa-cog',
+                        'permission' => 'manage_settings',
+                    ],
+                    [
+                        'name' => 'Traductions',
+                        'route' => 'admin.translations.index',
+                        'icon' => 'fas fa-list',
                         'permission' => 'manage_settings',
                     ],
                     [

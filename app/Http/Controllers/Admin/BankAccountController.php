@@ -198,7 +198,7 @@ class BankAccountController extends Controller
         if ($request->pin !== $correctPin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Code PIN incorrect',
+                'message' => __('bank_account.incorrect_pin'),
             ], 401);
         }
 
@@ -207,7 +207,7 @@ class BankAccountController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Code PIN vérifié avec succès',
+            'message' => __('bank_account.pin_verified'),
         ]);
     }
 
@@ -255,7 +255,7 @@ class BankAccountController extends Controller
         if (!$user->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé',
+                'message' => __('common.unauthorized_access'),
             ], 403);
         }
 
@@ -289,7 +289,7 @@ class BankAccountController extends Controller
             Log::warning("[Platform Withdrawal] Accès refusé - utilisateur non admin: {$user->id}");
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé',
+                'message' => __('common.unauthorized_access'),
             ], 403);
         }
 
@@ -301,7 +301,7 @@ class BankAccountController extends Controller
             Log::warning("[Platform Withdrawal] PIN non vérifié ou expiré");
             return response()->json([
                 'success' => false,
-                'message' => 'Session expirée. Veuillez vérifier votre code PIN',
+                'message' => __('bank_account.session_expired'),
             ], 401);
         }
 
@@ -316,7 +316,7 @@ class BankAccountController extends Controller
             Log::error("[Platform Withdrawal] Validation failed: " . json_encode($e->errors()));
             return response()->json([
                 'success' => false,
-                'message' => 'Validation échouée: ' . json_encode($e->errors()),
+                'message' => __('bank_account.validation_failed', ['errors' => json_encode($e->errors())]),
             ], 422);
         }
 
@@ -333,7 +333,7 @@ class BankAccountController extends Controller
         if ($request->amount > $availableBalance) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solde insuffisant. Disponible: ' . number_format($availableBalance, 0, ',', ' ') . ' XAF',
+                'message' => __('bank_account.insufficient_balance_xaf', ['amount' => number_format($availableBalance, 0, ',', ' ')]),
             ], 400);
         }
 
@@ -384,7 +384,7 @@ class BankAccountController extends Controller
                 'success' => true,
                 'transaction_id' => $processedWithdrawal->id,
                 'reference' => $processedWithdrawal->freemopay_reference,
-                'message' => 'Retrait initié avec succès',
+                'message' => __('bank_account.withdrawal_initiated'),
             ]);
 
         } catch (\Exception $e) {
@@ -587,7 +587,7 @@ class BankAccountController extends Controller
         if (!$user->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé',
+                'message' => __('common.unauthorized_access'),
             ], 403);
         }
 
@@ -703,7 +703,7 @@ class BankAccountController extends Controller
         if (!$user->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé',
+                'message' => __('common.unauthorized_access'),
             ], 403);
         }
 
@@ -736,7 +736,7 @@ class BankAccountController extends Controller
             Log::warning("[PayPal Platform Withdrawal] Accès refusé - utilisateur non admin: {$user->id}");
             return response()->json([
                 'success' => false,
-                'message' => 'Accès non autorisé',
+                'message' => __('common.unauthorized_access'),
             ], 403);
         }
 
@@ -748,7 +748,7 @@ class BankAccountController extends Controller
             Log::warning("[PayPal Platform Withdrawal] PIN non vérifié ou expiré");
             return response()->json([
                 'success' => false,
-                'message' => 'Session expirée. Veuillez vérifier votre code PIN',
+                'message' => __('bank_account.session_expired'),
             ], 401);
         }
 
@@ -762,7 +762,7 @@ class BankAccountController extends Controller
             Log::error("[PayPal Platform Withdrawal] Validation failed: " . json_encode($e->errors()));
             return response()->json([
                 'success' => false,
-                'message' => 'Validation échouée: ' . json_encode($e->errors()),
+                'message' => __('bank_account.validation_failed', ['errors' => json_encode($e->errors())]),
             ], 422);
         }
 
@@ -770,7 +770,7 @@ class BankAccountController extends Controller
         if (!$this->paypalPayoutService->validateEmail($request->paypal_email)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email PayPal invalide',
+                'message' => __('bank_account.invalid_paypal_email'),
             ], 400);
         }
 
@@ -786,7 +786,7 @@ class BankAccountController extends Controller
         if ($request->amount > $availableBalance) {
             return response()->json([
                 'success' => false,
-                'message' => 'Solde insuffisant. Disponible: ' . number_format($availableBalance, 2, ',', ' ') . ' USD',
+                'message' => __('bank_account.insufficient_balance_usd', ['amount' => number_format($availableBalance, 2, ',', ' ')]),
             ], 400);
         }
 
@@ -823,7 +823,7 @@ class BankAccountController extends Controller
                 'success' => true,
                 'transaction_id' => $processedWithdrawal->id,
                 'reference' => $processedWithdrawal->paypal_batch_id,
-                'message' => 'Retrait PayPal initié avec succès',
+                'message' => __('bank_account.paypal_withdrawal_initiated'),
             ]);
 
         } catch (\Exception $e) {

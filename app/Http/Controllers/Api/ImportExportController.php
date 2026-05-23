@@ -56,7 +56,7 @@ class ImportExportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le fichier est vide',
+                    'message' => __('import_export.file_empty'),
                 ], 400);
             }
 
@@ -90,7 +90,7 @@ class ImportExportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Import terminé: {$results['imported']} importés, {$results['failed']} échecs",
+                'message' => __('import_export.import_complete', ['imported' => $results['imported'], 'failed' => $results['failed']]),
                 'results' => $results,
             ]);
 
@@ -98,7 +98,7 @@ class ImportExportController extends Controller
             Log::error('Jobs import error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'import: ' . $e->getMessage(),
+                'message' => __('import_export.import_error', ['error' => $e->getMessage()]),
             ], 500);
         }
     }
@@ -136,7 +136,7 @@ class ImportExportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le fichier est vide',
+                    'message' => __('import_export.file_empty'),
                 ], 400);
             }
 
@@ -169,7 +169,7 @@ class ImportExportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Import terminé: {$results['imported']} importés, {$results['failed']} échecs",
+                'message' => __('import_export.import_complete', ['imported' => $results['imported'], 'failed' => $results['failed']]),
                 'results' => $results,
             ]);
 
@@ -177,7 +177,7 @@ class ImportExportController extends Controller
             Log::error('Resumes import error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'import: ' . $e->getMessage(),
+                'message' => __('import_export.import_error', ['error' => $e->getMessage()]),
             ], 500);
         }
     }
@@ -215,7 +215,7 @@ class ImportExportController extends Controller
             if (empty($rows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le fichier est vide',
+                    'message' => __('import_export.file_empty'),
                 ], 400);
             }
 
@@ -248,7 +248,7 @@ class ImportExportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Import terminé: {$results['imported']} importés, {$results['failed']} échecs",
+                'message' => __('import_export.import_complete', ['imported' => $results['imported'], 'failed' => $results['failed']]),
                 'results' => $results,
             ]);
 
@@ -256,7 +256,7 @@ class ImportExportController extends Controller
             Log::error('Quick Services import error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'import: ' . $e->getMessage(),
+                'message' => __('import_export.import_error', ['error' => $e->getMessage()]),
             ], 500);
         }
     }

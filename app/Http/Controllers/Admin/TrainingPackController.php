@@ -300,6 +300,6 @@ class TrainingPackController extends Controller
             ]);
         }
 
-        return response()->json(['success' => true, 'message' => 'Ordre mis à jour avec succès']);
+        return response()->json(['success' => true, 'message' => __('training_pack.ordered')]);
     }
 }

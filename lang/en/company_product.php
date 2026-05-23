@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'fetch_error' => 'Error while retrieving products/services',
+    'no_company' => 'No company associated with this user',
+    'add_error' => 'Error while adding the products/services',
+    'created' => 'Product/service created successfully',
+    'create_error' => 'Error while creating the product/service',
+    'not_found' => 'Product/service not found',
+    'updated' => 'Product/service updated successfully',
+    'update_error' => 'Error while updating',
+    'deleted' => 'Product/service deleted successfully',
+    'delete_error' => 'Error while deleting',
+    'not_purchasable' => 'This product/service is not available for direct purchase. Please contact the company.',
+    'not_available' => 'This product/service is no longer available',
+    'no_beneficiary' => 'Unable to find the beneficiary for this company',
+    'cannot_buy_own' => 'You cannot buy your own product',
+    'purchase_success' => 'Purchase completed successfully',
+    'purchase_error' => 'Error during purchase',
+    'no_contact' => 'This company has no available contact',
+    'cannot_chat_self' => 'You cannot chat with yourself',
+    'conversation_opened' => 'Conversation opened',
+    'conversation_error' => 'Error while opening the conversation',
+    'invoice_error' => 'Error while generating the invoice',
+];

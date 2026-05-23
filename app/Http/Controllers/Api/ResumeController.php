@@ -94,7 +94,7 @@ class ResumeController extends Controller
             if ($photoValidator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Photo invalide',
+                    'message' => __('resume.invalid_photo'),
                     'errors' => $photoValidator->errors(),
                 ], 422);
             }
@@ -103,7 +103,7 @@ class ResumeController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -168,7 +168,7 @@ class ResumeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'CV créé avec succès',
+            'message' => __('resume.created'),
             'data' => $resume->fresh(), // Retourner le CV complet avec pdf_path
         ], 201);
     }
@@ -187,7 +187,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'CV non trouvé',
+                'message' => __('resume.not_found'),
             ], 404);
         }
 
@@ -211,7 +211,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'CV non trouvé',
+                'message' => __('resume.not_found'),
             ], 404);
         }
 
@@ -246,7 +246,7 @@ class ResumeController extends Controller
             if ($photoValidator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Photo invalide',
+                    'message' => __('resume.invalid_photo'),
                     'errors' => $photoValidator->errors(),
                 ], 422);
             }
@@ -255,7 +255,7 @@ class ResumeController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Données invalides',
+                'message' => __('common.invalid_data'),
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -338,7 +338,7 @@ class ResumeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'CV mis à jour avec succès',
+            'message' => __('resume.updated'),
             'data' => $resume->fresh(), // Retourner le CV complet avec pdf_path
         ]);
     }
@@ -357,7 +357,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'CV non trouvé',
+                'message' => __('resume.not_found'),
             ], 404);
         }
 
@@ -376,7 +376,7 @@ class ResumeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'CV supprimé avec succès',
+            'message' => __('resume.deleted'),
         ]);
     }
 
@@ -394,7 +394,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'CV non trouvé',
+                'message' => __('resume.not_found'),
             ], 404);
         }
 
@@ -406,7 +406,7 @@ class ResumeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'PDF généré avec succès',
+                'message' => __('resume.pdf_generated'),
                 'data' => [
                     'pdf_url' => $resume->pdf_url,
                     'generated_at' => $resume->pdf_generated_at->toIso8601String(),
@@ -415,7 +415,7 @@ class ResumeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la génération du PDF',
+                'message' => __('resume.pdf_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -435,7 +435,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'CV non trouvé',
+                'message' => __('resume.not_found'),
             ], 404);
         }
 
@@ -443,7 +443,7 @@ class ResumeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'CV défini comme CV par défaut',
+            'message' => __('resume.set_as_default'),
             'data' => $resume->getSummary(),
         ]);
     }
@@ -460,7 +460,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucun CV par défaut trouvé',
+                'message' => __('resume.no_default'),
             ], 404);
         }
 
@@ -484,7 +484,7 @@ class ResumeController extends Controller
         if (!$resume) {
             return response()->json([
                 'success' => false,
-                'message' => 'CV non trouvé',
+                'message' => __('resume.not_found'),
             ], 404);
         }
 
@@ -497,7 +497,7 @@ class ResumeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'CV dupliqué avec succès',
+            'message' => __('resume.duplicated'),
             'data' => $newResume->getSummary(),
         ], 201);
     }

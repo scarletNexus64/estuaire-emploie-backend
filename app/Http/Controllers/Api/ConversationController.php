@@ -43,7 +43,7 @@ class ConversationController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'La conversation ne peut être créée que pour les candidatures acceptées',
+                'message' => __('conversation.only_for_accepted'),
             ], 403);
         }
 
@@ -58,7 +58,7 @@ class ConversationController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Seul un recruteur peut initier une conversation',
+                'message' => __('conversation.only_recruiter_can_initiate'),
             ], 403);
         }
 
@@ -74,7 +74,7 @@ class ConversationController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Seul un recruteur de l\'entreprise peut initier une conversation',
+                'message' => __('conversation.only_company_recruiter'),
             ], 403);
         }
 
@@ -87,7 +87,7 @@ class ConversationController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'La conversation doit être avec le candidat',
+                'message' => __('conversation.must_be_with_candidate'),
             ], 400);
         }
 
@@ -111,7 +111,7 @@ class ConversationController extends Controller
 
             return response()->json([
                 'conversation_id' => $existingConversation->id,
-                'message' => 'Conversation already exists',
+                'message' => __('conversation.already_exists'),
             ], 200);
         }
 
@@ -141,7 +141,7 @@ class ConversationController extends Controller
 
         return response()->json([
             'conversation_id' => $conversation->id,
-            'message' => 'Conversation created successfully',
+            'message' => __('conversation.created'),
         ], 201);
     }
     public function getConversationsList()
@@ -290,7 +290,7 @@ class ConversationController extends Controller
 
             return response()->json([
                 'conversation_id' => $existingConversation->id,
-                'message' => 'Service conversation already exists',
+                'message' => __('conversation.service_already_exists'),
             ], 200);
         }
 
@@ -328,7 +328,7 @@ class ConversationController extends Controller
 
         return response()->json([
             'conversation_id' => $conversation->id,
-            'message' => 'Service conversation created successfully',
+            'message' => __('conversation.service_created'),
         ], 201);
     }
 

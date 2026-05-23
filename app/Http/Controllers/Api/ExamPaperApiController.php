@@ -17,6 +17,9 @@ class ExamPaperApiController extends Controller
     private function hasStudentMode(): bool
     {
         $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
 
         // Vérifier si l'utilisateur a le service "student_mode" actif
         return UserPremiumService::where('user_id', $user->id)
@@ -32,6 +35,17 @@ class ExamPaperApiController extends Controller
     }
 
     /**
+     * Détermine si l'utilisateur peut accéder à une épreuve.
+     * Accès autorisé si :
+     *  - le Mode Étudiant est actif, OU
+     *  - l'épreuve est marquée preview dans au moins un pack (mode vitrine)
+     */
+    private function canAccessPaper(ExamPaper $paper): bool
+    {
+        return $this->hasStudentMode() || $paper->isPreviewInAnyPack();
+    }
+
+    /**
      * Liste des épreuves disponibles
      * GET /api/exam-papers
      */
@@ -41,7 +55,7 @@ class ExamPaperApiController extends Controller
         if (!$this->hasStudentMode()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès refusé. Vous devez activer le Mode Étudiant pour accéder aux épreuves.',
+                'message' => __('exam_paper.student_mode_required_papers'),
                 'requires_student_mode' => true,
             ], 403);
         }
@@ -106,7 +120,7 @@ class ExamPaperApiController extends Controller
         if (!$this->hasStudentMode()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès refusé. Vous devez activer le Mode Étudiant.',
+                'message' => __('exam_paper.student_mode_required'),
                 'requires_student_mode' => true,
             ], 403);
         }
@@ -151,22 +165,22 @@ class ExamPaperApiController extends Controller
      */
     public function show($id)
     {
-        // Vérifier l'accès
-        if (!$this->hasStudentMode()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Accès refusé. Vous devez activer le Mode Étudiant.',
-                'requires_student_mode' => true,
-            ], 403);
-        }
-
         $examPaper = ExamPaper::with('correctionPaper')->active()->find($id);
 
         if (!$examPaper) {
             return response()->json([
                 'success' => false,
-                'message' => 'Épreuve introuvable',
+                'message' => __('exam_paper.not_found'),
             ], 404);
+        }
+
+        // Mode vitrine : autoriser si preview dans au moins un pack
+        if (!$this->canAccessPaper($examPaper)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('exam_paper.student_mode_required'),
+                'requires_student_mode' => true,
+            ], 403);
         }
 
         // Incrémenter le compteur de vues
@@ -184,28 +198,28 @@ class ExamPaperApiController extends Controller
      */
     public function download($id)
     {
-        // Vérifier l'accès
-        if (!$this->hasStudentMode()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Accès refusé. Vous devez activer le Mode Étudiant.',
-                'requires_student_mode' => true,
-            ], 403);
-        }
-
         $examPaper = ExamPaper::active()->find($id);
 
         if (!$examPaper) {
             return response()->json([
                 'success' => false,
-                'message' => 'Épreuve introuvable',
+                'message' => __('exam_paper.not_found'),
             ], 404);
+        }
+
+        // Mode vitrine : autoriser si preview dans au moins un pack
+        if (!$this->canAccessPaper($examPaper)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('exam_paper.student_mode_required'),
+                'requires_student_mode' => true,
+            ], 403);
         }
 
         if (!$examPaper->fileExists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Fichier introuvable',
+                'message' => __('exam_paper.file_not_found'),
             ], 404);
         }
 
@@ -221,28 +235,28 @@ class ExamPaperApiController extends Controller
      */
     public function viewPdf($id)
     {
-        // Vérifier l'accès
-        if (!$this->hasStudentMode()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Accès refusé. Vous devez activer le Mode Étudiant.',
-                'requires_student_mode' => true,
-            ], 403);
-        }
-
         $examPaper = ExamPaper::active()->find($id);
 
         if (!$examPaper) {
             return response()->json([
                 'success' => false,
-                'message' => 'Épreuve introuvable',
+                'message' => __('exam_paper.not_found'),
             ], 404);
+        }
+
+        // Mode vitrine : autoriser si preview dans au moins un pack
+        if (!$this->canAccessPaper($examPaper)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('exam_paper.student_mode_required'),
+                'requires_student_mode' => true,
+            ], 403);
         }
 
         if (!$examPaper->fileExists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Fichier introuvable',
+                'message' => __('exam_paper.file_not_found'),
             ], 404);
         }
 
@@ -270,7 +284,7 @@ class ExamPaperApiController extends Controller
         if (!$this->hasStudentMode()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accès refusé. Vous devez activer le Mode Étudiant.',
+                'message' => __('exam_paper.student_mode_required'),
                 'requires_student_mode' => true,
             ], 403);
         }

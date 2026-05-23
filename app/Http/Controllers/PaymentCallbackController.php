@@ -40,7 +40,7 @@ class PaymentCallbackController extends Controller
             if (!$paymentId || !$paypalPaymentId || !$payerId) {
                 \Log::error("[PaymentCallback] ❌ Missing required parameters");
                 return view('payment.error', [
-                    'message' => 'Paramètres de paiement manquants',
+                    'message' => __('payment_callback.missing_params'),
                     'details' => 'Les informations de paiement sont incomplètes.'
                 ]);
             }
@@ -51,7 +51,7 @@ class PaymentCallbackController extends Controller
             if (!$payment) {
                 \Log::error("[PaymentCallback] ❌ Payment not found", ['payment_id' => $paymentId]);
                 return view('payment.error', [
-                    'message' => 'Paiement introuvable',
+                    'message' => __('payment_callback.payment_not_found'),
                     'details' => 'Le paiement #' . $paymentId . ' n\'existe pas.'
                 ]);
             }
@@ -98,7 +98,7 @@ class PaymentCallbackController extends Controller
             ]);
 
             return view('payment.error', [
-                'message' => 'Échec du paiement',
+                'message' => __('payment_callback.payment_failed'),
                 'details' => $payment->failure_reason ?? 'Le paiement n\'a pas pu être complété.'
             ]);
 
@@ -110,7 +110,7 @@ class PaymentCallbackController extends Controller
             \Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             return view('payment.error', [
-                'message' => 'Erreur système',
+                'message' => __('common.system_error'),
                 'details' => 'Une erreur s\'est produite lors du traitement du paiement.'
             ]);
         }

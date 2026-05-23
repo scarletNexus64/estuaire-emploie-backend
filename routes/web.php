@@ -127,6 +127,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('jobs/bulk-delete', [JobController::class, 'bulkDelete'])->name('jobs.bulk-delete');
         Route::resource('jobs', JobController::class);
         Route::patch('jobs/{job}/publish', [JobController::class, 'publish'])->name('jobs.publish');
+        Route::get('jobs/{job}/skill-test-prompt', [JobController::class, 'skillTestPrompt'])->name('jobs.skill-test-prompt');
         Route::get('jobs/{job}/send-notifications', [JobController::class, 'showSendNotifications'])->name('jobs.send-notifications');
         Route::post('jobs/{job}/send-notifications-batch', [JobController::class, 'sendNotificationsBatch'])->name('jobs.send-notifications-batch');
         Route::post('jobs/{job}/send-emails-batch', [JobController::class, 'sendEmailsBatch'])->name('jobs.send-emails-batch');
@@ -214,7 +215,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // Skill Tests Management
     Route::middleware('permission:manage_applications')->prefix('skill-tests')->name('skill-tests.')->group(function () {
         Route::get('/', [SkillTestController::class, 'index'])->name('index');
+        Route::get('/create', [SkillTestController::class, 'create'])->name('create');
+        Route::post('/', [SkillTestController::class, 'store'])->name('store');
         Route::get('/{id}', [SkillTestController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [SkillTestController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [SkillTestController::class, 'update'])->name('update');
+        Route::patch('/{id}/publish', [SkillTestController::class, 'publish'])->name('publish');
         Route::delete('/{id}', [SkillTestController::class, 'destroy'])->name('destroy');
     });
 
@@ -230,6 +236,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
         // Referral Settings
         Route::put('settings/referral', [SettingsController::class, 'updateReferralSettings'])->name('settings.referral.update');
+
+        // Translations multilingues (FR / EN / ES / AR)
+        Route::prefix('translations')->name('translations.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\TranslationController::class, 'index'])->name('index');
+            Route::get('/{resource}', [\App\Http\Controllers\Admin\TranslationController::class, 'listResource'])->name('list');
+            Route::get('/{resource}/{id}/edit', [\App\Http\Controllers\Admin\TranslationController::class, 'edit'])->name('edit');
+            Route::put('/{resource}/{id}', [\App\Http\Controllers\Admin\TranslationController::class, 'update'])->name('update');
+        });
     });
 
     // MONÉTISATION - Subscription Plans Recruteurs
@@ -336,6 +350,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{examPack}/manage-papers', [\App\Http\Controllers\Admin\ExamPackController::class, 'managePapers'])->name('manage-papers');
         Route::post('/{examPack}/add-paper', [\App\Http\Controllers\Admin\ExamPackController::class, 'addPaper'])->name('add-paper');
         Route::delete('/{examPack}/remove-paper/{examPaper}', [\App\Http\Controllers\Admin\ExamPackController::class, 'removePaper'])->name('remove-paper');
+        Route::patch('/{examPack}/toggle-preview/{examPaper}', [\App\Http\Controllers\Admin\ExamPackController::class, 'togglePreview'])->name('toggle-preview');
     });
 
     // MONÉTISATION - Packs espace de stockage
@@ -526,6 +541,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Admin\FcmTokenController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-destroy', [\App\Http\Controllers\Admin\FcmTokenController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/export/csv', [\App\Http\Controllers\Admin\FcmTokenController::class, 'export'])->name('export');
+    });
+
+    // FCM Topics — envoi manuel de notifications par topic
+    Route::prefix('fcm-topics')->name('fcm-topics.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FcmTopicController::class, 'index'])->name('index');
+        Route::post('/send', [\App\Http\Controllers\Admin\FcmTopicController::class, 'send'])->name('send');
     });
 
     // Bank Account Management (Platform Withdrawals)

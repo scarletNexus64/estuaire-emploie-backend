@@ -178,7 +178,7 @@ class NotificationController extends Controller
         }
 
         return response()->json([
-            'message' => 'Notification marquée comme lue',
+            'message' => __('notification.marked_read'),
             // 'data' => $notification->fresh(),
         ]);
     }

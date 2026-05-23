@@ -52,7 +52,7 @@ class CandidatePremiumServiceController extends Controller
         if (!$service) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ce service n\'est pas disponible',
+                'message' => __('candidate_premium.service_unavailable'),
             ], 404);
         }
 
@@ -69,7 +69,7 @@ class CandidatePremiumServiceController extends Controller
         if ($existingService) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vous avez déjà ce service actif',
+                'message' => __('candidate_premium.service_already_active'),
                 'data' => [
                     'service' => $service,
                     'user_service' => $existingService->load('config'),
@@ -86,7 +86,7 @@ class CandidatePremiumServiceController extends Controller
         if ($walletBalance < $service->price) {
             return response()->json([
                 'success' => false,
-                'message' => "Solde {$providerName} insuffisant. Veuillez recharger votre wallet.",
+                'message' => __('candidate_premium.insufficient_balance', ['provider' => $providerName]),
                 'data' => [
                     'required_amount' => $service->price,
                     'current_balance' => $walletBalance,
@@ -161,7 +161,7 @@ class CandidatePremiumServiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Service activé avec succès !',
+                'message' => __('candidate_premium.activated'),
                 'data' => [
                     'service' => $userService->load('config'),
                     'payment' => $payment,
@@ -175,7 +175,7 @@ class CandidatePremiumServiceController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'achat du service',
+                'message' => __('candidate_premium.purchase_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -285,7 +285,7 @@ class CandidatePremiumServiceController extends Controller
         if (!$service) {
             return response()->json([
                 'success' => false,
-                'message' => 'Service introuvable',
+                'message' => __('candidate_premium.service_not_found'),
             ], 404);
         }
 
@@ -324,7 +324,7 @@ class CandidatePremiumServiceController extends Controller
         if (!$service) {
             return response()->json([
                 'success' => false,
-                'message' => 'Service introuvable',
+                'message' => __('candidate_premium.service_not_found'),
             ], 404);
         }
 

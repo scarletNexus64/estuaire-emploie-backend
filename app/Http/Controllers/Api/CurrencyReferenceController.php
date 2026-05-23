@@ -22,17 +22,23 @@ class CurrencyReferenceController extends Controller
     {
         try {
             $currencies = Currency::active()
+                ->with('translations')
                 ->orderBy('id') // Ordre du seeder : devises locales/principales en premier
-                ->get(['id', 'code', 'name', 'symbol']);
+                ->get();
 
             return response()->json([
                 'success' => true,
-                'data' => $currencies,
+                'data' => $currencies->map(fn ($currency) => [
+                    'id' => $currency->id,
+                    'code' => $currency->code,
+                    'name' => $currency->t('name'),
+                    'symbol' => $currency->symbol,
+                ]),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des devises',
+                'message' => __('currency.fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

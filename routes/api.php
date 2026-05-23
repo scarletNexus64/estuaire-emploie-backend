@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\CurrencyReferenceController;
 use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ProficiencyLevelController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\RecruiterServicePurchaseController;
 use App\Http\Controllers\Api\RecruiterSkillTestController;
@@ -109,6 +110,9 @@ Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'reco
 // Catégories de services rapides (publique)
 Route::get('/service-categories', [QuickServiceController::class, 'categories']);
 
+// Niveaux de proficience (skill / language / training) — référentiel multilingue
+Route::get('/proficiency-levels', [ProficiencyLevelController::class, 'index']);
+
 // Packs de stockage (consultation publique)
 Route::get('/storage-packs', [\App\Http\Controllers\Api\StoragePackController::class, 'index']);
 Route::get('/storage-packs/{id}', [\App\Http\Controllers\Api\StoragePackController::class, 'show']);
@@ -133,6 +137,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user/role', [AuthController::class, 'updateRole']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::patch('/user/locale', [AuthController::class, 'updateLocale']);
     Route::get('/user/statistics', [AuthController::class, 'statistics']);
     Route::post('/user/sync-role', [AuthController::class, 'syncRoleWithSubscription']);
     Route::post('/auth/switch-role', [AuthController::class, 'switchRole']); // ⭐ Nouveau: Changer de rôle (candidat <-> recruteur)
@@ -352,13 +357,17 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // RECRUTEUR - GESTION DE L'ENTREPRISE
     // ------------------
-    // Créer une entreprise
+    // Créer une entreprise (un user peut en créer plusieurs)
     Route::post('/companies', [CompanyController::class, 'store']);
-    // Récupérer mon entreprise
+    // Liste de toutes mes entreprises (multi-entreprises)
+    Route::get('/my-companies', [CompanyController::class, 'myCompanies']);
+    // Basculer l'entreprise active
+    Route::post('/companies/{company}/switch', [CompanyController::class, 'switchCompany']);
+    // Récupérer mon entreprise courante (current_company_id)
     Route::get('/my-company', [CompanyController::class, 'myCompany']);
-    // Secteurs niveau 3 disponibles pour mon entreprise (selon ses niveaux 2)
+    // Secteurs niveau 3 disponibles pour mon entreprise courante (selon ses niveaux 2)
     Route::get('/my-company/level3-sectors', [CompanyController::class, 'myCompanyLevel3Sectors']);
-    // Mettre à jour mon entreprise
+    // Mettre à jour mon entreprise courante
     Route::put('/my-company', [CompanyController::class, 'updateMyCompany']);
 
     // ------------------

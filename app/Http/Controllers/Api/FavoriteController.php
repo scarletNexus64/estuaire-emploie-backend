@@ -165,7 +165,7 @@ class FavoriteController extends Controller
             $favorite->delete();
 
             return response()->json([
-                'message' => 'Retiré des favoris',
+                'message' => __('favorite.removed'),
                 'is_favorite' => false,
             ]);
         }
@@ -177,7 +177,7 @@ class FavoriteController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Ajouté aux favoris',
+            'message' => __('favorite.added'),
             'is_favorite' => true,
         ]);
     }
@@ -347,7 +347,7 @@ class FavoriteController extends Controller
             $favorite->delete();
 
             return response()->json([
-                'message' => 'Retiré des favoris',
+                'message' => __('favorite.removed'),
                 'is_favorite' => false,
             ]);
         }
@@ -359,7 +359,7 @@ class FavoriteController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Ajouté aux favoris',
+            'message' => __('favorite.added'),
             'is_favorite' => true,
         ]);
     }

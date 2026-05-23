@@ -55,7 +55,7 @@ class CompanyProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des produits/services',
+                'message' => __('company_product.fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -73,17 +73,17 @@ class CompanyProductController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non authentifié',
+                    'message' => __('common.not_authenticated'),
                 ], 401);
             }
 
             // Get user's company
-            $company = $user->recruiter ? $user->recruiter->company : null;
+            $company = $user->currentCompany;
 
             if (!$company) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Aucune entreprise associée à cet utilisateur',
+                    'message' => __('company_product.no_company'),
                 ], 404);
             }
 
@@ -105,7 +105,7 @@ class CompanyProductController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation échouée',
+                    'message' => __('common.validation_failed'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -159,7 +159,7 @@ class CompanyProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'ajout des produits/services',
+                'message' => __('company_product.add_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -177,17 +177,17 @@ class CompanyProductController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non authentifié',
+                    'message' => __('common.not_authenticated'),
                 ], 401);
             }
 
             // Get user's company
-            $company = $user->recruiter ? $user->recruiter->company : null;
+            $company = $user->currentCompany;
 
             if (!$company) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Aucune entreprise associée à cet utilisateur',
+                    'message' => __('company_product.no_company'),
                 ], 404);
             }
 
@@ -209,7 +209,7 @@ class CompanyProductController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation échouée',
+                    'message' => __('common.validation_failed'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -245,13 +245,13 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Produit/service créé avec succès',
+                'message' => __('company_product.created'),
                 'data' => $product,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création du produit/service',
+                'message' => __('company_product.create_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -272,7 +272,7 @@ class CompanyProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Produit/service non trouvé',
+                'message' => __('company_product.not_found'),
             ], 404);
         }
     }
@@ -287,12 +287,12 @@ class CompanyProductController extends Controller
 
             // Check if user owns this product
             $user = Auth::user();
-            $company = $user->recruiter ? $user->recruiter->company : null;
+            $company = $user->currentCompany;
 
             if (!$company || $product->company_id !== $company->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non autorisé',
+                    'message' => __('common.unauthorized'),
                 ], 403);
             }
 
@@ -314,7 +314,7 @@ class CompanyProductController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation échouée',
+                    'message' => __('common.validation_failed'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -365,13 +365,13 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Produit/service mis à jour avec succès',
+                'message' => __('company_product.updated'),
                 'data' => $product,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la mise à jour',
+                'message' => __('company_product.update_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -387,12 +387,12 @@ class CompanyProductController extends Controller
 
             // Check if user owns this product
             $user = Auth::user();
-            $company = $user->recruiter ? $user->recruiter->company : null;
+            $company = $user->currentCompany;
 
             if (!$company || $product->company_id !== $company->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non autorisé',
+                    'message' => __('common.unauthorized'),
                 ], 403);
             }
 
@@ -407,12 +407,12 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Produit/service supprimé avec succès',
+                'message' => __('company_product.deleted'),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la suppression',
+                'message' => __('company_product.delete_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -439,7 +439,7 @@ class CompanyProductController extends Controller
             if (!$buyer) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non authentifié',
+                    'message' => __('common.not_authenticated'),
                 ], 401);
             }
 
@@ -449,7 +449,7 @@ class CompanyProductController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation échouée',
+                    'message' => __('common.validation_failed'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -460,14 +460,14 @@ class CompanyProductController extends Controller
             if ($product->billing_type !== 'fixed_price' || $product->price === null) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Ce produit/service n\'est pas disponible à l\'achat direct. Contactez l\'entreprise.',
+                    'message' => __('company_product.not_purchasable'),
                 ], 422);
             }
 
             if (!$product->is_active) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Ce produit/service n\'est plus disponible',
+                    'message' => __('company_product.not_available'),
                 ], 422);
             }
 
@@ -475,14 +475,14 @@ class CompanyProductController extends Controller
             if (!$seller) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Impossible de trouver le bénéficiaire pour cette entreprise',
+                    'message' => __('company_product.no_beneficiary'),
                 ], 422);
             }
 
             if ($seller->id === $buyer->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Vous ne pouvez pas acheter votre propre produit',
+                    'message' => __('company_product.cannot_buy_own'),
                 ], 422);
             }
 
@@ -536,7 +536,7 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Achat effectué avec succès',
+                'message' => __('company_product.purchase_success'),
                 'data' => [
                     'purchase_id' => $purchase->id,
                     'amount' => $amount,
@@ -547,7 +547,7 @@ class CompanyProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'achat',
+                'message' => __('company_product.purchase_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -565,7 +565,7 @@ class CompanyProductController extends Controller
             if (!$buyer) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non authentifié',
+                    'message' => __('common.not_authenticated'),
                 ], 401);
             }
 
@@ -575,7 +575,7 @@ class CompanyProductController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation échouée',
+                    'message' => __('common.validation_failed'),
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -586,14 +586,14 @@ class CompanyProductController extends Controller
             if (!$seller) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cette entreprise n\'a pas de contact disponible',
+                    'message' => __('company_product.no_contact'),
                 ], 422);
             }
 
             if ($seller->id === $buyer->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Vous ne pouvez pas discuter avec vous-même',
+                    'message' => __('company_product.cannot_chat_self'),
                 ], 422);
             }
 
@@ -654,7 +654,7 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Conversation ouverte',
+                'message' => __('company_product.conversation_opened'),
                 'data' => [
                     'conversation_id' => $conversation->id,
                 ],
@@ -662,7 +662,7 @@ class CompanyProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'ouverture de la conversation',
+                'message' => __('company_product.conversation_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -679,7 +679,7 @@ class CompanyProductController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non authentifié',
+                    'message' => __('common.not_authenticated'),
                 ], 401);
             }
 
@@ -692,7 +692,7 @@ class CompanyProductController extends Controller
                 && $purchase->seller_user_id !== $user->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non autorisé',
+                    'message' => __('common.unauthorized'),
                 ], 403);
             }
 
@@ -751,7 +751,7 @@ class CompanyProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la génération de la facture',
+                'message' => __('company_product.invoice_error'),
                 'error' => $e->getMessage(),
             ], 500);
         }

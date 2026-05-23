@@ -54,6 +54,27 @@ class ExamPaper extends Model
     }
 
     /**
+     * Relation : Les packs qui contiennent cette épreuve
+     */
+    public function examPacks()
+    {
+        return $this->belongsToMany(ExamPack::class, 'exam_pack_papers')
+                    ->withPivot(['display_order', 'is_preview'])
+                    ->withTimestamps();
+    }
+
+    /**
+     * Indique si cette épreuve est en aperçu (preview) dans au moins un pack.
+     * Permet l'accès en mode vitrine, avant l'activation du Mode Étudiant.
+     */
+    public function isPreviewInAnyPack(): bool
+    {
+        return $this->examPacks()
+                    ->wherePivot('is_preview', true)
+                    ->exists();
+    }
+
+    /**
      * Relation : L'épreuve dont celle-ci est le corrigé
      */
     public function subjectPaper()

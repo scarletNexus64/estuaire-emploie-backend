@@ -4,10 +4,28 @@
 @section('page-title', 'Détails du Test')
 
 @section('content')
-    <div class="mb-3">
+    <div class="mb-3" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         <a href="{{ route('admin.skill-tests.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour à la liste
+            <i class="fas fa-arrow-left"></i> Retour
         </a>
+        <a href="{{ route('admin.skill-tests.edit', $test) }}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Éditer
+        </a>
+        @unless($test->is_active)
+            <form action="{{ route('admin.skill-tests.publish', $test) }}" method="POST" style="display:inline;">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-paper-plane"></i> Publier (sans paiement)
+                </button>
+            </form>
+        @endunless
+        <form action="{{ route('admin.skill-tests.destroy', $test) }}" method="POST" style="display:inline;"
+              onsubmit="return confirm('Supprimer définitivement ce test ?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Supprimer</button>
+        </form>
     </div>
 
     <div class="row">

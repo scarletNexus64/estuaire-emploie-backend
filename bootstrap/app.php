@@ -21,11 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
+        // Locale detection for API responses (Accept-Language / ?lang / user.locale)
+        $middleware->api(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
         // Register custom middleware aliases
         $middleware->alias([
             'subscription' => \App\Http\Middleware\CheckSubscriptionLimits::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'must.change.password' => \App\Http\Middleware\MustChangePassword::class,
+            'locale' => \App\Http\Middleware\SetLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
