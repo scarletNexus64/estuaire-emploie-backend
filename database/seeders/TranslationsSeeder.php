@@ -130,6 +130,152 @@ class TranslationsSeeder extends Seeder
                 'es' => 'Servicio al Cliente',
                 'ar' => 'خدمة العملاء',
             ],
+            // -------- Catégories supplémentaires (ajoutées 2026-05-23) --------
+            'Comptabilité & Finance' => [
+                'en' => 'Accounting & Finance',
+                'es' => 'Contabilidad y Finanzas',
+                'ar' => 'المحاسبة والمالية',
+            ],
+            'Banque & Finance' => [
+                'en' => 'Banking & Finance',
+                'es' => 'Banca y Finanzas',
+                'ar' => 'البنوك والمالية',
+            ],
+            'Commerce & International' => [
+                'en' => 'International Trade',
+                'es' => 'Comercio Internacional',
+                'ar' => 'التجارة الدولية',
+            ],
+            'Marketing & Commerce' => [
+                'en' => 'Marketing & Trade',
+                'es' => 'Marketing y Comercio',
+                'ar' => 'التسويق والتجارة',
+            ],
+            'Administration & Management' => [
+                'en' => 'Administration & Management',
+                'es' => 'Administración y Gestión',
+                'ar' => 'الإدارة والتسيير',
+            ],
+            'Tourisme & Hôtellerie' => [
+                'en' => 'Tourism & Hospitality',
+                'es' => 'Turismo y Hostelería',
+                'ar' => 'السياحة والفندقة',
+            ],
+            'Communication & Médias' => [
+                'en' => 'Communication & Media',
+                'es' => 'Comunicación y Medios',
+                'ar' => 'الاتصال والإعلام',
+            ],
+            'Administration Publique' => [
+                'en' => 'Public Administration',
+                'es' => 'Administración Pública',
+                'ar' => 'الإدارة العامة',
+            ],
+            'Qualité & HSE' => [
+                'en' => 'Quality & HSE',
+                'es' => 'Calidad y HSE',
+                'ar' => 'الجودة والصحة والسلامة والبيئة',
+            ],
+            'Industrie & Technique' => [
+                'en' => 'Industry & Technical',
+                'es' => 'Industria y Técnica',
+                'ar' => 'الصناعة والتقنية',
+            ],
+            'Électrotechnique & Énergie' => [
+                'en' => 'Electrical Engineering & Energy',
+                'es' => 'Electrotecnia y Energía',
+                'ar' => 'الهندسة الكهربائية والطاقة',
+            ],
+            'Énergies Renouvelables' => [
+                'en' => 'Renewable Energy',
+                'es' => 'Energías Renovables',
+                'ar' => 'الطاقات المتجددة',
+            ],
+            'Douane & Logistique' => [
+                'en' => 'Customs & Logistics',
+                'es' => 'Aduana y Logística',
+                'ar' => 'الجمارك واللوجستيك',
+            ],
+            'Gestion de Projet' => [
+                'en' => 'Project Management',
+                'es' => 'Gestión de Proyectos',
+                'ar' => 'إدارة المشاريع',
+            ],
+            'Communication' => [
+                'en' => 'Communication',
+                'es' => 'Comunicación',
+                'ar' => 'الاتصال',
+            ],
+            'Journalisme & Médias' => [
+                'en' => 'Journalism & Media',
+                'es' => 'Periodismo y Medios',
+                'ar' => 'الصحافة والإعلام',
+            ],
+            'Marketing & Vente' => [
+                'en' => 'Marketing & Sales',
+                'es' => 'Marketing y Ventas',
+                'ar' => 'التسويق والمبيعات',
+            ],
+            'Industrie textile' => [
+                'en' => 'Textile Industry',
+                'es' => 'Industria textil',
+                'ar' => 'صناعة النسيج',
+            ],
+            'BTP' => [
+                'en' => 'Construction (BTP)',
+                'es' => 'Construcción (BTP)',
+                'ar' => 'البناء والأشغال العمومية',
+            ],
+            'Industrie & Maintenance' => [
+                'en' => 'Industry & Maintenance',
+                'es' => 'Industria y Mantenimiento',
+                'ar' => 'الصناعة والصيانة',
+            ],
+            'Froid & Climatisation' => [
+                'en' => 'Refrigeration & Air Conditioning',
+                'es' => 'Refrigeración y Climatización',
+                'ar' => 'التبريد والتكييف',
+            ],
+            'Santé & Petite Enfance' => [
+                'en' => 'Health & Early Childhood',
+                'es' => 'Salud y Primera Infancia',
+                'ar' => 'الصحة والطفولة المبكرة',
+            ],
+            'Topographie & Géomatique' => [
+                'en' => 'Topography & Geomatics',
+                'es' => 'Topografía y Geomática',
+                'ar' => 'المساحة والجيوماتيك',
+            ],
+            'Plomberie Sanitaire' => [
+                'en' => 'Sanitary Plumbing',
+                'es' => 'Fontanería Sanitaria',
+                'ar' => 'السباكة الصحية',
+            ],
+            'Chaudronnerie & Soudure' => [
+                'en' => 'Boilermaking & Welding',
+                'es' => 'Calderería y Soldadura',
+                'ar' => 'الحدادة واللحام',
+            ],
+            'Informatique & Réseaux' => [
+                'en' => 'IT & Networks',
+                'es' => 'Informática y Redes',
+                'ar' => 'تكنولوجيا المعلومات والشبكات',
+            ],
+            'Électrotechnique' => [
+                'en' => 'Electrical Engineering',
+                'es' => 'Electrotecnia',
+                'ar' => 'الهندسة الكهربائية',
+            ],
+            'Maintenance Industrielle' => [
+                'en' => 'Industrial Maintenance',
+                'es' => 'Mantenimiento Industrial',
+                'ar' => 'الصيانة الصناعية',
+            ],
+            'Tronc Commun Commerce BTS' => [
+                'en' => 'BTS Business Core Curriculum',
+                'es' => 'Tronco Común Comercio BTS',
+                'ar' => 'المنهاج المشترك للتجارة (BTS)',
+            ],
         ];
 
         $descriptions = [
@@ -217,6 +363,19 @@ class TranslationsSeeder extends Seeder
                 'en' => 'Project contract',
                 'es' => 'Contrato por proyecto',
                 'ar' => 'عقد مشروع',
+            ],
+            // -------- Contrats supplémentaires (formes longues en DB, ajoutées 2026-05-23) --------
+            'Contrat à Durée Déterminée (CDD)' => [
+                'en' => 'Fixed-Term Contract (CDD)',
+                'es' => 'Contrato de Duración Determinada (CDD)',
+                'ar' => 'عقد محدد المدة (CDD)',
+            ],
+            // NB: le nom en DB contient un typo "Durrée" (deux R) — on garde la
+            // clé exacte sinon le mapping ne matche pas.
+            'Contrat à Durrée Indéterminé (CDI)' => [
+                'en' => 'Permanent Contract (CDI)',
+                'es' => 'Contrato Indefinido (CDI)',
+                'ar' => 'عقد غير محدد المدة (CDI)',
             ],
         ];
 
