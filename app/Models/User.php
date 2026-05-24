@@ -563,11 +563,18 @@ class User extends Authenticatable
         $isCandidate = $this->role === 'candidate';
         $isRecruiter = $this->role === 'recruiter';
 
+        // 🎯 Le paywall candidat doit s'afficher dès qu'il n'y a pas
+        // d'abonnement candidat valide, peu importe le rôle principal du user
+        // (un recruteur qui consulte l'UI candidat doit aussi le voir).
+        $hasValidCandidateSub = $candidateSubscription !== null
+            && $candidateSubscription->isValid();
+        $candidatePreview = !$hasValidCandidateSub;
+
         // Si aucun abonnement pour le rôle actuel
         if (!$plan) {
             return [
                 'has_subscription' => false,
-                'is_candidate_in_preview_mode' => $isCandidate,
+                'is_candidate_in_preview_mode' => $candidatePreview,
                 'plan' => null,
                 'limits' => null,
                 'usage' => null,
@@ -580,7 +587,7 @@ class User extends Authenticatable
 
         return [
             'has_subscription' => true,
-            'is_candidate_in_preview_mode' => $isCandidate && $this->isCandidateInPreviewMode(),
+            'is_candidate_in_preview_mode' => $candidatePreview,
             'plan' => [
                 'id' => $plan->id,
                 'name' => $plan->name,

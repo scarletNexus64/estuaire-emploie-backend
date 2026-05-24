@@ -50,6 +50,22 @@ class CheckSubscriptionLimits
         // Filtrer par le rôle actif de l'utilisateur
         $subscription = $user->activeSubscription($user->role);
 
+        // 🎁 Tolérance "première offre gratuite" :
+        // - 'can_post_job' : laisser passer si aucun job déjà publié
+        // - 'valid' : laisser passer tant que le recruteur reste dans la
+        //   limite gratuite (1 job), pour qu'il puisse consulter ses jobs,
+        //   ses candidatures, mettre à jour son offre, etc.
+        if (!$subscription && in_array($check, ['can_post_job', 'valid'], true)) {
+            $postedCount = $user->postedJobs()->count();
+            $freeQuota = 1;
+            if ($check === 'can_post_job' && $postedCount < $freeQuota) {
+                return $next($request);
+            }
+            if ($check === 'valid' && $postedCount <= $freeQuota) {
+                return $next($request);
+            }
+        }
+
         if (!$subscription) {
             return response()->json([
                 'success' => false,
