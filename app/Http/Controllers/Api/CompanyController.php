@@ -176,6 +176,25 @@ class CompanyController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            // 🎁 Quota gratuit : un user peut créer 1 seule entreprise sans
+            // abonnement recruteur actif. Au-delà, abonnement requis.
+            $existingCompaniesCount = Recruiter::where('user_id', auth()->id())->count();
+            if ($existingCompaniesCount >= 1) {
+                $authUser = auth()->user();
+                $activeSub = $authUser?->activeSubscription('recruiter');
+                if (!$activeSub || $activeSub->isExpired()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Un abonnement recruteur actif est requis pour créer plusieurs entreprises.',
+                        'error_code' => 'COMPANY_LIMIT_REACHED',
+                        'limit' => 1,
+                        'used' => $existingCompaniesCount,
+                        'upgrade_required' => true,
+                        'redirect_to' => '/subscription-plans',
+                    ], 403);
+                }
+            }
+
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255|unique:companies,email',

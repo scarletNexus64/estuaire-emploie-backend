@@ -86,6 +86,24 @@ class QuickServiceController extends Controller
             ], 403);
         }
 
+        // 🎁 Quota gratuit : 1 seul service rapide sans abonnement actif.
+        $existingCount = QuickService::where('user_id', auth()->id())->count();
+        if ($existingCount >= 1) {
+            $authUser = auth()->user();
+            $activeSub = $authUser?->activeSubscription('recruiter');
+            if (!$activeSub || $activeSub->isExpired()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Un abonnement recruteur actif est requis pour publier plusieurs services rapides.',
+                    'error_code' => 'QUICK_SERVICE_LIMIT_REACHED',
+                    'limit' => 1,
+                    'used' => $existingCount,
+                    'upgrade_required' => true,
+                    'redirect_to' => '/subscription-plans',
+                ], 403);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'service_category_id' => 'required|exists:service_categories,id',
             'title' => 'required|string|max:255',
