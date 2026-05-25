@@ -18,4 +18,9 @@ return [
         'api_url' => env('INSAMTECHS_API_URL', 'http://127.0.0.1:8001/api'),
     ],
 
+    'baileys' => [
+        'url'    => env('BAILEYS_URL', 'http://localhost:3001'),
+        'secret' => env('BAILEYS_SECRET', ''),
+    ],
+
 ];

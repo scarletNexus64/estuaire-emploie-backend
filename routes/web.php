@@ -369,6 +369,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{user}/create-cv', [\App\Http\Controllers\Admin\StudentController::class, 'showCreateCV'])->name('create-cv');
         Route::post('/{user}/store-cv', [\App\Http\Controllers\Admin\StudentController::class, 'storeCV'])->name('store-cv');
         Route::post('/{user}/send-sms', [\App\Http\Controllers\Admin\StudentController::class, 'sendSMS'])->name('send-sms');
+        Route::post('/{user}/send-whatsapp', [\App\Http\Controllers\Admin\StudentController::class, 'sendWhatsApp'])->name('send-whatsapp');
         Route::get('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');
         Route::put('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('update');

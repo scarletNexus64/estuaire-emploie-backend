@@ -104,40 +104,53 @@
         </div>
         @endif
 
-        <!-- SMS Form -->
+        <!-- Envoi des identifiants -->
         <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1.5rem; margin-top: 2rem;">
-            <h4 style="margin-bottom: 1rem;">📲 Dernière étape : Envoyer les Identifiants par SMS</h4>
+            <h4 style="margin-bottom: 1rem;">Derniere etape : Envoyer les Identifiants</h4>
             <p style="margin-bottom: 1rem;">
-                Un SMS contenant les informations de connexion (email, mot de passe) sera envoyé au numéro <strong>{{ $user->phone }}</strong>.
+                Les informations de connexion (email, mot de passe) seront envoyees au numero <strong>{{ $user->phone }}</strong>.
             </p>
-            <p style="margin-bottom: 1rem; color: #856404;">
-                ⚠️ <strong>Important :</strong> Le SMS permettra à l'étudiant de se connecter à la plateforme et d'accéder à son CV.
+            <p style="margin-bottom: 1.25rem; color: #856404;">
+                <strong>Important :</strong> Vous pouvez envoyer par SMS, par WhatsApp, ou les deux.
             </p>
 
-            <form action="{{ route('admin.students.send-sms', $user->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir envoyer le SMS à {{ $user->phone }} ?');">
-                @csrf
-                <input type="hidden" name="password" value="{{ $password }}">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
 
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                {{-- Bouton SMS --}}
+                <form action="{{ route('admin.students.send-sms', $user->id) }}" method="POST"
+                      onsubmit="return confirm('Envoyer le SMS a {{ $user->phone }} ?');">
+                    @csrf
+                    <input type="hidden" name="password" value="{{ $password }}">
                     <button type="submit" class="btn btn-primary btn-lg">
-                        📤 Envoyer le SMS maintenant
+                        Envoyer par SMS
                     </button>
-                    <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-lg">
-                        ⏭️ Terminer sans envoyer
+                </form>
+
+                {{-- Bouton WhatsApp --}}
+                <form action="{{ route('admin.students.send-whatsapp', $user->id) }}" method="POST"
+                      onsubmit="return confirm('Envoyer le message WhatsApp a {{ $user->phone }} ?');">
+                    @csrf
+                    <input type="hidden" name="password" value="{{ $password }}">
+                    <button type="submit" class="btn btn-lg" style="background-color: #25D366; border-color: #1da851; color: white;">
+                        Envoyer par WhatsApp
+                    </button>
+                </form>
+
+                <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-lg">
+                    Terminer sans envoyer
+                </a>
+                <a href="{{ route('admin.students.show', $user->id) }}" class="btn btn-info btn-lg">
+                    Voir le Profil
+                </a>
+                @if(isset($resume) && $resume->pdf_path)
+                    <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success btn-lg">
+                        Voir le CV
                     </a>
-                    <a href="{{ route('admin.students.show', $user->id) }}" class="btn btn-info btn-lg">
-                        👁️ Voir le Profil
+                    <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning btn-lg">
+                        Modifier le CV
                     </a>
-                    @if(isset($resume) && $resume->pdf_path)
-                        <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success btn-lg">
-                            📄 Voir le CV
-                        </a>
-                        <a href="{{ route('admin.students.create-cv', $user->id) }}" class="btn btn-warning btn-lg">
-                            ✏️ Modifier le CV
-                        </a>
-                    @endif
-                </div>
-            </form>
+                @endif
+            </div>
         </div>
     </div>
 </div>
