@@ -68,19 +68,107 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Localisation *</label>
-                <select name="location_id" class="form-control" required>
-                    <option value="">Sélectionner une localisation</option>
+                <label class="form-label">Localisation * (sélection multiple)</label>
+                <div id="location-selector" style="border: 1px solid #ddd; border-radius: 4px; padding: 12px; max-height: 200px; overflow-y: auto; background: #fff;">
                     @foreach($locations as $location)
-                        <option value="{{ $location->id }}" {{ old('location_id') == $location->id ? 'selected' : '' }}>
-                            {{ $location->name }}
-                        </option>
+                        <div style="display: flex; align-items: center; padding: 6px 8px; margin-bottom: 4px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" class="location-item" data-location-id="{{ $location->id }}">
+                            <input
+                                type="checkbox"
+                                name="location_ids[]"
+                                value="{{ $location->id }}"
+                                id="location_{{ $location->id }}"
+                                {{ in_array($location->id, old('location_ids', [])) ? 'checked' : '' }}
+                                style="cursor: pointer; width: 18px; height: 18px; margin-right: 10px;"
+                            >
+                            <label for="location_{{ $location->id }}" style="cursor: pointer; margin: 0; flex: 1; user-select: none;">
+                                {{ $location->name }}
+                            </label>
+                        </div>
                     @endforeach
-                </select>
-                @error('location_id')
-                    <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+                </div>
+                <div id="selected-count" style="margin-top: 8px; font-size: 0.875rem; color: #666;">
+                    <span id="count-text">Aucune ville sélectionnée</span>
+                </div>
+                @error('location_ids')
+                    <small style="color: var(--danger); font-size: 0.875rem; display: block; margin-top: 4px;">{{ $message }}</small>
+                @enderror
+                @error('location_ids.*')
+                    <small style="color: var(--danger); font-size: 0.875rem; display: block; margin-top: 4px;">{{ $message }}</small>
                 @enderror
             </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const locationItems = document.querySelectorAll('.location-item');
+                    const countText = document.getElementById('count-text');
+
+                    function updateSelectedCount() {
+                        const checked = document.querySelectorAll('input[name="location_ids[]"]:checked').length;
+                        if (checked === 0) {
+                            countText.textContent = 'Aucune ville sélectionnée';
+                            countText.style.color = '#dc3545';
+                        } else if (checked === 1) {
+                            countText.textContent = '1 ville sélectionnée';
+                            countText.style.color = '#28a745';
+                        } else {
+                            countText.textContent = checked + ' villes sélectionnées';
+                            countText.style.color = '#28a745';
+                        }
+                    }
+
+                    locationItems.forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+
+                        // Highlight au survol
+                        item.addEventListener('mouseenter', function() {
+                            if (!checkbox.checked) {
+                                item.style.background = '#f8f9fa';
+                            }
+                        });
+
+                        item.addEventListener('mouseleave', function() {
+                            if (!checkbox.checked) {
+                                item.style.background = 'transparent';
+                            }
+                        });
+
+                        // Click sur l'item entier
+                        item.addEventListener('click', function(e) {
+                            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                                checkbox.checked = !checkbox.checked;
+                                updateSelectedState(item, checkbox);
+                                updateSelectedCount();
+                            }
+                        });
+
+                        // Change du checkbox
+                        checkbox.addEventListener('change', function() {
+                            updateSelectedState(item, checkbox);
+                            updateSelectedCount();
+                        });
+
+                        // Init state
+                        if (checkbox.checked) {
+                            updateSelectedState(item, checkbox);
+                        }
+                    });
+
+                    function updateSelectedState(item, checkbox) {
+                        if (checkbox.checked) {
+                            item.style.background = '#e7f3ff';
+                            item.style.borderLeft = '3px solid #0066cc';
+                            item.style.paddingLeft = '5px';
+                        } else {
+                            item.style.background = 'transparent';
+                            item.style.borderLeft = 'none';
+                            item.style.paddingLeft = '8px';
+                        }
+                    }
+
+                    // Initial count
+                    updateSelectedCount();
+                });
+            </script>
 
             <div class="form-group">
                 <label class="form-label">Type de contrat *</label>

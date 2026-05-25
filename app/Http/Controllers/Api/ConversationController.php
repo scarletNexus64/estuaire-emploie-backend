@@ -150,8 +150,13 @@ class ConversationController extends Controller
         \Log::info('📋 Loading conversations for user', ['user_id' => $userId]);
 
         $conversations = Conversation::query()
-            ->whereHas('application', function ($q) {
-                $q->where('status', 'accepted');
+            // Inclure à la fois les conversations d'application ET les conversations de service
+            ->where(function ($query) {
+                $query->whereHas('application', function ($q) {
+                    $q->where('status', 'accepted');
+                })
+                // OU les conversations de service (sans application)
+                ->orWhereNull('application_id');
             })
             ->where(function ($q) use ($userId) {
                 $q->where('user_one', $userId)
@@ -220,6 +225,111 @@ class ConversationController extends Controller
         ]);
 
         return response()->json($conversations, 200);
+    }
+
+    /**
+     * Créer ou récupérer une conversation avec un prestataire de service
+     * Cette méthode permet de démarrer une conversation sans lien avec une application
+     */
+    public function getOrCreateServiceConversation(Request $request)
+    {
+        \Log::info('💬 Getting or creating service conversation', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
+        ]);
+
+        $validated = $request->validate([
+            'provider_id' => 'required|exists:users,id|different:' . Auth::id(),
+            'service_id' => 'nullable|exists:quick_services,id', // Optionnel pour traçabilité
+            'initial_message' => 'nullable|string|max:1000',
+        ]);
+
+        $currentUserId = Auth::id();
+        $providerId = $validated['provider_id'];
+
+        // Vérifier si une conversation existe déjà entre ces deux utilisateurs
+        // (indépendamment de l'application_id qui sera NULL pour les services)
+        $existingConversation = Conversation::where('application_id', null)
+            ->where(function ($q) use ($currentUserId, $providerId) {
+                $q->where(function ($query) use ($currentUserId, $providerId) {
+                    $query->where('user_one', $currentUserId)
+                        ->where('user_two', $providerId);
+                })->orWhere(function ($query) use ($currentUserId, $providerId) {
+                    $query->where('user_one', $providerId)
+                        ->where('user_two', $currentUserId);
+                });
+            })
+            ->first();
+
+        if ($existingConversation) {
+            \Log::info('💬 Service conversation already exists', [
+                'conversation_id' => $existingConversation->id
+            ]);
+
+            // Si un message initial est fourni, l'envoyer
+            if (!empty($validated['initial_message'])) {
+                // Vérifier si la conversation est vide (aucun message)
+                $hasMessages = Message::where('conversation_id', $existingConversation->id)->exists();
+
+                if (!$hasMessages) {
+                    $message = Message::create([
+                        'conversation_id' => $existingConversation->id,
+                        'sender_id' => $currentUserId,
+                        'message' => $validated['initial_message'],
+                        'status' => 'sent',
+                    ]);
+
+                    \Log::info('💬 Initial message sent to existing conversation', [
+                        'message_id' => $message->id,
+                    ]);
+
+                    // Broadcaster le message
+                    broadcast(new \App\Events\MessageSent($message))->toOthers();
+                }
+            }
+
+            return response()->json([
+                'conversation_id' => $existingConversation->id,
+                'message' => 'Service conversation already exists',
+            ], 200);
+        }
+
+        // Créer une nouvelle conversation
+        $conversation = Conversation::create([
+            'application_id' => null, // Pas liée à une application
+            'user_one' => $currentUserId,
+            'user_two' => $providerId,
+            'service_id' => $validated['service_id'] ?? null, // Pour traçabilité
+        ]);
+
+        \Log::info('💬 ✅ Service conversation created successfully', [
+            'conversation_id' => $conversation->id,
+            'user_one' => $currentUserId,
+            'user_two' => $providerId,
+            'service_id' => $validated['service_id'] ?? null,
+        ]);
+
+        // Envoyer le message initial si fourni
+        if (!empty($validated['initial_message'])) {
+            $message = Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => $currentUserId,
+                'message' => $validated['initial_message'],
+                'status' => 'sent',
+            ]);
+
+            \Log::info('💬 Initial message sent', [
+                'message_id' => $message->id,
+            ]);
+
+            // Broadcaster le message
+            broadcast(new \App\Events\MessageSent($message))->toOthers();
+        }
+
+        return response()->json([
+            'conversation_id' => $conversation->id,
+            'message' => 'Service conversation created successfully',
+        ], 201);
     }
 
 }

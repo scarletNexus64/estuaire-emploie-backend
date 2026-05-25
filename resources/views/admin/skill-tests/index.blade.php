@@ -71,7 +71,7 @@
                                             {{ $test->title }}
                                         </a>
                                     </td>
-                                    <td>{{ $test->company->name }}</td>
+                                    <td>{{ $test->company?->name ?? 'Entreprise supprimée' }}</td>
                                     <td>{{ $test->job?->title ?? 'Non lié' }}</td>
                                     <td>{{ count($test->questions) }}</td>
                                     <td>{{ $test->passing_score }}%</td>

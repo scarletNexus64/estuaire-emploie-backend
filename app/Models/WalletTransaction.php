@@ -52,6 +52,7 @@ class WalletTransaction extends Model
         'metadata',
         'status',
         'admin_id',
+        'provider', // freemopay, paypal
     ];
 
     protected function casts(): array

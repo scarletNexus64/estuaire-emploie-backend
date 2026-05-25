@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AdminRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Enum;
 use Illuminate\View\View;
 
 class AdminManagementController extends Controller
@@ -32,12 +34,25 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->whereNull('deleted_at')
+            ],
             'password' => 'required|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
+            'admin_role' => ['required', new Enum(AdminRole::class)],
             'permissions' => 'nullable|array',
             'is_super_admin' => 'nullable|boolean',
         ]);
+
+        // Get the admin role enum
+        $adminRole = AdminRole::from($validated['admin_role']);
+
+        // Merge role-based permissions with custom permissions
+        $rolePermissions = $adminRole->permissions();
+        $customPermissions = $validated['permissions'] ?? [];
+        $allPermissions = array_unique(array_merge($rolePermissions, $customPermissions));
 
         $data = [
             'name' => $validated['name'],
@@ -45,7 +60,8 @@ class AdminManagementController extends Controller
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
             'role' => 'admin',
-            'permissions' => $validated['permissions'] ?? [],
+            'admin_role' => $validated['admin_role'],
+            'permissions' => $allPermissions,
             'is_active' => true,
         ];
 
@@ -54,6 +70,11 @@ class AdminManagementController extends Controller
             $data['is_super_admin'] = (bool) $request->input('is_super_admin');
         } else {
             $data['is_super_admin'] = false;
+        }
+
+        // If role is super_admin, set is_super_admin to true
+        if ($adminRole === AdminRole::SUPER_ADMIN) {
+            $data['is_super_admin'] = true;
         }
 
         $user = User::create($data);
@@ -80,25 +101,44 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at')
+            ],
             'password' => 'nullable|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
+            'admin_role' => ['required', new Enum(AdminRole::class)],
             'permissions' => 'nullable|array',
             'is_active' => 'boolean',
             'is_super_admin' => 'nullable|boolean',
         ]);
 
+        // Get the admin role enum
+        $adminRole = AdminRole::from($validated['admin_role']);
+
+        // Merge role-based permissions with custom permissions
+        $rolePermissions = $adminRole->permissions();
+        $customPermissions = $validated['permissions'] ?? [];
+        $allPermissions = array_unique(array_merge($rolePermissions, $customPermissions));
+
         $data = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
-            'permissions' => $validated['permissions'] ?? [],
+            'admin_role' => $validated['admin_role'],
+            'permissions' => $allPermissions,
             'is_active' => $request->has('is_active'),
         ];
 
         // Only super admins can modify super admin status
         if (auth()->user()->isSuperAdmin()) {
             $data['is_super_admin'] = (bool) $request->input('is_super_admin', false);
+        }
+
+        // If role is super_admin, set is_super_admin to true
+        if ($adminRole === AdminRole::SUPER_ADMIN) {
+            $data['is_super_admin'] = true;
         }
 
         if (!empty($validated['password'])) {

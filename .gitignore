@@ -1,3 +1,11 @@
+database/data/epreuves_classees/
+storage/app/public/exam_papers/
+
+bootstrap/cache/*.php
+storage/framework/views/*
+storage/framework/cache/*
+storage/framework/sessions/*
+
 /vendor/
 node_modules/
 npm-debug.log
@@ -35,3 +43,6 @@ database/database.sqlite
 /.vscode
 firebase/estuaire-emplois-firebase-adminsdk-fbsvc-6c0d8105ad.json
 /storage/logs/*.log
+
+CLAUDE.md
+.claude/

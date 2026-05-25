@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Api\RecruiterServicePurchaseController;
 use App\Http\Controllers\Api\RecruiterSkillTestController;
 use App\Http\Controllers\Api\CandidatePremiumServiceController;
 use App\Http\Controllers\Api\ExamPaperApiController;
+use App\Http\Controllers\Api\QuickServiceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
@@ -34,14 +36,20 @@ use App\Services\FirebaseNotificationService;
 // ============================================
 
 // Authentification
+Route::post('/check-availability', [AuthController::class, 'checkAvailability']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+Route::post('/password/force-change', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
 
-// Vérification email (OTP)
+// Vérification email (OTP legacy)
 Route::post('/email/send-code', [EmailVerificationController::class, 'sendCode']);
 Route::post('/email/verify-code', [EmailVerificationController::class, 'verifyCode']);
+
+// OTP unifié inscription (SMS ou Email)
+Route::post('/otp/send', [OtpController::class, 'sendOtp']);
+Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
 
 // Maintenance Mode Status
 Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeController::class, 'status']);
@@ -53,6 +61,7 @@ Route::get('/jobs/{job}', [JobController::class, 'show']);
 
 // Entreprises publiques
 Route::get('/companies', [CompanyController::class, 'index']);
+Route::get('/companies/nearby', [CompanyController::class, 'getNearbyCompanies']); // Récupérer les entreprises à proximité par GPS
 Route::get('/companies/{company}', [CompanyController::class, 'show']);
 
 // Catégories et filtres (données de référence)
@@ -69,10 +78,16 @@ Route::get('/advertisements', [AdvertisementController::class, 'index']);
 Route::post('/advertisements/{id}/impression', [AdvertisementController::class, 'recordImpression']);
 Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'recordClick']);
 
+// Catégories de services rapides (publique)
+Route::get('/service-categories', [QuickServiceController::class, 'categories']);
+
+// Streaming vidéo optimisé (authentification optionnelle, gère les Range requests)
+Route::get('/video-stream/{videoId}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'streamVideoPublic']);
+
 // ============================================
 // ROUTES PROTÉGÉES (Nécessitent authentification)
 // ============================================
-Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, 'must.change.password'])->group(function () {
 
     // ------------------
     // AUTHENTIFICATION & PROFIL
@@ -106,9 +121,16 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // ------------------
     // FAVORIS (Candidat)
     // ------------------
+    // Favoris - Jobs
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/jobs/{job}/favorite', [FavoriteController::class, 'toggle']);
     Route::get('/jobs/{job}/is-favorite', [FavoriteController::class, 'isFavorite']);
+
+    // Favoris - Services Rapides
+    Route::get('/quick-services/favorites', [FavoriteController::class, 'getFavoriteQuickServices']);
+    Route::post('/quick-services/{service}/favorite', [FavoriteController::class, 'toggleQuickServiceFavorite']);
+    Route::get('/quick-services/{service}/is-favorite', [FavoriteController::class, 'isQuickServiceFavorite']);
+
     Route::get('/jobs/{job}/has-applied', [JobController::class, 'hasApplied']);
 
     // ------------------
@@ -185,20 +207,70 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/candidate/premium-services/check-access/{slug}', [CandidatePremiumServiceController::class, 'checkAccess']);
 
     // ------------------
-    // MODE ÉTUDIANT - ÉPREUVES D'EXAMEN (Réservé aux étudiants)
+    // MODE ÉTUDIANT - ÉPREUVES INDIVIDUELLES (Gratuites avec Mode Étudiant)
     // ------------------
-    // Liste des épreuves disponibles (filtres: specialty, subject, level, is_correction, year, search)
-    Route::get('/exam-papers', [ExamPaperApiController::class, 'index']);
+    // Liste des épreuves disponibles (requiert Mode Étudiant)
+    Route::get('/exam-papers', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'index']);
     // Filtres disponibles (spécialités, matières, niveaux, années)
-    Route::get('/exam-papers/filters', [ExamPaperApiController::class, 'filters']);
+    Route::get('/exam-papers/filters', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'filters']);
     // Statistiques des épreuves
-    Route::get('/exam-papers/stats', [ExamPaperApiController::class, 'stats']);
+    Route::get('/exam-papers/stats', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'stats']);
     // Détails d'une épreuve
-    Route::get('/exam-papers/{id}', [ExamPaperApiController::class, 'show']);
-    // Visualiser le PDF (retourne l'URL)
-    Route::get('/exam-papers/{id}/view', [ExamPaperApiController::class, 'viewPdf']);
-    // Télécharger le PDF
-    Route::get('/exam-papers/{id}/download', [ExamPaperApiController::class, 'download']);
+    Route::get('/exam-papers/{id}', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'show']);
+    // Télécharger une épreuve
+    Route::get('/exam-papers/{id}/download', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'download']);
+    // Obtenir l'URL pour visualiser le PDF
+    Route::get('/exam-papers/{id}/view', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'viewPdf']);
+
+    // ------------------
+    // MODE ÉTUDIANT - PACKS D'ÉPREUVES (Payants)
+    // ------------------
+    // Liste des packs d'épreuves disponibles
+    Route::get('/exam-packs', [\App\Http\Controllers\Api\ExamPackApiController::class, 'index']);
+    // Filtres disponibles (spécialités, années, types d'examen)
+    Route::get('/exam-packs/filters', [\App\Http\Controllers\Api\ExamPackApiController::class, 'filters']);
+    // Détails d'un pack d'épreuves
+    Route::get('/exam-packs/{id}', [\App\Http\Controllers\Api\ExamPackApiController::class, 'show']);
+    // Acheter un pack d'épreuves
+    Route::post('/exam-packs/{id}/purchase', [\App\Http\Controllers\Api\ExamPackApiController::class, 'purchase']);
+    // Mes packs d'épreuves achetés
+    Route::get('/my-exam-packs', [\App\Http\Controllers\Api\ExamPackApiController::class, 'myPurchases']);
+    // Vérifier l'accès à un pack d'épreuves
+    Route::get('/exam-packs/{id}/check-access', [\App\Http\Controllers\Api\ExamPackApiController::class, 'checkAccess']);
+
+    // ------------------
+    // MODE ÉTUDIANT - PACKS DE FORMATION (Vidéos payantes)
+    // ------------------
+    // Liste des packs de formation disponibles
+    Route::get('/training-packs', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'index']);
+    // Filtres disponibles (catégories, niveaux)
+    Route::get('/training-packs/filters', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'filters']);
+    // Détails d'un pack de formation
+    Route::get('/training-packs/{id}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'show']);
+    // Acheter un pack de formation
+    Route::post('/training-packs/{id}/purchase', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'purchase']);
+    // Mes packs de formation achetés
+    Route::get('/my-training-packs', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'myPurchases']);
+    // Vérifier l'accès à un pack de formation
+    Route::get('/training-packs/{id}/check-access', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'checkAccess']);
+    // Voir une vidéo de formation
+    Route::get('/training-packs/{packId}/videos/{videoId}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'viewVideo']);
+    // Streamer une vidéo de formation (optimisé pour mobile) - depuis un pack
+    Route::get('/training-packs/{packId}/videos/{videoId}/stream', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'streamVideo']);
+    // Marquer une vidéo comme terminée
+    Route::post('/training-packs/{packId}/videos/{videoId}/complete', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'markVideoCompleted']);
+
+    // ------------------
+    // FORMATIONS INSAMTECHS (Tarification & Achat)
+    // ------------------
+    // Récupérer les prix des formations InsamTechs
+    Route::get('/insamtechs-formations/pricing', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'pricing']);
+    // Mes achats de formations InsamTechs
+    Route::get('/my-insamtechs-formations', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'myPurchases']);
+    // Acheter une formation InsamTechs
+    Route::post('/insamtechs-formations/{formationId}/purchase', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'purchase']);
+    // Vérifier l'accès à une formation
+    Route::get('/insamtechs-formations/{formationId}/check-access', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'checkAccess']);
 
     // ------------------
     // RECRUTEUR - TESTS DE COMPÉTENCES (CRUD)
@@ -287,6 +359,20 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::post('/wallet/pay', [WalletController::class, 'pay']);
 
     // ------------------
+    // RETRAITS WALLET
+    // ------------------
+    // Obtenir les soldes disponibles pour retrait (FreeMoPay et PayPal)
+    Route::get('/wallet/withdrawal-balances', [WalletController::class, 'getWithdrawalBalances']);
+    // Initier un retrait FreeMoPay
+    Route::post('/wallet/withdraw/freemopay', [WalletController::class, 'initiateFreeMoPayWithdrawal']);
+    // Initier un retrait PayPal Payout
+    Route::post('/wallet/withdraw/paypal', [WalletController::class, 'initiatePayPalWithdrawal']);
+    // Vérifier le statut d'un retrait
+    Route::get('/wallet/withdrawal-status/{withdrawalId}', [WalletController::class, 'checkWithdrawalStatus']);
+    // Historique des retraits
+    Route::get('/wallet/withdrawals', [WalletController::class, 'getWithdrawalHistory']);
+
+    // ------------------
     // DEVISES & CONVERSIONS
     // ------------------
     // Liste des devises disponibles (XAF, USD, EUR)
@@ -321,6 +407,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     // Créer une nouvelle conversation (vérifie la limite de contacts du recruteur)
     Route::post('/conversations', [ConversationController::class, 'store'])
         ->middleware('subscription:can_contact');
+    // Créer ou récupérer une conversation de service (sans limitation)
+    Route::post('/conversations/service', [ConversationController::class, 'getOrCreateServiceConversation']);
     // Récupérer les messages d'une conversation
     Route::get('/conversations/{conversationId}/messages', [ChatController::class, 'getMessages']);
     // Envoyer un message
@@ -354,6 +442,30 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/portfolio/by-slug/{slug}', [PortfolioController::class, 'showBySlug']);
 
     // ------------------
+    // CVS / RESUMES (Candidat)
+    // ------------------
+    // Liste des templates disponibles
+    Route::get('/resumes/templates', [\App\Http\Controllers\Api\ResumeController::class, 'templates']);
+    // Récupérer tous mes CVs
+    Route::get('/resumes', [\App\Http\Controllers\Api\ResumeController::class, 'index']);
+    // Récupérer mon CV par défaut
+    Route::get('/resumes/default', [\App\Http\Controllers\Api\ResumeController::class, 'getDefault']);
+    // Créer un nouveau CV
+    Route::post('/resumes', [\App\Http\Controllers\Api\ResumeController::class, 'store']);
+    // Afficher un CV spécifique
+    Route::get('/resumes/{id}', [\App\Http\Controllers\Api\ResumeController::class, 'show']);
+    // Mettre à jour un CV
+    Route::put('/resumes/{id}', [\App\Http\Controllers\Api\ResumeController::class, 'update']);
+    // Supprimer un CV
+    Route::delete('/resumes/{id}', [\App\Http\Controllers\Api\ResumeController::class, 'destroy']);
+    // Générer le PDF d'un CV
+    Route::post('/resumes/{id}/generate-pdf', [\App\Http\Controllers\Api\ResumeController::class, 'generatePdf']);
+    // Définir un CV comme CV par défaut
+    Route::post('/resumes/{id}/set-default', [\App\Http\Controllers\Api\ResumeController::class, 'setDefault']);
+    // Dupliquer un CV
+    Route::post('/resumes/{id}/duplicate', [\App\Http\Controllers\Api\ResumeController::class, 'duplicate']);
+
+    // ------------------
     // PROGRAMMES (Candidat C2 OR / C3 DIAMANT)
     // ------------------
     // Liste des programmes avec informations d'accès
@@ -364,37 +476,36 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class])-
     Route::get('/programs/{program}', [ProgramController::class, 'show']);
 
     // ------------------
+    // SERVICES RAPIDES / PETITS JOBS
+    // ------------------
+    // Liste des catégories de services
+    Route::get('/quick-services/categories', [QuickServiceController::class, 'categories']);
+    // Liste des services rapides avec filtres
+    Route::get('/quick-services', [QuickServiceController::class, 'index']);
+    // Créer un service rapide
+    Route::post('/quick-services', [QuickServiceController::class, 'store']);
+    // Détails d'un service
+    Route::get('/quick-services/{id}', [QuickServiceController::class, 'show']);
+    // Mettre à jour un service (propriétaire uniquement)
+    Route::put('/quick-services/{id}', [QuickServiceController::class, 'update']);
+    // Supprimer un service (propriétaire uniquement)
+    Route::delete('/quick-services/{id}', [QuickServiceController::class, 'destroy']);
+    // Répondre à un service
+    Route::post('/quick-services/{id}/respond', [QuickServiceController::class, 'respond']);
+    // Accepter une réponse (propriétaire du service uniquement)
+    Route::post('/quick-services/{serviceId}/responses/{responseId}/accept', [QuickServiceController::class, 'acceptResponse']);
+    // Rejeter une réponse (propriétaire du service uniquement)
+    Route::post('/quick-services/{serviceId}/responses/{responseId}/reject', [QuickServiceController::class, 'rejectResponse']);
+    // Mes services postés
+    Route::get('/my-quick-services', [QuickServiceController::class, 'myServices']);
+    // Mes réponses aux services
+    Route::get('/my-service-responses', [QuickServiceController::class, 'myResponses']);
+
+    // ------------------
     // BROADCASTING AUTH (WebSocket Authentication)
     // ------------------
     Route::post('/broadcasting/auth', function () {
-        \Log::info('🔐 ========== BROADCASTING AUTH REQUEST ==========', [
-            'user_id' => Auth::id(),
-            'socket_id' => request()->input('socket_id'),
-            'channel_name' => request()->input('channel_name'),
-            'request_all' => request()->all(),
-            'headers' => request()->headers->all(),
-        ]);
-
-        try {
-            $result = Broadcast::auth(request());
-
-            \Log::info('🔐 ========== BROADCASTING AUTH SUCCESS ==========', [
-                'user_id' => Auth::id(),
-                'channel_name' => request()->input('channel_name'),
-                'response' => $result,
-            ]);
-
-            return $result;
-        } catch (\Exception $e) {
-            \Log::error('🔐 ========== BROADCASTING AUTH FAILED ==========', [
-                'user_id' => Auth::id(),
-                'channel_name' => request()->input('channel_name'),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return Broadcast::auth(request());
     });
 });
 

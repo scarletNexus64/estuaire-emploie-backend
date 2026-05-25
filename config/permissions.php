@@ -124,13 +124,6 @@ return [
             'category' => 'Monétisation',
         ],
 
-        // Statistiques financières
-        'view_financial_stats' => [
-            'name' => 'Voir les statistiques financières',
-            'description' => 'Accéder aux rapports et statistiques financières',
-            'category' => 'Monétisation',
-        ],
-
         // Configuration des services API
         'manage_service_config' => [
             'name' => 'Configurer les services API',

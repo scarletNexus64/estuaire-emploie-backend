@@ -17,7 +17,7 @@ class RecruiterServicePurchaseService
     /**
      * Purchase a candidate contact access
      */
-    public function purchaseCandidateContact(User $user, Company $company, Application $application): array
+    public function purchaseCandidateContact(User $user, Company $company, Application $application, string $paymentProvider = 'freemopay'): array
     {
         $service = AddonServiceConfig::where('service_type', 'candidate_contact')
             ->where('is_active', true)
@@ -36,7 +36,7 @@ class RecruiterServicePurchaseService
             ];
         }
 
-        return $this->processPurchase($user, $company, $service, [
+        return $this->processPurchase($user, $company, $service, $paymentProvider, [
             'related_user_id' => $application->user_id,
             'related_job_id' => $application->job_id,
         ]);
@@ -45,7 +45,7 @@ class RecruiterServicePurchaseService
     /**
      * Purchase diploma verification
      */
-    public function purchaseDiplomaVerification(User $user, Company $company, Application $application): array
+    public function purchaseDiplomaVerification(User $user, Company $company, Application $application, string $paymentProvider = 'freemopay'): array
     {
         $service = AddonServiceConfig::where('service_type', 'diploma_verification')
             ->where('is_active', true)
@@ -64,7 +64,7 @@ class RecruiterServicePurchaseService
             ];
         }
 
-        $result = $this->processPurchase($user, $company, $service, [
+        $result = $this->processPurchase($user, $company, $service, $paymentProvider, [
             'related_user_id' => $application->user_id,
             'related_job_id' => $application->job_id,
         ]);
@@ -120,41 +120,48 @@ class RecruiterServicePurchaseService
     /**
      * Purchase skills test access (ability to create tests)
      */
-    public function purchaseSkillsTest(User $user, Company $company): array
+    public function purchaseSkillsTest(User $user, Company $company, string $paymentProvider = 'freemopay'): array
     {
         $service = AddonServiceConfig::where('service_type', 'skills_test')
             ->where('is_active', true)
             ->firstOrFail();
 
-        return $this->processPurchase($user, $company, $service);
+        return $this->processPurchase($user, $company, $service, $paymentProvider);
     }
 
     /**
      * Process the purchase using wallet
      */
-    protected function processPurchase(User $user, Company $company, AddonServiceConfig $service, array $additionalData = []): array
+    protected function processPurchase(User $user, Company $company, AddonServiceConfig $service, string $paymentProvider = 'freemopay', array $additionalData = []): array
     {
         try {
             DB::beginTransaction();
 
+            // Déterminer le champ wallet et le nom du provider
+            $walletField = $paymentProvider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
+            $walletBalance = $user->{$walletField} ?? 0;
+            $providerName = $paymentProvider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+
             // Check wallet balance
-            if ($user->wallet_balance < $service->price) {
+            if ($walletBalance < $service->price) {
                 return [
                     'success' => false,
-                    'message' => 'Solde insuffisant. Veuillez recharger votre wallet.',
+                    'message' => "Solde {$providerName} insuffisant. Veuillez recharger votre wallet.",
                     'required' => $service->price,
-                    'available' => $user->wallet_balance,
+                    'available' => $walletBalance,
+                    'provider' => $paymentProvider,
                 ];
             }
 
             // Store balance before debit
-            $balanceBefore = $user->wallet_balance;
+            $balanceBefore = $walletBalance;
 
-            // Deduct from wallet
-            $user->decrement('wallet_balance', $service->price);
+            // Deduct from the specific wallet
+            $user->decrement($walletField, $service->price);
 
             // Refresh user to get updated balance
             $user->refresh();
+            $balanceAfter = $user->{$walletField};
 
             // Create payment record
             $payment = Payment::create([
@@ -165,11 +172,13 @@ class RecruiterServicePurchaseService
                 'payment_method' => 'wallet',
                 'payment_type' => 'addon_service',
                 'status' => 'completed',
+                'provider' => $paymentProvider,
                 'transaction_reference' => 'WALLET-' . time() . '-' . rand(1000, 9999),
                 'metadata' => [
                     'service_type' => $service->service_type,
                     'service_name' => $service->name,
                     'company_id' => $company->id,
+                    'payment_provider' => $paymentProvider,
                 ],
             ]);
 
@@ -179,9 +188,10 @@ class RecruiterServicePurchaseService
                 'type' => 'debit',
                 'amount' => $service->price,
                 'balance_before' => $balanceBefore,
-                'balance_after' => $user->wallet_balance,
-                'description' => "Achat service: {$service->name}",
+                'balance_after' => $balanceAfter,
+                'description' => "Achat service: {$service->name} ({$providerName})",
                 'payment_id' => $payment->id,
+                'provider' => $paymentProvider,
                 'status' => 'completed',
             ]);
 
@@ -203,7 +213,11 @@ class RecruiterServicePurchaseService
                 'service' => $service->service_type,
                 'amount' => $service->price,
                 'payment_id' => $payment->id,
+                'provider' => $paymentProvider,
             ]);
+
+            // Envoyer notification FCM pour l'achat
+            $this->sendPurchaseNotification($user, $service, $paymentProvider);
 
             return [
                 'success' => true,
@@ -218,6 +232,7 @@ class RecruiterServicePurchaseService
             Log::error("[Recruiter Service] Purchase failed", [
                 'company_id' => $company->id,
                 'service' => $service->service_type ?? 'unknown',
+                'provider' => $paymentProvider ?? 'unknown',
                 'error' => $e->getMessage(),
             ]);
 
@@ -271,5 +286,62 @@ class RecruiterServicePurchaseService
                     ->orWhere('expires_at', '>=', now());
             })
             ->exists();
+    }
+
+    /**
+     * Envoie une notification FCM pour un achat de service
+     */
+    protected function sendPurchaseNotification(User $user, AddonServiceConfig $service, string $paymentProvider): void
+    {
+        try {
+            if (!$user->fcm_token) {
+                return;
+            }
+
+            $providerName = $paymentProvider === 'paypal' ? 'PayPal' : 'FreeMoPay';
+            $title = "Service acheté";
+            $body = "Votre achat de {$service->name} pour " . number_format($service->price, 0, ',', ' ') . " FCFA via wallet {$providerName} a été effectué avec succès.";
+
+            // Créer la notification avec la structure correcte
+            $notification = \App\Models\Notification::create([
+                'type' => 'service_purchase',
+                'notifiable_type' => User::class,
+                'notifiable_id' => $user->id,
+                'data' => [
+                    'title' => $title,
+                    'body' => $body,
+                    'service_name' => $service->name,
+                    'service_type' => $service->service_type,
+                    'amount' => $service->price,
+                    'provider' => $paymentProvider,
+                ],
+            ]);
+
+            // Envoyer via FCM
+            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
+                ->post('https://fcm.googleapis.com/fcm/send', [
+                    'to' => $user->fcm_token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                        'sound' => 'default',
+                    ],
+                    'data' => [
+                        'type' => 'service_purchase',
+                        'service_name' => $service->name,
+                        'notification_id' => $notification->id,
+                    ],
+                ]);
+
+            Log::info("[Recruiter Service] ✅ FCM notification sent for service purchase", [
+                'user_id' => $user->id,
+                'service_name' => $service->name,
+                'amount' => $service->price,
+                'provider' => $paymentProvider,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("[Recruiter Service] ❌ Failed to send FCM notification: " . $e->getMessage());
+        }
     }
 }

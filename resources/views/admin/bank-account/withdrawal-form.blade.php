@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-0">Effectuer un Retrait</h2>
-            <p class="text-muted mb-0">Retirez des fonds de votre compte bancaire</p>
+            <p class="text-muted mb-0">Retirez des fonds de votre compte FREEMOPAY</p>
         </div>
         <a href="{{ route('admin.bank-account.index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i>Retour
@@ -149,7 +149,7 @@
             <h3 style="margin-bottom: 1rem;">Retrait Réussi!</h3>
             <p style="color: #6c757d; margin-bottom: 2rem;">Le retrait a été traité avec succès.</p>
             <a href="{{ route('admin.bank-account.index') }}" class="btn btn-primary">
-                Retour au Compte Bancaire
+                Retour au Compte FREEMOPAY
             </a>
         </div>
     </div>

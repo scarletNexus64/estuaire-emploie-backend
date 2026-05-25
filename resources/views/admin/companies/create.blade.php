@@ -123,10 +123,62 @@
 
         <div class="form-group">
             <label class="form-label">Adresse</label>
-            <input type="text" name="address" class="form-control" value="{{ old('address') }}" placeholder="123 Rue Principale">
+            <input type="text" name="address" id="address" class="form-control" value="{{ old('address') }}" placeholder="123 Rue Principale">
             @error('address')
                 <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
             @enderror
+        </div>
+
+        <!-- GPS Coordinates Section -->
+        <div style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <h4 style="margin-bottom: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                📍 Coordonnées GPS (Optionnel)
+            </h4>
+            <p style="color: #6c757d; font-size: 0.875rem; margin-bottom: 1rem;">
+                Renseignez les coordonnées GPS pour afficher l'entreprise sur la carte.
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Latitude</label>
+                    <input type="number" step="any" name="latitude" id="latitude" class="form-control"
+                           value="{{ old('latitude') }}"
+                           placeholder="Ex: 4.0511"
+                           onchange="updateMapPreview()">
+                    @error('latitude')
+                        <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Longitude</label>
+                    <input type="number" step="any" name="longitude" id="longitude" class="form-control"
+                           value="{{ old('longitude') }}"
+                           placeholder="Ex: 9.7679"
+                           onchange="updateMapPreview()">
+                    @error('longitude')
+                        <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+                    @enderror
+                </div>
+            </div>
+
+            <div id="map-preview" style="display: none; margin-top: 1.5rem;">
+                <h5 style="margin-bottom: 0.75rem; font-weight: 600;">🗺️ Aperçu de la localisation</h5>
+                <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <iframe
+                        id="map-iframe"
+                        width="100%"
+                        height="300"
+                        frameborder="0"
+                        style="border:0"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
+                    📍 <span id="coordinates-display"></span>
+                </p>
+            </div>
         </div>
 
         <div class="form-group">
@@ -148,4 +200,23 @@
         </div>
     </form>
 </div>
+
+<script>
+function updateMapPreview() {
+    const latitude = document.getElementById('latitude').value;
+    const longitude = document.getElementById('longitude').value;
+    const mapPreview = document.getElementById('map-preview');
+    const mapIframe = document.getElementById('map-iframe');
+    const coordinatesDisplay = document.getElementById('coordinates-display');
+
+    if (latitude && longitude) {
+        const apiKey = 'AIzaSyAffUHSFli6kMnjkfJOKBGO6AN828ixJPo';
+        mapIframe.src = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${latitude},${longitude}&zoom=15`;
+        coordinatesDisplay.textContent = `Coordonnées: ${parseFloat(latitude).toFixed(6)}, ${parseFloat(longitude).toFixed(6)}`;
+        mapPreview.style.display = 'block';
+    } else {
+        mapPreview.style.display = 'none';
+    }
+}
+</script>
 @endsection

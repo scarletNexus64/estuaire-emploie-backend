@@ -5,16 +5,18 @@ namespace App\Jobs;
 use App\Models\User;
 use App\Models\Notification;
 use App\Services\FirebaseNotificationService;
-use App\Notifications\AnnouncementNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Job Laravel pour envoyer des annonces en masse de manière asynchrone
+ * Job pour envoyer des annonces en masse de manière asynchrone
+ * Utilise Firebase Multicast pour envoyer les push en lot
+ * BULK: FCM uniquement (pas d'email)
  */
 class SendMassAnnouncementJob implements ShouldQueue
 {
@@ -27,26 +29,16 @@ class SendMassAnnouncementJob implements ShouldQueue
     protected $batchNumber;
     protected $batchSize;
 
-    /**
-     * Nombre de tentatives
-     */
     public $tries = 3;
+    public $timeout = 600;
 
-    /**
-     * Timeout en secondes
-     */
-    public $timeout = 300;
-
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         string $title,
         string $message,
         string $targetGroup = 'all',
         string $channel = 'both',
         int $batchNumber = 0,
-        int $batchSize = 50
+        int $batchSize = 500
     ) {
         $this->title = $title;
         $this->message = $message;
@@ -55,35 +47,24 @@ class SendMassAnnouncementJob implements ShouldQueue
         $this->batchNumber = $batchNumber;
         $this->batchSize = $batchSize;
 
-        // Utiliser la queue 'notifications' pour éviter de bloquer la queue par défaut
-        $this->onConnection('notifications');
+        $this->onQueue('notifications');
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(FirebaseNotificationService $firebaseService): array
     {
-        Log::info('📢 [MASS ANNOUNCEMENT] Début envoi par lots', [
+        Log::info('Mass announcement batch', [
             'batch' => $this->batchNumber,
-            'batch_size' => $this->batchSize,
-            'target_group' => $this->targetGroup,
+            'target' => $this->targetGroup,
             'channel' => $this->channel,
         ]);
 
-        // Construire la requête
+        // Construire la requête utilisateurs
         $query = User::query();
 
-        // Filtrer par groupe cible
         if ($this->targetGroup === 'candidates') {
             $query->where('role', 'candidate');
         } elseif ($this->targetGroup === 'recruiters') {
             $query->where('role', 'recruiter');
-        }
-
-        // Si on envoie du push, on a besoin du token FCM
-        if ($this->channel === 'push' || $this->channel === 'both') {
-            $query->whereNotNull('fcm_token');
         }
 
         // Récupérer le lot d'utilisateurs
@@ -91,123 +72,82 @@ class SendMassAnnouncementJob implements ShouldQueue
             ->take($this->batchSize)
             ->get();
 
+        if ($users->isEmpty()) {
+            return ['sent' => 0, 'failed' => 0, 'errors' => []];
+        }
+
         $sent = 0;
         $failed = 0;
-        $errors = [];
 
-        foreach ($users as $user) {
-            try {
-                $userSent = false;
-                $userFailed = false;
+        // 1. Envoyer les push via Firebase Multicast (BULK - FCM uniquement)
+        $tokens = $users->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
 
-                // 1. Envoyer la notification Push si demandé
-                if ($this->channel === 'push' || $this->channel === 'both') {
-                    if ($user->fcm_token) {
-                        try {
-                            $firebaseService->sendToToken(
-                                $user->fcm_token,
-                                $this->title,
-                                $this->message,
-                                [
-                                    'type' => 'announcement',
-                                    'sent_at' => now()->toISOString(),
-                                    'sender' => 'admin',
-                                    'target_group' => $this->targetGroup,
-                                ]
-                            );
-                            $userSent = true;
-                        } catch (\Exception $e) {
-                            Log::warning('❌ [MASS ANNOUNCEMENT] Erreur FCM', [
-                                'user_id' => $user->id,
-                                'error' => $e->getMessage(),
-                            ]);
-
-                            // Supprimer le token si invalide
-                            if (str_contains($e->getMessage(), 'Requested entity was not found') ||
-                                str_contains($e->getMessage(), 'registration token is not valid') ||
-                                str_contains($e->getMessage(), 'Invalid registration')) {
-                                $user->update(['fcm_token' => null]);
-                            }
-
-                            $userFailed = true;
-                        }
-                    }
-                }
-
-                // 2. Envoyer l'email si demandé
-                if ($this->channel === 'email' || $this->channel === 'both') {
-                    try {
-                        $user->notify(new AnnouncementNotification($this->title, $this->message));
-                        $userSent = true;
-                    } catch (\Exception $e) {
-                        Log::error('❌ [MASS ANNOUNCEMENT] Erreur email', [
-                            'user_id' => $user->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                        $userFailed = true;
-                    }
-                }
-
-                // 3. Enregistrer dans la BDD
-                Notification::create([
+        if (!empty($tokens)) {
+            $result = $firebaseService->sendMulticast(
+                $tokens,
+                $this->title,
+                $this->message,
+                [
                     'type' => 'announcement',
-                    'notifiable_type' => User::class,
-                    'notifiable_id' => $user->id,
-                    'data' => [
-                        'title' => $this->title,
-                        'message' => $this->message,
-                        'sent_at' => now()->toISOString(),
-                        'sender' => 'admin',
-                        'target_group' => $this->targetGroup,
-                        'channel' => $this->channel,
-                    ],
-                    'read_at' => null,
-                ]);
+                    'sent_at' => now()->toISOString(),
+                    'sender' => 'admin',
+                    'target_group' => $this->targetGroup,
+                ]
+            );
 
-                if ($userSent && !$userFailed) {
-                    $sent++;
-                } else {
-                    $failed++;
-                    $errors[] = [
-                        'user_id' => $user->id,
-                        'user_name' => $user->name,
-                        'error' => 'Échec d\'envoi',
-                    ];
-                }
-            } catch (\Exception $e) {
-                $failed++;
-                $errors[] = [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'error' => $e->getMessage(),
-                ];
+            $sent += $result['success'];
+            $failed += $result['failure'];
 
-                Log::error('❌ [MASS ANNOUNCEMENT] Erreur traitement utilisateur', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
+            // Nettoyer les tokens invalides
+            if (!empty($result['invalid_tokens'])) {
+                User::whereIn('fcm_token', $result['invalid_tokens'])
+                    ->update(['fcm_token' => null]);
             }
         }
 
-        Log::info('✅ [MASS ANNOUNCEMENT] Lot envoyé', [
+        // 2. Insérer les notifications BDD en batch
+        $notificationRows = [];
+        $now = now();
+        foreach ($users as $user) {
+            $notificationRows[] = [
+                'type' => 'announcement',
+                'notifiable_type' => User::class,
+                'notifiable_id' => $user->id,
+                'data' => json_encode([
+                    'title' => $this->title,
+                    'message' => $this->message,
+                    'sent_at' => $now->toISOString(),
+                    'sender' => 'admin',
+                    'target_group' => $this->targetGroup,
+                    'channel' => $this->channel,
+                ]),
+                'read_at' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($notificationRows, 500) as $chunk) {
+            DB::table('notifications')->insert($chunk);
+        }
+
+        Log::info('Mass announcement batch done', [
             'batch' => $this->batchNumber,
             'sent' => $sent,
             'failed' => $failed,
+            'users' => $users->count(),
         ]);
 
         return [
             'sent' => $sent,
             'failed' => $failed,
-            'errors' => $errors,
+            'errors' => [],
         ];
     }
 
-    /**
-     * Handle a job failure.
-     */
     public function failed(\Throwable $exception): void
     {
-        Log::error('❌ [MASS ANNOUNCEMENT] Échec définitif du job', [
+        Log::error('Mass announcement batch permanently failed', [
             'batch' => $this->batchNumber,
             'error' => $exception->getMessage(),
         ]);

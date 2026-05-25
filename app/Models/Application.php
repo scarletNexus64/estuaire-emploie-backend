@@ -108,12 +108,14 @@ class Application extends Model
             'diploma_verification_notes' => $notes,
         ]);
 
-        // Send notification to recruiters of the company
+        // Send notifications to recruiters and candidate
         $this->notifyRecruitersOfVerification();
+        $this->notifyCandidateOfVerification();
     }
 
     /**
      * Notify recruiters that diploma verification is complete
+     * INDIVIDUEL: FCM + Email
      */
     protected function notifyRecruitersOfVerification(): void
     {
@@ -126,6 +128,7 @@ class Application extends Model
             foreach ($recruiters as $recruiter) {
                 $recruiterUser = $recruiter->user;
                 if ($recruiterUser) {
+                    // 1. Send FCM push notification
                     $notificationService->sendToUser(
                         $recruiterUser,
                         "Vérification de diplôme complétée",
@@ -141,15 +144,61 @@ class Application extends Model
                             'verification_notes' => $this->diploma_verification_notes,
                         ]
                     );
+
+                    // 2. Send email notification
+                    $recruiterUser->notify(new \App\Notifications\DiplomaVerifiedNotification($this));
                 }
             }
 
-            \Log::info("[Diploma Verification] Recruiters notified of completed verification", [
+            \Log::info("[Diploma Verification] Recruiters notified (FCM + Email)", [
                 'application_id' => $this->id,
                 'company_id' => $this->job->company_id,
+                'recruiters_count' => $recruiters->count(),
             ]);
         } catch (\Exception $e) {
             \Log::error("[Diploma Verification] Failed to notify recruiters", [
+                'application_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Notify candidate that diploma verification is complete
+     * INDIVIDUEL: FCM + Email
+     */
+    protected function notifyCandidateOfVerification(): void
+    {
+        try {
+            $this->load(['user', 'job.company']);
+            $notificationService = app(\App\Services\NotificationService::class);
+
+            if ($this->user) {
+                // 1. Send FCM push notification
+                $notificationService->sendToUser(
+                    $this->user,
+                    "✓ Diplômes vérifiés",
+                    "Vos diplômes ont été vérifiés pour votre candidature à {$this->job->title}",
+                    'diploma_verified_candidate',
+                    [
+                        'application_id' => $this->id,
+                        'job_id' => $this->job_id,
+                        'job_title' => $this->job->title,
+                        'company_name' => $this->job->company->name,
+                        'verified_at' => $this->diploma_verified_at?->toISOString(),
+                    ]
+                );
+
+                // 2. Send email notification
+                $this->user->notify(new \App\Notifications\CandidateDiplomaVerifiedNotification($this));
+
+                \Log::info("[Diploma Verification] Candidate notified (FCM + Email)", [
+                    'application_id' => $this->id,
+                    'candidate_id' => $this->user_id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error("[Diploma Verification] Failed to notify candidate", [
                 'application_id' => $this->id,
                 'error' => $e->getMessage(),
             ]);

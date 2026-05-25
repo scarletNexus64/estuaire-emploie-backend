@@ -119,9 +119,16 @@ class UserSubscriptionPlan extends Model
 
     /**
      * Vérifie si l'abonnement est actif (basé sur le statut du paiement)
+     * Pour les souscriptions gratuites (étudiants), payment_id est null donc on considère actif
      */
     public function isActive(): bool
     {
+        // Si payment_id est null, c'est une souscription gratuite (étudiant) → actif
+        if ($this->payment_id === null) {
+            return true;
+        }
+
+        // Sinon, vérifier le paiement
         return $this->payment && $this->payment->status === 'completed';
     }
 
@@ -452,12 +459,16 @@ class UserSubscriptionPlan extends Model
     }
 
     /**
-     * Scope pour les abonnements actifs (paiement complété)
+     * Scope pour les abonnements actifs (paiement complété OU souscription gratuite)
      */
     public function scopeActive($query)
     {
-        return $query->whereHas('payment', function ($q) {
-            $q->where('status', 'completed');
+        return $query->where(function ($q) {
+            // Souscriptions gratuites (payment_id null) OU paiement complété
+            $q->whereNull('payment_id')
+                ->orWhereHas('payment', function ($subQ) {
+                    $subQ->where('status', 'completed');
+                });
         });
     }
 
@@ -484,11 +495,17 @@ class UserSubscriptionPlan extends Model
      */
     public function scopeValid($query)
     {
-        return $query->active()
-            ->where(function ($q) {
-                $q->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-            });
+        return $query->where(function ($q) {
+            // Souscriptions gratuites (payment_id null) OU paiement complété
+            $q->whereNull('payment_id')
+                ->orWhereHas('payment', function ($subQ) {
+                    $subQ->where('status', 'completed');
+                });
+        })
+        ->where(function ($q) {
+            $q->whereNull('expires_at')
+                ->orWhere('expires_at', '>', now());
+        });
     }
 
     /**
@@ -496,9 +513,15 @@ class UserSubscriptionPlan extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->active()
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '<=', now());
+        return $query->where(function ($q) {
+            // Souscriptions gratuites (payment_id null) OU paiement complété
+            $q->whereNull('payment_id')
+                ->orWhereHas('payment', function ($subQ) {
+                    $subQ->where('status', 'completed');
+                });
+        })
+        ->whereNotNull('expires_at')
+        ->where('expires_at', '<=', now());
     }
 
     /**
@@ -509,9 +532,15 @@ class UserSubscriptionPlan extends Model
         $targetDate = now()->addDays($days)->startOfDay();
         $nextDay = $targetDate->copy()->addDay();
 
-        return $query->active()
-            ->whereNotNull('expires_at')
-            ->whereBetween('expires_at', [$targetDate, $nextDay]);
+        return $query->where(function ($q) {
+            // Souscriptions gratuites (payment_id null) OU paiement complété
+            $q->whereNull('payment_id')
+                ->orWhereHas('payment', function ($subQ) {
+                    $subQ->where('status', 'completed');
+                });
+        })
+        ->whereNotNull('expires_at')
+        ->whereBetween('expires_at', [$targetDate, $nextDay]);
     }
 
     /**
@@ -519,9 +548,15 @@ class UserSubscriptionPlan extends Model
      */
     public function scopeExpiringWithin($query, int $days)
     {
-        return $query->active()
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '>', now())
-            ->where('expires_at', '<=', now()->addDays($days));
+        return $query->where(function ($q) {
+            // Souscriptions gratuites (payment_id null) OU paiement complété
+            $q->whereNull('payment_id')
+                ->orWhereHas('payment', function ($subQ) {
+                    $subQ->where('status', 'completed');
+                });
+        })
+        ->whereNotNull('expires_at')
+        ->where('expires_at', '>', now())
+        ->where('expires_at', '<=', now()->addDays($days));
     }
 }

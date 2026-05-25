@@ -37,18 +37,21 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle',
+            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle,digital_skills,agriculture_agrobusiness,tourisme_hotellerie,btp_construction,sante_social,commerce_vente,artisanat_metiers,finance_comptabilite,energie_environnement',
             'description' => 'required|string',
             'objectives' => 'nullable|string',
             'icon' => 'nullable|string|max:10',
             'duration_weeks' => 'nullable|integer|min:1',
             'order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
+            'required_packs' => 'nullable|array',
+            'required_packs.*' => 'in:C1,C2,C3',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
         $validated['is_active'] = $request->has('is_active');
         $validated['icon'] = $validated['icon'] ?? '📚';
+        $validated['required_packs'] = $request->input('required_packs', []);
 
         $program = Program::create($validated);
 
@@ -81,17 +84,20 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle',
+            'type' => 'required|in:immersion_professionnelle,entreprenariat,transformation_professionnelle,digital_skills,agriculture_agrobusiness,tourisme_hotellerie,btp_construction,sante_social,commerce_vente,artisanat_metiers,finance_comptabilite,energie_environnement',
             'description' => 'required|string',
             'objectives' => 'nullable|string',
             'icon' => 'nullable|string|max:10',
             'duration_weeks' => 'nullable|integer|min:1',
             'order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
+            'required_packs' => 'nullable|array',
+            'required_packs.*' => 'in:C1,C2,C3',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
         $validated['is_active'] = $request->has('is_active');
+        $validated['required_packs'] = $request->input('required_packs', []);
 
         $program->update($validated);
 

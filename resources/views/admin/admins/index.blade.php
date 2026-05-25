@@ -67,6 +67,16 @@
     </div>
 </div>
 
+<!-- Bulk Actions -->
+<div style="margin-bottom: 1rem; display: flex; justify-content: flex-end;">
+    <button type="button" id="bulkDeleteBtn" class="btn btn-danger">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Supprimer les sélectionnés
+    </button>
+</div>
+
 <!-- Admins Table -->
 <div class="card">
     <div class="table-responsive">
@@ -103,9 +113,11 @@
                     </td>
                     <td>
                         @if($admin->isSuperAdmin())
-                            <span class="badge badge-primary">⭐ Super Admin</span>
+                            <span class="badge badge-primary" style="font-size: 0.8125rem;">⭐ Super Administrateur</span>
+                        @elseif($admin->admin_role)
+                            <span class="badge badge-info" style="font-size: 0.8125rem;">{{ $admin->admin_role->label() }}</span>
                         @else
-                            <span class="badge badge-secondary">{{ ucfirst($admin->role) }}</span>
+                            <span class="badge badge-secondary" style="font-size: 0.8125rem;">Administrateur</span>
                         @endif
                     </td>
                     <td>
@@ -187,4 +199,38 @@
     </div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Select All Checkbox
+    document.getElementById('selectAll')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Bulk Delete
+    const deleteBtn = document.getElementById('bulkDeleteBtn');
+    deleteBtn?.addEventListener('click', function() {
+        const selected = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert('Veuillez sélectionner au moins un administrateur');
+            return;
+        }
+
+        if (!confirm(`Supprimer ${selected.length} administrateur(s) sélectionné(s) ?\n\nCette action est irréversible.`)) {
+            return;
+        }
+
+        const form = document.getElementById('bulkDeleteForm');
+        const idsInput = document.createElement('input');
+        idsInput.type = 'hidden';
+        idsInput.name = 'ids';
+        idsInput.value = JSON.stringify(selected);
+        form.appendChild(idsInput);
+
+        form.submit();
+    });
+</script>
 @endsection

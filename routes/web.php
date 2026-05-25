@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\JobController;
+use App\Http\Controllers\Admin\QuickServiceController;
 use App\Http\Controllers\Admin\ApplicationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RecruiterController;
@@ -18,10 +19,59 @@ use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
 use App\Http\Controllers\Admin\SkillTestController;
 use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\PortfolioViewController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('admin.dashboard');
+    }
     return redirect()->route('admin.login');
+});
+
+// Route de test pour le PDF CV
+Route::get('/test-pdf-cv', function () {
+    $data = [
+        'name' => 'Marie Martin',
+        'title' => 'AIDE-SOIGNANTE',
+        'phone' => '0612345678',
+        'email' => 'm.martin@mail.fr',
+        'address' => '34 rue La Boétie, 75014 Paris',
+        'photo_path' => null,
+        'objective' => 'Professionnelle de la santé recherchant activement un poste d\'aide soignante afin de mettre en valeur 17 ans d\'expérience dans des rôles connexes.',
+        'skills' => ['Premiers secours et sécurité', 'Gestion des maladies chroniques', 'Planification et organisation des repas'],
+        'hobbies' => ['Jardinage', 'Pratique du Pilates'],
+        'experiences' => [
+            [
+                'date' => '02/2013 - Actuel',
+                'company' => 'EHPAD | Paris',
+                'title' => 'Aide-soignante',
+                'description' => [
+                    'Suivi des progrès et consignation de tout changement de statut',
+                    'Assistance fournie aux patients dans leurs besoins de la vie quotidienne',
+                ],
+            ],
+        ],
+        'education' => [
+            [
+                'school' => 'Institut de Formation d\'Aides-soignants | CHU de Rouen',
+                'degree' => 'Diplôme d\'État d\'Aide-Soignant (DEAS)',
+            ],
+        ],
+    ];
+
+    try {
+        $pdf = Pdf::loadView('pdf.cv_aide_soignante', ['data' => $data]);
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->stream('test_cv.pdf');
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
 });
 
 // Payment Callback Routes (Public - No Auth Required)
@@ -49,46 +99,58 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
     // Companies Management
     Route::middleware('permission:manage_companies')->group(function () {
+        Route::delete('companies/bulk-delete', [CompanyController::class, 'bulkDelete'])->name('companies.bulk-delete');
+        Route::post('companies/verify-address', [CompanyController::class, 'verifyAddress'])->name('companies.verify-address');
         Route::resource('companies', CompanyController::class);
         Route::patch('companies/{company}/verify', [CompanyController::class, 'verify'])->name('companies.verify');
         Route::patch('companies/{company}/suspend', [CompanyController::class, 'suspend'])->name('companies.suspend');
-        Route::delete('companies/bulk-delete', [CompanyController::class, 'bulkDelete'])->name('companies.bulk-delete');
     });
 
     // Jobs Management
     Route::middleware('permission:manage_jobs')->group(function () {
+        Route::delete('jobs/bulk-delete', [JobController::class, 'bulkDelete'])->name('jobs.bulk-delete');
         Route::resource('jobs', JobController::class);
         Route::patch('jobs/{job}/publish', [JobController::class, 'publish'])->name('jobs.publish');
         Route::get('jobs/{job}/send-notifications', [JobController::class, 'showSendNotifications'])->name('jobs.send-notifications');
         Route::post('jobs/{job}/send-notifications-batch', [JobController::class, 'sendNotificationsBatch'])->name('jobs.send-notifications-batch');
         Route::post('jobs/{job}/send-emails-batch', [JobController::class, 'sendEmailsBatch'])->name('jobs.send-emails-batch');
         Route::patch('jobs/{job}/feature', [JobController::class, 'feature'])->name('jobs.feature');
-        Route::delete('jobs/bulk-delete', [JobController::class, 'bulkDelete'])->name('jobs.bulk-delete');
+    });
+
+    // Quick Services Management
+    Route::middleware('permission:manage_jobs')->group(function () {
+        Route::delete('quick-services/bulk-delete', [\App\Http\Controllers\Admin\QuickServiceController::class, 'bulkDelete'])->name('quick-services.bulk-delete');
+        Route::get('quick-services', [\App\Http\Controllers\Admin\QuickServiceController::class, 'index'])->name('quick-services.index');
+        Route::get('quick-services/{id}', [\App\Http\Controllers\Admin\QuickServiceController::class, 'show'])->name('quick-services.show');
+        Route::delete('quick-services/{id}', [\App\Http\Controllers\Admin\QuickServiceController::class, 'destroy'])->name('quick-services.destroy');
+        Route::patch('quick-services/{id}/status', [\App\Http\Controllers\Admin\QuickServiceController::class, 'updateStatus'])->name('quick-services.status');
+        Route::post('quick-services/{id}/approve', [\App\Http\Controllers\Admin\QuickServiceController::class, 'approve'])->name('quick-services.approve');
     });
 
     // Applications Management
     Route::middleware('permission:manage_applications')->group(function () {
+        Route::delete('applications/bulk-delete', [ApplicationController::class, 'bulkDelete'])->name('applications.bulk-delete');
         Route::get('applications', [ApplicationController::class, 'index'])->name('applications.index');
         Route::get('applications/{application}', [ApplicationController::class, 'show'])->name('applications.show');
         Route::patch('applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
         Route::patch('applications/{application}/verify-diploma', [ApplicationController::class, 'verifyDiploma'])->name('applications.verify-diploma');
-        Route::delete('applications/bulk-delete', [ApplicationController::class, 'bulkDelete'])->name('applications.bulk-delete');
     });
 
     // Users (Candidates) Management
     Route::middleware('permission:manage_users')->group(function () {
-        Route::resource('users', UserController::class)->only(['index', 'show', 'destroy']);
         Route::delete('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk-delete');
+        Route::resource('users', UserController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
     });
 
     // Recruiters Management
     Route::middleware('permission:manage_recruiters')->group(function () {
-        Route::resource('recruiters', RecruiterController::class);
         Route::delete('recruiters/bulk-delete', [RecruiterController::class, 'bulkDelete'])->name('recruiters.bulk-delete');
+        Route::resource('recruiters', RecruiterController::class);
     });
 
     // Admin Management
     Route::middleware('permission:manage_admins')->prefix('admins')->name('admins.')->group(function () {
+        Route::delete('bulk-delete', [AdminManagementController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/', [AdminManagementController::class, 'index'])->name('index');
         Route::get('/create', [AdminManagementController::class, 'create'])->name('create');
         Route::post('/', [AdminManagementController::class, 'store'])->name('store');
@@ -97,7 +159,6 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/{user}', [AdminManagementController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminManagementController::class, 'destroy'])->name('destroy');
         Route::patch('/{user}/permissions', [AdminManagementController::class, 'updatePermissions'])->name('permissions');
-        Route::delete('bulk-delete', [AdminManagementController::class, 'bulkDelete'])->name('bulk-delete');
     });
 
     // Sections Management
@@ -117,12 +178,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
     // Portfolios Management
     Route::middleware('permission:manage_users')->prefix('portfolios')->name('portfolios.')->group(function () {
+        Route::delete('/bulk-delete', [AdminPortfolioController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/export/csv', [AdminPortfolioController::class, 'export'])->name('export');
         Route::get('/', [AdminPortfolioController::class, 'index'])->name('index');
         Route::get('/{portfolio}', [AdminPortfolioController::class, 'show'])->name('show');
         Route::delete('/{portfolio}', [AdminPortfolioController::class, 'destroy'])->name('destroy');
         Route::patch('/{portfolio}/toggle-visibility', [AdminPortfolioController::class, 'toggleVisibility'])->name('toggle-visibility');
-        Route::delete('/bulk-delete', [AdminPortfolioController::class, 'bulkDelete'])->name('bulk-delete');
-        Route::get('/export/csv', [AdminPortfolioController::class, 'export'])->name('export');
     });
 
     // Skill Tests Management
@@ -141,6 +202,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('settings/categories', [SettingsController::class, 'categories'])->name('settings.categories');
         Route::post('settings/categories', [SettingsController::class, 'storeCategory'])->name('settings.categories.store');
         Route::delete('settings/categories/{category}', [SettingsController::class, 'deleteCategory'])->name('settings.categories.delete');
+
+        // Referral Settings
+        Route::put('settings/referral', [SettingsController::class, 'updateReferralSettings'])->name('settings.referral.update');
     });
 
     // MONÉTISATION - Subscription Plans Recruteurs
@@ -225,7 +289,24 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{service}', [\App\Http\Controllers\Admin\RecruiterServiceController::class, 'show'])->name('show');
     });
 
-    // MODE ÉTUDIANT - Épreuves d'examen
+    // CONTENU ÉTUDIANT - Packs d'épreuves payants
+    Route::middleware('permission:manage_premium_services')->prefix('exam-packs')->name('exam-packs.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ExamPackController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ExamPackController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ExamPackController::class, 'store'])->name('store');
+        Route::get('/{examPack}/edit', [\App\Http\Controllers\Admin\ExamPackController::class, 'edit'])->name('edit');
+        Route::put('/{examPack}', [\App\Http\Controllers\Admin\ExamPackController::class, 'update'])->name('update');
+        Route::delete('/{examPack}', [\App\Http\Controllers\Admin\ExamPackController::class, 'destroy'])->name('destroy');
+        Route::patch('/{examPack}/toggle', [\App\Http\Controllers\Admin\ExamPackController::class, 'toggle'])->name('toggle');
+        Route::get('/{examPack}', [\App\Http\Controllers\Admin\ExamPackController::class, 'show'])->name('show');
+
+        // Gestion des épreuves dans le pack
+        Route::get('/{examPack}/manage-papers', [\App\Http\Controllers\Admin\ExamPackController::class, 'managePapers'])->name('manage-papers');
+        Route::post('/{examPack}/add-paper', [\App\Http\Controllers\Admin\ExamPackController::class, 'addPaper'])->name('add-paper');
+        Route::delete('/{examPack}/remove-paper/{examPaper}', [\App\Http\Controllers\Admin\ExamPackController::class, 'removePaper'])->name('remove-paper');
+    });
+
+    // CONTENU ÉTUDIANT - Épreuves individuelles (gestion interne uniquement, pas dans le menu)
     Route::middleware('permission:manage_premium_services')->prefix('exam-papers')->name('exam-papers.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ExamPaperController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\ExamPaperController::class, 'create'])->name('create');
@@ -234,15 +315,76 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'update'])->name('update');
         Route::delete('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'destroy'])->name('destroy');
         Route::patch('/{examPaper}/toggle', [\App\Http\Controllers\Admin\ExamPaperController::class, 'toggle'])->name('toggle');
-        Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
         Route::get('/{examPaper}/download', [\App\Http\Controllers\Admin\ExamPaperController::class, 'download'])->name('download');
+        Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
+    });
+
+    // CONTENU ÉTUDIANT - Vidéos de formation
+    Route::middleware('permission:manage_premium_services')->prefix('training-videos')->name('training-videos.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'store'])->name('store');
+        Route::get('/{trainingVideo}/edit', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'edit'])->name('edit');
+        Route::put('/{trainingVideo}', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'update'])->name('update');
+        Route::delete('/{trainingVideo}', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'destroy'])->name('destroy');
+        Route::patch('/{trainingVideo}/toggle', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'toggle'])->name('toggle');
+        Route::get('/{trainingVideo}', [\App\Http\Controllers\Admin\TrainingVideoController::class, 'show'])->name('show');
+    });
+
+    // CONTENU ÉTUDIANT - Packs de formation payants
+    Route::middleware('permission:manage_premium_services')->prefix('training-packs')->name('training-packs.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TrainingPackController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\TrainingPackController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\TrainingPackController::class, 'store'])->name('store');
+        Route::get('/{trainingPack}/edit', [\App\Http\Controllers\Admin\TrainingPackController::class, 'edit'])->name('edit');
+        Route::put('/{trainingPack}', [\App\Http\Controllers\Admin\TrainingPackController::class, 'update'])->name('update');
+        Route::delete('/{trainingPack}', [\App\Http\Controllers\Admin\TrainingPackController::class, 'destroy'])->name('destroy');
+        Route::patch('/{trainingPack}/toggle', [\App\Http\Controllers\Admin\TrainingPackController::class, 'toggle'])->name('toggle');
+        Route::get('/{trainingPack}', [\App\Http\Controllers\Admin\TrainingPackController::class, 'show'])->name('show');
+
+        // Gestion des vidéos dans le pack
+        Route::get('/{trainingPack}/manage-videos', [\App\Http\Controllers\Admin\TrainingPackController::class, 'manageVideos'])->name('manage-videos');
+        Route::post('/{trainingPack}/add-video', [\App\Http\Controllers\Admin\TrainingPackController::class, 'addVideo'])->name('add-video');
+        Route::delete('/{trainingPack}/remove-video/{trainingVideo}', [\App\Http\Controllers\Admin\TrainingPackController::class, 'removeVideo'])->name('remove-video');
+        Route::post('/{trainingPack}/update-videos-order', [\App\Http\Controllers\Admin\TrainingPackController::class, 'updateVideosOrder'])->name('update-videos-order');
+    });
+
+    // TARIFICATION DES FORMATIONS INSAMTECHS
+    Route::middleware('permission:manage_premium_services')->prefix('insamtechs-pricing')->name('insamtechs-pricing.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'store'])->name('store');
+        Route::get('/{pricing}/edit', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'edit'])->name('edit');
+        Route::put('/{pricing}', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'update'])->name('update');
+        Route::patch('/{pricing}/toggle', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'toggle'])->name('toggle');
+        Route::delete('/{pricing}', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'destroy'])->name('destroy');
+    });
+
+    // Création de compte étudiant
+    Route::middleware('permission:manage_premium_services')->prefix('students')->name('students.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\StudentController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('store');
+        Route::post('/confirm', [\App\Http\Controllers\Admin\StudentController::class, 'confirmAndSave'])->name('confirm');
+        Route::get('/{user}/create-cv', [\App\Http\Controllers\Admin\StudentController::class, 'showCreateCV'])->name('create-cv');
+        Route::post('/{user}/store-cv', [\App\Http\Controllers\Admin\StudentController::class, 'storeCV'])->name('store-cv');
+        Route::post('/{user}/send-sms', [\App\Http\Controllers\Admin\StudentController::class, 'sendSMS'])->name('send-sms');
+        Route::post('/{user}/send-whatsapp', [\App\Http\Controllers\Admin\StudentController::class, 'sendWhatsApp'])->name('send-whatsapp');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('update');
+        Route::delete('/{user}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('destroy');
     });
 
     // MONÉTISATION - CVthèque
     Route::middleware('permission:manage_cvtheque')->prefix('cvtheque')->name('cvtheque.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CVthequeController::class, 'index'])->name('index');
-        Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
         Route::get('/export/all', [\App\Http\Controllers\Admin\CVthequeController::class, 'export'])->name('export');
+        Route::get('/{resume}/preview', [\App\Http\Controllers\Admin\CVthequeController::class, 'preview'])->name('preview');
+        Route::get('/{resume}/edit', [\App\Http\Controllers\Admin\CVthequeController::class, 'edit'])->name('edit');
+        Route::put('/{resume}', [\App\Http\Controllers\Admin\CVthequeController::class, 'update'])->name('update');
+        Route::delete('/{resume}', [\App\Http\Controllers\Admin\CVthequeController::class, 'destroy'])->name('destroy');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\CVthequeController::class, 'show'])->name('show');
     });
 
     // MONÉTISATION - Advertisements
@@ -308,9 +450,18 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::middleware('permission:manage_payments')->prefix('bank-account')->name('bank-account.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\BankAccountController::class, 'index'])->name('index');
         Route::post('/verify-pin', [\App\Http\Controllers\Admin\BankAccountController::class, 'verifyPin'])->name('verify-pin');
+
+        // FreeMoPay routes
+        Route::get('/available-balance', [\App\Http\Controllers\Admin\BankAccountController::class, 'getAvailableBalance'])->name('available-balance');
         Route::get('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'showWithdrawalForm'])->name('withdrawal');
         Route::post('/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'initiateWithdrawal'])->name('initiate-withdrawal');
         Route::get('/withdrawal/{id}/status', [\App\Http\Controllers\Admin\BankAccountController::class, 'checkWithdrawalStatus'])->name('withdrawal-status');
+
+        // PayPal routes
+        Route::get('/paypal/available-balance', [\App\Http\Controllers\Admin\BankAccountController::class, 'getPayPalAvailableBalance'])->name('paypal-available-balance');
+        Route::get('/paypal/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'showPayPalWithdrawalForm'])->name('paypal-withdrawal');
+        Route::post('/paypal/withdrawal', [\App\Http\Controllers\Admin\BankAccountController::class, 'initiatePayPalWithdrawal'])->name('initiate-paypal-withdrawal');
+
         Route::get('/history', [\App\Http\Controllers\Admin\BankAccountController::class, 'history'])->name('history');
     });
 

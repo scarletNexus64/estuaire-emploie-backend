@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Job;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,8 +13,9 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Job Laravel pour envoyer des notifications de manière asynchrone
- * lors de la publication d'une offre d'emploi
+ * Job pour envoyer des notifications lors de la publication d'une offre d'emploi
+ * Utilise Firebase Multicast pour envoyer en masse (500 tokens/requête)
+ * BULK: FCM uniquement (pas d'email)
  */
 class SendJobPublishedNotification implements ShouldQueue
 {
@@ -21,30 +23,15 @@ class SendJobPublishedNotification implements ShouldQueue
 
     protected $jobOffer;
 
-    /**
-     * Nombre de tentatives
-     */
     public $tries = 3;
+    public $timeout = 600; // 10 minutes
 
-    /**
-     * Timeout en secondes
-     */
-    public $timeout = 300; // 5 minutes
-
-    /**
-     * Create a new job instance.
-     */
     public function __construct(Job $jobOffer)
     {
         $this->jobOffer = $jobOffer;
-
-        // Définir la connexion de queue (séparée de 'default' pour éviter les conflits avec Reverb)
-        $this->onConnection('notifications');
+        $this->onQueue('notifications');
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(NotificationService $notificationService): void
     {
         try {
@@ -53,47 +40,51 @@ class SendJobPublishedNotification implements ShouldQueue
             $title = "Nouvelle offre : {$jobOffer->title}";
             $message = "{$jobOffer->company->name} recrute à {$jobOffer->location->name}";
 
-            Log::info('Début envoi notifications pour job publié', [
+            $additionalData = [
                 'job_id' => $jobOffer->id,
                 'job_title' => $jobOffer->title,
+                'company_name' => $jobOffer->company->name,
+                'location' => $jobOffer->location->name,
+                'category' => $jobOffer->category->name ?? null,
+            ];
+
+            // Récupérer tous les candidats avec token FCM
+            $candidates = User::where('role', 'candidate')
+                ->whereNotNull('fcm_token')
+                ->get();
+
+            Log::info('Job published notification', [
+                'job_id' => $jobOffer->id,
+                'candidates' => $candidates->count(),
             ]);
 
-            // Envoi à tous les candidats de manière sécurisée (par lots)
-            $result = $notificationService->sendToAllCandidates(
+            // Envoyer via multicast (500 tokens par requête Firebase - FCM uniquement)
+            $result = $notificationService->sendToMultipleUsers(
+                $candidates,
                 $title,
                 $message,
                 'job_published',
-                [
-                    'job_id' => $jobOffer->id,
-                    'job_title' => $jobOffer->title,
-                    'company_name' => $jobOffer->company->name,
-                    'location' => $jobOffer->location->name,
-                    'category' => $jobOffer->category->name ?? null,
-                ]
+                $additionalData
             );
 
-            Log::info('Notifications job publié envoyées', [
+            Log::info('Job published notification sent', [
                 'job_id' => $jobOffer->id,
                 'sent' => $result['sent'],
                 'failed' => $result['failed'],
             ]);
+
         } catch (\Exception $e) {
-            Log::error('Erreur envoi notifications job publié', [
+            Log::error('Job published notification failed', [
                 'job_id' => $this->jobOffer->id,
                 'error' => $e->getMessage(),
             ]);
-
-            // Relancer le job si échec
             throw $e;
         }
     }
 
-    /**
-     * Handle a job failure.
-     */
     public function failed(\Throwable $exception): void
     {
-        Log::error('Échec définitif envoi notifications job publié', [
+        Log::error('Job published notification permanently failed', [
             'job_id' => $this->jobOffer->id,
             'error' => $exception->getMessage(),
         ]);

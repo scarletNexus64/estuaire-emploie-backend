@@ -66,8 +66,9 @@ class ExamPaperController extends Controller
         $specialties = ExamPaper::getSpecialties();
         $subjects = ExamPaper::getSubjectsBySpecialty();
         $levels = ExamPaper::getLevels();
+        $corrections = ExamPaper::where('is_correction', true)->where('is_active', true)->orderBy('title')->get();
 
-        return view('admin.exam-papers.form', compact('specialties', 'subjects', 'levels'));
+        return view('admin.exam-papers.form', compact('specialties', 'subjects', 'levels', 'corrections'));
     }
 
     /**
@@ -86,6 +87,7 @@ class ExamPaperController extends Controller
             'file' => 'required|file|mimes:pdf|max:20480', // Max 20MB
             'is_active' => 'boolean',
             'display_order' => 'nullable|integer',
+            'correction_paper_id' => 'nullable|exists:exam_papers,id',
         ]);
 
         // Upload du fichier PDF
@@ -105,6 +107,14 @@ class ExamPaperController extends Controller
 
         $validated['is_correction'] = $request->has('is_correction');
         $validated['is_active'] = $request->has('is_active');
+
+        // Gérer le lien correction
+        if (!$validated['is_correction'] && $request->filled('correction_paper_id')) {
+            $validated['has_correction'] = true;
+        } else {
+            $validated['has_correction'] = false;
+            $validated['correction_paper_id'] = null;
+        }
 
         ExamPaper::create($validated);
 
@@ -128,8 +138,13 @@ class ExamPaperController extends Controller
         $specialties = ExamPaper::getSpecialties();
         $subjects = ExamPaper::getSubjectsBySpecialty();
         $levels = ExamPaper::getLevels();
+        $corrections = ExamPaper::where('is_correction', true)
+            ->where('is_active', true)
+            ->where('id', '!=', $examPaper->id)
+            ->orderBy('title')
+            ->get();
 
-        return view('admin.exam-papers.form', compact('examPaper', 'specialties', 'subjects', 'levels'));
+        return view('admin.exam-papers.form', compact('examPaper', 'specialties', 'subjects', 'levels', 'corrections'));
     }
 
     /**
@@ -148,6 +163,7 @@ class ExamPaperController extends Controller
             'file' => 'nullable|file|mimes:pdf|max:20480', // Max 20MB
             'is_active' => 'boolean',
             'display_order' => 'nullable|integer',
+            'correction_paper_id' => 'nullable|exists:exam_papers,id',
         ]);
 
         // Upload d'un nouveau fichier si fourni
@@ -170,6 +186,14 @@ class ExamPaperController extends Controller
 
         $validated['is_correction'] = $request->has('is_correction');
         $validated['is_active'] = $request->has('is_active');
+
+        // Gérer le lien correction
+        if (!$validated['is_correction'] && $request->filled('correction_paper_id')) {
+            $validated['has_correction'] = true;
+        } else {
+            $validated['has_correction'] = false;
+            $validated['correction_paper_id'] = null;
+        }
 
         $examPaper->update($validated);
 

@@ -107,6 +107,16 @@
     </form>
 </div>
 
+<!-- Bulk Actions -->
+<div style="margin-bottom: 1rem; display: flex; justify-content: flex-end;">
+    <button type="button" id="bulkDeleteBtn" class="btn btn-danger">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Supprimer les sélectionnées
+    </button>
+</div>
+
 <!-- Jobs Table -->
 <div class="card">
     <div class="table-responsive">
@@ -143,7 +153,15 @@
                         </div>
                     </td>
                     <td>{{ $job->company?->name ?? 'N/A' }}</td>
-                    <td>{{ $job->location?->city ?? 'N/A' }}</td>
+                    <td>
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #6c757d;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <strong>{{ $job->location?->name ?? 'N/A' }}</strong>
+                        </span>
+                    </td>
                     <td>
                         @if($job->status === 'published')
                             <span class="badge badge-success">Publiée</span>
@@ -257,4 +275,38 @@
     </div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Select All Checkbox
+    document.getElementById('selectAll')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Bulk Delete
+    const deleteBtn = document.getElementById('bulkDeleteBtn');
+    deleteBtn?.addEventListener('click', function() {
+        const selected = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+
+        if (selected.length === 0) {
+            alert('Veuillez sélectionner au moins une offre');
+            return;
+        }
+
+        if (!confirm(`Supprimer ${selected.length} offre(s) sélectionnée(s) ?\n\nCette action est irréversible.`)) {
+            return;
+        }
+
+        const form = document.getElementById('bulkDeleteForm');
+        const idsInput = document.createElement('input');
+        idsInput.type = 'hidden';
+        idsInput.name = 'ids';
+        idsInput.value = JSON.stringify(selected);
+        form.appendChild(idsInput);
+
+        form.submit();
+    });
+</script>
 @endsection

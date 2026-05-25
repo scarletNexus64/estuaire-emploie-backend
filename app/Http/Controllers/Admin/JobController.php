@@ -65,7 +65,8 @@ class JobController extends Controller
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'required|exists:categories,id',
-            'location_id' => 'required|exists:locations,id',
+            'location_ids' => 'required|array|min:1',
+            'location_ids.*' => 'required|exists:locations,id',
             'contract_type_id' => 'required|exists:contract_types,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -77,6 +78,10 @@ class JobController extends Controller
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date|after:today',
         ]);
+
+        // Extraire les location_ids
+        $locationIds = $validated['location_ids'];
+        unset($validated['location_ids']);
 
         // Auteur de l'offre
         $validated['posted_by'] = Auth::id();
@@ -90,17 +95,27 @@ class JobController extends Controller
             $validated['published_at'] = now();
         }
 
-        // Création
-        $job = Job::create($validated);
+        // Créer un job pour chaque localisation sélectionnée
+        $createdJobs = [];
+        foreach ($locationIds as $locationId) {
+            $validated['location_id'] = $locationId;
+            $job = Job::create($validated);
+            $createdJobs[] = $job;
 
-        // Dispatcher l'événement si le job est publié
-        if ($job->status === 'published') {
-            JobPublished::dispatch($job);
+            // Dispatcher l'événement si le job est publié
+            if ($job->status === 'published') {
+                JobPublished::dispatch($job);
+            }
         }
+
+        $count = count($createdJobs);
+        $message = $count > 1
+            ? "Offre créée avec succès dans {$count} villes"
+            : 'Offre créée avec succès';
 
         return redirect()
             ->route('admin.jobs.index')
-            ->with('success', 'Offre créée avec succès');
+            ->with('success', $message);
     }
 
     public function show(Job $job): View
@@ -359,7 +374,7 @@ class JobController extends Controller
             return response()->json([
                 'success' => true,
                 'completed' => true,
-                'message' => 'Tous les emails ont été envoyés',
+                'message' => 'Toutes les notifications ont été envoyées',
                 'sent' => 0,
                 'failed' => 0,
             ]);
@@ -369,7 +384,7 @@ class JobController extends Controller
         $failed = 0;
         $errors = [];
 
-        // Envoyer les emails directement (sans queue)
+        // Envoyer les notifications directement (BULK - database uniquement, FCM géré par SendJobPublishedNotification)
         foreach ($users as $user) {
             try {
                 $user->notify(new \App\Notifications\NewJobNotification($job));
@@ -381,7 +396,7 @@ class JobController extends Controller
                     'user_email' => $user->email,
                     'error' => $e->getMessage(),
                 ];
-                \Log::error('Erreur envoi email nouveau job', [
+                \Log::error('Erreur envoi notification nouveau job', [
                     'job_id' => $job->id,
                     'user_id' => $user->id,
                     'error' => $e->getMessage()
@@ -398,7 +413,7 @@ class JobController extends Controller
         $processed = ($batchNumber + 1) * $batchSize;
         $completed = $processed >= $totalUsers;
 
-        Log::info('Lot d\'emails envoyé pour job', [
+        Log::info('Lot de notifications envoyé pour job (database only)', [
             'job_id' => $job->id,
             'batch' => $batchNumber,
             'sent' => $sent,

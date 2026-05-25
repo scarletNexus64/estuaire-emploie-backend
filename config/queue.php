@@ -2,29 +2,35 @@
 
 return [
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'redis'),
 
     'connections' => [
-
-        'database' => [
-            'driver' => 'database',
-            'table' => 'job_queue', // <- ta table personnalisée
-            'queue' => 'default',
-            'retry_after' => 90,
-        ],
-
-        'notifications' => [
-            'driver' => 'database',
-            'table' => 'job_queue',
-            'queue' => 'notifications', // Queue séparée pour les notifications d'emploi
-            'retry_after' => 300,
-        ],
 
         'sync' => [
             'driver' => 'sync',
         ],
 
-        // tu peux ajouter d'autres drivers si besoin
+        'database' => [
+            'driver' => 'database',
+            'table' => 'job_queue',
+            'queue' => 'default',
+            'retry_after' => 90,
+        ],
+
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('REDIS_QUEUE', 'default'),
+            'retry_after' => 300,
+            'block_for' => 3,
+            'after_commit' => false,
+        ],
+
+    ],
+
+    'batching' => [
+        'database' => env('DB_CONNECTION', 'mysql'),
+        'table' => 'job_batches',
     ],
 
     'failed' => [

@@ -50,8 +50,24 @@
                             N/A
                         @endif
                     </p>
+                    <p><strong>Adresse:</strong> {{ $company->address ?? 'N/A' }}</p>
                     <p><strong>Ville:</strong> {{ $company->city ?? 'N/A' }}</p>
                     <p><strong>Pays:</strong> {{ $company->country }}</p>
+                    <p><strong>Coordonnées GPS:</strong>
+                        @if($company->latitude && $company->longitude)
+                            <span style="color: #28a745;">
+                                📍 {{ number_format($company->latitude, 6) }}, {{ number_format($company->longitude, 6) }}
+                            </span>
+                            <a href="https://www.google.com/maps?q={{ $company->latitude }},{{ $company->longitude }}"
+                               target="_blank"
+                               class="btn btn-sm btn-info"
+                               style="margin-left: 10px;">
+                                🗺️ Voir sur Google Maps
+                            </a>
+                        @else
+                            <span style="color: #dc3545;">Non renseignées</span>
+                        @endif
+                    </p>
                     <p><strong>Statut:</strong>
                         @if($company->status === 'verified')
                             <span class="badge badge-success">Vérifiée</span>
@@ -75,6 +91,37 @@
                     <p>{{ $company->description ?? 'Aucune description disponible' }}</p>
                 </div>
             </div>
+
+            <!-- Google Maps Preview Section -->
+            @if($company->latitude && $company->longitude)
+            <div style="margin-top: 2rem;">
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">🗺️ Localisation sur la Carte</h4>
+                <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <iframe
+                        width="100%"
+                        height="400"
+                        frameborder="0"
+                        style="border:0"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAffUHSFli6kMnjkfJOKBGO6AN828ixJPo&q={{ $company->latitude }},{{ $company->longitude }}&zoom=15"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
+                    📍 Coordonnées: {{ number_format($company->latitude, 6) }}, {{ number_format($company->longitude, 6) }}
+                </p>
+            </div>
+            @elseif($company->address || $company->city)
+            <div style="margin-top: 2rem; padding: 1.5rem; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+                <h4 style="margin-bottom: 0.5rem; color: #856404;">⚠️ Coordonnées GPS manquantes</h4>
+                <p style="margin: 0; color: #856404;">
+                    Cette entreprise a une adresse mais pas de coordonnées GPS.
+                    <a href="{{ route('admin.companies.edit', $company) }}" style="color: #004085; text-decoration: underline;">
+                        Cliquez ici pour les ajouter
+                    </a>
+                </p>
+            </div>
+            @endif
         </div>
     </div>
 

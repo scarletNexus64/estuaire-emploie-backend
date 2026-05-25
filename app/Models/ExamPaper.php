@@ -18,6 +18,8 @@ class ExamPaper extends Model
         'level',
         'year',
         'is_correction',
+        'has_correction',
+        'correction_paper_id',
         'description',
         'file_path',
         'file_name',
@@ -34,6 +36,7 @@ class ExamPaper extends Model
             'level' => 'integer',
             'year' => 'integer',
             'is_correction' => 'boolean',
+            'has_correction' => 'boolean',
             'file_size' => 'integer',
             'downloads_count' => 'integer',
             'views_count' => 'integer',
@@ -43,28 +46,27 @@ class ExamPaper extends Model
     }
 
     /**
-     * Spécialités disponibles
+     * Relation : Le corrigé associé à cette épreuve
+     */
+    public function correctionPaper()
+    {
+        return $this->belongsTo(ExamPaper::class, 'correction_paper_id');
+    }
+
+    /**
+     * Relation : L'épreuve dont celle-ci est le corrigé
+     */
+    public function subjectPaper()
+    {
+        return $this->hasOne(ExamPaper::class, 'correction_paper_id');
+    }
+
+    /**
+     * Spécialités disponibles (depuis la base de données)
      */
     public static function getSpecialties(): array
     {
-        return [
-            'Informatique' => 'Informatique',
-            'Gestion' => 'Gestion',
-            'Commerce' => 'Commerce',
-            'Marketing' => 'Marketing',
-            'Finance' => 'Finance',
-            'Comptabilité' => 'Comptabilité',
-            'Ressources Humaines' => 'Ressources Humaines',
-            'Droit' => 'Droit',
-            'Économie' => 'Économie',
-            'Communication' => 'Communication',
-            'Ingénierie' => 'Ingénierie',
-            'Architecture' => 'Architecture',
-            'Médecine' => 'Médecine',
-            'Sciences' => 'Sciences',
-            'Lettres' => 'Lettres',
-            'Autre' => 'Autre',
-        ];
+        return Specialty::getSelectOptions();
     }
 
     /**

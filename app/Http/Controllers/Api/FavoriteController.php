@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Favorite;
 use App\Models\Job;
+use App\Models\QuickService;
 use Illuminate\Http\Request;
 
 /**
@@ -29,6 +30,13 @@ class FavoriteController extends Controller
      *         description="Numéro de page",
      *         required=false,
      *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Recherche par mots-clés (titre, description, entreprise, catégorie)",
+     *         required=false,
+     *         @OA\Schema(type="string")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -80,13 +88,37 @@ class FavoriteController extends Controller
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $favorites = auth()->user()
+        $query = auth()->user()
             ->favorites()
             ->with(['company', 'category', 'location', 'contractType'])
-            ->orderBy('favorites.created_at', 'desc')
-            ->paginate(20);
+            ->orderBy('favorites.created_at', 'desc');
+
+        // Recherche par mots-clés
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $normalizedSearch = $this->normalizeString($search);
+
+            $query->where(function ($q) use ($normalizedSearch) {
+                // Recherche dans le titre du job
+                $q->whereRaw('LOWER(jobs.title) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                    // Recherche dans la description du job
+                    ->orWhereRaw('LOWER(jobs.description) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                    // Recherche dans les exigences du job
+                    ->orWhereRaw('LOWER(jobs.requirements) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                    // Recherche dans le nom de l'entreprise
+                    ->orWhereHas('company', function ($companyQuery) use ($normalizedSearch) {
+                        $companyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                    })
+                    // Recherche dans la catégorie
+                    ->orWhereHas('category', function ($categoryQuery) use ($normalizedSearch) {
+                        $categoryQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                    });
+            });
+        }
+
+        $favorites = $query->paginate(20);
 
         return response()->json($favorites);
     }
@@ -134,7 +166,8 @@ class FavoriteController extends Controller
     {
         $favorite = Favorite::where([
             'user_id' => auth()->id(),
-            'job_id' => $job->id,
+            'favoriteable_type' => Job::class,
+            'favoriteable_id' => $job->id,
         ])->first();
 
         if ($favorite) {
@@ -148,7 +181,8 @@ class FavoriteController extends Controller
 
         Favorite::create([
             'user_id' => auth()->id(),
-            'job_id' => $job->id,
+            'favoriteable_type' => Job::class,
+            'favoriteable_id' => $job->id,
         ]);
 
         return response()->json([
@@ -196,11 +230,227 @@ class FavoriteController extends Controller
     {
         $isFavorite = Favorite::where([
             'user_id' => auth()->id(),
-            'job_id' => $job->id,
+            'favoriteable_type' => Job::class,
+            'favoriteable_id' => $job->id,
         ])->exists();
 
         return response()->json([
             'is_favorite' => $isFavorite,
         ]);
+    }
+
+    // ==================== QUICK SERVICES FAVORITES ====================
+
+    /**
+     * @OA\Get(
+     *     path="/api/quick-services/favorites",
+     *     summary="Liste des services rapides favoris",
+     *     description="Récupère la liste paginée de tous les services rapides mis en favori par l'utilisateur connecté",
+     *     operationId="getFavoriteQuickServices",
+     *     tags={"Favorites"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Numéro de page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Recherche par mots-clés (titre, description, catégorie)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des services favoris récupérée avec succès"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     )
+     * )
+     */
+    public function getFavoriteQuickServices(Request $request)
+    {
+        $query = Favorite::where('user_id', auth()->id())
+            ->where('favoriteable_type', QuickService::class)
+            ->with(['favoriteable.user', 'favoriteable.category'])
+            ->orderBy('created_at', 'desc');
+
+        // Recherche par mots-clés
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $normalizedSearch = $this->normalizeString($search);
+
+            $query->whereHas('favoriteable', function ($serviceQuery) use ($normalizedSearch) {
+                $serviceQuery->where(function ($q) use ($normalizedSearch) {
+                    // Recherche dans le titre du service
+                    $q->whereRaw('LOWER(quick_services.title) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                        // Recherche dans la description du service
+                        ->orWhereRaw('LOWER(quick_services.description) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                        // Recherche dans la catégorie du service
+                        ->orWhereHas('category', function ($categoryQuery) use ($normalizedSearch) {
+                            $categoryQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                        });
+                });
+            });
+        }
+
+        $favorites = $query->paginate(20);
+
+        // Transformer les favoris pour retourner directement les services
+        $services = $favorites->map(function ($favorite) {
+            return $favorite->favoriteable;
+        });
+
+        return response()->json([
+            'current_page' => $favorites->currentPage(),
+            'data' => $services,
+            'per_page' => $favorites->perPage(),
+            'total' => $favorites->total(),
+            'last_page' => $favorites->lastPage(),
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/quick-services/{service}/favorite",
+     *     summary="Ajouter/Retirer un service rapide des favoris",
+     *     description="Toggle le statut favori d'un service rapide. Si le service est déjà en favori, il sera retiré. Sinon, il sera ajouté.",
+     *     operationId="toggleQuickServiceFavorite",
+     *     tags={"Favorites"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="service",
+     *         in="path",
+     *         description="ID du service rapide",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut favori mis à jour avec succès"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Service rapide non trouvé"
+     *     )
+     * )
+     */
+    public function toggleQuickServiceFavorite(QuickService $service)
+    {
+        $favorite = Favorite::where([
+            'user_id' => auth()->id(),
+            'favoriteable_type' => QuickService::class,
+            'favoriteable_id' => $service->id,
+        ])->first();
+
+        if ($favorite) {
+            $favorite->delete();
+
+            return response()->json([
+                'message' => 'Retiré des favoris',
+                'is_favorite' => false,
+            ]);
+        }
+
+        Favorite::create([
+            'user_id' => auth()->id(),
+            'favoriteable_type' => QuickService::class,
+            'favoriteable_id' => $service->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Ajouté aux favoris',
+            'is_favorite' => true,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/quick-services/{service}/is-favorite",
+     *     summary="Vérifier si un service rapide est en favori",
+     *     description="Vérifie si un service rapide spécifique est dans les favoris de l'utilisateur connecté",
+     *     operationId="isQuickServiceFavorite",
+     *     tags={"Favorites"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(
+     *         name="service",
+     *         in="path",
+     *         description="ID du service rapide",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statut favori du service"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Non authentifié"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Service rapide non trouvé"
+     *     )
+     * )
+     */
+    public function isQuickServiceFavorite(QuickService $service)
+    {
+        $isFavorite = Favorite::where([
+            'user_id' => auth()->id(),
+            'favoriteable_type' => QuickService::class,
+            'favoriteable_id' => $service->id,
+        ])->exists();
+
+        return response()->json([
+            'is_favorite' => $isFavorite,
+        ]);
+    }
+
+    /**
+     * Normalise une chaîne pour la recherche (retire les accents, convertit en minuscules)
+     */
+    private function normalizeString(string $str): string
+    {
+        // Convertir en minuscules
+        $str = mb_strtolower($str, 'UTF-8');
+
+        // Tableau de correspondance des caractères accentués (majuscules et minuscules)
+        $unwanted = [
+            // Minuscules
+            'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'ae',
+            'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'œ' => 'oe',
+            'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ý' => 'y', 'ÿ' => 'y',
+            'ñ' => 'n', 'ç' => 'c',
+            // Majuscules (au cas où)
+            'À' => 'a', 'Á' => 'a', 'Â' => 'a', 'Ã' => 'a', 'Ä' => 'a', 'Å' => 'a', 'Æ' => 'ae',
+            'È' => 'e', 'É' => 'e', 'Ê' => 'e', 'Ë' => 'e',
+            'Ì' => 'i', 'Í' => 'i', 'Î' => 'i', 'Ï' => 'i',
+            'Ò' => 'o', 'Ó' => 'o', 'Ô' => 'o', 'Õ' => 'o', 'Ö' => 'o', 'Ø' => 'o', 'Œ' => 'oe',
+            'Ù' => 'u', 'Ú' => 'u', 'Û' => 'u', 'Ü' => 'u',
+            'Ý' => 'y', 'Ÿ' => 'y',
+            'Ñ' => 'n', 'Ç' => 'c',
+        ];
+
+        $str = strtr($str, $unwanted);
+
+        // Utiliser iconv pour retirer les accents restants
+        $str = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $str);
+
+        // Nettoyer les caractères non alphanumériques sauf espaces
+        $str = preg_replace('/[^a-z0-9\s]/i', '', $str);
+
+        return $str;
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\User;
-use App\Notifications\MaintenanceNotification;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -34,10 +33,7 @@ class SendMaintenanceNotificationJob implements ShouldQueue
     public function handle(NotificationService $notificationService): void
     {
         try {
-            // Send email notification via Laravel notification
-            $this->user->notify(new MaintenanceNotification($this->isActive, $this->message));
-
-            // Send push notification via Firebase
+            // Send push notification via Firebase (BULK - FCM uniquement, pas d'email)
             $title = $this->isActive ? '⚠️ Maintenance en cours' : '✅ Services disponibles';
             $messageText = $this->message ?? ($this->isActive
                 ? 'Nous effectuons actuellement une maintenance. L\'application sera bientôt disponible.'
@@ -54,7 +50,7 @@ class SendMaintenanceNotificationJob implements ShouldQueue
                 ]
             );
 
-            Log::info('Maintenance notification sent', [
+            Log::info('Maintenance notification sent (FCM only)', [
                 'user_id' => $this->user->id,
                 'is_active' => $this->isActive,
             ]);

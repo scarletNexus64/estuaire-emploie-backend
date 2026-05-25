@@ -1,0 +1,988 @@
+<?php
+
+namespace App\Services\Resume;
+
+use App\Models\Resume;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+
+class ResumePdfService
+{
+    /**
+     * Génère un PDF pour un CV donné
+     */
+    public function generatePdf(Resume $resume): string
+    {
+        // Log des données pour débogage
+        \Log::info('Génération PDF pour CV #' . $resume->id, [
+            'personal_info' => $resume->personal_info,
+            'experiences_count' => is_array($resume->experiences) ? count($resume->experiences) : 0,
+            'education_count' => is_array($resume->education) ? count($resume->education) : 0,
+            'skills_count' => is_array($resume->skills) ? count($resume->skills) : 0,
+        ]);
+
+        // Récupérer le template HTML
+        $html = $this->getTemplateHtml($resume);
+
+        // Générer le PDF avec de meilleures options
+        $pdf = Pdf::loadHTML($html)
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 150,
+                'enable_php' => false,
+                'isFontSubsettingEnabled' => true,
+            ]);
+
+        // Générer un nom de fichier unique
+        $fileName = 'resumes/' . $resume->user_id . '/' . uniqid() . '_' . $resume->id . '.pdf';
+
+        // Sauvegarder le PDF
+        Storage::disk('public')->put($fileName, $pdf->output());
+
+        // Supprimer l'ancien PDF si existe
+        if ($resume->pdf_path && Storage::disk('public')->exists($resume->pdf_path)) {
+            Storage::disk('public')->delete($resume->pdf_path);
+        }
+
+        // Mettre à jour le CV
+        $resume->update([
+            'pdf_path' => $fileName,
+            'pdf_generated_at' => now(),
+        ]);
+
+        return $fileName;
+    }
+
+    /**
+     * Récupère le HTML du template selon le type
+     */
+    private function getTemplateHtml(Resume $resume): string
+    {
+        $templateType = $resume->template_type ?? 'modern';
+
+        return match($templateType) {
+            'modern' => $this->getModernTemplate($resume),
+            'classic' => $this->getClassicTemplate($resume),
+            'creative' => $this->getCreativeTemplate($resume),
+            'professional' => $this->getProfessionalTemplate($resume),
+            'minimalist' => $this->getMinimalistTemplate($resume),
+            default => $this->getModernTemplate($resume),
+        };
+    }
+
+    /**
+     * Template Moderne - Design épuré avec barre latérale colorée
+     */
+    private function getModernTemplate(Resume $resume): string
+    {
+        $primaryColor = '#2D96D3'; // Bleu moderne
+        $accentColor = '#eb316f';  // Rose accent
+
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>' . htmlspecialchars($resume->title) . '</title>
+    <style>
+        @page { margin: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #2c3e50;
+        }
+        .page {
+            width: 210mm;
+            height: 297mm;
+            position: relative;
+        }
+        .sidebar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 65mm;
+            height: 297mm;
+            background: linear-gradient(180deg, ' . $primaryColor . ' 0%, ' . $accentColor . ' 100%);
+            color: white;
+            padding: 25px 15px;
+        }
+        .main-content {
+            position: absolute;
+            left: 65mm;
+            top: 0;
+            width: 145mm;
+            height: 297mm;
+            padding: 25px 20px;
+            background: white;
+        }
+        .profile-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            margin: 0 auto 20px;
+            text-align: center;
+            line-height: 100px;
+            font-size: 48px;
+            color: ' . $primaryColor . ';
+            font-weight: bold;
+        }
+        .sidebar h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .sidebar .subtitle {
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        .sidebar-section h3 {
+            font-size: 13px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .contact-item {
+            margin-bottom: 15px;
+            font-size: 9pt;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .contact-item strong {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+        .skill-item {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 9pt;
+        }
+        .main-section {
+            margin-bottom: 25px;
+        }
+        .main-section h2 {
+            font-size: 18px;
+            color: ' . $primaryColor . ';
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid ' . $primaryColor . ';
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .experience-item, .education-item {
+            margin-bottom: 18px;
+            page-break-inside: avoid;
+        }
+        .item-header {
+            width: 100%;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+        .item-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            float: left;
+            width: 65%;
+        }
+        .item-date {
+            font-size: 9pt;
+            color: ' . $accentColor . ';
+            font-weight: 600;
+            float: right;
+            width: 35%;
+            text-align: right;
+        }
+        .item-subtitle {
+            font-size: 11px;
+            color: ' . $primaryColor . ';
+            font-weight: 500;
+            margin-bottom: 3px;
+            clear: both;
+        }
+        .item-location {
+            font-size: 9pt;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        .item-description {
+            font-size: 10pt;
+            text-align: justify;
+            color: #555;
+            line-height: 1.6;
+        }
+        .summary {
+            font-size: 10pt;
+            text-align: justify;
+            line-height: 1.7;
+            color: #555;
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid ' . $primaryColor . ';
+            border-radius: 4px;
+        }
+        .certification-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="sidebar">';
+
+        // Photo de profil (initiales)
+        $personalInfo = is_array($resume->personal_info) ? $resume->personal_info : [];
+        $initials = '';
+        $name = $personalInfo['name'] ?? '';
+
+        if (!empty($name)) {
+            $names = explode(' ', $name);
+            $initials = strtoupper(substr($names[0], 0, 1));
+            if (count($names) > 1) {
+                $initials .= strtoupper(substr($names[count($names) - 1], 0, 1));
+            }
+        }
+
+        if ($initials) {
+            $html .= '<div class="profile-photo">' . htmlspecialchars($initials) . '</div>';
+        }
+        $html .= '<h1>' . htmlspecialchars($name) . '</h1>';
+
+        // Contact
+        $hasContactInfo = !empty($personalInfo['email']) || !empty($personalInfo['phone']) ||
+                         !empty($personalInfo['address']) || !empty($personalInfo['linkedin']) ||
+                         !empty($personalInfo['github']) || !empty($personalInfo['website']);
+
+        if ($hasContactInfo) {
+            $html .= '<div class="sidebar-section">
+                <h3>CONTACT</h3>';
+
+            if (!empty($personalInfo['email'])) {
+                $html .= '<div class="contact-item"><strong>Email</strong><br>' . htmlspecialchars($personalInfo['email']) . '</div>';
+            }
+            if (!empty($personalInfo['phone'])) {
+                $html .= '<div class="contact-item"><strong>Téléphone</strong><br>' . htmlspecialchars($personalInfo['phone']) . '</div>';
+            }
+            if (!empty($personalInfo['address'])) {
+                $html .= '<div class="contact-item"><strong>Adresse</strong><br>' . htmlspecialchars($personalInfo['address']) . '</div>';
+            }
+            if (!empty($personalInfo['linkedin'])) {
+                $html .= '<div class="contact-item"><strong>LinkedIn</strong><br>' . htmlspecialchars($personalInfo['linkedin']) . '</div>';
+            }
+            if (!empty($personalInfo['github'])) {
+                $html .= '<div class="contact-item"><strong>GitHub</strong><br>' . htmlspecialchars($personalInfo['github']) . '</div>';
+            }
+            if (!empty($personalInfo['website'])) {
+                $html .= '<div class="contact-item"><strong>Site web</strong><br>' . htmlspecialchars($personalInfo['website']) . '</div>';
+            }
+
+            $html .= '</div>';
+        }
+
+        // Compétences
+        if (!empty($resume->skills) && is_array($resume->skills)) {
+            $html .= '<div class="sidebar-section">
+                <h3>COMPÉTENCES</h3>';
+            foreach ($resume->skills as $skill) {
+                if (is_array($skill)) {
+                    $skillName = $skill['name'] ?? '';
+                    $skillLevel = isset($skill['level']) ? str_repeat('●', $skill['level']) . str_repeat('○', 5 - $skill['level']) : '';
+                    $html .= '<div class="skill-item">' . htmlspecialchars($skillName);
+                    if ($skillLevel) {
+                        $html .= '<br><small>' . $skillLevel . '</small>';
+                    }
+                    $html .= '</div>';
+                } else {
+                    $html .= '<div class="skill-item">' . htmlspecialchars($skill) . '</div>';
+                }
+            }
+            $html .= '</div>';
+        }
+
+        // Loisirs
+        if (!empty($resume->hobbies) && is_array($resume->hobbies)) {
+            $html .= '<div class="sidebar-section">
+                <h3>LOISIRS</h3>';
+            foreach ($resume->hobbies as $hobby) {
+                $html .= '<div class="skill-item">' . htmlspecialchars($hobby) . '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        $html .= '</div>
+        <div class="main-content">';
+
+        // Résumé professionnel
+        if (!empty($resume->professional_summary)) {
+            $html .= '<div class="main-section">
+                <h2>PROFIL</h2>
+                <div class="summary">' . nl2br(htmlspecialchars($resume->professional_summary)) . '</div>
+            </div>';
+        }
+
+        // Expériences
+        if (!empty($resume->experiences) && is_array($resume->experiences)) {
+            $html .= '<div class="main-section">
+                <h2>EXPÉRIENCES</h2>';
+            foreach ($resume->experiences as $exp) {
+                if (!is_array($exp)) continue;
+
+                $startDate = !empty($exp['start_date']) ? date('m/Y', strtotime($exp['start_date'])) : '';
+                $endDate = !empty($exp['currently_working']) ? 'Présent' :
+                          (!empty($exp['end_date']) ? date('m/Y', strtotime($exp['end_date'])) : '');
+
+                $html .= '<div class="experience-item">
+                    <div class="item-header">
+                        <div class="item-title">' . htmlspecialchars($exp['title'] ?? '') . '</div>
+                        <div class="item-date">' . $startDate . ' - ' . $endDate . '</div>
+                    </div>
+                    <div class="item-subtitle">' . htmlspecialchars($exp['company'] ?? '') . '</div>';
+
+                if (!empty($exp['location'])) {
+                    $html .= '<div class="item-location">📍 ' . htmlspecialchars($exp['location']) . '</div>';
+                }
+
+                if (!empty($exp['description'])) {
+                    $html .= '<div class="item-description">' . nl2br(htmlspecialchars($exp['description'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Formation
+        if (!empty($resume->education) && is_array($resume->education)) {
+            $html .= '<div class="main-section">
+                <h2>FORMATION</h2>';
+            foreach ($resume->education as $edu) {
+                if (!is_array($edu)) continue;
+
+                $startDate = !empty($edu['start_date']) ? date('Y', strtotime($edu['start_date'])) : '';
+                $endDate = !empty($edu['end_date']) ? date('Y', strtotime($edu['end_date'])) : '';
+
+                $html .= '<div class="education-item">
+                    <div class="item-header">
+                        <div class="item-title">' . htmlspecialchars($edu['degree'] ?? '') . '</div>
+                        <div class="item-date">' . $startDate . ($endDate ? ' - ' . $endDate : '') . '</div>
+                    </div>
+                    <div class="item-subtitle">' . htmlspecialchars($edu['institution'] ?? '') . '</div>';
+
+                if (!empty($edu['location'])) {
+                    $html .= '<div class="item-location">📍 ' . htmlspecialchars($edu['location']) . '</div>';
+                }
+
+                if (!empty($edu['description'])) {
+                    $html .= '<div class="item-description">' . nl2br(htmlspecialchars($edu['description'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Certifications
+        if (!empty($resume->certifications) && is_array($resume->certifications)) {
+            $html .= '<div class="main-section">
+                <h2>CERTIFICATIONS</h2>';
+            foreach ($resume->certifications as $cert) {
+                if (!is_array($cert)) continue;
+
+                $html .= '<div class="certification-item">
+                    <div class="item-title">' . htmlspecialchars($cert['name'] ?? '') . '</div>';
+
+                if (!empty($cert['issuer'])) {
+                    $html .= '<div class="item-subtitle">' . htmlspecialchars($cert['issuer']) . '</div>';
+                }
+
+                if (!empty($cert['issue_date'])) {
+                    $html .= '<div class="item-date">' . date('m/Y', strtotime($cert['issue_date'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Projets
+        if (!empty($resume->projects) && is_array($resume->projects)) {
+            $html .= '<div class="main-section">
+                <h2>PROJETS</h2>';
+            foreach ($resume->projects as $project) {
+                if (!is_array($project)) continue;
+
+                $html .= '<div class="experience-item">
+                    <div class="item-title">' . htmlspecialchars($project['name'] ?? '') . '</div>';
+
+                if (!empty($project['description'])) {
+                    $html .= '<div class="item-description">' . nl2br(htmlspecialchars($project['description'])) . '</div>';
+                }
+
+                if (!empty($project['technologies']) && is_array($project['technologies'])) {
+                    $html .= '<div class="item-location">💻 ' . implode(', ', array_map('htmlspecialchars', $project['technologies'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        $html .= '</div>
+    </div>
+</body>
+</html>';
+
+        return $html;
+    }
+
+    /**
+     * Template Classique - Format traditionnel une colonne
+     */
+    private function getClassicTemplate(Resume $resume): string
+    {
+        $primaryColor = '#1a1a1a'; // Noir classique
+        $accentColor = '#4a5568';  // Gris
+
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>' . htmlspecialchars($resume->title) . '</title>
+    <style>
+        @page { margin: 15mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #1a1a1a;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px double #1a1a1a;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header .subtitle {
+            font-size: 11pt;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+        .contact-info {
+            font-size: 9pt;
+            margin-top: 10px;
+        }
+        .contact-info span {
+            margin: 0 10px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid #1a1a1a;
+            padding-bottom: 5px;
+            margin-bottom: 12px;
+        }
+        .item {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        .item-header {
+            margin-bottom: 5px;
+        }
+        .item-title {
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            width: 65%;
+        }
+        .item-date {
+            font-size: 9pt;
+            color: #4a5568;
+            float: right;
+            width: 35%;
+            text-align: right;
+        }
+        .item-subtitle {
+            font-size: 10pt;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 3px;
+            clear: both;
+        }
+        .item-location {
+            font-size: 9pt;
+            color: #718096;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        .item-description {
+            font-size: 9.5pt;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        .summary {
+            font-size: 10pt;
+            text-align: justify;
+            line-height: 1.7;
+            font-style: italic;
+            padding: 10px 0;
+        }
+        .skills-grid {
+            display: table;
+            width: 100%;
+        }
+        .skill-item {
+            display: inline-block;
+            width: 48%;
+            margin: 3px 0;
+            font-size: 9.5pt;
+        }
+        .skill-item:before {
+            content: "• ";
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>';
+
+        // Header avec nom et contact
+        $personalInfo = is_array($resume->personal_info) ? $resume->personal_info : [];
+        $name = $personalInfo['name'] ?? '';
+
+        $html .= '<div class="header">
+            <h1>' . htmlspecialchars($name) . '</h1>';
+
+        // Contact info en une ligne
+        $contactParts = [];
+        if (!empty($personalInfo['email'])) $contactParts[] = $personalInfo['email'];
+        if (!empty($personalInfo['phone'])) $contactParts[] = $personalInfo['phone'];
+        if (!empty($personalInfo['address'])) $contactParts[] = $personalInfo['address'];
+
+        if (!empty($contactParts)) {
+            $html .= '<div class="contact-info">';
+            foreach ($contactParts as $part) {
+                $html .= '<span>' . htmlspecialchars($part) . '</span>';
+            }
+            $html .= '</div>';
+        }
+
+        // Liens professionnels
+        $links = [];
+        if (!empty($personalInfo['linkedin'])) $links[] = $personalInfo['linkedin'];
+        if (!empty($personalInfo['github'])) $links[] = $personalInfo['github'];
+        if (!empty($personalInfo['website'])) $links[] = $personalInfo['website'];
+
+        if (!empty($links)) {
+            $html .= '<div class="contact-info" style="margin-top: 5px;">';
+            foreach ($links as $link) {
+                $html .= '<span>' . htmlspecialchars($link) . '</span>';
+            }
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        // Résumé professionnel
+        if (!empty($resume->professional_summary)) {
+            $html .= '<div class="section">
+                <div class="summary">' . nl2br(htmlspecialchars($resume->professional_summary)) . '</div>
+            </div>';
+        }
+
+        // Expériences
+        if (!empty($resume->experiences) && is_array($resume->experiences)) {
+            $html .= '<div class="section">
+                <h2>Expériences Professionnelles</h2>';
+            foreach ($resume->experiences as $exp) {
+                if (!is_array($exp)) continue;
+
+                $startDate = !empty($exp['start_date']) ? date('m/Y', strtotime($exp['start_date'])) : '';
+                $endDate = !empty($exp['currently_working']) ? 'Présent' :
+                          (!empty($exp['end_date']) ? date('m/Y', strtotime($exp['end_date'])) : '');
+
+                $html .= '<div class="item">
+                    <div class="item-header">
+                        <span class="item-title">' . htmlspecialchars($exp['title'] ?? '') . '</span>
+                        <span class="item-date">' . $startDate . ' - ' . $endDate . '</span>
+                    </div>
+                    <div class="item-subtitle">' . htmlspecialchars($exp['company'] ?? '') . '</div>';
+
+                if (!empty($exp['location'])) {
+                    $html .= '<div class="item-location">' . htmlspecialchars($exp['location']) . '</div>';
+                }
+
+                if (!empty($exp['description'])) {
+                    $html .= '<div class="item-description">' . nl2br(htmlspecialchars($exp['description'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Formation
+        if (!empty($resume->education) && is_array($resume->education)) {
+            $html .= '<div class="section">
+                <h2>Formation</h2>';
+            foreach ($resume->education as $edu) {
+                if (!is_array($edu)) continue;
+
+                $startDate = !empty($edu['start_date']) ? date('Y', strtotime($edu['start_date'])) : '';
+                $endDate = !empty($edu['end_date']) ? date('Y', strtotime($edu['end_date'])) : '';
+
+                $html .= '<div class="item">
+                    <div class="item-header">
+                        <span class="item-title">' . htmlspecialchars($edu['degree'] ?? '') . '</span>
+                        <span class="item-date">' . $startDate . ($endDate ? ' - ' . $endDate : '') . '</span>
+                    </div>
+                    <div class="item-subtitle">' . htmlspecialchars($edu['institution'] ?? '') . '</div>';
+
+                if (!empty($edu['location'])) {
+                    $html .= '<div class="item-location">' . htmlspecialchars($edu['location']) . '</div>';
+                }
+
+                if (!empty($edu['description'])) {
+                    $html .= '<div class="item-description">' . nl2br(htmlspecialchars($edu['description'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Compétences
+        if (!empty($resume->skills) && is_array($resume->skills)) {
+            $html .= '<div class="section">
+                <h2>Compétences</h2>
+                <div class="skills-grid">';
+            foreach ($resume->skills as $skill) {
+                $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+                if (!empty($skillName)) {
+                    $html .= '<div class="skill-item">' . htmlspecialchars($skillName) . '</div>';
+                }
+            }
+            $html .= '</div></div>';
+        }
+
+        // Certifications
+        if (!empty($resume->certifications) && is_array($resume->certifications)) {
+            $html .= '<div class="section">
+                <h2>Certifications</h2>';
+            foreach ($resume->certifications as $cert) {
+                if (!is_array($cert)) continue;
+
+                $html .= '<div class="item">
+                    <span class="item-title">' . htmlspecialchars($cert['name'] ?? '') . '</span>';
+
+                if (!empty($cert['issuer'])) {
+                    $html .= ' <span style="color: #4a5568;">- ' . htmlspecialchars($cert['issuer']) . '</span>';
+                }
+
+                if (!empty($cert['issue_date'])) {
+                    $html .= ' <span class="item-date">(' . date('Y', strtotime($cert['issue_date'])) . ')</span>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        $html .= '</body></html>';
+
+        return $html;
+    }
+
+    /**
+     * Template Créatif - Design coloré et moderne
+     */
+    private function getCreativeTemplate(Resume $resume): string
+    {
+        $primaryColor = '#8B5CF6'; // Violet
+        $accentColor = '#EC4899';  // Rose vif
+        $tertiaryColor = '#F59E0B'; // Orange
+
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>' . htmlspecialchars($resume->title) . '</title>
+    <style>
+        @page { margin: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #1a1a1a;
+        }
+        .page {
+            width: 210mm;
+            height: 297mm;
+            position: relative;
+            background: white;
+        }
+        .accent-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 8mm;
+            height: 297mm;
+            background: linear-gradient(180deg, ' . $primaryColor . ' 0%, ' . $accentColor . ' 50%, ' . $tertiaryColor . ' 100%);
+        }
+        .content {
+            position: absolute;
+            left: 15mm;
+            top: 0;
+            width: 180mm;
+            padding: 25mm 20mm 20mm 15mm;
+        }
+        .name-block {
+            background: ' . $primaryColor . ';
+            color: white;
+            padding: 20px 25px;
+            margin: -25mm -20mm 20px -15mm;
+            position: relative;
+        }
+        .name-block h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .name-block .tagline {
+            font-size: 12pt;
+            opacity: 0.95;
+        }
+        .contact-bar {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            margin: 20px -20mm 20px -15mm;
+            font-size: 9pt;
+            border-left: 4px solid ' . $accentColor . ';
+        }
+        .contact-bar span {
+            margin-right: 15px;
+            color: #4a5568;
+        }
+        .contact-bar span:before {
+            content: "● ";
+            color: ' . $primaryColor . ';
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 16px;
+            color: ' . $primaryColor . ';
+            margin-bottom: 12px;
+            padding-left: 15px;
+            border-left: 5px solid ' . $accentColor . ';
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            border-left: 2px solid #e2e8f0;
+            page-break-inside: avoid;
+        }
+        .item-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: ' . $primaryColor . ';
+            margin-bottom: 3px;
+        }
+        .item-meta {
+            font-size: 9pt;
+            color: #64748b;
+            margin-bottom: 3px;
+        }
+        .item-meta .company {
+            font-weight: 600;
+            color: #334155;
+        }
+        .item-meta .date {
+            color: ' . $accentColor . ';
+            font-weight: 600;
+        }
+        .item-description {
+            font-size: 9.5pt;
+            line-height: 1.6;
+            text-align: justify;
+            color: #334155;
+        }
+        .summary {
+            font-size: 10pt;
+            line-height: 1.7;
+            text-align: justify;
+            padding: 15px 20px;
+            background: #faf5ff;
+            border-left: 4px solid ' . $primaryColor . ';
+        }
+        .skills-container {
+            padding-left: 20px;
+        }
+        .skill-tag {
+            display: inline-block;
+            background: ' . $primaryColor . ';
+            color: white;
+            padding: 4px 12px;
+            margin: 4px 4px 4px 0;
+            font-size: 9pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="accent-bar"></div>
+        <div class="content">';
+
+        // Nom et tagline
+        $personalInfo = is_array($resume->personal_info) ? $resume->personal_info : [];
+        $name = $personalInfo['name'] ?? '';
+
+        $html .= '<div class="name-block">
+            <h1>' . htmlspecialchars($name) . '</h1>
+            <div class="tagline">Développeur Full Stack</div>
+        </div>';
+
+        // Contact bar
+        $html .= '<div class="contact-bar">';
+        if (!empty($personalInfo['email'])) $html .= '<span>' . htmlspecialchars($personalInfo['email']) . '</span>';
+        if (!empty($personalInfo['phone'])) $html .= '<span>' . htmlspecialchars($personalInfo['phone']) . '</span>';
+        if (!empty($personalInfo['address'])) $html .= '<span>' . htmlspecialchars($personalInfo['address']) . '</span>';
+        $html .= '</div>';
+
+        // Résumé
+        if (!empty($resume->professional_summary)) {
+            $html .= '<div class="section">
+                <h2>À Propos</h2>
+                <div class="summary">' . nl2br(htmlspecialchars($resume->professional_summary)) . '</div>
+            </div>';
+        }
+
+        // Expériences
+        if (!empty($resume->experiences) && is_array($resume->experiences)) {
+            $html .= '<div class="section">
+                <h2>Expériences</h2>';
+            foreach ($resume->experiences as $exp) {
+                if (!is_array($exp)) continue;
+
+                $startDate = !empty($exp['start_date']) ? date('m/Y', strtotime($exp['start_date'])) : '';
+                $endDate = !empty($exp['currently_working']) ? 'Présent' :
+                          (!empty($exp['end_date']) ? date('m/Y', strtotime($exp['end_date'])) : '');
+
+                $html .= '<div class="item">
+                    <div class="item-title">' . htmlspecialchars($exp['title'] ?? '') . '</div>
+                    <div class="item-meta">
+                        <span class="company">' . htmlspecialchars($exp['company'] ?? '') . '</span>';
+
+                if (!empty($exp['location'])) {
+                    $html .= ' • ' . htmlspecialchars($exp['location']);
+                }
+
+                $html .= ' • <span class="date">' . $startDate . ' - ' . $endDate . '</span>
+                    </div>';
+
+                if (!empty($exp['description'])) {
+                    $html .= '<div class="item-description">' . nl2br(htmlspecialchars($exp['description'])) . '</div>';
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Formation
+        if (!empty($resume->education) && is_array($resume->education)) {
+            $html .= '<div class="section">
+                <h2>Formation</h2>';
+            foreach ($resume->education as $edu) {
+                if (!is_array($edu)) continue;
+
+                $startDate = !empty($edu['start_date']) ? date('Y', strtotime($edu['start_date'])) : '';
+                $endDate = !empty($edu['end_date']) ? date('Y', strtotime($edu['end_date'])) : '';
+
+                $html .= '<div class="item">
+                    <div class="item-title">' . htmlspecialchars($edu['degree'] ?? '') . '</div>
+                    <div class="item-meta">
+                        <span class="company">' . htmlspecialchars($edu['institution'] ?? '') . '</span>
+                        • <span class="date">' . $startDate . ($endDate ? ' - ' . $endDate : '') . '</span>
+                    </div>
+                </div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Compétences
+        if (!empty($resume->skills) && is_array($resume->skills)) {
+            $html .= '<div class="section">
+                <h2>Compétences</h2>
+                <div class="skills-container">';
+            foreach ($resume->skills as $skill) {
+                $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+                if (!empty($skillName)) {
+                    $html .= '<span class="skill-tag">' . htmlspecialchars($skillName) . '</span>';
+                }
+            }
+            $html .= '</div></div>';
+        }
+
+        $html .= '</div>
+    </div>
+</body>
+</html>';
+
+        return $html;
+    }
+
+    /**
+     * Template Professionnel
+     */
+    private function getProfessionalTemplate(Resume $resume): string
+    {
+        // TODO: Implémenter le template professionnel
+        return $this->getModernTemplate($resume);
+    }
+
+    /**
+     * Template Minimaliste
+     */
+    private function getMinimalistTemplate(Resume $resume): string
+    {
+        // TODO: Implémenter le template minimaliste
+        return $this->getModernTemplate($resume);
+    }
+}
