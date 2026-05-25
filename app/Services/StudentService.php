@@ -7,6 +7,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserPremiumService;
 use App\Models\UserSubscriptionPlan;
+use App\Services\Notifications\BaileysService;
 use App\Services\Notifications\NexahService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,11 +18,13 @@ class StudentService
 {
     protected NexahService $nexahService;
     protected FirebaseNotificationService $fcmService;
+    protected BaileysService $baileysService;
 
-    public function __construct(NexahService $nexahService, FirebaseNotificationService $fcmService)
+    public function __construct(NexahService $nexahService, FirebaseNotificationService $fcmService, BaileysService $baileysService)
     {
-        $this->nexahService = $nexahService;
-        $this->fcmService = $fcmService;
+        $this->nexahService    = $nexahService;
+        $this->fcmService      = $fcmService;
+        $this->baileysService  = $baileysService;
     }
 
     /**
@@ -209,24 +212,7 @@ class StudentService
      */
     public function sendCredentialsSMS(User $user, string $password): array
     {
-        // Nettoyer le numéro et s'assurer qu'il est au format international
-        $phone = preg_replace('/\s+/', '', $user->phone); // Enlever les espaces
-
-        // Si le numéro ne commence pas par +, ajouter le code pays
-        if (!str_starts_with($phone, '+')) {
-            // Si le numéro commence par 237, ajouter juste le +
-            if (str_starts_with($phone, '237')) {
-                $phone = '+' . $phone;
-            }
-            // Sinon, ajouter +237 (code pays Cameroun par défaut)
-            else if (str_starts_with($phone, '6')) {
-                $phone = '+237' . $phone;
-            }
-            // Pour autres formats, ajouter juste le +
-            else {
-                $phone = '+' . $phone;
-            }
-        }
+        $phone = $this->normalizePhone($user->phone);
 
         $message = $this->prepareSMSMessage($user->name, $user->email, $password, $phone);
 
@@ -288,6 +274,58 @@ class StudentService
                 'message' => 'Erreur: ' . $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Normalise un numéro de téléphone au format international (+237...)
+     */
+    protected function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/\s+/', '', $phone);
+        if (!str_starts_with($phone, '+')) {
+            if (str_starts_with($phone, '237')) {
+                $phone = '+' . $phone;
+            } elseif (str_starts_with($phone, '6')) {
+                $phone = '+237' . $phone;
+            } else {
+                $phone = '+' . $phone;
+            }
+        }
+        return $phone;
+    }
+
+    /**
+     * Envoie les identifiants par WhatsApp via Baileys
+     *
+     * @param User $user
+     * @param string $password
+     * @return array
+     */
+    public function sendCredentialsWhatsApp(User $user, string $password): array
+    {
+        $phone = $this->normalizePhone($user->phone);
+
+        $message = "*Estuaire Emploi - Bienvenue !*\n\n"
+            . "Bonjour *{$user->name}* !\n\n"
+            . "Votre compte etudiant a ete cree avec succes.\n\n"
+            . "Vos identifiants de connexion :\n"
+            . "Email : {$user->email}\n"
+            . "Mot de passe : {$password}\n\n"
+            . "Telechargez l'application Estuaire Emploi et connectez-vous !";
+
+        Log::info('[STUDENT WhatsApp] Envoi des identifiants', [
+            'user_id' => $user->id,
+            'phone'   => $phone,
+        ]);
+
+        $result = $this->baileysService->sendMessage($phone, $message);
+
+        Log::info('[STUDENT WhatsApp] Resultat', [
+            'phone'  => $phone,
+            'result' => $result,
+        ]);
+
+        return $result;
     }
 
     /**
