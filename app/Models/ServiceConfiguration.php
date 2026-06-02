@@ -133,6 +133,12 @@ class ServiceConfiguration extends Model
     {
         if ($serviceType) {
             Cache::forget("service_config_{$serviceType}");
+
+            // Le canal par défaut est mis en cache séparément : il faut aussi
+            // l'invalider quand on met à jour les préférences de notification.
+            if ($serviceType === 'notification_preferences') {
+                Cache::forget('default_notification_channel');
+            }
         } else {
             // Clear all service configs
             Cache::forget('service_config_whatsapp');
