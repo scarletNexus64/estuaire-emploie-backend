@@ -316,30 +316,6 @@ class StudentController extends Controller
     }
 
     /**
-     * Envoyer les identifiants par WhatsApp via Baileys
-     */
-    public function sendWhatsApp(Request $request, $userId)
-    {
-        $validator = Validator::make($request->all(), [
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->with('error', 'Mot de passe manquant');
-        }
-
-        $user = User::findOrFail($userId);
-        $result = $this->studentService->sendCredentialsWhatsApp($user, $request->password);
-
-        if ($result['success']) {
-            return redirect()->route('admin.students.index')
-                ->with('success', 'Message WhatsApp envoye avec succes a ' . $user->phone);
-        }
-
-        return back()->with('error', 'Erreur WhatsApp: ' . $result['message']);
-    }
-
-    /**
      * Afficher les détails d'un étudiant
      */
     public function show($id)

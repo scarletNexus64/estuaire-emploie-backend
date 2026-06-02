@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\EmailVerification;
 use App\Models\PhoneOtp;
+use App\Models\ServiceConfiguration;
 use App\Models\User;
-use App\Services\Notifications\NexahService;
+use App\Services\Notifications\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,11 @@ use Illuminate\Support\Facades\Validator;
 
 class OtpController extends Controller
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
+    }
+
     /**
      * Envoie un OTP par SMS (téléphone) ou par email.
      *
@@ -115,24 +121,18 @@ class OtpController extends Controller
             ]
         );
 
-        // Message OTP
-        // $message = "Votre OTP est \"{$code}\"\nIl est valable pendant 5 minutes. Ne le partagez avec personne.";
-           $message = "Utilisez \"{$code}\" pour poursuivre l'opération.\nValable pendant 5 minutes. Ne le partagez avec personne.";
+        // Message OTP (utilisé pour le canal SMS)
+        $message = "Utilisez \"{$code}\" pour poursuivre l'opération.\nValable pendant 5 minutes. Ne le partagez avec personne.";
 
-        // Envoyer via Nexah (2 fois avec senderID différents)
+        // Envoyer via le canal configuré (WhatsApp Meta ou SMS Nexah),
+        // avec bascule automatique sur l'autre canal en cas d'échec.
         try {
-            $nexah = new NexahService();
+            $result = $this->notificationService->sendOtp($phone, $code, $message);
 
-            // Envoi 1 : senderID = 'infos'
-            $result1 = $nexah->sendSms($phone, $message, 'infos');
-            Log::info("[OTP] SMS 1 (senderID: infos) → {$phone}", ['result' => $result1]);
+            Log::info("[OTP] Envoi OTP → {$phone}", ['result' => $result]);
 
-            // Envoi 2 : senderID = celui de la config admin
-            $result2 = $nexah->sendSms($phone, $message);
-            Log::info("[OTP] SMS 2 (senderID: config) → {$phone}", ['result' => $result2]);
-
-            if (!$result1['success'] && !$result2['success']) {
-                Log::error("[OTP] Les deux envois SMS ont échoué pour {$phone}");
+            if (empty($result['success'])) {
+                Log::error("[OTP] Echec d'envoi de l'OTP pour {$phone}", ['result' => $result]);
                 return response()->json([
                     'message' => __('otp.sms_send_failed'),
                 ], 500);
@@ -140,11 +140,11 @@ class OtpController extends Controller
 
             return response()->json([
                 'message' => __('otp.sms_sent'),
-                'channel' => 'sms',
+                'channel' => $result['channel'] ?? ServiceConfiguration::getDefaultNotificationChannel(),
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error("[OTP] Erreur envoi SMS : " . $e->getMessage());
+            Log::error("[OTP] Erreur envoi OTP : " . $e->getMessage());
             return response()->json([
                 'message' => __('otp.sms_send_error'),
                 'error'   => config('app.debug') ? $e->getMessage() : null,
@@ -342,23 +342,18 @@ class OtpController extends Controller
             ]
         );
 
-        // Message OTP
+        // Message OTP (utilisé pour le canal SMS)
         $message = "Utilisez \"{$code}\" pour réinitialiser votre mot de passe.\nValable pendant 5 minutes. Ne le partagez avec personne.";
 
-        // Envoyer via Nexah
+        // Envoyer via le canal configuré (WhatsApp Meta ou SMS Nexah),
+        // avec bascule automatique sur l'autre canal en cas d'échec.
         try {
-            $nexah = new NexahService();
+            $result = $this->notificationService->sendOtp($phone, $code, $message);
 
-            // Envoi 1 : senderID = 'infos'
-            $result1 = $nexah->sendSms($phone, $message, 'infos');
-            Log::info("[PASSWORD RESET OTP] SMS 1 (senderID: infos) → {$phone}", ['result' => $result1]);
+            Log::info("[PASSWORD RESET OTP] Envoi OTP → {$phone}", ['result' => $result]);
 
-            // Envoi 2 : senderID = celui de la config admin
-            $result2 = $nexah->sendSms($phone, $message);
-            Log::info("[PASSWORD RESET OTP] SMS 2 (senderID: config) → {$phone}", ['result' => $result2]);
-
-            if (!$result1['success'] && !$result2['success']) {
-                Log::error("[PASSWORD RESET OTP] Les deux envois SMS ont échoué pour {$phone}");
+            if (empty($result['success'])) {
+                Log::error("[PASSWORD RESET OTP] Echec d'envoi de l'OTP pour {$phone}", ['result' => $result]);
                 return response()->json([
                     'message' => __('otp.sms_send_failed'),
                 ], 500);
@@ -366,11 +361,11 @@ class OtpController extends Controller
 
             return response()->json([
                 'message' => __('otp.reset_sms_sent'),
-                'channel' => 'sms',
+                'channel' => $result['channel'] ?? ServiceConfiguration::getDefaultNotificationChannel(),
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error("[PASSWORD RESET OTP] Erreur envoi SMS : " . $e->getMessage());
+            Log::error("[PASSWORD RESET OTP] Erreur envoi OTP : " . $e->getMessage());
             return response()->json([
                 'message' => __('otp.sms_send_error'),
                 'error'   => config('app.debug') ? $e->getMessage() : null,

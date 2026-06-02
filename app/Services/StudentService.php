@@ -7,7 +7,6 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserPremiumService;
 use App\Models\UserSubscriptionPlan;
-use App\Services\Notifications\BaileysService;
 use App\Services\Notifications\NexahService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -18,13 +17,11 @@ class StudentService
 {
     protected NexahService $nexahService;
     protected FirebaseNotificationService $fcmService;
-    protected BaileysService $baileysService;
 
-    public function __construct(NexahService $nexahService, FirebaseNotificationService $fcmService, BaileysService $baileysService)
+    public function __construct(NexahService $nexahService, FirebaseNotificationService $fcmService)
     {
         $this->nexahService    = $nexahService;
         $this->fcmService      = $fcmService;
-        $this->baileysService  = $baileysService;
     }
 
     /**
@@ -292,40 +289,6 @@ class StudentService
             }
         }
         return $phone;
-    }
-
-    /**
-     * Envoie les identifiants par WhatsApp via Baileys
-     *
-     * @param User $user
-     * @param string $password
-     * @return array
-     */
-    public function sendCredentialsWhatsApp(User $user, string $password): array
-    {
-        $phone = $this->normalizePhone($user->phone);
-
-        $message = "*Estuaire Emploi - Bienvenue !*\n\n"
-            . "Bonjour *{$user->name}* !\n\n"
-            . "Votre compte etudiant a ete cree avec succes.\n\n"
-            . "Vos identifiants de connexion :\n"
-            . "Email : {$user->email}\n"
-            . "Mot de passe : {$password}\n\n"
-            . "Telechargez l'application Estuaire Emploi et connectez-vous !";
-
-        Log::info('[STUDENT WhatsApp] Envoi des identifiants', [
-            'user_id' => $user->id,
-            'phone'   => $phone,
-        ]);
-
-        $result = $this->baileysService->sendMessage($phone, $message);
-
-        Log::info('[STUDENT WhatsApp] Resultat', [
-            'phone'  => $phone,
-            'result' => $result,
-        ]);
-
-        return $result;
     }
 
     /**

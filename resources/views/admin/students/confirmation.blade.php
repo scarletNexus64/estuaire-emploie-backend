@@ -111,7 +111,7 @@
                 Les informations de connexion (email, mot de passe) seront envoyees au numero <strong>{{ $user->phone }}</strong>.
             </p>
             <p style="margin-bottom: 1.25rem; color: #856404;">
-                <strong>Important :</strong> Vous pouvez envoyer par SMS, par WhatsApp, ou les deux.
+                <strong>Important :</strong> Les identifiants sont envoyes par SMS. L'envoi par WhatsApp n'est pas encore disponible.
             </p>
 
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start;">
@@ -126,15 +126,12 @@
                     </button>
                 </form>
 
-                {{-- Bouton WhatsApp --}}
-                <form action="{{ route('admin.students.send-whatsapp', $user->id) }}" method="POST"
-                      onsubmit="return confirm('Envoyer le message WhatsApp a {{ $user->phone }} ?');">
-                    @csrf
-                    <input type="hidden" name="password" value="{{ $password }}">
-                    <button type="submit" class="btn btn-lg" style="background-color: #25D366; border-color: #1da851; color: white;">
-                        Envoyer par WhatsApp
-                    </button>
-                </form>
+                {{-- Bouton WhatsApp (non disponible pour le moment) --}}
+                <button type="button" class="btn btn-lg" disabled
+                        title="Envoi par WhatsApp non disponible pour le moment"
+                        style="background-color: #25D366; border-color: #1da851; color: white; opacity: 0.55; cursor: not-allowed;">
+                    Envoyer par WhatsApp (bientot)
+                </button>
 
                 <a href="{{ route('admin.students.index') }}" class="btn btn-secondary btn-lg">
                     Terminer sans envoyer
