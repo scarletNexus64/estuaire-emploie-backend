@@ -225,7 +225,14 @@ public function login(Request $request)
     ]);
 
     // 4. VÉRIFICATION DU DEVICE_ID
-    if (empty($user->device_id)) {
+    // Bypass device check pour le compte de review Apple
+    $appleReviewEmails = ['jrkira84@gmail.com'];
+    if (in_array(strtolower($user->email ?? ''), $appleReviewEmails, true)) {
+        Log::info('🍎 [LOGIN] Bypass device check (Apple review account)', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
+    } elseif (empty($user->device_id)) {
         // Premier login ou ancien compte sans device_id -> Associer cet appareil
         Log::info('📱 [LOGIN] Premier appareil associé au compte', ['user_id' => $user->id]);
         $user->update(['device_id' => $deviceId]);
