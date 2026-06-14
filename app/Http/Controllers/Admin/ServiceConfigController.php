@@ -23,12 +23,14 @@ class ServiceConfigController extends Controller
         $whatsappConfig = ServiceConfiguration::getWhatsAppConfig();
         $nexahConfig = ServiceConfiguration::getNexahConfig();
         $freemopayConfig = ServiceConfiguration::getFreeMoPayConfig();
+        $kpayConfig = ServiceConfiguration::getKPayConfig();
         $paypalConfig = ServiceConfiguration::getPayPalConfig();
 
         return view('admin.service-config.index', compact(
             'whatsappConfig',
             'nexahConfig',
             'freemopayConfig',
+            'kpayConfig',
             'paypalConfig'
         ));
     }
@@ -197,6 +199,73 @@ class ServiceConfigController extends Controller
 
             return redirect()->back()
                 ->with('success', 'Configuration FreeMoPay mise à jour avec succès!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update KPay configuration
+     */
+    public function updateKPay(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'kpay_base_url' => 'required|url',
+            'kpay_api_key' => 'required|string|min:8',
+            'kpay_secret_key' => 'required|string|min:8',
+            'kpay_webhook_secret' => 'nullable|string|min:8',
+            'kpay_environment' => 'required|in:sandbox,live',
+            'kpay_deposit_callback_url' => 'nullable|url',
+            'kpay_withdrawal_callback_url' => 'nullable|url',
+            'kpay_init_payment_timeout' => 'required|integer|min:5|max:120',
+            'kpay_status_check_timeout' => 'required|integer|min:5|max:120',
+            'kpay_max_retries' => 'required|integer|min:0|max:5',
+            'kpay_retry_delay' => 'required|numeric|min:0|max:5',
+            'kpay_min_deposit' => 'required|integer|min:50|max:1000000',
+            'kpay_min_withdrawal' => 'required|integer|min:100|max:1000000',
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Erreurs de validation: ' . implode(' | ', $errors));
+        }
+
+        try {
+            $config = ServiceConfiguration::updateOrCreate(
+                ['service_type' => 'kpay'],
+                [
+                    'kpay_base_url' => $request->kpay_base_url,
+                    'kpay_api_key' => $request->kpay_api_key,
+                    'kpay_secret_key' => $request->kpay_secret_key,
+                    'kpay_webhook_secret' => $request->kpay_webhook_secret,
+                    'kpay_environment' => $request->kpay_environment,
+                    'kpay_deposit_callback_url' => $request->kpay_deposit_callback_url,
+                    'kpay_withdrawal_callback_url' => $request->kpay_withdrawal_callback_url,
+                    'kpay_init_payment_timeout' => $request->kpay_init_payment_timeout,
+                    'kpay_status_check_timeout' => $request->kpay_status_check_timeout,
+                    'kpay_max_retries' => $request->kpay_max_retries,
+                    'kpay_retry_delay' => $request->kpay_retry_delay,
+                    'kpay_min_deposit' => $request->kpay_min_deposit,
+                    'kpay_min_withdrawal' => $request->kpay_min_withdrawal,
+                    'is_active' => $request->has('is_active'),
+                ]
+            );
+
+            ServiceConfiguration::clearCache('kpay');
+
+            $errors = $config->validateKPayConfig();
+            if (!empty($errors)) {
+                return redirect()->back()
+                    ->with('warning', 'Configuration sauvegardée avec des avertissements: ' . implode(', ', $errors));
+            }
+
+            return redirect()->back()
+                ->with('success', 'Configuration KPay mise à jour avec succès!');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage())
@@ -435,6 +504,25 @@ class ServiceConfigController extends Controller
 
         $freemopayService = new \App\Services\Payment\FreeMoPayService();
         $result = $freemopayService->testConnection();
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
+
+    /**
+     * Test KPay connection (appelle /payments/balance)
+     */
+    public function testKPay()
+    {
+        $config = ServiceConfiguration::getKPayConfig();
+
+        if (!$config || !$config->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Configuration KPay incomplète ou inactive.'
+            ], 400);
+        }
+
+        $result = (new \App\Services\Payment\KPayService())->testConnection();
 
         return response()->json($result, $result['success'] ? 200 : 400);
     }

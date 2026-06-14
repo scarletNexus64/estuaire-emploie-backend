@@ -105,6 +105,7 @@ class JobController extends Controller
                 'company',
                 'category',
                 'contractType',
+                'specialty',
                 'skillTests' => function ($query) {
                     $query->where('is_active', true)
                           ->select('id', 'job_id', 'title', 'description', 'duration_minutes', 'passing_score');
@@ -131,6 +132,11 @@ class JobController extends Controller
 
         if ($request->has('contract_type_id')) {
             $query->where('contract_type_id', $request->contract_type_id);
+        }
+
+        // Filtre par spécialité académique (filière).
+        if ($request->has('specialty_id')) {
+            $query->where('specialty_id', $request->specialty_id);
         }
 
         if ($request->has('experience_level')) {
@@ -170,9 +176,18 @@ class JobController extends Controller
                     ->orWhereHas('company', function ($companyQuery) use ($normalizedSearch) {
                         $companyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
                     })
-                    // Recherche dans la catégorie
+                    // Recherche dans la catégorie (table company_categories :
+                    // colonnes level_1/2/3, pas de colonne `name`).
                     ->orWhereHas('category', function ($categoryQuery) use ($normalizedSearch) {
-                        $categoryQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                        $categoryQuery->where(function ($c) use ($normalizedSearch) {
+                            $c->whereRaw('LOWER(level_1) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                                ->orWhereRaw('LOWER(level_2) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
+                                ->orWhereRaw('LOWER(level_3) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
+                        });
+                    })
+                    // Recherche dans la spécialité académique (filière).
+                    ->orWhereHas('specialty', function ($specialtyQuery) use ($normalizedSearch) {
+                        $specialtyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
                     });
             });
         }

@@ -27,6 +27,10 @@ class FcmTopicController extends Controller
         'all' => 'Tous les utilisateurs (abonnement explicite via Réglages)',
         'forum' => 'Forum (abonnement auto à la connexion)',
         'maintenance' => 'Maintenance (abonnement auto à la connexion)',
+        'all_users' => 'Tous les utilisateurs (abonnement auto à la connexion)',
+        'role_student' => 'Étudiants (abonnement auto par rôle)',
+        'role_candidate' => 'Candidats (abonnement auto par rôle)',
+        'role_recruiter' => 'Entreprises (abonnement auto par rôle)',
     ];
 
     private FirebaseNotificationService $firebaseService;

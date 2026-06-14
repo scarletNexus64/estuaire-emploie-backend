@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\PlatformWithdrawal;
 use App\Services\Payment\FreeMoPayDisbursementService;
+use App\Services\Payment\KPayService;
 use App\Services\Payment\PayPalPayoutService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -25,7 +26,7 @@ class ProcessWithdrawalPolling implements ShouldQueue
         public string $reference
     ) {
         // Queue 'notifications' pour priorité élevée
-        $this->onQueue('notifications');
+        $this->onQueue('withdrawals');
     }
 
     /**
@@ -40,7 +41,9 @@ class ProcessWithdrawalPolling implements ShouldQueue
         ]);
 
         try {
-            if ($this->withdrawal->provider === 'freemopay') {
+            if ($this->withdrawal->provider === 'kpay') {
+                $this->pollKPay();
+            } elseif ($this->withdrawal->provider === 'freemopay') {
                 $this->pollFreeMoPay();
             } elseif ($this->withdrawal->provider === 'paypal') {
                 $this->pollPayPal();
@@ -146,6 +149,74 @@ class ProcessWithdrawalPolling implements ShouldQueue
 
             } catch (\Exception $e) {
                 Log::warning("[ProcessWithdrawalPolling] ⚠️ Poll attempt #{$attempts} error: {$e->getMessage()}");
+                sleep($pollingInterval);
+            }
+        }
+    }
+
+    /**
+     * Poll KPay withdrawal status (GET /payments/withdraw/:id)
+     *
+     * Source de vérité = webhook payout.* ; ce job est le secours. Les gardes
+     * isCompleted()/isFailed() évitent toute double-déduction en cas de course.
+     */
+    protected function pollKPay(): void
+    {
+        $kpay = app(KPayService::class);
+        $startTime = time();
+        $attempts = 0;
+        $pollingInterval = 5;   // 5s (KPay rate limit ~10 req/min/transaction)
+        $pollingTimeout = 150;
+        $maxPollingAttempts = 30;
+
+        $successStatuses = ['COMPLETED'];
+        $failedStatuses = ['FAILED', 'CANCELLED', 'CANCELED'];
+
+        while (true) {
+            $attempts++;
+            $elapsed = time() - $startTime;
+
+            if ($elapsed >= $pollingTimeout || $attempts > $maxPollingAttempts) {
+                Log::warning("[ProcessWithdrawalPolling] ⏱️ KPay polling timeout", [
+                    'withdrawal_id' => $this->withdrawal->id,
+                    'attempts' => $attempts,
+                ]);
+                return; // Laisser en 'processing' ; le webhook finalisera
+            }
+
+            try {
+                $statusResponse = $kpay->checkWithdrawalStatus($this->reference);
+                $currentStatus = strtoupper($statusResponse['status'] ?? '');
+
+                Log::info("[ProcessWithdrawalPolling] KPay Poll #{$attempts}: {$currentStatus}");
+
+                if (in_array($currentStatus, $successStatuses)) {
+                    $wasAlreadyCompleted = $this->withdrawal->fresh()->isCompleted();
+                    $this->withdrawal->markAsCompleted($this->reference, $statusResponse);
+
+                    if (!$wasAlreadyCompleted) {
+                        $this->deductWalletBalance();
+                        $this->updateWalletTransactionStatus('completed');
+                        $this->sendSuccessNotification();
+                    }
+                    return;
+                }
+
+                if (in_array($currentStatus, $failedStatuses)) {
+                    $message = $statusResponse['failureReason'] ?? ($statusResponse['message'] ?? $currentStatus);
+                    $wasAlreadyFailed = $this->withdrawal->fresh()->isFailed();
+                    $this->withdrawal->markAsFailed('disbursement_failed', $message);
+
+                    if (!$wasAlreadyFailed) {
+                        $this->updateWalletTransactionStatus('failed', $message);
+                        $this->sendFailureNotification($message);
+                    }
+                    return;
+                }
+
+                sleep($pollingInterval);
+            } catch (\Exception $e) {
+                Log::warning("[ProcessWithdrawalPolling] ⚠️ KPay poll #{$attempts} error: {$e->getMessage()}");
                 sleep($pollingInterval);
             }
         }

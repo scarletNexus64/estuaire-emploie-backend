@@ -281,4 +281,19 @@ class SettingsController extends Controller
         return redirect()->back()
             ->with('success', 'Paramètres de parrainage mis à jour avec succès');
     }
+
+    /**
+     * Mettre à jour les paramètres du wallet (frais de retrait)
+     */
+    public function updateWalletSettings(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'withdrawal_fee_percentage' => 'required|numeric|min:0|max:100',
+        ]);
+
+        Setting::set('withdrawal_fee_percentage', $validated['withdrawal_fee_percentage']);
+
+        return redirect()->back()
+            ->with('success', 'Paramètres du wallet mis à jour avec succès');
+    }
 }

@@ -1652,6 +1652,7 @@
                     'fas fa-cog' => 'mdi-cog',
                     'fas fa-wrench' => 'mdi-wrench',
                     'fas fa-envelope' => 'mdi-email',
+                    'fas fa-map-signs' => 'mdi-map-marker-path',
                 ];
             @endphp
 

@@ -90,7 +90,7 @@ class UserRoleController extends Controller
     public function switchRole(Request $request): JsonResponse
     {
         $request->validate([
-            'role' => 'required|in:candidate,recruiter',
+            'role' => 'required|in:candidate,recruiter,student',
         ]);
 
         $user = $request->user();

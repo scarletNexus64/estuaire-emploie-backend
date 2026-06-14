@@ -82,8 +82,8 @@
                         </li>
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" id="payment-tab" data-bs-toggle="tab" href="#payment" role="tab" aria-controls="payment" aria-selected="false">
-                                <i class="mdi mdi-currency-usd"></i> Paiement (FreeMoPay)
-                                @if($freemopayConfig && $freemopayConfig->isConfigured())
+                                <i class="mdi mdi-cellphone-wireless"></i> Paiement (KPay)
+                                @if($kpayConfig && $kpayConfig->isConfigured())
                                     <span class="badge bg-success ms-1">Configuré</span>
                                 @else
                                     <span class="badge bg-warning ms-1">Non configuré</span>
@@ -114,8 +114,8 @@
                         {{-- SMS Tab --}}
                         @include('admin.service-config.nexah', ['config' => $nexahConfig])
 
-                        {{-- Payment Tab --}}
-                        @include('admin.service-config.freemopay', ['config' => $freemopayConfig])
+                        {{-- Payment Tab (KPay) --}}
+                        @include('admin.service-config.kpay', ['config' => $kpayConfig])
 
                         {{-- PayPal Tab --}}
                         @include('admin.service-config.paypal', ['config' => $paypalConfig])

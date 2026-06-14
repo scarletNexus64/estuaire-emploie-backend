@@ -50,6 +50,9 @@
                     <p><strong>Ville (entreprise):</strong> {{ $job->company?->city ?? 'N/A' }}</p>
                     <p><strong>Visibilité:</strong> {{ $job->visibility === 'local' ? 'Locale' : 'Nationale' }}</p>
                     <p><strong>Type de contrat:</strong> {{ $job->contractType?->name ?? 'N/A' }}</p>
+                    @if($job->specialty)
+                        <p><strong>Spécialité académique (filière):</strong> {{ $job->specialty->name }}</p>
+                    @endif
                     <p><strong>Niveau d'expérience:</strong> {{ ucfirst($job->experience_level ?? 'N/A') }}</p>
 
                     @if($job->salary_min || $job->salary_max)

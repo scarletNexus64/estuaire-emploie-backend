@@ -78,16 +78,34 @@
 
             <div class="form-group">
                 <label class="form-label">Type de contrat *</label>
-                <select name="contract_type_id" class="form-control" required>
+                <select name="contract_type_id" id="contract_type_id" class="form-control" required>
                     <option value="">Sélectionner un type</option>
                     @foreach($contractTypes as $type)
-                        <option value="{{ $type->id }}" {{ old('contract_type_id') == $type->id ? 'selected' : '' }}>
+                        <option value="{{ $type->id }}" data-slug="{{ $type->slug }}" {{ old('contract_type_id') == $type->id ? 'selected' : '' }}>
                             {{ $type->name }}
                         </option>
                     @endforeach
                 </select>
                 @error('contract_type_id')
                     <small style="color: var(--danger); font-size: 0.875rem;">{{ $message }}</small>
+                @enderror
+            </div>
+
+            <div class="form-group" id="specialtyGroup" style="display: none;">
+                <label class="form-label">Spécialité académique (filière) <span style="color: var(--danger);">*</span></label>
+                <select name="specialty_id" id="specialty_id" class="form-control">
+                    <option value="">— Sélectionner une filière —</option>
+                    @foreach($specialties as $specialty)
+                        <option value="{{ $specialty->id }}" {{ old('specialty_id') == $specialty->id ? 'selected' : '' }}>
+                            {{ $specialty->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <small style="color: #6b7280;">
+                    Obligatoire pour un Stage : précisez la filière vraiment concernée par ce stage.
+                </small>
+                @error('specialty_id')
+                    <small style="color: var(--danger); font-size: 0.875rem; display: block;">{{ $message }}</small>
                 @enderror
             </div>
 
@@ -239,5 +257,27 @@ function updateCategoryOptions() {
 companySelect.addEventListener('change', updateCategoryOptions);
 // Init au chargement (utile si old company_id est présent après échec de validation)
 updateCategoryOptions();
+
+// --- Spécialité académique obligatoire si Type de contrat = Stage ---
+const contractSelect = document.getElementById('contract_type_id');
+const specialtyGroup = document.getElementById('specialtyGroup');
+const specialtySelect = document.getElementById('specialty_id');
+
+function updateSpecialtyVisibility() {
+    const selected = contractSelect.options[contractSelect.selectedIndex];
+    const isStage = selected && selected.dataset.slug === 'stage';
+
+    specialtyGroup.style.display = isStage ? '' : 'none';
+    if (isStage) {
+        specialtySelect.setAttribute('required', 'required');
+    } else {
+        specialtySelect.removeAttribute('required');
+        specialtySelect.value = '';
+    }
+}
+
+contractSelect.addEventListener('change', updateSpecialtyVisibility);
+// Init au chargement (utile après échec de validation pour ré-afficher le champ)
+updateSpecialtyVisibility();
 </script>
 @endsection

@@ -13,6 +13,7 @@ use App\Models\PackPurchase;
 use App\Models\UserStoragePack;
 use App\Models\UserSubscriptionPlan;
 use App\Models\Payment;
+use App\Services\Gfs\GfsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -188,6 +189,10 @@ class PackPromotionApiController extends Controller
 
                 DB::commit();
 
+                // Compte GFSolutions offert si la promo porte sur un plan
+                // d'abonnement qui inclut l'avantage. Non bloquant.
+                $gfsAccount = $this->maybeOnboardGfsForPromotion($promotion, $user);
+
                 return response()->json([
                     'success' => true,
                     'message' => __('pack_promotion.activated', ['date' => $activation->expires_at->format('d/m/Y')]),
@@ -199,6 +204,7 @@ class PackPromotionApiController extends Controller
                         'pack_name' => $promotion->pack_name,
                         'pack_type' => $this->getPackTypeSlug($promotion->promotionable_type),
                     ],
+                    'gfs_account' => $gfsAccount,
                 ]);
 
             } catch (\Exception $e) {
@@ -268,6 +274,39 @@ class PackPromotionApiController extends Controller
                 'message' => __('pack_promotion.activations_fetch_error'),
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Crée (ou récupère) le compte GFSolutions offert lorsqu'une promotion
+     * porte sur un plan d'abonnement (SubscriptionPlan) incluant l'avantage
+     * `gfs_free_account`. Non bloquant : un échec GFS n'invalide pas
+     * l'activation déjà committée. À appeler APRÈS le commit.
+     */
+    private function maybeOnboardGfsForPromotion(PackPromotion $promotion, $user): ?array
+    {
+        if ($promotion->promotionable_type !== 'App\Models\SubscriptionPlan') {
+            return null;
+        }
+
+        $plan = $promotion->promotionable;
+        $offersGfs = $plan
+            && is_array($plan->features)
+            && ($plan->features['gfs_free_account'] ?? false) === true;
+
+        if (!$offersGfs) {
+            return null;
+        }
+
+        try {
+            return app(GfsService::class)->onboardClient($user);
+        } catch (\Throwable $e) {
+            Log::error('[PackPromotionApiController] GFS onboarding failed', [
+                'user_id' => $user->id,
+                'promotion_id' => $promotion->id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
         }
     }
 

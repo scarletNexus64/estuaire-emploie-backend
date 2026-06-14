@@ -38,7 +38,7 @@ class CandidatePremiumServiceController extends Controller
     {
         $request->validate([
             'service_slug' => 'required|string|exists:premium_services_configs,slug',
-            'payment_provider' => 'required|string|in:freemopay,paypal',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
         ]);
 
         $user = Auth::user();
@@ -312,6 +312,30 @@ class CandidatePremiumServiceController extends Controller
     }
 
     /**
+     * Résumé des accès « espace étudiant » de l'utilisateur.
+     * GET /api/candidate/premium-services/student-access
+     *
+     * Renvoie les flags résolus côté serveur (source de vérité) :
+     *  - has_student_mode  : Pack Étudiant actif → débloque Épreuvethèque +
+     *                        Vidéothèque + Bibliothèque + RoadMap complète +
+     *                        Programme d'insertion.
+     *  - has_library_access : Mode Étudiant OU Pack C2/C3 → débloque seulement
+     *                        Vidéothèque + Bibliothèque (PAS l'Épreuvethèque).
+     */
+    public function studentAccess()
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'has_student_mode' => $user->hasStudentMode(),
+                'has_library_access' => $user->hasLibraryAccess(),
+            ],
+        ]);
+    }
+
+    /**
      * Obtenir les détails d'un service spécifique
      * GET /api/candidate/premium-services/{slug}
      */
@@ -328,17 +352,21 @@ class CandidatePremiumServiceController extends Controller
             ], 404);
         }
 
-        $user = Auth::user();
+        // Lecture publique (mode vitrine) : token optionnel résolu via le guard
+        // sanctum. Un invité (null) reçoit la description du service sans crash.
+        $user = auth('sanctum')->user();
 
-        // Vérifier si l'utilisateur a déjà ce service
-        $userService = UserPremiumService::where('user_id', $user->id)
-            ->where('premium_services_config_id', $service->id)
-            ->where('is_active', true)
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>=', now());
-            })
-            ->first();
+        // Vérifier si l'utilisateur connecté a déjà ce service (null-guard invité).
+        $userService = $user
+            ? UserPremiumService::where('user_id', $user->id)
+                ->where('premium_services_config_id', $service->id)
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>=', now());
+                })
+                ->first()
+            : null;
 
         return response()->json([
             'success' => true,

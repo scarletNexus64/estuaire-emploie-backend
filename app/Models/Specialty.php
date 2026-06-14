@@ -81,6 +81,14 @@ class Specialty extends Model
     }
 
     /**
+     * Relation avec les offres d'emploi (via specialty_id).
+     */
+    public function jobs()
+    {
+        return $this->hasMany(Job::class, 'specialty_id');
+    }
+
+    /**
      * Obtenir toutes les spécialités actives pour un select
      */
     public static function getSelectOptions(): array

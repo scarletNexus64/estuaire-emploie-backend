@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\PlatformWithdrawal;
-use App\Services\Payment\FreeMoPayDisbursementService;
+use App\Services\Payment\KPayService;
 use App\Services\Payment\PayPalPayoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,14 +15,14 @@ use Illuminate\Support\Str;
 
 class BankAccountController extends Controller
 {
-    protected FreeMoPayDisbursementService $disbursementService;
+    protected KPayService $kpayService;
     protected PayPalPayoutService $paypalPayoutService;
 
     public function __construct(
-        FreeMoPayDisbursementService $disbursementService,
+        KPayService $kpayService,
         PayPalPayoutService $paypalPayoutService
     ) {
-        $this->disbursementService = $disbursementService;
+        $this->kpayService = $kpayService;
         $this->paypalPayoutService = $paypalPayoutService;
     }
 
@@ -46,9 +46,9 @@ class BankAccountController extends Controller
                       ->orWhereNull('payment_type');
             })
             ->where(function($query) {
-                // Only FreeMoPay transactions (Orange & MTN)
-                $query->where('provider', 'FreeMoPay')
-                      ->orWhereIn('payment_method', ['om', 'momo', 'orange', 'mtn']);
+                // Transactions Mobile Money (KPay + héritage FreeMoPay)
+                $query->whereIn('provider', ['kpay', 'FreeMoPay', 'freemopay'])
+                      ->orWhereIn('payment_method', ['om', 'momo', 'orange', 'mtn', 'mtn_money', 'orange_money']);
             })
             ->orderBy('created_at', 'desc')
             ->paginate(15)
@@ -97,7 +97,7 @@ class BankAccountController extends Controller
         // user_id IS NOT NULL = user wallet withdrawals (user money, should NOT be counted here)
         $freemopayWithdrawn = PlatformWithdrawal::where('status', 'completed')
             ->where(function($query) {
-                $query->where('provider', 'freemopay')
+                $query->whereIn('provider', ['kpay', 'freemopay'])
                       ->orWhereNull('provider'); // Legacy data without provider
             })
             ->whereNull('user_id') // ⚠️ CRITICAL: Exclude user wallet withdrawals
@@ -144,9 +144,9 @@ class BankAccountController extends Controller
                       ->orWhereNull('payment_type');
             })
             ->where(function($query) {
-                // Only FreeMoPay transactions (Orange & MTN)
-                $query->where('provider', 'FreeMoPay')
-                      ->orWhereIn('payment_method', ['om', 'momo', 'orange', 'mtn']);
+                // Transactions Mobile Money (KPay + héritage FreeMoPay)
+                $query->whereIn('provider', ['kpay', 'FreeMoPay', 'freemopay'])
+                      ->orWhereIn('payment_method', ['om', 'momo', 'orange', 'mtn', 'mtn_money', 'orange_money']);
             })
             ->sum('amount');
     }
@@ -339,7 +339,7 @@ class BankAccountController extends Controller
 
         // Normalize phone number
         try {
-            $phone = $this->disbursementService->normalizePhoneNumber($request->phone);
+            $phone = $this->kpayService->normalizePhoneNumber($request->phone);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -399,7 +399,7 @@ class BankAccountController extends Controller
     }
 
     /**
-     * Process platform withdrawal using FreemoPay
+     * Process platform withdrawal using KPay
      */
     protected function processPlatformWithdrawal(PlatformWithdrawal $withdrawal): PlatformWithdrawal
     {
@@ -408,35 +408,38 @@ class BankAccountController extends Controller
         try {
             // Mark as processing
             $withdrawal->markAsProcessing();
+            $withdrawal->update(['provider' => 'kpay']);
 
-            // Call FreeMoPay API to initiate withdrawal
-            // Get callback URL from config or use default
-            $config = \App\Models\ServiceConfiguration::getFreeMoPayConfig();
-            $callbackUrl = $config->freemopay_callback_url ?? config('app.url') . '/api/webhooks/freemopay';
+            // Dériver le code opérateur KPay depuis le numéro
+            $providerCode = $this->kpayService->deriveProviderCode($withdrawal->payment_account);
+            if (!$providerCode) {
+                $withdrawal->markAsFailed('no_provider', 'Opérateur indéterminé pour ce numéro');
+                throw new \Exception('Opérateur indéterminé pour ce numéro de retrait');
+            }
 
-            Log::info("[Platform Withdrawal] Using callback URL: {$callbackUrl}");
-
-            $freemoResponse = $this->callDirectWithdrawAPI(
+            // Appel KPay /payments/withdraw
+            $kpayResponse = $this->kpayService->initWithdrawal(
                 $withdrawal->payment_account,
-                (int) $withdrawal->amount_sent,
+                (float) $withdrawal->amount_sent,
+                $providerCode,
                 $withdrawal->transaction_reference,
-                $callbackUrl
+                'Retrait plateforme Estuaire Emploi'
             );
 
-            $reference = $freemoResponse['reference'] ?? null;
+            $reference = $kpayResponse['id'] ?? null;
 
             if (!$reference) {
-                Log::error("[Platform Withdrawal] Pas de référence dans la réponse: " . json_encode($freemoResponse));
-                $withdrawal->markAsFailed('no_reference', 'Pas de référence FreeMoPay dans la réponse');
+                Log::error("[Platform Withdrawal] Pas d'identifiant KPay: " . json_encode($kpayResponse));
+                $withdrawal->markAsFailed('no_reference', 'Pas d\'identifiant KPay dans la réponse');
                 throw new \Exception('Erreur lors de l\'initialisation du transfert');
             }
 
             $withdrawal->update([
-                'freemopay_reference' => $reference,
-                'freemopay_response' => $freemoResponse,
+                'freemopay_reference' => $reference, // colonne réutilisée pour l'id KPay
+                'freemopay_response' => $kpayResponse,
             ]);
 
-            Log::info("[Platform Withdrawal] Transfert initié - Référence: {$reference}");
+            Log::info("[Platform Withdrawal] Transfert KPay initié - Référence: {$reference}");
 
             // Wait for disbursement completion (polling)
             $finalWithdrawal = $this->waitForDisbursementCompletion($withdrawal, $reference);
@@ -452,81 +455,20 @@ class BankAccountController extends Controller
     }
 
     /**
-     * Call FreeMoPay API to initiate withdrawal
-     */
-    protected function callDirectWithdrawAPI(string $receiver, int $amount, string $externalId, string $callback): array
-    {
-        // Get FreeMoPay configuration from ServiceConfiguration
-        $config = \App\Models\ServiceConfiguration::getFreeMoPayConfig();
-
-        if (!$config || !$config->isConfigured()) {
-            Log::error("[Platform Withdrawal] FreeMoPay non configuré");
-            throw new \Exception('FreeMoPay n\'est pas configuré. Veuillez configurer les clés API dans les paramètres.');
-        }
-
-        $baseUrl = rtrim($config->freemopay_base_url ?? 'https://api-v2.freemopay.com', '/');
-        $appKey = $config->freemopay_app_key;
-        $secretKey = $config->freemopay_secret_key;
-
-        // Validate credentials
-        if (empty($appKey) || empty($secretKey)) {
-            Log::error("[Platform Withdrawal] Clés API FreeMoPay manquantes");
-            throw new \Exception('Les clés API FreeMoPay sont manquantes. Veuillez les configurer dans les paramètres.');
-        }
-
-        $endpoint = "{$baseUrl}/api/v2/payment/direct-withdraw";
-
-        $payload = [
-            'receiver' => $receiver,
-            'amount' => (string) $amount,
-            'externalId' => $externalId,
-            'callback' => $callback,
-        ];
-
-        Log::info("[Platform Withdrawal] Appel API FreeMoPay v2 Direct Withdraw");
-        Log::info("[Platform Withdrawal] URL: {$endpoint}");
-        Log::info("[Platform Withdrawal] Payload: " . json_encode([
-            'receiver' => substr($receiver, 0, 6) . '***',
-            'amount' => $amount,
-            'externalId' => $externalId,
-        ]));
-
-        $response = \Illuminate\Support\Facades\Http::withBasicAuth($appKey, $secretKey)
-            ->timeout(60)
-            ->withHeaders([
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])
-            ->post($endpoint, $payload);
-
-        Log::info("[Platform Withdrawal] HTTP Status: {$response->status()}");
-
-        if (!$response->successful()) {
-            $errorBody = $response->json() ?? ['message' => $response->body()];
-            $rawMessage = $errorBody['message'] ?? "Erreur HTTP {$response->status()}";
-            $errorMessage = is_array($rawMessage) ? implode(', ', $rawMessage) : $rawMessage;
-            Log::error("[Platform Withdrawal] Erreur API: {$errorMessage}");
-            throw new \Exception("Erreur FreeMoPay: {$errorMessage}");
-        }
-
-        return $response->json();
-    }
-
-    /**
-     * Wait for disbursement completion
+     * Wait for disbursement completion (KPay)
      */
     protected function waitForDisbursementCompletion(PlatformWithdrawal $withdrawal, string $reference): PlatformWithdrawal
     {
-        Log::info("[Platform Withdrawal] Démarrage polling pour référence: {$reference}");
+        Log::info("[Platform Withdrawal] Démarrage polling KPay pour référence: {$reference}");
 
         $startTime = time();
         $attempts = 0;
-        $pollingInterval = 3;
+        $pollingInterval = 5;
         $pollingTimeout = 90;
-        $maxPollingAttempts = 30;
+        $maxPollingAttempts = 18;
 
-        $successStatuses = ['SUCCESS', 'SUCCESSFUL', 'COMPLETED'];
-        $failedStatuses = ['FAILED', 'FAILURE', 'ERROR', 'REJECTED', 'CANCELLED', 'CANCELED'];
+        $successStatuses = ['COMPLETED'];
+        $failedStatuses = ['FAILED', 'CANCELLED', 'CANCELED'];
 
         while (true) {
             $attempts++;
@@ -543,7 +485,7 @@ class BankAccountController extends Controller
             }
 
             try {
-                $statusResponse = $this->disbursementService->checkWithdrawalStatus($reference);
+                $statusResponse = $this->kpayService->checkWithdrawalStatus($reference);
                 $currentStatus = strtoupper($statusResponse['status'] ?? '');
 
                 Log::info("[Platform Withdrawal] Poll {$attempts}: Status = {$currentStatus}");

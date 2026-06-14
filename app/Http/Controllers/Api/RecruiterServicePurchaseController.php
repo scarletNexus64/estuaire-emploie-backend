@@ -25,7 +25,7 @@ class RecruiterServicePurchaseController extends Controller
     {
         $request->validate([
             'application_id' => 'required|exists:applications,id',
-            'payment_provider' => 'required|string|in:freemopay,paypal',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
         ]);
 
         $user = Auth::user();
@@ -69,7 +69,7 @@ class RecruiterServicePurchaseController extends Controller
     {
         $request->validate([
             'application_id' => 'required|exists:applications,id',
-            'payment_provider' => 'required|string|in:freemopay,paypal',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
         ]);
 
         $user = Auth::user();
@@ -112,7 +112,7 @@ class RecruiterServicePurchaseController extends Controller
     public function purchaseSkillsTest(Request $request)
     {
         $request->validate([
-            'payment_provider' => 'required|string|in:freemopay,paypal',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
         ]);
 
         $user = Auth::user();

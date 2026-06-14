@@ -137,6 +137,13 @@ return [
             'description' => 'Envoyer et recevoir des emails (support, candidats, entreprises)',
             'category' => 'Communications',
         ],
+
+        // Gestion des demandes de digitalisation
+        'manage_digitalization' => [
+            'name' => 'Gérer les demandes de digitalisation',
+            'description' => 'Voir et traiter les demandes de digitalisation envoyées depuis l\'app',
+            'category' => 'Administration',
+        ],
     ],
 
     /*

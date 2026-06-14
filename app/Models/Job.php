@@ -31,6 +31,7 @@ class Job extends Model
         'company_id',
         'category_id',
         'contract_type_id',
+        'specialty_id',
         'posted_by',
         'title',
         'language',
@@ -76,6 +77,15 @@ class Job extends Model
     public function contractType(): BelongsTo
     {
         return $this->belongsTo(ContractType::class);
+    }
+
+    /**
+     * Spécialité académique (filière) rattachée à l'offre.
+     * Renseignée notamment pour les offres de type Stage.
+     */
+    public function specialty(): BelongsTo
+    {
+        return $this->belongsTo(Specialty::class);
     }
 
     public function postedBy(): BelongsTo

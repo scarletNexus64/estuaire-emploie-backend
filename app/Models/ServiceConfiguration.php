@@ -47,6 +47,21 @@ class ServiceConfiguration extends Model
         'paypal_return_url',
         'paypal_cancel_url',
 
+        // KPay (remplace FreeMoPay)
+        'kpay_base_url',
+        'kpay_api_key',
+        'kpay_secret_key',
+        'kpay_webhook_secret',
+        'kpay_deposit_callback_url',
+        'kpay_withdrawal_callback_url',
+        'kpay_environment',
+        'kpay_init_payment_timeout',
+        'kpay_status_check_timeout',
+        'kpay_max_retries',
+        'kpay_retry_delay',
+        'kpay_min_deposit',
+        'kpay_min_withdrawal',
+
         // Preferences
         'default_notification_channel',
     ];
@@ -60,6 +75,12 @@ class ServiceConfiguration extends Model
         'freemopay_token_cache_duration' => 'integer',
         'freemopay_max_retries' => 'integer',
         'freemopay_retry_delay' => 'decimal:1',
+        'kpay_init_payment_timeout' => 'integer',
+        'kpay_status_check_timeout' => 'integer',
+        'kpay_max_retries' => 'integer',
+        'kpay_retry_delay' => 'decimal:1',
+        'kpay_min_deposit' => 'integer',
+        'kpay_min_withdrawal' => 'integer',
     ];
 
     /**
@@ -110,6 +131,30 @@ class ServiceConfiguration extends Model
     }
 
     /**
+     * Get KPay configuration
+     */
+    public static function getKPayConfig(): ?self
+    {
+        return self::getConfig('kpay');
+    }
+
+    /**
+     * Montant minimum de dépôt KPay (XAF). Défaut 100.
+     */
+    public static function getKPayMinDeposit(): int
+    {
+        return (int) (self::getKPayConfig()?->kpay_min_deposit ?? 100);
+    }
+
+    /**
+     * Montant minimum de retrait KPay (XAF). Défaut 100.
+     */
+    public static function getKPayMinWithdrawal(): int
+    {
+        return (int) (self::getKPayConfig()?->kpay_min_withdrawal ?? 100);
+    }
+
+    /**
      * Get default notification channel
      */
     public static function getDefaultNotificationChannel(): string
@@ -144,6 +189,7 @@ class ServiceConfiguration extends Model
             Cache::forget('service_config_whatsapp');
             Cache::forget('service_config_nexah_sms');
             Cache::forget('service_config_freemopay');
+            Cache::forget('service_config_kpay');
             Cache::forget('service_config_paypal');
             Cache::forget('service_config_notification_preferences');
             Cache::forget('default_notification_channel');
@@ -288,6 +334,49 @@ class ServiceConfiguration extends Model
     }
 
     /**
+     * Validate KPay configuration
+     */
+    public function validateKPayConfig(): array
+    {
+        $errors = [];
+
+        if (empty($this->kpay_base_url)) {
+            $errors[] = 'KPay Base URL is required';
+        } elseif (!filter_var($this->kpay_base_url, FILTER_VALIDATE_URL)) {
+            $errors[] = 'KPay Base URL must be a valid URL';
+        }
+
+        if (empty($this->kpay_api_key)) {
+            $errors[] = 'KPay API Key is required';
+        }
+
+        if (empty($this->kpay_secret_key)) {
+            $errors[] = 'KPay Secret Key is required';
+        }
+
+        // Le Webhook Secret est optionnel (le polling de secours finalise les
+        // transactions si aucun webhook signé n'est configuré).
+
+        // NB : on ne bloque PAS sur le préfixe des clés (kpay_live_/sk_live_).
+        // Les formats KPay peuvent varier ; la cohérence env/clés est vérifiée
+        // à l'appel API réel (le bouton "Tester la connexion" reste la source
+        // de vérité). Imposer un préfixe ici bloquait à tort des clés valides.
+
+        // Callback URLs HTTPS en production
+        foreach (['kpay_deposit_callback_url', 'kpay_withdrawal_callback_url'] as $field) {
+            $url = $this->{$field};
+            if ($url && !filter_var($url, FILTER_VALIDATE_URL)) {
+                $errors[] = "{$field} must be a valid URL";
+            }
+            if ($url && config('app.env') === 'production' && !str_starts_with($url, 'https://')) {
+                $errors[] = "{$field} must use HTTPS in production";
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
      * Check if service is properly configured and active
      */
     public function isConfigured(): bool
@@ -300,6 +389,7 @@ class ServiceConfiguration extends Model
             'whatsapp' => $this->validateWhatsAppConfig(),
             'nexah_sms' => $this->validateNexahConfig(),
             'freemopay' => $this->validateFreeMoPayConfig(),
+            'kpay' => $this->validateKPayConfig(),
             'paypal' => $this->validatePayPalConfig(),
             default => [],
         };

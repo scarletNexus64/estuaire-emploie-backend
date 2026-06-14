@@ -72,13 +72,13 @@ class InsamtechsFormationController extends Controller
         $request->validate([
             'payment_method' => 'required|in:wallet',
             'currency' => 'nullable|in:XAF,USD,EUR',
-            'payment_provider' => 'nullable|in:freemopay,paypal',
+            'payment_provider' => 'nullable|in:kpay,freemopay,paypal',
             'formation_title' => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
         $currency = $request->input('currency', 'XAF');
-        $paymentProvider = $request->input('payment_provider', 'freemopay');
+        $paymentProvider = $request->input('payment_provider', 'kpay');
 
         // Récupérer le prix de la formation
         $pricing = InsamtechsFormationPricing::where('insamtechs_formation_id', $formationId)

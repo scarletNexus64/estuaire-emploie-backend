@@ -78,6 +78,7 @@ class AuthController extends Controller
             'fcm_token' => 'nullable|string',
             'device_id' => 'required|string', // Identifiant unique de l'appareil
             'referral_code' => 'nullable|string|exists:users,referral_code',
+            'country' => 'nullable|string|size:2|exists:countries,code', // Pays de résidence (ISO alpha-2)
         ]);
 
         // Au moins un identifiant (email ou téléphone) est requis
@@ -114,6 +115,7 @@ class AuthController extends Controller
             'phone'            => $validated['phone'] ?? null,
             'fcm_token'        => $validated['fcm_token'] ?? null,
             'device_id'        => $validated['device_id'], // Associer l'appareil au compte
+            'country'          => $validated['country'] ?? 'CM', // Défaut Cameroun
             'role'             => 'candidate',
             'available_roles'  => ['candidate'], // ✅ Initialiser avec le rôle par défaut
             'email_verified_at'=> !empty($validated['email']) ? now() : null,
@@ -375,7 +377,7 @@ public function login(Request $request)
 
         // Valider le nouveau rôle
         $validated = $request->validate([
-            'role' => 'required|string|in:candidate,recruiter',
+            'role' => 'required|string|in:candidate,recruiter,student',
         ]);
 
         $previousRole = $user->role;
@@ -521,7 +523,7 @@ public function login(Request $request)
     public function updateRole(Request $request): JsonResponse
     {
         $request->validate([
-            'role' => 'required|in:candidate,recruiter',
+            'role' => 'required|in:candidate,recruiter,student',
         ]);
 
         $user = auth()->user();
@@ -589,6 +591,7 @@ public function login(Request $request)
             'experience_level' => 'nullable|in:junior,intermediaire,senior,expert',
             'portfolio_url' => 'nullable|url',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'country' => 'nullable|string|size:2|exists:countries,code', // Pays de résidence (ISO alpha-2)
         ]);
 
         $user = auth()->user();

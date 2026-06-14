@@ -15,12 +15,14 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\ProgramController;
+use App\Http\Controllers\Admin\RoadmapController;
 use App\Http\Controllers\Admin\PortfolioController as AdminPortfolioController;
 use App\Http\Controllers\Admin\SkillTestController;
 use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\Admin\PackPromotionController;
 use App\Http\Controllers\Admin\MessagerieController;
+use App\Http\Controllers\Admin\DigitalizationRequestController;
 use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -195,6 +197,15 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{user}/permissions', [AdminManagementController::class, 'updatePermissions'])->name('permissions');
     });
 
+    // Digitalization Requests Management (demandes reçues depuis l'app mobile)
+    Route::middleware('permission:manage_digitalization')->prefix('digitalization-requests')->name('digitalization-requests.')->group(function () {
+        Route::delete('bulk-delete', [DigitalizationRequestController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/', [DigitalizationRequestController::class, 'index'])->name('index');
+        Route::get('/{digitalizationRequest}', [DigitalizationRequestController::class, 'show'])->name('show');
+        Route::patch('/{digitalizationRequest}/process', [DigitalizationRequestController::class, 'process'])->name('process');
+        Route::delete('/{digitalizationRequest}', [DigitalizationRequestController::class, 'destroy'])->name('destroy');
+    });
+
     // Sections Management
     Route::middleware('permission:manage_sections')->group(function () {
         Route::resource('sections', SectionController::class);
@@ -208,6 +219,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('programs/{program}/steps', [ProgramController::class, 'storeStep'])->name('programs.store-step');
         Route::put('programs/{program}/steps/{step}', [ProgramController::class, 'updateStep'])->name('programs.update-step');
         Route::delete('programs/{program}/steps/{step}', [ProgramController::class, 'destroyStep'])->name('programs.destroy-step');
+
+        // Roadmaps Management (parcours gamifiés : niveaux + QCM)
+        Route::resource('roadmaps', RoadmapController::class);
+        Route::get('roadmaps/{roadmap}/manage-levels', [RoadmapController::class, 'manageLevels'])->name('roadmaps.manage-levels');
+        Route::get('roadmaps/{roadmap}/levels/{level}', [RoadmapController::class, 'getLevel'])->name('roadmaps.get-level');
+        Route::post('roadmaps/{roadmap}/levels', [RoadmapController::class, 'storeLevel'])->name('roadmaps.store-level');
+        Route::put('roadmaps/{roadmap}/levels/{level}', [RoadmapController::class, 'updateLevel'])->name('roadmaps.update-level');
+        Route::delete('roadmaps/{roadmap}/levels/{level}', [RoadmapController::class, 'destroyLevel'])->name('roadmaps.destroy-level');
     });
 
     // Portfolios Management
@@ -244,6 +263,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
         // Referral Settings
         Route::put('settings/referral', [SettingsController::class, 'updateReferralSettings'])->name('settings.referral.update');
+
+        // Wallet Settings (frais de retrait)
+        Route::put('settings/wallet', [SettingsController::class, 'updateWalletSettings'])->name('settings.wallet.update');
 
         // Translations multilingues (FR / EN / ES / AR)
         Route::prefix('translations')->name('translations.')->group(function () {
@@ -503,6 +525,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{ad}/toggle', [\App\Http\Controllers\Admin\AdvertisementController::class, 'toggle'])->name('toggle');
     });
 
+    // MONÉTISATION - Tarification du sponsoring (Marketing Digital)
+    Route::middleware('permission:manage_advertisements')->prefix('ad-pricing')->name('ad-pricing.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdPricingController::class, 'index'])->name('index');
+        Route::put('/{adPricing}', [\App\Http\Controllers\Admin\AdPricingController::class, 'update'])->name('update');
+    });
+
     // MONÉTISATION - Financial Statistics
     Route::middleware('permission:view_financial_stats')->prefix('financial-stats')->name('financial-stats.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\FinancialStatsController::class, 'index'])->name('index');
@@ -517,6 +545,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateWhatsApp'])->name('update-whatsapp');
         Route::put('/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNexah'])->name('update-nexah');
         Route::put('/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateFreeMoPay'])->name('update-freemopay');
+        Route::put('/kpay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateKPay'])->name('update-kpay');
         Route::put('/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updatePayPal'])->name('update-paypal');
         Route::put('/preferences', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNotificationPreferences'])->name('update-preferences');
 
@@ -524,6 +553,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/test/whatsapp', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testWhatsApp'])->name('test-whatsapp');
         Route::post('/test/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testNexah'])->name('test-nexah');
         Route::post('/test/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testFreeMoPay'])->name('test-freemopay');
+        Route::post('/test/kpay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testKPay'])->name('test-kpay');
         Route::post('/test/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testPayPal'])->name('test-paypal');
 
         // Send actual test messages

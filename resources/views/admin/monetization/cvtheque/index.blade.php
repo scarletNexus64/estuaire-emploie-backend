@@ -74,6 +74,19 @@
                     </div>
                 </div>
 
+                <!-- Spécialité -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Spécialité</label>
+                    <select name="specialty" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Toutes les spécialités</option>
+                        @foreach($specialties as $specialty)
+                            <option value="{{ $specialty }}" {{ request('specialty') === $specialty ? 'selected' : '' }}>
+                                {{ $specialty }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <!-- Template -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Template</label>
@@ -84,6 +97,28 @@
                                 {{ $template['name'] }}
                             </option>
                         @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Catégorie d'entreprise (cascade Niveau 1 > 2 > 3) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Secteur (Niveau 1)</label>
+                    <select id="filter-level-1" name="level_1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Tous les secteurs</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sous-catégorie (Niveau 2)</label>
+                    <select id="filter-level-2" name="level_2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Toutes</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Spécialité métier (Niveau 3)</label>
+                    <select id="filter-level-3" name="level_3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Toutes</option>
                     </select>
                 </div>
 
@@ -259,3 +294,66 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    // Arbre des catégories : { "Secteur": { "Sous-cat": ["Spé1", "Spé2"] } }
+    const CATEGORY_TREE = @json($categoryTree);
+    // Valeurs sélectionnées (rechargées depuis la requête pour persister les filtres).
+    const SELECTED = {
+        l1: @json(request('level_1', '')),
+        l2: @json(request('level_2', '')),
+        l3: @json(request('level_3', '')),
+    };
+
+    const sel1 = document.getElementById('filter-level-1');
+    const sel2 = document.getElementById('filter-level-2');
+    const sel3 = document.getElementById('filter-level-3');
+
+    function fill(select, options, placeholder, selectedValue) {
+        select.innerHTML = '';
+        const opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = placeholder;
+        select.appendChild(opt0);
+        options.forEach(function (val) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            if (val === selectedValue) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
+
+    function refreshLevel2() {
+        const l1 = sel1.value;
+        const l2Map = (l1 && CATEGORY_TREE[l1]) ? CATEGORY_TREE[l1] : {};
+        fill(sel2, Object.keys(l2Map), 'Toutes', SELECTED.l2);
+    }
+
+    function refreshLevel3() {
+        const l1 = sel1.value;
+        const l2 = sel2.value;
+        const l3List = (l1 && l2 && CATEGORY_TREE[l1] && CATEGORY_TREE[l1][l2])
+            ? CATEGORY_TREE[l1][l2] : [];
+        fill(sel3, l3List, 'Toutes', SELECTED.l3);
+    }
+
+    // Initialisation niveau 1.
+    fill(sel1, Object.keys(CATEGORY_TREE), 'Tous les secteurs', SELECTED.l1);
+    refreshLevel2();
+    refreshLevel3();
+
+    sel1.addEventListener('change', function () {
+        SELECTED.l2 = ''; SELECTED.l3 = '';
+        refreshLevel2();
+        refreshLevel3();
+    });
+    sel2.addEventListener('change', function () {
+        SELECTED.l3 = '';
+        refreshLevel3();
+    });
+})();
+</script>
+@endpush
