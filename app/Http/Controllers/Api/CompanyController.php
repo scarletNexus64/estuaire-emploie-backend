@@ -893,6 +893,105 @@ class CompanyController extends Controller
      *     )
      * )
      */
+    /**
+     * Recherche d'entreprises (autocomplete annuaire).
+     *
+     * Recherche un mot-clé `q` sur l'ensemble des champs pertinents :
+     *  - Entreprise : name, description, domain, sector, city, address
+     *  - Catégories liées : level_1, level_2, level_3, description
+     *
+     * Si latitude/longitude sont fournis, la distance (km) est calculée et les
+     * résultats sont triés du plus proche au plus loin. Sinon, on priorise les
+     * correspondances sur le nom, puis l'ordre alphabétique.
+     *
+     * Seules les entreprises `verified` sont renvoyées.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'q' => 'required|string|min:2|max:255',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
+                'limit' => 'nullable|integer|min:1|max:50',
+            ]);
+
+            $term = trim($validated['q']);
+            $limit = $validated['limit'] ?? 25;
+            $lat = $validated['latitude'] ?? null;
+            $lng = $validated['longitude'] ?? null;
+            $hasGeo = $lat !== null && $lng !== null;
+
+            // Échapper les jokers LIKE pour éviter les faux positifs (% / _).
+            $escaped = addcslashes($term, '%_\\');
+            $like = '%' . $escaped . '%';
+
+            $query = Company::query()
+                ->where('status', 'verified')
+                ->with('categories')
+                ->withCount('jobs');
+
+            // Correspondance sur les champs de l'entreprise OU de ses catégories.
+            $query->where(function ($outer) use ($like) {
+                $companyFields = ['name', 'description', 'domain', 'sector', 'city', 'address'];
+                foreach ($companyFields as $field) {
+                    $outer->orWhere($field, 'LIKE', $like);
+                }
+
+                // Niveaux 1/2/3 + description de catégorie via la relation pivot.
+                $outer->orWhereHas('categories', function ($q) use ($like) {
+                    $q->where('level_1', 'LIKE', $like)
+                        ->orWhere('level_2', 'LIKE', $like)
+                        ->orWhere('level_3', 'LIKE', $like)
+                        ->orWhere('description', 'LIKE', $like);
+                });
+            });
+
+            // Distance : calculée en SQL si position fournie (entreprises géolocalisées).
+            if ($hasGeo) {
+                $query->whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->selectRaw(
+                        'companies.*, ( 6371 * acos( cos( radians(?) ) * cos( radians( latitude ) ) * cos( radians( longitude ) - radians(?) ) + sin( radians(?) ) * sin( radians( latitude ) ) ) ) AS distance',
+                        [$lat, $lng, $lat]
+                    )
+                    ->orderBy('distance');
+            } else {
+                // Sans position : priorité aux entreprises dont le nom matche, puis alpha.
+                $query->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$like])
+                    ->orderBy('name');
+            }
+
+            $companies = $query->limit($limit)->get();
+
+            return response()->json([
+                'data' => $companies,
+                'meta' => [
+                    'total' => $companies->count(),
+                    'query' => $term,
+                    'sorted_by' => $hasGeo ? 'distance' : 'relevance',
+                ],
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => __('company.invalid_params'),
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la recherche d\'entreprises', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => __('company.fetch_error'),
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function getNearbyCompanies(Request $request): JsonResponse
     {
         try {

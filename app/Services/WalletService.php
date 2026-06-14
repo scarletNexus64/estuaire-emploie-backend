@@ -73,6 +73,83 @@ class WalletService
     }
 
     /**
+     * Finalise une recharge de wallet de façon IDEMPOTENTE.
+     *
+     * Point d'entrée unique appelé par : le webhook KPay (source de vérité),
+     * le job ProcessDepositPolling (secours) et l'endpoint checkPaymentStatus.
+     * Utilise un verrou de ligne (lockForUpdate) + une garde sur le statut pour
+     * garantir un crédit UNE SEULE fois, même en cas de course webhook/polling.
+     *
+     * @return bool true si le crédit a effectivement eu lieu, false si déjà fait.
+     */
+    public function completeRechargeForPayment(Payment $payment): bool
+    {
+        return DB::transaction(function () use ($payment) {
+            /** @var Payment $fresh */
+            $fresh = Payment::whereKey($payment->id)->lockForUpdate()->first();
+
+            if (!$fresh) {
+                return false;
+            }
+
+            // Garde d'idempotence : déjà finalisé → ne rien faire.
+            if ($fresh->status === 'completed') {
+                return false;
+            }
+
+            // Marquer le paiement complété dans tous les cas (recharge OU autre type,
+            // ex. abonnement payé directement par Mobile Money).
+            $fresh->update(['status' => 'completed', 'paid_at' => now()]);
+
+            // Le crédit du wallet ne concerne QUE les recharges de wallet.
+            // Pour les autres types (subscription, addon, etc.), le paiement est
+            // complété mais aucun montant n'est crédité au wallet.
+            if ($fresh->payment_type !== 'wallet_recharge') {
+                return false;
+            }
+
+            $user = $fresh->user;
+            if (!$user) {
+                Log::warning('[WalletService] completeRechargeForPayment: paiement sans user', ['payment_id' => $fresh->id]);
+                return false;
+            }
+
+            $provider = $this->providerKeyFor($fresh);
+
+            $this->credit(
+                $user,
+                (float) $fresh->amount,
+                $fresh,
+                'Recharge wallet via ' . strtoupper($provider),
+                ['payment_id' => $fresh->id],
+                $provider
+            );
+
+            Log::info('🟢 [KPay] DÉPÔT pending → completed (wallet crédité)', [
+                'payment_id' => $fresh->id,
+                'provider' => $provider,
+                'amount' => $fresh->amount,
+                'user_id' => $user->id,
+            ]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Détermine la clé de provider du wallet pour un paiement.
+     * 'paypal' pour PayPal ; 'kpay' pour KPay ; 'freemopay' (historique) sinon.
+     */
+    public function providerKeyFor(Payment $payment): string
+    {
+        return match ($payment->provider) {
+            'paypal' => 'paypal',
+            'kpay' => 'kpay',
+            default => 'freemopay',
+        };
+    }
+
+    /**
      * Débite le wallet d'un utilisateur
      *
      * @param User $user
@@ -96,8 +173,8 @@ class WalletService
     ): WalletTransaction {
         return DB::transaction(function () use ($user, $amount, $description, $referenceType, $referenceId, $metadata, $provider) {
             // Valider le provider
-            if (!in_array($provider, ['freemopay', 'paypal'])) {
-                throw new \Exception("Provider invalide. Doit être 'freemopay' ou 'paypal'.");
+            if (!in_array($provider, ['kpay', 'freemopay', 'paypal'])) {
+                throw new \Exception("Provider invalide. Doit être 'kpay', 'freemopay' ou 'paypal'.");
             }
 
             // Déterminer quel wallet débiter
@@ -199,8 +276,8 @@ class WalletService
     ): WalletTransaction {
         return DB::transaction(function () use ($user, $amount, $description, $metadata, $provider) {
             // Valider le provider
-            if (!in_array($provider, ['freemopay', 'paypal'])) {
-                throw new \Exception("Provider invalide. Doit être 'freemopay' ou 'paypal'.");
+            if (!in_array($provider, ['kpay', 'freemopay', 'paypal'])) {
+                throw new \Exception("Provider invalide. Doit être 'kpay', 'freemopay' ou 'paypal'.");
             }
 
             // Déterminer quel wallet mettre à jour
@@ -479,8 +556,8 @@ class WalletService
             throw new \Exception("Vous ne pouvez pas transférer de l'argent à vous-même");
         }
 
-        if (!in_array($provider, ['freemopay', 'paypal'])) {
-            throw new \Exception("Provider invalide. Doit être 'freemopay' ou 'paypal'");
+        if (!in_array($provider, ['kpay', 'freemopay', 'paypal'])) {
+            throw new \Exception("Provider invalide. Doit être 'kpay', 'freemopay' ou 'paypal'");
         }
 
         if ($amount <= 0) {

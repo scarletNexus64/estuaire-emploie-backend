@@ -87,10 +87,14 @@ class WalletController extends Controller
         \Log::info("║ [WalletController] 💰 WALLET RECHARGE REQUEST                     ║");
         \Log::info("╚════════════════════════════════════════════════════════════════════╝");
 
+        $minDeposit = \App\Models\ServiceConfiguration::getKPayMinDeposit();
         $validator = Validator::make($request->all(), [
-            'amount' => 'required|numeric|min:50', // Minimum 100 FCFA
-            'payment_method' => 'required|in:freemopay,paypal',
-            'phone_number' => 'required_if:payment_method,freemopay|string', // Requis pour FreeMoPay
+            'amount' => "required|numeric|min:{$minDeposit}", // Minimum configurable (admin)
+            'payment_method' => 'required|in:kpay,paypal',
+            'phone_number' => 'required_if:payment_method,kpay|string', // Requis pour KPay (USSD)
+            'provider_code' => 'nullable|string', // Code opérateur KPay (ex. MTN_MOMO_CMR), sinon dérivé
+        ], [
+            'amount.min' => "Le montant minimum de recharge est {$minDeposit} FCFA.",
         ]);
 
         if ($validator->fails()) {
@@ -119,62 +123,45 @@ class WalletController extends Controller
             ]);
 
             // Générer l'URL/référence de paiement selon la méthode
-            if ($paymentMethod === 'freemopay') {
-                \Log::info("[WalletController] 📱 Using FreeMoPay");
+            if ($paymentMethod === 'kpay') {
+                \Log::info("[WalletController] 📱 Using KPay (USSD, async)");
 
                 if (!$phoneNumber) {
                     throw new \Exception('Le numéro de téléphone est requis pour Mobile Money');
                 }
 
-                $freemopayService = app(\App\Services\Payment\FreeMoPayService::class);
+                $kpayService = app(\App\Services\Payment\KPayService::class);
 
-                // FreeMoPay crée le paiement et attend la confirmation (synchrone)
-                $payment = $freemopayService->initPayment(
+                // KPay : init ASYNCHRONE → retourne immédiatement un paiement "pending".
+                // Le crédit du wallet est finalisé par le webhook (source de vérité)
+                // ou le job ProcessDepositPolling (secours). Le front poll payment-status.
+                $payment = $kpayService->initDeposit(
                     $user,
                     $amount,
                     $phoneNumber,
                     'Recharge wallet',
                     null,
                     null,
-                    'wallet_recharge'
+                    'wallet_recharge',
+                    $request->provider_code
                 );
 
-                \Log::info("[WalletController] ✅ FreeMoPay payment initiated", [
+                \Log::info("[WalletController] ✅ KPay payment initiated (pending)", [
                     'payment_id' => $payment->id,
                     'status' => $payment->status,
                 ]);
 
-                // Si le paiement est complété, créditer le wallet
-                if ($payment->status === 'completed') {
-                    $this->completeWalletRecharge($payment);
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => __('wallet.recharge_success'),
-                        'data' => [
-                            'payment_id' => $payment->id,
-                            'payment_url' => null, // Pas d'URL pour FreeMoPay
-                            'amount' => $amount,
-                            'payment_method' => $paymentMethod,
-                            'status' => $payment->status,
-                            'new_balance' => $user->wallet_balance,
-                        ],
-                    ]);
-                }
-
-                // Si échec ou autre statut
                 return response()->json([
-                    'success' => $payment->status !== 'failed',
-                    'message' => $payment->status === 'failed'
-                        ? 'Le paiement a échoué'
-                        : 'Recharge en cours de traitement',
+                    'success' => true,
+                    'message' => 'Recharge initiée. Validez le paiement sur votre téléphone.',
                     'data' => [
                         'payment_id' => $payment->id,
-                        'payment_url' => null,
+                        'payment_url' => null, // USSD : pas d'URL
                         'amount' => $amount,
-                        'payment_method' => $paymentMethod,
-                        'status' => $payment->status,
-                        'failure_reason' => $payment->failure_reason,
+                        'payment_method' => 'kpay',
+                        'status' => $payment->status, // pending
+                        'poll_url' => "/api/wallet/payment-status/{$payment->id}",
+                        'ussd_hint' => true,
                     ],
                 ]);
             } else {
@@ -242,7 +229,7 @@ class WalletController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:0',
-            'provider' => 'nullable|string|in:freemopay,paypal',
+            'provider' => 'nullable|string|in:kpay,freemopay,paypal',
         ]);
 
         if ($validator->fails()) {
@@ -283,7 +270,7 @@ class WalletController extends Controller
             'description' => 'required|string|max:255',
             'reference_type' => 'required|string|in:subscription,addon_service',
             'reference_id' => 'required|integer',
-            'payment_provider' => 'required|string|in:freemopay,paypal',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
         ]);
 
         if ($validator->fails()) {
@@ -395,7 +382,30 @@ class WalletController extends Controller
                 \Log::info("[WalletController] ⏳ Payment is pending, checking with provider...");
 
                 try {
-                    if ($payment->provider === 'freemopay' || $payment->payment_method === 'freemopay') {
+                    if ($payment->provider === 'kpay') {
+                        // Vérifier avec KPay (GET /payments/:id) — finalisation idempotente
+                        $kpayService = app(\App\Services\Payment\KPayService::class);
+                        $statusResponse = $kpayService->checkPaymentStatus($payment->provider_reference);
+
+                        $status = strtoupper($statusResponse['status'] ?? '');
+                        \Log::info("[WalletController] 📥 KPay status: {$status}");
+
+                        if ($status === 'COMPLETED') {
+                            $credited = $this->walletService->completeRechargeForPayment($payment);
+                            if ($credited) {
+                                app(\App\Services\WalletNotifier::class)->rechargeSuccess($payment->fresh());
+                            }
+                        } elseif (in_array($status, ['FAILED', 'CANCELLED', 'CANCELED'])) {
+                            if ($payment->isPending()) {
+                                $payment->update([
+                                    'status' => 'failed',
+                                    'failure_reason' => $statusResponse['failureReason'] ?? $status,
+                                    'payment_provider_response' => $statusResponse,
+                                ]);
+                                app(\App\Services\WalletNotifier::class)->rechargeFailed($payment->fresh());
+                            }
+                        }
+                    } elseif ($payment->provider === 'freemopay' || $payment->payment_method === 'freemopay') {
                         // Vérifier avec FreeMoPay
                         $freemoPayService = app(\App\Services\Payment\FreeMoPayService::class);
                         $statusResponse = $freemoPayService->checkPaymentStatus($payment->provider_reference);
@@ -936,9 +946,18 @@ class WalletController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
+                    // Clé canonique (Mobile Money via KPay)
+                    'mobile_money_balance' => max(0, $freemopayBalance),
+                    // Alias rétro-compatible (ancien front FreeMoPay)
                     'freemopay_balance' => max(0, $freemopayBalance),
+                    'kpay_balance' => max(0, $freemopayBalance),
                     'paypal_balance' => max(0, $paypalBalance),
                     'total_balance' => max(0, $totalBalance),
+                    // Taux de frais de retrait Mobile Money (en %), configurable admin
+                    'withdrawal_fee_percentage' => $this->withdrawalFeePercentage(),
+                    // Montants minimum configurables (admin)
+                    'min_deposit' => \App\Models\ServiceConfiguration::getKPayMinDeposit(),
+                    'min_withdrawal' => \App\Models\ServiceConfiguration::getKPayMinWithdrawal(),
                 ],
             ]);
         } catch (\Exception $e) {
@@ -953,10 +972,261 @@ class WalletController extends Controller
     }
 
     /**
+     * Taux de frais de retrait Mobile Money (en %), configurable depuis l'admin.
+     * Réglage `withdrawal_fee_percentage` (défaut 5%). Borné [0, 100].
+     */
+    private function withdrawalFeePercentage(): float
+    {
+        $rate = (float) settings('withdrawal_fee_percentage', 5);
+
+        return max(0.0, min(100.0, $rate));
+    }
+
+    /**
+     * Calcule les frais à partir du montant NET (ce que l'utilisateur reçoit).
+     * Modèle « frais ajoutés » : l'utilisateur reçoit $net, son wallet est débité de $net + frais.
+     *
+     * @return array{rate: float, fee: float, total: float}
+     */
+    private function computeWithdrawalFee(float $netAmount): array
+    {
+        $rate = $this->withdrawalFeePercentage();
+        $fee = round($netAmount * $rate / 100, 2);
+
+        return [
+            'rate' => $rate,
+            'fee' => $fee,
+            'total' => round($netAmount + $fee, 2),
+        ];
+    }
+
+    /**
+     * Auto-détection de l'opérateur Mobile Money d'un numéro (KPay predict-provider).
+     *
+     * POST /api/wallet/predict-provider  { phone }
+     */
+    public function predictProvider(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $kpay = app(\App\Services\Payment\KPayService::class);
+            $result = $kpay->predictProvider($request->phone);
+
+            return response()->json(['success' => true, 'data' => $result]);
+        } catch (\Exception $e) {
+            \Log::warning('[WalletController] predictProvider error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de détecter l\'opérateur.',
+                'error' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Disponibilité des opérateurs KPay (OPERATIONAL / DELAYED / CLOSED).
+     * Le front signale les opérateurs instables ; l'utilisateur peut continuer à ses risques.
+     *
+     * GET /api/wallet/payment-availability
+     */
+    public function paymentAvailability(Request $request)
+    {
+        try {
+            $kpay = app(\App\Services\Payment\KPayService::class);
+            $availability = $kpay->getAvailability();
+
+            return response()->json(['success' => true, 'data' => $availability]);
+        } catch (\Exception $e) {
+            \Log::warning('[WalletController] paymentAvailability error: ' . $e->getMessage());
+
+            // Dégradé : on renvoie une liste vide plutôt que de bloquer l'UI
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'message' => 'Disponibilité indisponible pour le moment.',
+            ], 200);
+        }
+    }
+
+    /**
      * Initie un retrait FreeMoPay depuis le wallet
      *
      * POST /api/wallet/withdraw/freemopay
      */
+    /**
+     * Initie un retrait via KPay (USSD, asynchrone).
+     *
+     * POST /api/wallet/withdraw/kpay
+     * Le statut final arrive par webhook payout.* (source de vérité) ou le job
+     * ProcessWithdrawalPolling (secours). La déduction du wallet n'a lieu qu'au succès.
+     */
+    public function initiateKPayWithdrawal(Request $request)
+    {
+        \Log::info("[WalletController] [KPay Withdrawal] DEMANDE DE RETRAIT");
+
+        $user = $request->user();
+
+        $minWithdrawal = \App\Models\ServiceConfiguration::getKPayMinWithdrawal();
+        $validator = Validator::make($request->all(), [
+            'amount' => "required|numeric|min:{$minWithdrawal}", // Minimum configurable (admin)
+            'payment_method' => 'required|in:om,momo',
+            'phone' => 'required|string',
+            'provider_code' => 'nullable|string',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'amount.min' => "Le montant minimum de retrait est {$minWithdrawal} FCFA.",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('common.invalid_data'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // $amount = montant NET que l'utilisateur reçoit. Les frais s'ajoutent par-dessus.
+        $amount = (float) $request->input('amount');
+        $paymentMethod = $request->input('payment_method');
+        $phone = $request->input('phone');
+        $notes = $request->input('notes');
+
+        // Frais de retrait configurables : on débite (net + frais), on envoie net à l'opérateur.
+        $feeBreakdown = $this->computeWithdrawalFee($amount);
+        $feeRate = $feeBreakdown['rate'];
+        $feeAmount = $feeBreakdown['fee'];
+        $totalDebit = $feeBreakdown['total'];
+
+        // Solde Mobile Money disponible (bucket freemopay_wallet_balance, partagé KPay)
+        $availableBalance = $user->freemopay_wallet_balance ?? 0;
+
+        // Le wallet doit couvrir le montant net + les frais
+        if ($totalDebit > $availableBalance) {
+            return response()->json([
+                'success' => false,
+                'message' => __('wallet.insufficient_freemopay_balance', ['amount' => number_format($availableBalance, 0, ',', ' ')]),
+            ], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $kpay = app(\App\Services\Payment\KPayService::class);
+            $normalizedPhone = $kpay->normalizePhoneNumber($phone);
+            $providerCode = $request->provider_code ?: $kpay->deriveProviderCode($normalizedPhone);
+
+            if (!$providerCode) {
+                throw new \Exception('Opérateur indéterminé pour ce numéro. Précisez provider_code.');
+            }
+
+            $withdrawal = PlatformWithdrawal::create([
+                'user_id' => $user->id,
+                'admin_id' => null,
+                // amount_requested = ce qui est débité du wallet (net + frais).
+                // Le débit au succès s'appuie sur amount_requested → frais inclus.
+                'amount_requested' => $totalDebit,
+                'commission_rate' => $feeRate,
+                'commission_amount' => $feeAmount,
+                // amount_sent = montant net réellement envoyé à l'opérateur.
+                'amount_sent' => $amount,
+                'currency' => 'XAF',
+                'provider' => 'kpay',
+                'payment_method' => $paymentMethod,
+                'payment_account' => $normalizedPhone,
+                'payment_account_name' => $user->name,
+                'status' => 'pending',
+                'transaction_reference' => $this->generateTransactionReference(),
+                'admin_notes' => $notes,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            \App\Models\WalletTransaction::create([
+                'user_id' => $user->id,
+                'type' => 'debit',
+                // Débit = net reçu + frais
+                'amount' => -$totalDebit,
+                'balance_before' => $user->freemopay_wallet_balance,
+                'balance_after' => $user->freemopay_wallet_balance, // débit réel au succès
+                'description' => "Retrait Mobile Money ({$paymentMethod}) - En cours",
+                'reference_type' => 'platform_withdrawal',
+                'reference_id' => $withdrawal->id,
+                'payment_id' => null,
+                'provider' => 'kpay',
+                'metadata' => [
+                    'withdrawal_id' => $withdrawal->id,
+                    'provider' => 'kpay',
+                    'payment_method' => $paymentMethod,
+                    'kpay_provider' => $providerCode,
+                    'phone' => substr($normalizedPhone, 0, 6) . '***',
+                    'net_amount' => $amount,
+                    'fee_rate' => $feeRate,
+                    'fee_amount' => $feeAmount,
+                ],
+                'status' => 'pending',
+            ]);
+
+            $withdrawal->markAsProcessing();
+
+            // Appel KPay /payments/withdraw — on envoie le montant NET (ce que reçoit l'utilisateur).
+            // Les frais restent dans le wallet (déjà comptés dans amount_requested / le débit).
+            $response = $kpay->initWithdrawal(
+                $normalizedPhone,
+                (float) $amount,
+                $providerCode,
+                $withdrawal->transaction_reference,
+                'Retrait wallet Estuaire Emploi'
+            );
+
+            $kpayId = $response['id'] ?? null;
+            if (!$kpayId) {
+                throw new \Exception('Pas d\'identifiant KPay dans la réponse de retrait');
+            }
+
+            // On stocke l'id KPay dans freemopay_reference (colonne réutilisée)
+            $withdrawal->update([
+                'freemopay_reference' => $kpayId,
+                'freemopay_response' => $response,
+            ]);
+
+            ProcessWithdrawalPolling::dispatch($withdrawal, $kpayId);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => __('wallet.withdrawal_processing'),
+                'data' => [
+                    'withdrawal_id' => $withdrawal->id,
+                    'transaction_reference' => $withdrawal->transaction_reference,
+                    'kpay_reference' => $kpayId,
+                    'amount' => $withdrawal->amount_requested, // total débité (net + frais)
+                    'net_amount' => $amount,                   // reçu par l'utilisateur
+                    'fee_rate' => $feeRate,
+                    'fee_amount' => $feeAmount,
+                    'status' => 'processing',
+                    'message' => __('wallet.withdrawal_processing_detail'),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("[WalletController] ❌ KPay withdrawal error: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function initiateFreeMoPayWithdrawal(Request $request)
     {
         \Log::info("[WalletController] ╔════════════════════════════════════════════════════════════════════╗");
@@ -1314,6 +1584,32 @@ class WalletController extends Controller
                     'success' => false,
                     'message' => __('wallet.withdrawal_not_found'),
                 ], 404);
+            }
+
+            // Réconciliation active KPay : si encore en cours, on interroge KPay
+            // et on finalise de façon idempotente (marche même sans worker de queue).
+            if ($withdrawal->provider === 'kpay'
+                && in_array($withdrawal->status, ['pending', 'processing'])
+                && $withdrawal->freemopay_reference) {
+                try {
+                    $kpay = app(\App\Services\Payment\KPayService::class);
+                    $kpayStatus = $kpay->checkWithdrawalStatus($withdrawal->freemopay_reference);
+                    $status = strtoupper($kpayStatus['status'] ?? '');
+
+                    \Log::info("🟠 [KPay] RETRAIT status-check → KPay status={$status}", [
+                        'withdrawal_id' => $withdrawal->id,
+                    ]);
+
+                    $finalizer = app(\App\Services\KPayWithdrawalFinalizer::class);
+                    if ($status === 'COMPLETED') {
+                        $finalizer->complete($withdrawal, $withdrawal->freemopay_reference, $kpayStatus);
+                    } elseif (in_array($status, ['FAILED', 'CANCELLED', 'CANCELED'])) {
+                        $finalizer->fail($withdrawal, $kpayStatus['failureReason'] ?? $status);
+                    }
+                    $withdrawal->refresh();
+                } catch (\Throwable $e) {
+                    \Log::warning('[WalletController] Réconciliation KPay retrait échouée: ' . $e->getMessage());
+                }
             }
 
             return response()->json([
@@ -1720,7 +2016,7 @@ class WalletController extends Controller
         $validator = Validator::make($request->all(), [
             'recipient_id' => 'required|integer|exists:users,id',
             'amount' => 'required|numeric|min:1',
-            'provider' => 'required|in:freemopay,paypal',
+            'provider' => 'required|in:kpay,freemopay,paypal',
             'note' => 'nullable|string|max:255',
         ], [
             'recipient_id.required' => 'Le destinataire est requis',

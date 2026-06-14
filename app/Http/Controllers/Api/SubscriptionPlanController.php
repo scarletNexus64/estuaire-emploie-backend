@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSubscriptionPlan;
+use App\Services\Gfs\GfsService;
 use App\Services\Payment\FreeMoPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -336,6 +337,10 @@ class SubscriptionPlanController extends Controller
         $request->validate([
             'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
             'payment_id' => 'required|integer|exists:payments,id',
+            // Infos optionnelles pour le compte GFSolutions offert
+            'gfs_gender' => 'nullable|string|max:10',
+            'gfs_city' => 'nullable|string|max:100',
+            'gfs_region' => 'nullable|string|max:100',
         ]);
 
         $user = $request->user();
@@ -529,6 +534,14 @@ class SubscriptionPlanController extends Controller
 
             DB::commit();
 
+            // Compte GFSolutions offert (si le plan inclut l'avantage).
+            // Non bloquant : exécuté après le commit.
+            $gfsAccount = $this->maybeOnboardGfs($user, $plan, [
+                'gender' => $request->input('gfs_gender'),
+                'city' => $request->input('gfs_city'),
+                'region' => $request->input('gfs_region'),
+            ]);
+
             $message = $isRenewal
                 ? 'Abonnement renouvelé avec succès ! Vos limites ont été augmentées.'
                 : 'Abonnement activé avec succès';
@@ -543,6 +556,7 @@ class SubscriptionPlanController extends Controller
                     'role_added' => $targetRole,
                 ],
                 'data' => $this->formatSubscriptionResponse($userSubscription),
+                'gfs_account' => $gfsAccount,
             ]);
 
         } catch (\Exception $e) {
@@ -736,8 +750,9 @@ class SubscriptionPlanController extends Controller
     {
         $request->validate([
             'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
-            'payment_method' => 'required|in:freemopay,paypal',
-            'phone_number' => 'required_if:payment_method,freemopay|string|min:12|max:15',
+            'payment_method' => 'required|in:kpay,paypal',
+            'phone_number' => 'required_if:payment_method,kpay|string|min:9|max:15',
+            'provider_code' => 'nullable|string',
         ]);
 
         $user = $request->user();
@@ -811,50 +826,42 @@ class SubscriptionPlanController extends Controller
                 ]);
 
             } else {
-                // FreeMoPay (méthode par défaut)
-                $freemoPayService = new FreeMoPayService();
+                // KPay (Mobile Money, USSD, ASYNCHRONE)
+                $kpayService = new \App\Services\Payment\KPayService();
 
-                // Initier le paiement (passer le plan comme payable)
-                // IMPORTANT: Cette méthode est SYNCHRONE et attend la confirmation du paiement
-                $payment = $freemoPayService->initPayment(
+                // Init asynchrone : retourne immédiatement un paiement "pending".
+                // Le client poll /api/payments/{id}/status ; le webhook KPay finalise.
+                $payment = $kpayService->initDeposit(
                     $user,
                     $plan->price,
                     $phoneNumber,
                     $description,
                     $externalId,
                     $plan,
-                    'subscription'
+                    'subscription',
+                    $request->provider_code
                 );
 
-                Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                Log::info("[SubscriptionPlanController] ✅ FreeMoPay payment process completed!");
-                Log::info("[SubscriptionPlanController] 📋 Payment ID: {$payment->id}");
-                Log::info("[SubscriptionPlanController] 📊 Status: {$payment->status}");
-                Log::info("[SubscriptionPlanController] 🔖 Reference: {$payment->provider_reference}");
-                Log::info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-                $responseData = [
+                Log::info("[SubscriptionPlanController] ✅ KPay payment initiated (pending)", [
                     'payment_id' => $payment->id,
-                    'reference' => $payment->provider_reference,
-                    'external_id' => $payment->external_id,
-                    'amount' => $payment->amount,
                     'status' => $payment->status,
-                    'is_completed' => $payment->isCompleted(),
-                    'paid_at' => $payment->paid_at?->toIso8601String(),
-                    'subscription_plan_id' => $plan->id,
-                    'plan_name' => $plan->name,
-                    'payment_method' => 'freemopay',
-                ];
-
-                // Message de réponse selon le statut
-                $message = $payment->isCompleted()
-                    ? 'Paiement effectué avec succès! Vous pouvez maintenant activer votre abonnement.'
-                    : 'Paiement en cours de traitement.';
+                ]);
 
                 return response()->json([
                     'success' => true,
-                    'message' => $message,
-                    'data' => $responseData,
+                    'message' => 'Paiement initié. Validez sur votre téléphone, puis activez votre abonnement.',
+                    'data' => [
+                        'payment_id' => $payment->id,
+                        'reference' => $payment->provider_reference,
+                        'external_id' => $payment->external_id,
+                        'amount' => $payment->amount,
+                        'status' => $payment->status, // pending
+                        'is_completed' => false,
+                        'subscription_plan_id' => $plan->id,
+                        'plan_name' => $plan->name,
+                        'payment_method' => 'kpay',
+                        'poll_url' => "/api/payments/{$payment->id}/status",
+                    ],
                 ]);
             }
 
@@ -929,35 +936,32 @@ class SubscriptionPlanController extends Controller
 
         Log::info("[SubscriptionPlanController] 📋 Payment found - Current status: {$payment->status}");
 
-        // Si le paiement est encore pending, vérifier avec FreeMoPay
+        // Si le paiement est encore pending, vérifier avec KPay
         if ($payment->status === 'pending' && $payment->provider_reference) {
-            Log::info("[SubscriptionPlanController] ⏳ Payment is pending, checking with FreeMoPay...");
+            Log::info("[SubscriptionPlanController] ⏳ Payment is pending, checking with KPay...");
             try {
-                $freemoPayService = new FreeMoPayService();
-                $statusResponse = $freemoPayService->checkPaymentStatus($payment->provider_reference);
+                $kpayService = new \App\Services\Payment\KPayService();
+                $statusResponse = $kpayService->checkPaymentStatus($payment->provider_reference);
 
-                $freemoStatus = strtoupper($statusResponse['status'] ?? '');
-                Log::info("[SubscriptionPlanController] 📥 FreeMoPay status: {$freemoStatus}");
+                $kpayStatus = strtoupper($statusResponse['status'] ?? '');
+                Log::info("[SubscriptionPlanController] 📥 KPay status: {$kpayStatus}");
 
-                // Mettre à jour le statut local si nécessaire
-                if (in_array($freemoStatus, ['SUCCESS', 'SUCCESSFUL', 'COMPLETED']) && $payment->status !== 'completed') {
-                    Log::info("[SubscriptionPlanController] ✅ Updating payment to completed");
+                if ($kpayStatus === 'COMPLETED' && $payment->status !== 'completed') {
                     $payment->update([
                         'status' => 'completed',
                         'paid_at' => now(),
                         'payment_provider_response' => $statusResponse,
                     ]);
-                } elseif (in_array($freemoStatus, ['FAILED', 'CANCELLED', 'REJECTED'])) {
-                    Log::warning("[SubscriptionPlanController] ❌ Updating payment to failed - Reason: {$freemoStatus}");
+                } elseif (in_array($kpayStatus, ['FAILED', 'CANCELLED', 'CANCELED'])) {
                     $payment->update([
                         'status' => 'failed',
-                        'failure_reason' => $statusResponse['message'] ?? $freemoStatus,
+                        'failure_reason' => $statusResponse['failureReason'] ?? $kpayStatus,
                         'payment_provider_response' => $statusResponse,
                     ]);
                 }
 
             } catch (\Exception $e) {
-                Log::warning("[SubscriptionPlanController] ⚠️  Could not check payment status with FreeMoPay: " . $e->getMessage());
+                Log::warning("[SubscriptionPlanController] ⚠️  Could not check payment status with KPay: " . $e->getMessage());
             }
         }
 
@@ -1315,6 +1319,37 @@ class SubscriptionPlanController extends Controller
     }
 
     /**
+     * Crée (ou récupère) le compte GFSolutions offert si le plan inclut
+     * l'avantage `gfs_free_account`. Non bloquant : un échec côté GFS ne doit
+     * jamais invalider une souscription déjà payée — on loggue et on retourne
+     * null. À appeler APRÈS le commit de la souscription.
+     *
+     * @param array $extra Infos GFS collectées à la souscription
+     *                     (gender / city / region), fournies par l'app.
+     * @return array|null Le compte GFS (format camelCase pour le frontend) ou null.
+     */
+    private function maybeOnboardGfs(User $user, SubscriptionPlan $plan, array $extra = []): ?array
+    {
+        $offersGfs = is_array($plan->features)
+            && ($plan->features['gfs_free_account'] ?? false) === true;
+
+        if (!$offersGfs) {
+            return null;
+        }
+
+        try {
+            return app(GfsService::class)->onboardClient($user, $extra);
+        } catch (\Throwable $e) {
+            Log::error('[SubscriptionPlanController] GFS onboarding failed', [
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Formate la réponse d'un abonnement
      */
     private function formatSubscriptionResponse(UserSubscriptionPlan $subscription): array
@@ -1382,7 +1417,11 @@ class SubscriptionPlanController extends Controller
     {
         $request->validate([
             'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
-            'payment_provider' => 'required|string|in:freemopay,paypal',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
+            // Infos optionnelles pour le compte GFSolutions offert
+            'gfs_gender' => 'nullable|string|max:10',
+            'gfs_city' => 'nullable|string|max:100',
+            'gfs_region' => 'nullable|string|max:100',
         ]);
 
         $user = $request->user();
@@ -1557,6 +1596,14 @@ class SubscriptionPlanController extends Controller
             // Envoyer notification FCM pour l'achat d'abonnement
             $this->sendSubscriptionPurchaseNotification($user, $plan, $paymentProvider, $isRenewal);
 
+            // Compte GFSolutions offert (si le plan inclut l'avantage).
+            // Non bloquant : exécuté après le commit.
+            $gfsAccount = $this->maybeOnboardGfs($user, $plan, [
+                'gender' => $request->input('gfs_gender'),
+                'city' => $request->input('gfs_city'),
+                'region' => $request->input('gfs_region'),
+            ]);
+
             $message = $isRenewal
                 ? "Abonnement {$plan->name} renouvelé avec succès !"
                 : "Abonnement {$plan->name} activé avec succès !";
@@ -1571,6 +1618,7 @@ class SubscriptionPlanController extends Controller
                     'role_added' => $roleToSync,
                 ],
                 'data' => $this->formatSubscriptionResponse($subscription),
+                'gfs_account' => $gfsAccount,
             ]);
 
         } catch (\Exception $e) {

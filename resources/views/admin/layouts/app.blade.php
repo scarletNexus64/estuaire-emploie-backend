@@ -1651,6 +1651,7 @@
                     'fas fa-mobile-alt' => 'mdi-cellphone-link',
                     'fas fa-cog' => 'mdi-cog',
                     'fas fa-wrench' => 'mdi-wrench',
+                    'fas fa-map-signs' => 'mdi-map-marker-path',
                 ];
             @endphp
 

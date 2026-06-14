@@ -34,11 +34,28 @@ use Illuminate\Support\Facades\Log;
 trait UserFeatures
 {
     /**
-     * Retourne les rôles disponibles pour cet utilisateur
+     * Retourne les rôles disponibles pour cet utilisateur.
+     *
+     * `candidate` et `student` sont des espaces universellement accessibles à
+     * tout utilisateur non-admin : ils sont donc toujours présents. `recruiter`
+     * reste conditionné par l'abonnement (ajouté via addAvailableRole lors de la
+     * souscription). L'accès aux contenus étudiants payants reste géré
+     * séparément par le service premium (cf. User::hasStudentMode()).
      */
     public function getAvailableRoles(): array
     {
-        return $this->available_roles ?? [$this->role];
+        $roles = $this->available_roles ?? [$this->role];
+
+        // Espaces universels pour les comptes non-admin.
+        if ($this->role !== 'admin') {
+            foreach (['candidate', 'student'] as $universal) {
+                if (!in_array($universal, $roles, true)) {
+                    $roles[] = $universal;
+                }
+            }
+        }
+
+        return array_values(array_unique($roles));
     }
 
     /**
@@ -92,6 +109,7 @@ trait UserFeatures
         return match($role) {
             'candidate' => 'candidate_features',
             'recruiter' => 'recruiter_features',
+            'student' => 'student_features',
             default => 'features',
         };
     }

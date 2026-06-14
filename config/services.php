@@ -18,4 +18,12 @@ return [
         'api_url' => env('INSAMTECHS_API_URL', 'http://127.0.0.1:8001/api'),
     ],
 
+    // GFSolutions (G-Financials) — compte bancaire offert lors de la
+    // souscription d'un pack incluant l'avantage `gfs_free_account`.
+    'gfs' => [
+        'base_url' => env('GFS_BASE_URL', 'https://backend.gfinancials.com/api/v1'),
+        'api_key' => env('GFS_API_KEY'),
+        'timeout' => env('GFS_TIMEOUT', 30),
+    ],
+
 ];

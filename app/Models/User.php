@@ -33,6 +33,7 @@ class User extends Authenticatable
         'paypal_wallet_balance',
         'preferred_currency', // XAF, USD, EUR
         'locale',
+        'country', // Pays de résidence (code ISO alpha-2, ex: CM) — ciblage géographique
         'password',
         'must_change_password',
         'profile_photo',
@@ -53,6 +54,11 @@ class User extends Authenticatable
         'level',
         'interests',
         'specialty',
+        // Compte GFSolutions (G-Financials) offert à la souscription
+        'gfs_client_number',
+        'gfs_account_number',
+        'gfs_phone',
+        'gfs_onboarded_at',
     ];
 
     protected $hidden = [
@@ -75,7 +81,16 @@ class User extends Authenticatable
             'freemopay_wallet_balance' => 'decimal:2',
             'paypal_wallet_balance' => 'decimal:2',
             'last_login_at' => 'datetime',
+            'gfs_onboarded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Indique si l'utilisateur possède déjà un compte GFSolutions onboardé.
+     */
+    public function hasGfsAccount(): bool
+    {
+        return !empty($this->gfs_client_number);
     }
 
     public function recruiter(): HasOne
@@ -200,6 +215,17 @@ class User extends Authenticatable
     public function isCandidate(): bool
     {
         return $this->role === 'candidate';
+    }
+
+    /**
+     * Rôle étudiant (source de vérité : champ `role`).
+     *
+     * Détermine l'espace de navigation Étudiant. Pour l'accès aux contenus
+     * étudiants payants, voir hasStudentMode() (service premium).
+     */
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
     }
 
     public function hasPermission(string $permission): bool
@@ -634,12 +660,14 @@ class User extends Authenticatable
 
         return [
             'id' => $subscription->id,
-            'plan' => [
+            // Null-safe : un abonnement orphelin (plan supprimé) ne doit pas
+            // faire planter l'endpoint (sinon loader infini côté app).
+            'plan' => $plan ? [
                 'id' => $plan->id,
                 'name' => $plan->name,
                 'slug' => $plan->slug,
                 'plan_type' => $plan->plan_type,
-            ],
+            ] : null,
             'expires_at' => $subscription->end_date?->toIso8601String(),
             'is_expired' => $subscription->isExpired(),
             'is_valid' => $subscription->isValid(),
@@ -762,11 +790,42 @@ class User extends Authenticatable
     }
 
     /**
-     * Vérifie si l'utilisateur est un étudiant (a le service Mode Étudiant actif)
+     * Vérifie si l'utilisateur a accès aux CONTENUS étudiants payants
+     * (service premium "Mode Étudiant" actif).
+     *
+     * NB : distinct du RÔLE étudiant (cf. isStudent()). Le rôle détermine
+     * l'espace de navigation ; ce service premium déverrouille le contenu
+     * (épreuvethèque/vidéothèque payants).
      */
-    public function isStudent(): bool
+    public function hasStudentMode(): bool
     {
         return $this->hasPremiumService('student_mode');
+    }
+
+    /**
+     * Accès à la Vidéothèque et la Bibliothèque (contenus « ressources »).
+     *
+     * Déverrouillé soit par le Mode Étudiant (service premium "student_mode"),
+     * soit par un abonnement candidat Pack C2 (Or/Gold) ou supérieur (C3
+     * Platinum/Diamant). L'Épreuvethèque reste exclusivement réservée au
+     * Mode Étudiant (cf. hasStudentMode()).
+     */
+    public function hasLibraryAccess(): bool
+    {
+        if ($this->hasStudentMode()) {
+            return true;
+        }
+
+        $sub = $this->activeSubscription('candidate');
+        if ($sub === null || !$sub->isValid()) {
+            return false;
+        }
+
+        $slug = strtoupper($sub->subscriptionPlan->slug ?? '');
+
+        // Pack C2 (Or/Gold) ou C3 (Platinum/Diamant) déverrouillent les ressources.
+        return str_contains($slug, 'C2') || str_contains($slug, 'OR') || str_contains($slug, 'GOLD')
+            || str_contains($slug, 'C3') || str_contains($slug, 'DIAMANT') || str_contains($slug, 'PLATINUM');
     }
 
     /**

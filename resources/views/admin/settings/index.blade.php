@@ -43,6 +43,15 @@
                 <i class="mdi mdi-account-multiple"></i> Parrainage
                 <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">3</span>
             </button>
+            <button
+                id="tab-btn-wallet"
+                class="tab-button"
+                onclick="switchSettingsTab('wallet')"
+                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+            >
+                <i class="mdi mdi-wallet"></i> Wallet
+                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">1</span>
+            </button>
         </div>
 
         <!-- Tab Content Container -->
@@ -70,6 +79,11 @@
                 @include('admin.settings.partials.referral-config')
                 @include('admin.settings.partials.referral-users')
                 @include('admin.settings.partials.referral-commissions')
+            </div>
+
+            <!-- Tab: Wallet -->
+            <div id="tab-content-wallet" class="settings-tab-content" style="display: none;">
+                @include('admin.settings.partials.wallet-config')
             </div>
         </div>
     </div>
@@ -165,7 +179,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const tabParam = urlParams.get('tab');
 
-            if (tabParam && ['jobs', 'companies', 'academic', 'referral'].includes(tabParam)) {
+            if (tabParam && ['jobs', 'companies', 'academic', 'referral', 'wallet'].includes(tabParam)) {
                 switchSettingsTab(tabParam);
             } else {
                 // Make sure first tab is active

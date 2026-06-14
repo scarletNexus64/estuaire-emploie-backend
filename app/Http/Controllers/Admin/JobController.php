@@ -9,6 +9,8 @@ use App\Models\Job;
 use App\Models\Company;
 use App\Models\CompanyCategory;
 use App\Models\ContractType;
+use App\Models\Specialty;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,13 +58,14 @@ class JobController extends Controller
             ->orderBy('name')
             ->get();
         $contractTypes = ContractType::orderBy('name')->get();
+        $specialties = Specialty::active()->ordered()->get();
 
         // Carte company_id => liste des CompanyCategory level_3 dont le level_2
         // fait partie des catégories de l'entreprise (même règle que API
         // myCompanyLevel3Sectors). Sérialisée en JSON dans la vue pour le filtre JS.
         $companyLevel3Map = $this->buildCompanyLevel3Map($companies);
 
-        return view('admin.jobs.create', compact('companies', 'contractTypes', 'companyLevel3Map'));
+        return view('admin.jobs.create', compact('companies', 'contractTypes', 'specialties', 'companyLevel3Map'));
     }
 
     /**
@@ -97,12 +100,33 @@ class JobController extends Controller
         return $map;
     }
 
+    /**
+     * Indique si le type de contrat sélectionné correspond à un Stage,
+     * auquel cas la spécialité académique (filière) devient obligatoire.
+     */
+    private function isInternshipContract($contractTypeId): bool
+    {
+        if (!$contractTypeId) {
+            return false;
+        }
+
+        return ContractType::whereKey($contractTypeId)
+            ->where('slug', 'stage')
+            ->exists();
+    }
+
     public function store(Request $request): RedirectResponse
     {
+        $isInternship = $this->isInternshipContract($request->input('contract_type_id'));
+
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'nullable|exists:company_categories,id',
             'contract_type_id' => 'required|exists:contract_types,id',
+            'specialty_id' => [
+                $isInternship ? 'required' : 'nullable',
+                Rule::exists('specialties', 'id')->where('is_active', true),
+            ],
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'requirements' => 'nullable|string',
@@ -113,7 +137,14 @@ class JobController extends Controller
             'visibility' => 'required|in:national,local',
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date|after:today',
+        ], [
+            'specialty_id.required' => 'La spécialité académique (filière) est obligatoire pour une offre de type Stage.',
         ]);
+
+        // Si le contrat n'est pas un Stage, on ignore toute spécialité éventuelle.
+        if (!$isInternship) {
+            $validated['specialty_id'] = null;
+        }
 
         // Auteur de l'offre
         $validated['posted_by'] = Auth::id();
@@ -154,7 +185,7 @@ class JobController extends Controller
 
     public function show(Job $job): View
     {
-        $job->load(['company', 'category', 'contractType', 'postedBy', 'applications.user']);
+        $job->load(['company', 'category', 'contractType', 'specialty', 'postedBy', 'applications.user']);
 
         return view('admin.jobs.show', compact('job'));
     }
@@ -166,17 +197,24 @@ class JobController extends Controller
             ->orderBy('name')
             ->get();
         $contractTypes = ContractType::orderBy('name')->get();
+        $specialties = Specialty::active()->ordered()->get();
         $companyLevel3Map = $this->buildCompanyLevel3Map($companies);
 
-        return view('admin.jobs.edit', compact('job', 'companies', 'contractTypes', 'companyLevel3Map'));
+        return view('admin.jobs.edit', compact('job', 'companies', 'contractTypes', 'specialties', 'companyLevel3Map'));
     }
 
     public function update(Request $request, Job $job): RedirectResponse
     {
+        $isInternship = $this->isInternshipContract($request->input('contract_type_id'));
+
         $validated = $request->validate([
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'nullable|exists:company_categories,id',
             'contract_type_id' => 'required|exists:contract_types,id',
+            'specialty_id' => [
+                $isInternship ? 'required' : 'nullable',
+                Rule::exists('specialties', 'id')->where('is_active', true),
+            ],
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'requirements' => 'nullable|string',
@@ -187,7 +225,14 @@ class JobController extends Controller
             'visibility' => 'required|in:national,local',
             'status' => 'required|in:draft,pending,published,closed,expired',
             'application_deadline' => 'nullable|date',
+        ], [
+            'specialty_id.required' => 'La spécialité académique (filière) est obligatoire pour une offre de type Stage.',
         ]);
+
+        // Si le contrat n'est pas un Stage, on détache toute spécialité éventuelle.
+        if (!$isInternship) {
+            $validated['specialty_id'] = null;
+        }
 
         $validated['salary_negotiable'] = $request->boolean('salary_negotiable');
         $validated['is_featured'] = $request->boolean('is_featured');

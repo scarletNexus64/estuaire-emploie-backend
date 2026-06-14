@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Advertisement;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * @OA\Tag(
@@ -28,13 +29,25 @@ class AdvertisementController extends Controller
      *     )
      * )
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $advertisements = Advertisement::where('is_active', true)
-            ->where('status', 'active')
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+        // Ciblage : un user ne voit que les annonces destinées à son rôle ou à 'all'.
+        // Un visiteur non authentifié ne voit que les annonces 'all'.
+        // La route est publique : on résout l'utilisateur depuis le Bearer token s'il est fourni.
+        $user = $request->user();
+        if (!$user && $request->bearerToken()) {
+            $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+            $user = $tokenModel?->tokenable;
+        }
+        $role = $user?->role;
+        // Pays du user pour le ciblage géographique (défaut Cameroun).
+        // Un visiteur non authentifié ne voit que les annonces "tous pays".
+        $country = $user?->country;
+
+        $advertisements = Advertisement::currentlyActive()
             ->where('ad_type', 'homepage_banner')
+            ->forAudience($role)
+            ->forCountry($country)
             ->orderBy('display_order')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -45,6 +58,7 @@ class AdvertisementController extends Controller
                     'description' => $ad->description,
                     'image_url' => $ad->image_url, // URL complète via accessor
                     'background_color' => $ad->background_color,
+                    'overlay_opacity' => $ad->overlay_opacity,
                     'ad_type' => $ad->ad_type,
                     'start_date' => $ad->start_date->format('Y-m-d'),
                     'end_date' => $ad->end_date->format('Y-m-d'),

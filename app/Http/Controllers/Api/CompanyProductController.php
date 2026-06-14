@@ -444,7 +444,7 @@ class CompanyProductController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'provider' => 'required|in:freemopay,paypal',
+                'provider' => 'required|in:kpay,freemopay,paypal',
             ]);
             if ($validator->fails()) {
                 return response()->json([

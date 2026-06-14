@@ -35,7 +35,7 @@
                         @else
                             <span class="badge badge-secondary">Inactif</span>
                         @endif
-                        @if($user->isStudent())
+                        @if($user->hasStudentMode())
                             <span class="badge badge-warning">🎓 Étudiant</span>
                         @endif
                         @if($user->hasActiveSubscription())

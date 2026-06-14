@@ -117,6 +117,12 @@ class NavigationService
                         'icon' => 'fas fa-book',
                         'permission' => 'manage_settings',
                     ],
+                    [
+                        'name' => 'Roadmaps',
+                        'route' => 'admin.roadmaps.index',
+                        'icon' => 'fas fa-map-signs',
+                        'permission' => 'manage_settings',
+                    ],
                 ],
             ],
             [
@@ -242,6 +248,12 @@ class NavigationService
                         'permission' => 'manage_advertisements',
                     ],
                     [
+                        'name' => 'Tarifs Sponsoring (Marketing Digital)',
+                        'route' => 'admin.ad-pricing.index',
+                        'icon' => 'fas fa-ad',
+                        'permission' => 'manage_advertisements',
+                    ],
+                    [
                         'name' => 'Statistiques Financières',
                         'route' => 'admin.financial-stats.index',
                         'icon' => 'fas fa-chart-line',
@@ -299,6 +311,12 @@ class NavigationService
                         'route' => 'admin.device-change-requests.index',
                         'icon' => 'fas fa-mobile-alt',
                         'permission' => null, // All admins can manage device requests
+                    ],
+                    [
+                        'name' => 'Digitalisation',
+                        'route' => 'admin.digitalization-requests.index',
+                        'icon' => 'fas fa-laptop-code',
+                        'permission' => 'manage_digitalization',
                     ],
                     [
                         'name' => 'Mode Maintenance',
@@ -359,6 +377,7 @@ class NavigationService
 
             AdminRole::TRAINING_PROGRAMS_MANAGER->value => [
                 'admin.programs.index',
+                'admin.roadmaps.index',
             ],
 
             AdminRole::STUDENT_SPACE_MANAGER->value => [

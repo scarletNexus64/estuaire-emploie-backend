@@ -52,11 +52,12 @@ class ExamPackApiController extends Controller
                       ->orderBy('created_at', 'desc')
                       ->paginate($perPage);
 
-        // Ajouter les informations d'achat et promotionnelles pour l'utilisateur connecté
-        if (Auth::check()) {
-            $userId = Auth::id();
-            $user = Auth::user();
-            $isStudent = $user->isStudent();
+        // Ajouter les informations d'achat et promotionnelles pour l'utilisateur connecté.
+        // Lecture publique (mode vitrine) : token optionnel résolu via le guard sanctum.
+        if (auth('sanctum')->check()) {
+            $userId = auth('sanctum')->id();
+            $user = auth('sanctum')->user();
+            $isStudent = $user->hasStudentMode();
 
             $packs->getCollection()->transform(function ($pack) use ($userId, $isStudent) {
                 $pack->is_purchased = PackPurchase::where('user_id', $userId)
@@ -126,14 +127,15 @@ class ExamPackApiController extends Controller
         // Vérifier si l'utilisateur a acheté ce pack
         $isPurchased = false;
         $isFreeForStudent = false;
-        if (Auth::check()) {
-            $user = Auth::user();
-            $isPurchased = PackPurchase::where('user_id', Auth::id())
+        // Lecture publique (mode vitrine) : token optionnel via le guard sanctum.
+        if (auth('sanctum')->check()) {
+            $user = auth('sanctum')->user();
+            $isPurchased = PackPurchase::where('user_id', auth('sanctum')->id())
                                        ->where('exam_pack_id', $pack->id)
                                        ->where('pack_type', 'exam')
                                        ->active()
                                        ->exists();
-            $isFreeForStudent = $user->isStudent();
+            $isFreeForStudent = $user->hasStudentMode();
         }
 
         // Mode vitrine : exposer is_preview au top level sur chaque épreuve
@@ -218,13 +220,13 @@ class ExamPackApiController extends Controller
         $request->validate([
             'payment_method' => 'required|in:wallet',
             'currency' => 'nullable|in:XAF,USD,EUR',
-            'payment_provider' => 'nullable|string|in:freemopay,paypal',
+            'payment_provider' => 'nullable|string|in:kpay,freemopay,paypal',
         ]);
 
         $pack = ExamPack::findOrFail($id);
         $user = Auth::user();
         $currency = $request->input('currency', 'XAF');
-        $paymentProvider = $request->input('payment_provider', 'freemopay');
+        $paymentProvider = $request->input('payment_provider', 'kpay');
 
         // Vérifier si l'utilisateur a déjà acheté ce pack
         $existingPurchase = PackPurchase::where('user_id', $user->id)
@@ -241,7 +243,7 @@ class ExamPackApiController extends Controller
         }
 
         // Vérifier si l'utilisateur est un étudiant (a le Mode Étudiant actif)
-        $isStudent = $user->isStudent();
+        $isStudent = $user->hasStudentMode();
 
         // Obtenir le prix dans la devise demandée
         $price = $pack->getPrice($currency);

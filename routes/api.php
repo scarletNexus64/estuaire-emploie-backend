@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdvertisementController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\SpecialtyController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CompanyCategoryController;
@@ -20,11 +21,15 @@ use App\Http\Controllers\Api\TestNotificationController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\CurrencyController;
+use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\CurrencyReferenceController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProficiencyLevelController;
 use App\Http\Controllers\Api\ProgramController;
+use App\Http\Controllers\Api\RoadmapController;
 use App\Http\Controllers\Api\RecruiterServicePurchaseController;
+use App\Http\Controllers\Api\MarketingCampaignController;
+use App\Http\Controllers\Api\RecruiterCvLibraryController;
 use App\Http\Controllers\Api\RecruiterSkillTestController;
 use App\Http\Controllers\Api\CandidatePremiumServiceController;
 use App\Http\Controllers\Api\ExamPaperApiController;
@@ -76,6 +81,7 @@ Route::get('/jobs/{job}', [JobController::class, 'show']);
 // Entreprises publiques
 Route::get('/companies', [CompanyController::class, 'index']);
 Route::get('/companies/nearby', [CompanyController::class, 'getNearbyCompanies']); // Récupérer les entreprises à proximité par GPS
+Route::get('/companies/search', [CompanyController::class, 'search']); // Recherche full-text (nom, description, niveaux 1/2/3, ville…) + tri par distance
 Route::get('/companies/{company}', [CompanyController::class, 'show']);
 
 // Produits/Services d'entreprises (publics)
@@ -85,6 +91,7 @@ Route::get('/company-products/{id}', [CompanyProductController::class, 'show']);
 // Catégories et filtres (données de référence)
 Route::get('/categories', [CategoryController::class, 'categories']);
 Route::get('/contract-types', [CategoryController::class, 'contractTypes']);
+Route::get('/specialties', [SpecialtyController::class, 'index']); // Spécialités académiques (filtres offres)
 Route::get('/domains-sectors', [CompanyController::class, 'getDomainsSectors']); // Domaines et secteurs d'activité
 
 // Company Categories (new hierarchical structure)
@@ -98,6 +105,9 @@ Route::get('/company-categories/search', [CompanyCategoryController::class, 'sea
 // Référentiel complet des devises mondiales (pour le choix de devise produit)
 Route::get('/currencies/all', [CurrencyReferenceController::class, 'index']);
 
+// Pays (référentiel) — sélecteur pays inscription + ciblage géo des annonces
+Route::get('/countries', [CountryController::class, 'index']);
+
 // Plans d'abonnement publics (consultation)
 Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
 Route::get('/subscription-plans/{id}', [SubscriptionPlanController::class, 'show']);
@@ -109,6 +119,60 @@ Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'reco
 
 // Catégories de services rapides (publique)
 Route::get('/service-categories', [QuickServiceController::class, 'categories']);
+
+// Services rapides / petits jobs — consultation PUBLIQUE (mode vitrine).
+// La lecture (liste + détail) est ouverte comme pour /jobs ; les actions
+// (créer, répondre, mes services…) restent protégées dans le groupe auth.
+// La contrainte numérique sur {id} évite que ce détail public n'intercepte
+// les sous-routes protégées (/quick-services/favorites, /categories, …).
+Route::get('/quick-services', [QuickServiceController::class, 'index']);
+Route::get('/quick-services/{id}', [QuickServiceController::class, 'show'])->whereNumber('id');
+
+// Roadmaps (parcours d'apprentissage gamifiés) — consultation PUBLIQUE (mode
+// vitrine). Auth optionnelle côté contrôleur (auth('sanctum')->user()) : avec
+// token → progression personnalisée ; sans token → version invité (1er niveau).
+// Le QCM (submitQuiz) reste protégé dans le groupe auth.
+Route::get('/roadmaps', [RoadmapController::class, 'index']);
+Route::get('/roadmaps/{roadmap}', [RoadmapController::class, 'show']);
+
+// Programmes (parcours d'insertion) — consultation PUBLIQUE (mode vitrine).
+// Auth optionnelle côté contrôleur (auth('sanctum')->user()) : avec token →
+// has_access/abonnement personnalisés ; sans token → structure grisée.
+// check-access et les actions restent protégés dans le groupe auth.
+Route::get('/programs', [ProgramController::class, 'index']);
+// {program} exclut « check-access » pour ne pas intercepter la sous-route
+// protégée GET /programs/check-access (déclarée dans le groupe auth, mais ce
+// bloc public est enregistré avant : sans contrainte, le wildcard la capterait).
+Route::get('/programs/{program}', [ProgramController::class, 'show'])
+    ->where('program', '^(?!check-access$).+$');
+
+// Packs d'épreuves (Épreuvethèque) — consultation PUBLIQUE (mode vitrine).
+// Auth optionnelle côté contrôleur (auth('sanctum')->check()) : avec token →
+// is_purchased/is_free_for_student ; sans token → catalogue seul. filters est
+// déclaré AVANT {id} et {id} contraint numérique pour ne pas capter les
+// sous-routes protégées (purchase, my-exam-packs, check-access).
+Route::get('/exam-packs', [\App\Http\Controllers\Api\ExamPackApiController::class, 'index']);
+Route::get('/exam-packs/filters', [\App\Http\Controllers\Api\ExamPackApiController::class, 'filters']);
+Route::get('/exam-packs/{id}', [\App\Http\Controllers\Api\ExamPackApiController::class, 'show'])->whereNumber('id');
+
+// Packs de formation (Vidéothèque) — consultation PUBLIQUE (mode vitrine).
+// Auth optionnelle côté contrôleur (auth('sanctum')->check()). filters AVANT
+// {id} numérique ; purchase, my-training-packs, check-access, view/stream/
+// complete restent protégés (nécessitent un vrai utilisateur).
+Route::get('/training-packs', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'index']);
+Route::get('/training-packs/filters', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'filters']);
+Route::get('/training-packs/{id}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'show'])->whereNumber('id');
+
+// Services premium candidat — consultation PUBLIQUE (mode vitrine) de la liste
+// et du détail. Auth optionnelle côté contrôleur (auth('sanctum')->user()).
+// student-access, my-services, check-access et purchase restent protégés.
+// {slug} doit être déclaré APRÈS pour ne pas capter d'éventuelles sous-routes ;
+// ici les sous-routes protégées vivent dans le groupe auth.
+Route::get('/candidate/premium-services', [CandidatePremiumServiceController::class, 'index']);
+// {slug} exclut les segments réservés aux sous-routes protégées du groupe auth
+// (student-access, my-services, check-access) pour ne pas les intercepter.
+Route::get('/candidate/premium-services/{slug}', [CandidatePremiumServiceController::class, 'show'])
+    ->where('slug', '^(?!student-access$|my-services$|check-access$).+$');
 
 // Niveaux de proficience (skill / language / training) — référentiel multilingue
 Route::get('/proficiency-levels', [ProficiencyLevelController::class, 'index']);
@@ -143,6 +207,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::post('/auth/switch-role', [AuthController::class, 'switchRole']); // ⭐ Nouveau: Changer de rôle (candidat <-> recruteur)
     Route::delete('/user/account', [AuthController::class, 'deleteAccount']);
     Route::get('/me/subscription-status', [AuthController::class, 'getSubscriptionStatus']); // ⭐ Statut d'abonnement (candidat + recruteur)
+
+    // ------------------
+    // DIGITALISATION (demande de digitalisation d'un process métier)
+    // ------------------
+    Route::post('/digitalization-requests', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'store']);
+    Route::get('/my-digitalization-requests', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'myRequests']);
+    Route::delete('/digitalization-requests/bulk', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'bulkDestroy']);
+    Route::delete('/digitalization-requests/{id}', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'destroy']);
 
     // ------------------
     // CANDIDATURES (Candidat & Recruteur)
@@ -212,6 +284,21 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // Candidatures reçues pour mes offres - vérifie que l'abonnement est valide
     Route::get('/recruiter/applications', [ApplicationController::class, 'receivedApplications'])->middleware('subscription:valid');
+    // CVThèque : tous les candidats disposant d'un CV (builder, candidature ou legacy).
+    // Consultation libre pour tout recruteur ; les actions premium (chat, voir
+    // les infos détaillées) nécessitent un abonnement actif, géré dans le contrôleur.
+    Route::get('/recruiter/cv-library', [RecruiterCvLibraryController::class, 'index']);
+    // Liste des spécialités disponibles (alimente le filtre de la CVThèque)
+    Route::get('/recruiter/cv-library/specialties', [RecruiterCvLibraryController::class, 'specialties']);
+    // Arbre des catégories d'entreprise (cascade level_1 > level_2 > level_3) pour les filtres
+    Route::get('/recruiter/cv-library/categories', [RecruiterCvLibraryController::class, 'categories']);
+    // Ouvrir le CV d'un candidat (PDF) — action premium : nécessite un
+    // abonnement recruteur actif, non expiré, avec accès CVthèque (même
+    // contrôle que POST /conversations). Géré par le middleware pour renvoyer
+    // les codes NO_SUBSCRIPTION / SUBSCRIPTION_EXPIRED / FEATURE_NOT_AVAILABLE.
+    Route::get('/recruiter/cv-library/{userId}/cv', [RecruiterCvLibraryController::class, 'cv'])
+        ->middleware('subscription:feature_cvtheque')
+        ->whereNumber('userId');
     // Mettre à jour le statut d'une candidature - vérifie que l'abonnement est valide
     Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->middleware('subscription:valid');
     // Débloquer les coordonnées d'un candidat (consomme 1 contact) - vérifie la limite de contacts
@@ -235,12 +322,22 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/recruiter/services/access-status', [RecruiterServicePurchaseController::class, 'checkAccessStatus']);
 
     // ------------------
+    // Marketing Digital (sponsoring self-service côté entreprise)
+    // ------------------
+    Route::get('/marketing/pricing', [MarketingCampaignController::class, 'pricing']);
+    Route::post('/marketing/estimate', [MarketingCampaignController::class, 'estimate']);
+    Route::get('/marketing/campaigns', [MarketingCampaignController::class, 'index']);
+    Route::post('/marketing/campaigns', [MarketingCampaignController::class, 'store']);
+    Route::get('/marketing/campaigns/{id}/stats', [MarketingCampaignController::class, 'stats']);
+    Route::get('/marketing/campaigns/{id}/report', [MarketingCampaignController::class, 'report']);
+    Route::delete('/marketing/campaigns/{id}', [MarketingCampaignController::class, 'destroy']);
+
+    // ------------------
     // CANDIDAT - SERVICES PREMIUM (Mode Étudiant, CV Premium, etc.)
     // ------------------
-    // Liste des services premium disponibles
-    Route::get('/candidate/premium-services', [CandidatePremiumServiceController::class, 'index']);
-    // Détails d'un service spécifique
-    Route::get('/candidate/premium-services/{slug}', [CandidatePremiumServiceController::class, 'show']);
+    // NB: GET /candidate/premium-services (index) et /candidate/premium-services/{slug} (show) désormais PUBLIC
+    // Résumé des accès « espace étudiant » (Pack Étudiant / accès ressources).
+    Route::get('/candidate/premium-services/student-access', [CandidatePremiumServiceController::class, 'studentAccess']);
     // Acheter un service premium avec le wallet
     Route::post('/candidate/premium-services/purchase', [CandidatePremiumServiceController::class, 'purchase']);
     // Liste de mes services actifs
@@ -267,12 +364,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // MODE ÉTUDIANT - PACKS D'ÉPREUVES (Payants)
     // ------------------
-    // Liste des packs d'épreuves disponibles
-    Route::get('/exam-packs', [\App\Http\Controllers\Api\ExamPackApiController::class, 'index']);
-    // Filtres disponibles (spécialités, années, types d'examen)
-    Route::get('/exam-packs/filters', [\App\Http\Controllers\Api\ExamPackApiController::class, 'filters']);
-    // Détails d'un pack d'épreuves
-    Route::get('/exam-packs/{id}', [\App\Http\Controllers\Api\ExamPackApiController::class, 'show']);
+    // NB: GET /exam-packs (index), /exam-packs/filters, /exam-packs/{id} (show) désormais PUBLIC
     // Acheter un pack d'épreuves
     Route::post('/exam-packs/{id}/purchase', [\App\Http\Controllers\Api\ExamPackApiController::class, 'purchase']);
     // Mes packs d'épreuves achetés
@@ -283,12 +375,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // MODE ÉTUDIANT - PACKS DE FORMATION (Vidéos payantes)
     // ------------------
-    // Liste des packs de formation disponibles
-    Route::get('/training-packs', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'index']);
-    // Filtres disponibles (catégories, niveaux)
-    Route::get('/training-packs/filters', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'filters']);
-    // Détails d'un pack de formation
-    Route::get('/training-packs/{id}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'show']);
+    // NB: GET /training-packs (index), /training-packs/filters, /training-packs/{id} (show) désormais PUBLIC
     // Acheter un pack de formation
     Route::post('/training-packs/{id}/purchase', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'purchase']);
     // Mes packs de formation achetés
@@ -439,12 +526,17 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // RETRAITS WALLET
     // ------------------
-    // Obtenir les soldes disponibles pour retrait (FreeMoPay et PayPal)
+    // Obtenir les soldes disponibles pour retrait (Mobile Money et PayPal)
     Route::get('/wallet/withdrawal-balances', [WalletController::class, 'getWithdrawalBalances']);
-    // Initier un retrait FreeMoPay
-    Route::post('/wallet/withdraw/freemopay', [WalletController::class, 'initiateFreeMoPayWithdrawal']);
+    // Initier un retrait KPay (Mobile Money)
+    Route::post('/wallet/withdraw/kpay', [WalletController::class, 'initiateKPayWithdrawal']);
+    // Alias temporaire (compatibilité ascendante) → KPay
+    Route::post('/wallet/withdraw/freemopay', [WalletController::class, 'initiateKPayWithdrawal']);
     // Initier un retrait PayPal Payout
     Route::post('/wallet/withdraw/paypal', [WalletController::class, 'initiatePayPalWithdrawal']);
+    // Helpers KPay : auto-détection opérateur + disponibilité des opérateurs
+    Route::post('/wallet/predict-provider', [WalletController::class, 'predictProvider']);
+    Route::get('/wallet/payment-availability', [WalletController::class, 'paymentAvailability']);
     // Vérifier le statut d'un retrait
     Route::get('/wallet/withdrawal-status/{withdrawalId}', [WalletController::class, 'checkWithdrawalStatus']);
     // Historique des retraits
@@ -610,24 +702,28 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // PROGRAMMES (Candidat C2 OR / C3 DIAMANT)
     // ------------------
-    // Liste des programmes avec informations d'accès
-    Route::get('/programs', [ProgramController::class, 'index']);
+    // NB: GET /programs (index) et /programs/{program} (show) désormais PUBLIC
     // Vérifier l'accès aux programmes
     Route::get('/programs/check-access', [ProgramController::class, 'checkAccess']);
-    // Détails d'un programme avec ses étapes (nécessite l'accès)
-    Route::get('/programs/{program}', [ProgramController::class, 'show']);
+
+    // ------------------
+    // ROADMAPS (parcours d'apprentissage gamifiés : niveaux + QCM)
+    // ------------------
+    // NB: la liste (GET /roadmaps) et le détail (GET /roadmaps/{roadmap}) sont
+    // désormais PUBLICS (déclarés plus haut, hors auth) avec auth optionnelle
+    // côté contrôleur, pour le mode vitrine. Seul le QCM reste protégé.
+    // Soumettre le QCM d'un niveau (valide et débloque le niveau suivant)
+    Route::post('/roadmaps/{roadmap}/levels/{level}/quiz', [RoadmapController::class, 'submitQuiz']);
 
     // ------------------
     // SERVICES RAPIDES / PETITS JOBS
     // ------------------
     // Liste des catégories de services
     Route::get('/quick-services/categories', [QuickServiceController::class, 'categories']);
-    // Liste des services rapides avec filtres
-    Route::get('/quick-services', [QuickServiceController::class, 'index']);
+    // NB: la liste (GET /quick-services) et le détail (GET /quick-services/{id})
+    // sont désormais PUBLICS (déclarés plus haut, hors auth) pour le mode vitrine.
     // Créer un service rapide
     Route::post('/quick-services', [QuickServiceController::class, 'store']);
-    // Détails d'un service
-    Route::get('/quick-services/{id}', [QuickServiceController::class, 'show']);
     // Mettre à jour un service (propriétaire uniquement)
     Route::put('/quick-services/{id}', [QuickServiceController::class, 'update']);
     // Supprimer un service (propriétaire uniquement)
@@ -689,11 +785,11 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
 // ============================================
 // WEBHOOKS
 // ============================================
-Route::post('/webhooks/freemopay', function (\Illuminate\Http\Request $request) {
-    \Illuminate\Support\Facades\Log::info('[FreeMoPay Webhook] Received callback', [
-        'headers' => $request->headers->all(),
-        'body' => $request->all(),
-    ]);
-
-    return response()->json(['status' => 'received'], 200);
-})->name('api.webhooks.freemopay');
+// KPay — signature HMAC vérifiée dans le contrôleur, réponse 200 rapide puis
+// traitement asynchrone via ProcessKPayWebhook. Hors middleware d'auth.
+Route::post('/webhooks/kpay', [\App\Http\Controllers\Api\KPayWebhookController::class, 'handleGeneric'])
+    ->name('api.webhooks.kpay');
+Route::post('/webhooks/kpay/deposits', [\App\Http\Controllers\Api\KPayWebhookController::class, 'handleDeposit'])
+    ->name('api.webhooks.kpay.deposits');
+Route::post('/webhooks/kpay/withdrawals', [\App\Http\Controllers\Api\KPayWebhookController::class, 'handleWithdrawal'])
+    ->name('api.webhooks.kpay.withdrawals');

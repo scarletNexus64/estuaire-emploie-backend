@@ -130,6 +130,13 @@ return [
             'description' => 'Configurer WhatsApp, SMS, et autres services API',
             'category' => 'Administration',
         ],
+
+        // Gestion des demandes de digitalisation
+        'manage_digitalization' => [
+            'name' => 'Gérer les demandes de digitalisation',
+            'description' => 'Voir et traiter les demandes de digitalisation envoyées depuis l\'app',
+            'category' => 'Administration',
+        ],
     ],
 
     /*

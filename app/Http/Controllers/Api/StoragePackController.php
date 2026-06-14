@@ -137,7 +137,7 @@ class StoragePackController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'provider' => 'required|string|in:freemopay,paypal',
+                'provider' => 'required|string|in:kpay,freemopay,paypal',
             ]);
 
             if ($validator->fails()) {
@@ -150,7 +150,7 @@ class StoragePackController extends Controller
 
             $user = $request->user();
             $storagePack = StoragePack::findOrFail($id);
-            $provider = $request->input('provider', 'freemopay');
+            $provider = $request->input('provider', 'kpay');
 
             // Acheter le pack
             $userStoragePack = $this->storagePackService->purchaseStoragePack($user, $storagePack, $provider);
@@ -280,7 +280,7 @@ class StoragePackController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'new_pack_id' => 'required|exists:storage_packs,id',
-                'provider' => 'required|string|in:freemopay,paypal',
+                'provider' => 'required|string|in:kpay,freemopay,paypal',
             ]);
 
             if ($validator->fails()) {
@@ -293,7 +293,7 @@ class StoragePackController extends Controller
 
             $user = $request->user();
             $newPackId = $request->input('new_pack_id');
-            $provider = $request->input('provider', 'freemopay');
+            $provider = $request->input('provider', 'kpay');
 
             $result = $this->storagePackService->upgradeStoragePack($user, $userPackId, $newPackId, $provider);
 

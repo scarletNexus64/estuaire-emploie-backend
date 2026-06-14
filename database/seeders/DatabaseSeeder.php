@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ContractTypeSeeder::class,
             CurrencySeeder::class, // Devises mondiales (XAF, USD, EUR...)
+            CountriesSeeder::class, // Pays du monde (CM par défaut) — ciblage géographique des annonces
             ServiceCategorySeeder::class, // Catégories des services rapides (Plomberie, Électricité…)
             DomainsAndSectorsSeeder::class, // Domaines + secteurs depuis config/domains_sectors.php
             ProficiencyLevelsSeeder::class, // Niveaux skill / language / training
@@ -22,6 +23,7 @@ class DatabaseSeeder extends Seeder
             JobSeekerSubscriptionPlanSeeder::class, // Forfaits chercheurs d'emploi (SILVER, GOLD, PLATINUM, PACK ÉTUDIANT)
             PremiumServiceConfigSeeder::class, // Services premium individuels pour candidats
             AddonServiceConfigSeeder::class, // Services à la carte pour recruteurs
+            AdPricingConfigSeeder::class, // Grille tarifaire du sponsoring (Marketing Digital)
 
             // Utilisateurs et données de test
             SuperAdminSeeder::class, // Admin principal (à exécuter en premier)
@@ -30,6 +32,7 @@ class DatabaseSeeder extends Seeder
             RecruiterSeeder::class,
             JobSeeder::class,
             ApplicationSeeder::class,
+            StudentQuickServiceSeeder::class, // Services rapides « jobs étudiants » (cours, livraison, baby-sitting…)
 
             // Configuration Académique (Spécialités et Catégories)
             SpecialtySeeder::class, // Spécialités pour épreuves et packs d'épreuves
@@ -54,6 +57,10 @@ class DatabaseSeeder extends Seeder
             // Idempotent : à lancer après ProgramSeeder (créé manuellement via
             // `php artisan db:seed --class=ProgramSeeder`).
             ProgramsTranslationsSeeder::class,
+
+            // Roadmaps d'apprentissage gamifiées (niveaux + QCM). Volumineux :
+            // à lancer manuellement via `php artisan db:seed --class=RoadmapSeeder`
+            // (laissé hors du seed global pour ne pas alourdir les resets).
         ]);
     }
 }

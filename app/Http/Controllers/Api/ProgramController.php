@@ -15,7 +15,9 @@ class ProgramController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        // Lecture publique (mode vitrine) : token optionnel résolu via le guard
+        // sanctum pour personnaliser la réponse d'un utilisateur connecté.
+        $user = auth('sanctum')->user();
 
         // Get all active programs
         $programs = Program::with('steps')
@@ -23,16 +25,21 @@ class ProgramController extends Controller
             ->orderBy('order')
             ->get();
 
-        // Get user's active subscription
+        // Get user's active subscription (informational only)
         $activeSubscription = $user ? $user->activeSubscription() : null;
-        $userPlanSlug = strtoupper($activeSubscription->subscriptionPlan->slug ?? '');
+        // Null-safe : pas d'abonnement actif → chaîne vide (évite le crash sur
+        // $activeSubscription->subscriptionPlan->slug quand $activeSubscription est null).
+        $userPlanSlug = strtoupper($activeSubscription?->subscriptionPlan?->slug ?? '');
 
-        // Determine user's pack (C1, C2, or C3)
+        // Determine user's pack (C1, C2, or C3) — informational only
         $userPack = $this->getUserPack($userPlanSlug);
 
+        // Accès au programme d'insertion = Pack Étudiant uniquement
+        $hasStudentMode = $user ? $user->hasStudentMode() : false;
+
         // Transform programs with access information
-        $transformedPrograms = $programs->map(function ($program) use ($userPack) {
-            $hasAccess = $this->checkProgramAccess($program, $userPack);
+        $transformedPrograms = $programs->map(function ($program) use ($hasStudentMode) {
+            $hasAccess = $hasStudentMode;
 
             return [
                 'id' => $program->id,
@@ -48,6 +55,8 @@ class ProgramController extends Controller
                 'steps_count' => $program->steps->count(),
                 'has_access' => $hasAccess,
                 'required_packs' => $program->required_packs ?? [],
+                // L'accès au programme d'insertion est réservé au Pack Étudiant.
+                'requires_student_mode' => true,
             ];
         });
 
@@ -68,30 +77,24 @@ class ProgramController extends Controller
      */
     public function show(Request $request, Program $program): JsonResponse
     {
-        $user = $request->user();
+        // Lecture publique (mode vitrine) : token optionnel via le guard sanctum.
+        $user = auth('sanctum')->user();
 
-        // Check if user has access to this program
-        $activeSubscription = $user ? $user->activeSubscription() : null;
-        $userPlanSlug = strtoupper($activeSubscription->subscriptionPlan->slug ?? '');
-        $userPack = $this->getUserPack($userPlanSlug);
-
-        $hasAccess = $this->checkProgramAccess($program, $userPack);
-
-        if (!$hasAccess) {
-            return response()->json([
-                'success' => false,
-                'message' => __('program.no_access'),
-                'required_packs' => $program->required_packs ?? [],
-                'current_pack' => $userPack,
-            ], 403);
-        }
+        // Accès au programme d'insertion = Pack Étudiant uniquement.
+        $hasAccess = $user ? $user->hasStudentMode() : false;
 
         // Load steps
         $program->load('steps');
 
+        // Sans accès : on renvoie quand même la structure (titres/descriptions)
+        // pour permettre la navigation grisée côté app, mais on masque le
+        // contenu et les ressources réelles de chaque étape.
         return response()->json([
             'success' => true,
             'locale' => App::getLocale(),
+            'has_access' => $hasAccess,
+            'requires_student_mode' => true,
+            'required_packs' => $program->required_packs ?? [],
             'program' => [
                 'id' => $program->id,
                 'title' => $program->title,
@@ -102,16 +105,17 @@ class ProgramController extends Controller
                 'objectives' => $program->objectives,
                 'icon' => $program->icon,
                 'duration_weeks' => $program->duration_weeks,
-                'steps' => $program->steps->map(function ($step) {
+                'steps' => $program->steps->map(function ($step) use ($hasAccess) {
                     return [
                         'id' => $step->id,
                         'title' => $step->title,
                         'description' => $step->description,
-                        'content' => $step->content,
-                        'resources' => $step->resources,
+                        'content' => $hasAccess ? $step->content : null,
+                        'resources' => $hasAccess ? $step->resources : null,
                         'order' => $step->order,
                         'estimated_duration_days' => $step->estimated_duration_days,
                         'is_required' => $step->is_required,
+                        'is_locked' => !$hasAccess,
                     ];
                 }),
             ],
@@ -133,24 +137,17 @@ class ProgramController extends Controller
             ], 401);
         }
 
+        // Accès au programme d'insertion = Pack Étudiant uniquement.
+        $hasAccess = $user->hasStudentMode();
+
         $activeSubscription = $user->activeSubscription();
-
-        if (!$activeSubscription) {
-            return response()->json([
-                'success' => true,
-                'has_access' => false,
-                'message' => __('program.no_active_subscription'),
-                'current_pack' => null,
-            ]);
-        }
-
         $userPlanSlug = strtoupper($activeSubscription->subscriptionPlan->slug ?? '');
         $userPack = $this->getUserPack($userPlanSlug);
-        $hasAccess = !empty($userPack);
 
         return response()->json([
             'success' => true,
             'has_access' => $hasAccess,
+            'requires_student_mode' => true,
             'current_pack' => $userPack,
             'plan_slug' => $userPlanSlug,
         ]);
