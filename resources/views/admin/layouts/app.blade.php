@@ -1651,6 +1651,7 @@
                     'fas fa-mobile-alt' => 'mdi-cellphone-link',
                     'fas fa-cog' => 'mdi-cog',
                     'fas fa-wrench' => 'mdi-wrench',
+                    'fas fa-envelope' => 'mdi-email',
                 ];
             @endphp
 
@@ -1694,6 +1695,19 @@
                             {{-- Badges --}}
                             @if(isset($item['route']) && $item['route'] === 'admin.applications.index' && isset($pendingApplications) && $pendingApplications > 0)
                                 <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingApplications }}</span>
+                            @endif
+
+                            @if(isset($item['route']) && $item['route'] === 'admin.messagerie.index' && class_exists('\App\Models\MailboxMessage'))
+                                @php
+                                    try {
+                                        $unreadMailCount = \App\Models\MailboxMessage::where('direction', 'inbound')->where('is_read', false)->count();
+                                    } catch (\Throwable $e) {
+                                        $unreadMailCount = 0;
+                                    }
+                                @endphp
+                                @if($unreadMailCount > 0)
+                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $unreadMailCount }}</span>
+                                @endif
                             @endif
 
                             @if(isset($item['route']) && $item['route'] === 'admin.device-change-requests.index' && class_exists('\App\Models\DeviceChangeRequest'))

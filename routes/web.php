@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\SkillTestController;
 use App\Http\Controllers\Admin\MaintenanceModeController;
 use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\Admin\PackPromotionController;
+use App\Http\Controllers\Admin\MessagerieController;
 use App\Http\Controllers\PortfolioViewController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -596,4 +597,19 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
     // AJAX API for Pack Promotions
     Route::get('/api/packs/{type}', [PackPromotionController::class, 'getPacksByType'])->name('api.packs.by-type');
+
+    // Messagerie / Support (emails entrants & sortants)
+    Route::middleware('permission:manage_messagerie')->prefix('messagerie')->name('messagerie.')->group(function () {
+        Route::get('/', [MessagerieController::class, 'index'])->name('index');
+        Route::get('/compose', [MessagerieController::class, 'compose'])->name('compose');
+        Route::post('/send', [MessagerieController::class, 'send'])->name('send');
+        Route::post('/fetch', [MessagerieController::class, 'fetchNow'])->name('fetch');
+        Route::post('/bulk', [MessagerieController::class, 'bulk'])->name('bulk');
+        Route::get('/search/recipients', [MessagerieController::class, 'searchRecipients'])->name('search.recipients');
+        Route::get('/search/cvs', [MessagerieController::class, 'searchCvs'])->name('search.cvs');
+        Route::get('/template', [MessagerieController::class, 'template'])->name('template');
+        Route::get('/cv/{resume}/pdf', [MessagerieController::class, 'cvPdf'])->name('cv.pdf');
+        Route::get('/{thread}', [MessagerieController::class, 'show'])->name('show');
+        Route::post('/{thread}/status', [MessagerieController::class, 'updateStatus'])->name('status');
+    });
 });

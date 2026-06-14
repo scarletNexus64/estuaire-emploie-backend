@@ -43,6 +43,7 @@ enum AdminRole: string
                 'manage_jobs',
                 'manage_applications',
                 'manage_recruiters',
+                'manage_messagerie',
                 'manage_settings',
             ],
             self::TRAINING_PROGRAMS_MANAGER => [

@@ -42,6 +42,29 @@ class ResumePdfService
     }
 
     /**
+     * Rend le PDF (avec le template corrigé) EN MÉMOIRE, sans modifier le
+     * fichier stocké ni la base. Utilisé pour joindre/prévisualiser un CV
+     * toujours à jour, sans impacter la bibliothèque existante.
+     */
+    public function renderPdfBytes(Resume $resume): string
+    {
+        $cvData = $this->prepareCVData($resume);
+
+        return Pdf::loadView('pdf.cv_aide_soignante', ['data' => $cvData])
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+                'dpi' => 96,
+                'enable_php' => false,
+                'enable_javascript' => false,
+                'enable_remote' => true,
+            ])
+            ->output();
+    }
+
+    /**
      * Prépare les données du Resume pour le template cv_aide_soignante.blade.php
      */
     protected function prepareCVData(Resume $resume): array

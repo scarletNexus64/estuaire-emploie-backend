@@ -250,6 +250,17 @@ class NavigationService
                 ],
             ],
             [
+                'section' => 'Communications',
+                'items' => [
+                    [
+                        'name' => 'Estuaire Mail',
+                        'route' => 'admin.messagerie.index',
+                        'icon' => 'fas fa-envelope',
+                        'permission' => 'manage_messagerie',
+                    ],
+                ],
+            ],
+            [
                 'section' => 'API & Documentation',
                 'items' => [
                     [
@@ -354,6 +365,7 @@ class NavigationService
                 'admin.cv-library.index',
                 'admin.import-export.index',
                 'admin.recruiters.index',
+                'admin.messagerie.index',
                 'admin.settings.index',
             ],
 

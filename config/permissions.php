@@ -130,6 +130,13 @@ return [
             'description' => 'Configurer WhatsApp, SMS, et autres services API',
             'category' => 'Administration',
         ],
+
+        // Gestion de la messagerie / support
+        'manage_messagerie' => [
+            'name' => 'Gérer la messagerie',
+            'description' => 'Envoyer et recevoir des emails (support, candidats, entreprises)',
+            'category' => 'Communications',
+        ],
     ],
 
     /*

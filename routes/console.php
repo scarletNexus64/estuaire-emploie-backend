@@ -23,6 +23,12 @@ Schedule::command('subscriptions:send-expiry-reminders')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/subscription-reminders.log'));
 
+// Récupération des emails entrants de la boîte support (toutes les 2 minutes)
+Schedule::command('mailbox:fetch')
+    ->everyTwoMinutes()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/mailbox-fetch.log'));
+
 // Désactivation quotidienne des packs de stockage expirés
 Schedule::call(function () {
     $storagePackService = app(\App\Services\StoragePackService::class);

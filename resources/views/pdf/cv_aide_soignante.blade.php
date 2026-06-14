@@ -19,30 +19,27 @@
         }
 
         .cv-container {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+            display: block;
         }
 
-        /* Zone bleue */
+        /* Zone bleue : barre latérale fixe, répétée sur chaque page par dompdf
+           (évite le bug de pagination des cellules de tableau pleine hauteur). */
         .cv-left {
-            display: table-cell;
-            vertical-align: top;
-            width: 35%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 57.5mm;   /* +16mm de padding -> ~73.5mm de bande (dompdf ignore box-sizing) */
+            height: 273mm;   /* +24mm de padding -> ~297mm pleine page */
             background-color: #004a7c;
             color: white;
             padding: 12mm 8mm;
-            box-sizing: border-box;
         }
 
-        /* Zone blanche */
+        /* Zone blanche : contenu principal en flux normal -> pagine correctement */
         .cv-right {
-            display: table-cell;
-            vertical-align: top;
-            width: 65%;
+            margin-left: 75mm;
             background-color: white;
-            padding: 12mm 10mm;
-            box-sizing: border-box;
+            padding: 12mm 12mm 12mm 4mm;
         }
 
         /* === COLONNE GAUCHE === */
@@ -238,9 +235,8 @@
     </style>
 </head>
 <body>
-    <div class="cv-container">
-        <!-- COLONNE GAUCHE (bleue) -->
-        <div class="cv-left">
+    <!-- COLONNE GAUCHE (bleue) : barre latérale fixe, répétée à chaque page -->
+    <div class="cv-left">
             <div class="photo-box">
                 @if(!empty($data['photo_path']))
                     <img src="{{ $data['photo_path'] }}" alt="Photo de profil">
@@ -295,6 +291,7 @@
             @endif
         </div>
 
+    <div class="cv-container">
         <!-- COLONNE DROITE (blanche) -->
         <div class="cv-right">
             <h1 class="cv-name">{{ $data['name'] }}</h1>
