@@ -13,7 +13,10 @@ class CVthequeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Resume::with(['user' => function($q) {
+        // On n'affiche que les CV rattachés à un utilisateur existant.
+        // Les Resume dont le user_id est null ou orphelin (utilisateur supprimé)
+        // sont exclus pour éviter les lignes « N/A » dans la CVthèque.
+        $query = Resume::whereHas('user')->with(['user' => function($q) {
             $q->select('id', 'name', 'email', 'phone', 'profile_photo', 'created_at');
         }]);
 
