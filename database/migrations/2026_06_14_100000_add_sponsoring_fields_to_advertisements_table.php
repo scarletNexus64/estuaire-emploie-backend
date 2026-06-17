@@ -14,39 +14,73 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent : le schéma de prod possède déjà `company_id` / `payment_id`
+        // et ne possède pas `background_color`. On n'ajoute que ce qui manque.
         Schema::table('advertisements', function (Blueprint $table) {
             // Propriétaire de la campagne (null = annonce admin historique)
-            $table->foreignId('company_id')->nullable()->after('id')
-                ->constrained('companies')->nullOnDelete();
-            $table->foreignId('created_by_user_id')->nullable()->after('company_id')
-                ->constrained('users')->nullOnDelete();
+            if (!Schema::hasColumn('advertisements', 'company_id')) {
+                $table->foreignId('company_id')->nullable()->after('id')
+                    ->constrained('companies')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('advertisements', 'created_by_user_id')) {
+                $table->foreignId('created_by_user_id')->nullable()->after('company_id')
+                    ->constrained('users')->nullOnDelete();
+            }
 
             // Type de contenu diffusé
-            $table->enum('content_type', ['text', 'flyer', 'logo'])
-                ->default('text')->after('background_color');
+            if (!Schema::hasColumn('advertisements', 'content_type')) {
+                $table->enum('content_type', ['text', 'flyer', 'logo'])
+                    ->default('text')->after('status');
+            }
 
             // Ciblage : student / candidate / recruiter (entreprise) / all
-            $table->enum('target_audience', ['student', 'candidate', 'recruiter', 'all'])
-                ->default('all')->after('content_type');
+            if (!Schema::hasColumn('advertisements', 'target_audience')) {
+                $table->enum('target_audience', ['student', 'candidate', 'recruiter', 'all'])
+                    ->default('all')->after('content_type');
+            }
 
             // Budget & audience
-            $table->decimal('budget', 10, 2)->default(0)->after('target_audience');
-            $table->unsignedInteger('target_reach')->default(0)->after('budget');
+            if (!Schema::hasColumn('advertisements', 'budget')) {
+                $table->decimal('budget', 10, 2)->default(0)->after('target_audience');
+            }
+            if (!Schema::hasColumn('advertisements', 'target_reach')) {
+                $table->unsignedInteger('target_reach')->default(0)->after('budget');
+            }
 
             // Lien paiement wallet
-            $table->foreignId('payment_id')->nullable()->after('target_reach')
-                ->constrained('payments')->nullOnDelete();
+            if (!Schema::hasColumn('advertisements', 'payment_id')) {
+                $table->foreignId('payment_id')->nullable()->after('target_reach')
+                    ->constrained('payments')->nullOnDelete();
+            }
 
             // Origine de l'annonce
-            $table->enum('source', ['admin', 'self_service'])
-                ->default('admin')->after('payment_id');
-
-            $table->index(['target_audience', 'is_active']);
-            $table->index(['company_id', 'source']);
+            if (!Schema::hasColumn('advertisements', 'source')) {
+                $table->enum('source', ['admin', 'self_service'])
+                    ->default('admin')->after('payment_id');
+            }
         });
+
+        // Index (ajoutés une fois les colonnes présentes, en évitant les doublons)
+        $this->addIndexIfMissing('advertisements', 'advertisements_target_audience_is_active_index', ['target_audience', 'is_active']);
+        $this->addIndexIfMissing('advertisements', 'advertisements_company_id_source_index', ['company_id', 'source']);
 
         // Élargir l'enum status pour inclure 'completed' (budget épuisé / période finie)
         DB::statement("ALTER TABLE `advertisements` MODIFY COLUMN `status` ENUM('active', 'paused', 'expired', 'completed') NOT NULL DEFAULT 'active'");
+    }
+
+    private function addIndexIfMissing(string $table, string $indexName, array $columns): void
+    {
+        $exists = DB::table('information_schema.statistics')
+            ->where('table_schema', DB::raw('DATABASE()'))
+            ->where('table_name', $table)
+            ->where('index_name', $indexName)
+            ->exists();
+
+        if (!$exists) {
+            Schema::table($table, function (Blueprint $t) use ($columns) {
+                $t->index($columns);
+            });
+        }
     }
 
     public function down(): void

@@ -14,7 +14,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('advertisements', function (Blueprint $table) {
-            $table->unsignedTinyInteger('overlay_opacity')->default(60)->after('background_color');
+            // `background_color` manque sur le schéma de prod (table advertisements
+            // divergente). On la crée d'abord car la feature Marketing en dépend.
+            if (!Schema::hasColumn('advertisements', 'background_color')) {
+                $table->string('background_color')->default('#0277BD')->after('status');
+            }
+        });
+
+        Schema::table('advertisements', function (Blueprint $table) {
+            if (!Schema::hasColumn('advertisements', 'overlay_opacity')) {
+                $table->unsignedTinyInteger('overlay_opacity')->default(60)->after('background_color');
+            }
         });
     }
 
