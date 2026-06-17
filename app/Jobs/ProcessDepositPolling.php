@@ -85,11 +85,21 @@ class ProcessDepositPolling implements ShouldQueue
                 }
 
                 if (in_array($status, $failedStatuses)) {
-                    if ($payment->fresh()->isPending()) {
-                        $payment->markAsFailed($response['failureReason'] ?? $status);
-                        app(\App\Services\WalletNotifier::class)->rechargeFailed($payment->fresh());
-                    }
-                    return;
+                    // ⚠️ FAILED TRANSITOIRE pendant l'USSD : KPay peut renvoyer
+                    // FAILED alors que l'utilisateur n'a pas encore saisi son code
+                    // (push USSD bien reçu). Ce job de secours tourne justement
+                    // pendant cette fenêtre → on NE fige PAS "failed" ici. La
+                    // source de vérité du verdict d'échec est le WEBHOOK
+                    // payment.failed. On continue simplement à poller : si le
+                    // FAILED est réel, le webhook finalisera ; sinon le paiement
+                    // pourra encore passer COMPLETED.
+                    Log::info("🟡 [KPay] DÉPÔT polling secours #{$attempts} → FAILED transitoire ignoré (webhook = source de vérité)", [
+                        'payment_id' => $payment->id,
+                        'kpay_status' => $status,
+                        'kpay_failure_reason' => $response['failureReason'] ?? null,
+                    ]);
+                    sleep($interval);
+                    continue;
                 }
 
                 sleep($interval);

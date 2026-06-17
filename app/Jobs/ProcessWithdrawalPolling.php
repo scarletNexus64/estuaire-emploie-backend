@@ -203,15 +203,16 @@ class ProcessWithdrawalPolling implements ShouldQueue
                 }
 
                 if (in_array($currentStatus, $failedStatuses)) {
-                    $message = $statusResponse['failureReason'] ?? ($statusResponse['message'] ?? $currentStatus);
-                    $wasAlreadyFailed = $this->withdrawal->fresh()->isFailed();
-                    $this->withdrawal->markAsFailed('disbursement_failed', $message);
-
-                    if (!$wasAlreadyFailed) {
-                        $this->updateWalletTransactionStatus('failed', $message);
-                        $this->sendFailureNotification($message);
-                    }
-                    return;
+                    // ⚠️ FAILED TRANSITOIRE pendant l'USSD de retrait : on NE fige
+                    // PAS "failed" ici. La source de vérité est le webhook
+                    // payout.failed. On continue à poller : si le FAILED est réel,
+                    // le webhook finalisera ; sinon le retrait peut encore aboutir.
+                    Log::info("🟡 [KPay] RETRAIT polling #{$attempts} → FAILED transitoire ignoré (webhook = source de vérité)", [
+                        'withdrawal_id' => $this->withdrawal->id,
+                        'kpay_status' => $currentStatus,
+                    ]);
+                    sleep($pollingInterval);
+                    continue;
                 }
 
                 sleep($pollingInterval);
