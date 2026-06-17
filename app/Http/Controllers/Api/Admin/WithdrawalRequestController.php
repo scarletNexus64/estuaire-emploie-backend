@@ -295,21 +295,17 @@ class WithdrawalRequestController extends Controller
                 ],
             ]);
 
-            // Envoyer via FCM
-            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
-                ->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'sound' => 'default',
-                    ],
-                    'data' => [
-                        'type' => 'withdrawal_request_response',
-                        'withdrawal_request_id' => $request->id,
-                        'action' => $action,
-                    ],
-                ]);
+            // Envoyer via FCM (API HTTP v1 via le SDK Firebase)
+            app(\App\Services\FirebaseNotificationService::class)->sendToToken(
+                $user->fcm_token,
+                $title,
+                $body,
+                [
+                    'type' => 'withdrawal_request_response',
+                    'withdrawal_request_id' => (string) $request->id,
+                    'action' => (string) $action,
+                ]
+            );
 
             \Log::info("[Admin] FCM notification envoyée", [
                 'user_id' => $user->id,

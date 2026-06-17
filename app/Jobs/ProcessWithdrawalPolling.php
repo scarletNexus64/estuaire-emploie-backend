@@ -354,21 +354,17 @@ class ProcessWithdrawalPolling implements ShouldQueue
                 ],
             ]);
 
-            // Envoyer via FCM
-            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
-                ->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'sound' => 'default',
-                    ],
-                    'data' => [
-                        'type' => 'wallet_withdrawal_success',
-                        'withdrawal_id' => $withdrawal->id,
-                        'notification_id' => $notification->id,
-                    ],
-                ]);
+            // Envoyer via FCM (API HTTP v1 via le SDK Firebase)
+            app(\App\Services\FirebaseNotificationService::class)->sendToToken(
+                $user->fcm_token,
+                $title,
+                $body,
+                [
+                    'type' => 'wallet_withdrawal_success',
+                    'withdrawal_id' => (string) $withdrawal->id,
+                    'notification_id' => (string) $notification->id,
+                ]
+            );
 
             Log::info("[ProcessWithdrawalPolling] ✅ FCM notification sent", [
                 'user_id' => $user->id,
@@ -417,21 +413,17 @@ class ProcessWithdrawalPolling implements ShouldQueue
                 ],
             ]);
 
-            // Envoyer via FCM
-            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
-                ->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'sound' => 'default',
-                    ],
-                    'data' => [
-                        'type' => 'wallet_withdrawal_failed',
-                        'withdrawal_id' => $withdrawal->id,
-                        'notification_id' => $notification->id,
-                    ],
-                ]);
+            // Envoyer via FCM (API HTTP v1 via le SDK Firebase)
+            app(\App\Services\FirebaseNotificationService::class)->sendToToken(
+                $user->fcm_token,
+                $title,
+                $body,
+                [
+                    'type' => 'wallet_withdrawal_failed',
+                    'withdrawal_id' => (string) $withdrawal->id,
+                    'notification_id' => (string) $notification->id,
+                ]
+            );
 
             Log::info("[ProcessWithdrawalPolling] ✅ Failure FCM notification sent", [
                 'user_id' => $user->id,

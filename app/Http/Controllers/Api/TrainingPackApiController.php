@@ -393,21 +393,17 @@ class TrainingPackApiController extends Controller
                 ],
             ]);
 
-            // Envoyer via FCM
-            \Illuminate\Support\Facades\Http::withToken(config('services.fcm.server_key'))
-                ->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'sound' => 'default',
-                    ],
-                    'data' => [
-                        'type' => 'training_pack_purchase',
-                        'pack_name' => $pack->name,
-                        'notification_id' => $notification->id,
-                    ],
-                ]);
+            // Envoyer via FCM (API HTTP v1 via le SDK Firebase)
+            app(\App\Services\FirebaseNotificationService::class)->sendToToken(
+                $user->fcm_token,
+                $title,
+                $body,
+                [
+                    'type' => 'training_pack_purchase',
+                    'pack_name' => (string) $pack->name,
+                    'notification_id' => (string) $notification->id,
+                ]
+            );
 
             \Log::info("[TrainingPackApiController] ✅ FCM notification sent for pack purchase", [
                 'user_id' => $user->id,

@@ -132,19 +132,13 @@ class WalletNotifier
                 'data' => array_merge(['title' => $title, 'body' => $body], $extra),
             ]);
 
-            Http::withToken(config('services.fcm.server_key'))
-                ->post('https://fcm.googleapis.com/fcm/send', [
-                    'to' => $user->fcm_token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                        'sound' => 'default',
-                    ],
-                    'data' => array_merge([
-                        'type' => $type,
-                        'notification_id' => $notification->id,
-                    ], $extra),
-                ]);
+            $data = ['type' => $type, 'notification_id' => (string) $notification->id];
+            foreach ($extra as $k => $v) {
+                $data[$k] = is_scalar($v) ? (string) $v : json_encode($v);
+            }
+
+            app(\App\Services\FirebaseNotificationService::class)
+                ->sendToToken($user->fcm_token, $title, $body, $data);
 
             Log::info("[WalletNotifier] FCM envoyée: {$type}", ['user_id' => $user->id]);
         } catch (\Exception $e) {

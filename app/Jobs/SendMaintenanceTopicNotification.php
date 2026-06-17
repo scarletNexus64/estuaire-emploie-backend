@@ -40,7 +40,7 @@ class SendMaintenanceTopicNotification implements ShouldQueue
         try {
             // Initialiser Firebase Messaging
             Log::info('🔥 [FCM-JOB] Initialisation Firebase Factory...');
-            $factory = (new Factory)->withServiceAccount(config('firebase.credentials.file'));
+            $factory = (new Factory)->withServiceAccount(config('firebase.credentials'));
             $messaging = $factory->createMessaging();
             Log::info('✅ [FCM-JOB] Firebase Factory initialisé');
 
