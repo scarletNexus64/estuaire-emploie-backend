@@ -90,6 +90,11 @@ class RecruiterCvLibraryController extends Controller
             $query->whereNotIn('id', $placeholderIds);
         }
 
+        // Le nom est désormais affiché dans la liste : n'exposer que les candidats
+        // ayant un nom réel (non null / non vide). Sans cela, des cartes "sans nom"
+        // apparaîtraient à la place du nom attendu.
+        $query->whereNotNull('name')->where('name', '!=', '');
+
         // Filtre "a un CV" (activé par défaut) : resume OU application CV OU cv_path legacy.
         $hasCv = filter_var($request->input('has_cv', true), FILTER_VALIDATE_BOOLEAN);
         if ($hasCv) {
@@ -141,9 +146,8 @@ class RecruiterCvLibraryController extends Controller
             }
         }
 
-        // Recherche : n'importe quel mot-clé. Couvre les compétences et l'email
-        // du user, ainsi que la spécialité / le titre / le résumé pro des CV.
-        // Le nom n'est volontairement PAS recherché (masqué dans la liste).
+        // Recherche : n'importe quel mot-clé. Couvre le nom et les compétences et
+        // l'email du user, ainsi que la spécialité / le titre / le résumé pro des CV.
         if ($request->filled('search')) {
             $search = trim($request->search);
             $resumeMatchIds = Resume::where(function ($q) use ($search) {
@@ -154,7 +158,8 @@ class RecruiterCvLibraryController extends Controller
             })->distinct()->pluck('user_id');
 
             $query->where(function ($q) use ($search, $resumeMatchIds) {
-                $q->where('skills', 'like', "%{$search}%")
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('skills', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('bio', 'like', "%{$search}%")
                     ->orWhereIn('id', $resumeMatchIds);
@@ -186,7 +191,9 @@ class RecruiterCvLibraryController extends Controller
 
             $item = [
                 'id' => $candidate->id,
-                // 'name' volontairement omis : le nom n'est pas exposé dans la liste.
+                // Le nom du candidat est désormais affiché dans la liste (filtré
+                // en amont pour exclure les noms factices/vides).
+                'name' => $candidate->name,
                 'specialty' => $this->resolveSpecialty($candidate, $preferredSpecialty),
                 'experience_level' => $candidate->experience_level,
                 'profile_photo' => $candidate->profile_photo,
@@ -202,8 +209,7 @@ class RecruiterCvLibraryController extends Controller
                     'bio' => $candidate->portfolio->bio,
                 ] : null,
                 'has_full_access' => $hasFullAccess,
-                // Nom + coordonnées : seulement si débloqués.
-                'name' => $hasFullAccess ? $candidate->name : null,
+                // Coordonnées : seulement si débloquées (le nom, lui, est public).
                 'email' => $hasFullAccess ? $candidate->email : null,
                 'phone' => $hasFullAccess ? $candidate->phone : null,
             ];

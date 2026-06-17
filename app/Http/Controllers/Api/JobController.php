@@ -134,6 +134,15 @@ class JobController extends Controller
             $query->where('contract_type_id', $request->contract_type_id);
         }
 
+        // Exclusion des offres de type Stage (slug `stage`).
+        // Utilisé par le home candidat : les stages sont présentés ailleurs
+        // (section étudiant) et ne doivent pas polluer la liste des offres.
+        if ($request->boolean('exclude_internships')) {
+            $query->whereHas('contractType', function ($q) {
+                $q->where('slug', '!=', 'stage');
+            });
+        }
+
         // Filtre par spécialité académique (filière).
         if ($request->has('specialty_id')) {
             $query->where('specialty_id', $request->specialty_id);
@@ -350,12 +359,21 @@ class JobController extends Controller
      *     )
      * )
      */
-    public function featured(): JsonResponse
+    public function featured(Request $request): JsonResponse
     {
-        $jobs = Job::with(['company', 'category', 'contractType'])
+        $query = Job::with(['company', 'category', 'contractType'])
             ->where('status', 'published')
-            ->where('is_featured', true)
-            ->latest()
+            ->where('is_featured', true);
+
+        // Home candidat : exclure les offres de type Stage (slug `stage`),
+        // présentées dans la section étudiant.
+        if ($request->boolean('exclude_internships')) {
+            $query->whereHas('contractType', function ($q) {
+                $q->where('slug', '!=', 'stage');
+            });
+        }
+
+        $jobs = $query->latest()
             ->limit(10)
             ->get();
 
