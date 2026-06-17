@@ -396,7 +396,26 @@ class WalletController extends Controller
                                 app(\App\Services\WalletNotifier::class)->rechargeSuccess($payment->fresh());
                             }
                         } elseif (in_array($status, ['FAILED', 'CANCELLED', 'CANCELED'])) {
-                            if ($payment->isPending()) {
+                            // ⚠️ KPay renvoie un FAILED TRANSITOIRE pendant que l'USSD
+                            // est encore en cours (push reçu, code pas encore saisi).
+                            // On NE fige donc PAS "failed" pendant la fenêtre USSD :
+                            // pendant `graceSeconds` après l'init, un FAILED lu via
+                            // GET /payments/:id est ignoré → le paiement reste "pending"
+                            // et c'est le WEBHOOK payment.failed (source de vérité) qui
+                            // tranchera. Passé ce délai, un FAILED est considéré réel
+                            // (filet de sécurité anti-pending éternel).
+                            $graceSeconds = 90;
+                            $age = now()->diffInSeconds($payment->created_at, true);
+                            $withinUssdGrace = $age < $graceSeconds;
+
+                            if ($withinUssdGrace) {
+                                \Log::info("[WalletController] ⏳ KPay FAILED transitoire ignoré (fenêtre USSD, age={$age}s) — reste pending", [
+                                    'payment_id' => $payment->id,
+                                    'kpay_status' => $status,
+                                    'kpay_failure_reason' => $statusResponse['failureReason'] ?? null,
+                                ]);
+                                // On reste "pending" : on ne notifie pas, on n'écrit pas.
+                            } elseif ($payment->isPending()) {
                                 $payment->update([
                                     'status' => 'failed',
                                     'failure_reason' => $statusResponse['failureReason'] ?? $status,
@@ -1600,7 +1619,21 @@ class WalletController extends Controller
                     if ($status === 'COMPLETED') {
                         $finalizer->complete($withdrawal, $withdrawal->freemopay_reference, $kpayStatus);
                     } elseif (in_array($status, ['FAILED', 'CANCELLED', 'CANCELED'])) {
-                        $finalizer->fail($withdrawal, $kpayStatus['failureReason'] ?? $status);
+                        // Même garde-fou que pour les dépôts : KPay peut renvoyer
+                        // un FAILED TRANSITOIRE pendant que l'USSD de retrait est
+                        // encore en cours. On n'échoue pas pendant la fenêtre USSD ;
+                        // le webhook payout.failed (source de vérité) tranchera.
+                        $graceSeconds = 90;
+                        $age = now()->diffInSeconds($withdrawal->created_at, true);
+                        if ($age < $graceSeconds) {
+                            \Log::info("🟡 [KPay] RETRAIT FAILED transitoire ignoré (fenêtre USSD, age={$age}s) — reste pending", [
+                                'withdrawal_id' => $withdrawal->id,
+                                'kpay_status' => $status,
+                                'kpay_failure_reason' => $kpayStatus['failureReason'] ?? null,
+                            ]);
+                        } else {
+                            $finalizer->fail($withdrawal, $kpayStatus['failureReason'] ?? $status);
+                        }
                     }
                     $withdrawal->refresh();
                 } catch (\Throwable $e) {
