@@ -25,13 +25,15 @@ class ServiceConfigController extends Controller
         $freemopayConfig = ServiceConfiguration::getFreeMoPayConfig();
         $kpayConfig = ServiceConfiguration::getKPayConfig();
         $paypalConfig = ServiceConfiguration::getPayPalConfig();
+        $preferencesConfig = ServiceConfiguration::getConfig('notification_preferences');
 
         return view('admin.service-config.index', compact(
             'whatsappConfig',
             'nexahConfig',
             'freemopayConfig',
             'kpayConfig',
-            'paypalConfig'
+            'paypalConfig',
+            'preferencesConfig'
         ));
     }
 
@@ -347,6 +349,8 @@ class ServiceConfigController extends Controller
                 ['service_type' => 'notification_preferences'],
                 [
                     'default_notification_channel' => $request->default_notification_channel,
+                    'use_otp' => $request->has('use_otp'),
+                    'use_paypal' => $request->has('use_paypal'),
                     'is_active' => true,
                 ]
             );

@@ -73,6 +73,9 @@ Route::post('/device-change-requests/status', [DeviceChangeRequestController::cl
 // Maintenance Mode Status
 Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeController::class, 'status']);
 
+// Configuration publique de l'app (feature flags: OTP, PayPal)
+Route::get('/app-config', [\App\Http\Controllers\Api\AppConfigController::class, 'index']);
+
 // Jobs publics
 Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/featured', [JobController::class, 'featured']);
