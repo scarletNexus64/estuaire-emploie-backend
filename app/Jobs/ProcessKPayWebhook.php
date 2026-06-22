@@ -29,7 +29,12 @@ class ProcessKPayWebhook implements ShouldQueue
     public $tries = 3;
     public $backoff = [5, 15, 30];
 
-    public function __construct(public array $payload, public string $event)
+    /**
+     * @param bool $deferredVerdict true lorsque ce job est un ré-essai différé
+     *   d'un échec transitoire (fenêtre USSD) : la déduplication est alors
+     *   bypassée car le verrou initial event+id est encore actif (TTL 5 min).
+     */
+    public function __construct(public array $payload, public string $event, public bool $deferredVerdict = false)
     {
         // Queue écoutée par le worker (deposits,withdrawals,default).
         $this->onQueue('default');
@@ -53,10 +58,14 @@ class ProcessKPayWebhook implements ShouldQueue
         }
 
         // Déduplication : un même évènement (event + id) ne doit être traité qu'une fois.
-        $lock = Cache::lock("kpay_wh:{$event}:{$paymentId}", 300);
-        if (!$lock->get()) {
-            Log::info('[KPay Webhook Job] Évènement déjà en cours/traité, ignoré', ['event' => $event]);
-            return;
+        // Exception : un ré-essai différé (verdict d'échec après fenêtre USSD) doit
+        // pouvoir re-traiter le même event+id — son verrou initial est encore actif.
+        if (!$this->deferredVerdict) {
+            $lock = Cache::lock("kpay_wh:{$event}:{$paymentId}", 300);
+            if (!$lock->get()) {
+                Log::info('[KPay Webhook Job] Évènement déjà en cours/traité, ignoré', ['event' => $event]);
+                return;
+            }
         }
 
         try {
@@ -92,10 +101,60 @@ class ProcessKPayWebhook implements ShouldQueue
         }
 
         // payment.failed / payment.cancelled
-        if ($payment->isPending()) {
-            $payment->markAsFailed($this->payload['failureReason'] ?? $event);
-            $notifier->rechargeFailed($payment->fresh());
+        if (!$payment->isPending()) {
+            return;
         }
+
+        // ⚠️ FAILED TRANSITOIRE pendant l'USSD : sur réseau mobile pauvre, KPay
+        // peut émettre un webhook payment.failed AVANT que l'utilisateur ait saisi
+        // son code (push USSD reçu mais confirmation pas encore remontée). Figer
+        // "failed" immédiatement gèle le paiement en échec alors qu'il peut encore
+        // aboutir → c'est le bug observé (poll #1 = failed à t≈0s).
+        //
+        // Garde-fou : pendant la fenêtre USSD (graceSeconds après l'init), on ne
+        // tranche pas sur la foi du seul webhook. On RE-VÉRIFIE le statut réel
+        // auprès de KPay (GET /payments/:id). Si KPay confirme COMPLETED → on
+        // finalise. Si toujours échoué, on REPLANIFIE ce même webhook après le
+        // délai de grâce restant : à la 2e passe (age >= grace) le verdict est
+        // considéré définitif. Cohérent avec ProcessDepositPolling + le status-check.
+        $graceSeconds = 90;
+        $age = now()->diffInSeconds($payment->created_at, true);
+
+        if ($age < $graceSeconds) {
+            try {
+                $kpay = app(\App\Services\Payment\KPayService::class);
+                $statusResponse = $kpay->checkPaymentStatus($payment->provider_reference);
+                $liveStatus = strtoupper($statusResponse['status'] ?? '');
+
+                if ($liveStatus === 'COMPLETED') {
+                    Log::info('🟢 [KPay] WEBHOOK failed transitoire → KPay confirme COMPLETED, finalisation', ['payment_id' => $payment->id]);
+                    $credited = $wallet->completeRechargeForPayment($payment);
+                    if ($credited) {
+                        $notifier->rechargeSuccess($payment->fresh());
+                    }
+                    return;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('[KPay Webhook Job] Re-vérification statut impossible: ' . $e->getMessage(), ['payment_id' => $payment->id]);
+            }
+
+            // Toujours échoué (ou re-vérif impossible) : on ne fige PAS maintenant.
+            // On replanifie le verdict après la fenêtre de grâce (au-delà de laquelle
+            // un failed est réputé réel). Le ré-essai porte deferredVerdict=true pour
+            // contourner le verrou de dédup (event+id) encore actif (TTL 5 min).
+            $delay = (int) ceil($graceSeconds - $age) + 2;
+            Log::info("⏳ [KPay] WEBHOOK {$event} transitoire ignoré (fenêtre USSD, age={$age}s) → replanifié dans {$delay}s", [
+                'payment_id' => $payment->id,
+                'kpay_failure_reason' => $this->payload['failureReason'] ?? null,
+            ]);
+            self::dispatch($this->payload, $this->event, true)->delay(now()->addSeconds($delay));
+            return;
+        }
+
+        // Hors fenêtre de grâce : le verdict d'échec est définitif.
+        $payment->markAsFailed($this->payload['failureReason'] ?? $event);
+        $notifier->rechargeFailed($payment->fresh());
+        Log::info("🔴 [KPay] WEBHOOK {$event} → dépôt marqué failed (hors fenêtre USSD, age={$age}s)", ['payment_id' => $payment->id]);
     }
 
     protected function handleWithdrawal(string $event, WalletNotifier $notifier): void

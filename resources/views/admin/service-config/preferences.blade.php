@@ -72,6 +72,40 @@
                     </div>
                 </div>
 
+                <h5 class="mb-3 mt-4">Fonctionnalités de l'application</h5>
+
+                <div class="card border">
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Active ou désactive certaines fonctionnalités exposées à l'application mobile.
+                        </p>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="use_otp" name="use_otp"
+                                   {{ ($preferencesConfig?->use_otp ?? true) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="use_otp">
+                                <strong>Vérification OTP à l'inscription</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Si désactivé, l'utilisateur passe directement à la création du mot de passe sans saisir de code OTP.
+                                </small>
+                            </label>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="use_paypal" name="use_paypal"
+                                   {{ ($preferencesConfig?->use_paypal ?? true) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="use_paypal">
+                                <strong>Paiement PayPal</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Si désactivé, l'option PayPal est masquée dans le wallet et dans toutes les modales de paiement.
+                                </small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary">
                         <i class="mdi mdi-content-save"></i> Sauvegarder les préférences

@@ -64,6 +64,10 @@ class ServiceConfiguration extends Model
 
         // Preferences
         'default_notification_channel',
+
+        // App feature flags (exposés à l'app mobile via /api/app-config)
+        'use_otp',
+        'use_paypal',
     ];
 
     protected $casts = [
@@ -81,6 +85,8 @@ class ServiceConfiguration extends Model
         'kpay_retry_delay' => 'decimal:1',
         'kpay_min_deposit' => 'integer',
         'kpay_min_withdrawal' => 'integer',
+        'use_otp' => 'boolean',
+        'use_paypal' => 'boolean',
     ];
 
     /**
@@ -169,6 +175,24 @@ class ServiceConfiguration extends Model
         );
 
         return $config;
+    }
+
+    /**
+     * Indique si l'OTP doit être utilisé (vérification à l'inscription).
+     * Défaut: true (sécurité par défaut).
+     */
+    public static function isOtpEnabled(): bool
+    {
+        return (bool) (self::getConfig('notification_preferences')?->use_otp ?? true);
+    }
+
+    /**
+     * Indique si PayPal doit être proposé dans l'app.
+     * Défaut: true.
+     */
+    public static function isPaypalEnabled(): bool
+    {
+        return (bool) (self::getConfig('notification_preferences')?->use_paypal ?? true);
     }
 
     /**
