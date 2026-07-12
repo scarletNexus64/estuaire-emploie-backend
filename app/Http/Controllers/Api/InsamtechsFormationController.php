@@ -29,12 +29,22 @@ class InsamtechsFormationController extends Controller
                 ->toArray();
         }
 
-        $data = $pricings->map(function ($p) use ($purchasedIds) {
+        $currency = app(\App\Services\CurrencyService::class);
+        $target = $currency->resolveCurrency(auth()->user());
+
+        $data = $pricings->map(function ($p) use ($purchasedIds, $currency, $target) {
+            // Affichage du prix (base price_xaf) dans la devise du user.
+            $display = $currency->displayFor((float) $p->price_xaf, $target);
+
             return [
                 'insamtechs_formation_id' => $p->insamtechs_formation_id,
                 'price_xaf' => (float) $p->price_xaf,
                 'price_usd' => (float) $p->price_usd,
                 'price_eur' => (float) $p->price_eur,
+                'base_currency' => $display['base_currency'],
+                'display_currency' => $display['display_currency'],
+                'display_price' => $display['display_price'],
+                'display_price_formatted' => $display['display_price_formatted'],
                 'is_purchased' => in_array($p->insamtechs_formation_id, $purchasedIds),
             ];
         });
@@ -92,7 +102,13 @@ class InsamtechsFormationController extends Controller
             ], 400);
         }
 
+        // Prix d'AFFICHAGE (devise demandée) — pour le record d'achat uniquement.
         $price = $pricing->getPrice($currency);
+
+        // Prix de DÉBIT : toujours en XAF (les wallets sont libellés en XAF).
+        // Débiter price_usd/price_eur sur un solde XAF serait un sous/sur-paiement
+        // (money-critical). Source de vérité = price_xaf.
+        $priceXaf = $pricing->getPrice('XAF');
 
         if ($price <= 0) {
             return response()->json([
@@ -121,29 +137,29 @@ class InsamtechsFormationController extends Controller
             $walletField = $paymentProvider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
             $currentBalance = $user->{$walletField} ?? 0;
 
-            if ($currentBalance < $price) {
+            if ($currentBalance < $priceXaf) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'message' => __('insamtechs_formation.insufficient_wallet', ['provider' => ucfirst($paymentProvider)]),
-                    'required' => $price,
+                    'required' => $priceXaf,
                     'available' => $currentBalance,
                 ], 400);
             }
 
             $balanceBefore = $currentBalance;
-            $balanceAfter = $currentBalance - $price;
+            $balanceAfter = $currentBalance - $priceXaf;
 
-            // Débiter le wallet
-            $user->decrement($walletField, $price);
+            // Débiter le wallet (montant XAF)
+            $user->decrement($walletField, $priceXaf);
 
             $formationTitle = $request->input('formation_title', $pricing->formation_title ?? "Formation #{$formationId}");
 
-            // Transaction wallet
+            // Transaction wallet (montant XAF, cohérent avec le solde)
             WalletTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'debit',
-                'amount' => $price,
+                'amount' => $priceXaf,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'description' => "Achat de la formation: {$formationTitle}",
@@ -209,6 +225,12 @@ class InsamtechsFormationController extends Controller
             ->completed()
             ->exists();
 
+        $currency = app(\App\Services\CurrencyService::class);
+        $display = $currency->displayFor(
+            (float) $pricing->price_xaf,
+            $currency->resolveCurrency(auth()->user())
+        );
+
         return response()->json([
             'success' => true,
             'has_access' => $purchased,
@@ -216,6 +238,10 @@ class InsamtechsFormationController extends Controller
             'price_xaf' => (float) $pricing->price_xaf,
             'price_usd' => (float) $pricing->price_usd,
             'price_eur' => (float) $pricing->price_eur,
+            'base_currency' => $display['base_currency'],
+            'display_currency' => $display['display_currency'],
+            'display_price' => $display['display_price'],
+            'display_price_formatted' => $display['display_price_formatted'],
         ]);
     }
 }

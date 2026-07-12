@@ -1438,9 +1438,27 @@ class WalletController extends Controller
         $paypalEmail = $request->input('paypal_email');
         $notes = $request->input('notes');
 
-        // Convertir le montant USD en XAF (taux approximatif)
-        $exchangeRate = 600; // 1 USD = 600 XAF (à ajuster selon le taux réel)
-        $amountXaf = $amountUsd * $exchangeRate;
+        // Convertir le montant USD saisi en XAF via le taux LIVE (money-critical :
+        // ce montant XAF débite réellement le wallet). On refuse si les taux sont
+        // périmés plutôt que de débiter un mauvais montant avec un taux figé.
+        $currencyService = app(\App\Services\CurrencyService::class);
+        if ($currencyService->ratesAreStale()) {
+            \Log::warning("[WalletController] ❌ Taux de change périmés — retrait PayPal refusé");
+            return response()->json([
+                'success' => false,
+                'message' => __('wallet.exchange_rate_unavailable'),
+            ], 503);
+        }
+
+        try {
+            $amountXaf = $currencyService->convert((float) $amountUsd, 'USD', 'XAF');
+        } catch (\Throwable $e) {
+            \Log::error("[WalletController] ❌ Conversion USD→XAF échouée: {$e->getMessage()}");
+            return response()->json([
+                'success' => false,
+                'message' => __('wallet.exchange_rate_unavailable'),
+            ], 503);
+        }
 
         // Vérifier le solde PayPal wallet disponible
         $availableBalance = $user->paypal_wallet_balance ?? 0;
@@ -1452,9 +1470,16 @@ class WalletController extends Controller
                 'requested_usd' => $amountUsd,
             ]);
 
+            // Solde max en USD (à titre indicatif) : reconvertir le solde XAF.
+            try {
+                $availableUsd = $currencyService->convert((float) $availableBalance, 'XAF', 'USD');
+            } catch (\Throwable $e) {
+                $availableUsd = 0;
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => __('wallet.insufficient_paypal_balance', ['amount' => number_format($availableBalance, 0, ',', ' '), 'usd' => number_format($availableBalance / $exchangeRate, 2)]),
+                'message' => __('wallet.insufficient_paypal_balance', ['amount' => number_format($availableBalance, 0, ',', ' '), 'usd' => number_format($availableUsd, 2)]),
             ], 400);
         }
 

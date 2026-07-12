@@ -34,6 +34,7 @@ return [
     // Balances & withdrawals
     'insufficient_freemopay_balance' => 'رصيد FreeMoPay غير كافٍ. المتاح: :amount فرنك',
     'insufficient_paypal_balance' => 'رصيد PayPal غير كافٍ. المتاح: :amount فرنك (~:usd دولار)',
+    'exchange_rate_unavailable' => 'أسعار الصرف غير متوفرة أو قديمة. يرجى المحاولة مرة أخرى لاحقًا.',
     'withdrawal_processing' => 'جاري معالجة طلب السحب. ستتلقى إشعارًا فور اكتمال العملية.',
     'withdrawal_processing_detail' => 'السحب قيد التنفيذ. ستتلقى إشعارًا فوريًا فور اكتماله (حوالي 1-2 دقيقة).',
     'paypal_withdrawal_processing' => 'جاري معالجة سحب PayPal. ستتلقى إشعارًا فور اكتمال العملية.',

@@ -25,13 +25,18 @@ class StoragePackController extends Controller
     public function index()
     {
         try {
+            $currency = app(\App\Services\CurrencyService::class);
+            $target = $currency->resolveCurrency(auth('sanctum')->user());
+
             $packs = StoragePack::active()
                 ->ordered()
                 ->get()
-                ->map(function ($pack) {
+                ->map(function ($pack) use ($currency, $target) {
                     // Vérifier si le pack est en promotion
                     $promotion = $pack->getActivePromotion();
                     $isPromotional = $promotion !== null;
+
+                    $display = $currency->displayFor((float) $pack->price, $target);
 
                     $data = [
                         'id' => $pack->id,
@@ -43,6 +48,10 @@ class StoragePackController extends Controller
                         'formatted_duration' => $pack->formatted_duration,
                         'price' => $pack->price,
                         'formatted_price' => $pack->formatted_price,
+                        'base_currency' => $display['base_currency'],
+                        'display_currency' => $display['display_currency'],
+                        'display_price' => $display['display_price'],
+                        'display_price_formatted' => $display['display_price_formatted'],
                         'description' => $pack->description,
                         'display_order' => $pack->display_order,
                         'is_promotional' => $isPromotional,
@@ -101,6 +110,12 @@ class StoragePackController extends Controller
                 ];
             }
 
+            $currency = app(\App\Services\CurrencyService::class);
+            $display = $currency->displayFor(
+                (float) $pack->price,
+                $currency->resolveCurrency(auth('sanctum')->user())
+            );
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -113,6 +128,10 @@ class StoragePackController extends Controller
                     'formatted_duration' => $pack->formatted_duration,
                     'price' => $pack->price,
                     'formatted_price' => $pack->formatted_price,
+                    'base_currency' => $display['base_currency'],
+                    'display_currency' => $display['display_currency'],
+                    'display_price' => $display['display_price'],
+                    'display_price_formatted' => $display['display_price_formatted'],
                     'description' => $pack->description,
                     'is_active' => $pack->is_active,
                     'is_promotional' => $promotion !== null,

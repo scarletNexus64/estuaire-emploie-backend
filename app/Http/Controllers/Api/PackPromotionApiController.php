@@ -395,6 +395,23 @@ class PackPromotionApiController extends Controller
             'description' => $pack->description ?? null,
         ];
 
+        // Prix de base en XAF selon le type de pack (source de vérité).
+        $basePriceXaf = match ($type) {
+            'App\Models\ExamPack', 'App\Models\TrainingPack' => (float) $pack->price_xaf,
+            'App\Models\StoragePack', 'App\Models\SubscriptionPlan' => (float) $pack->price,
+            default => null,
+        };
+
+        // Affichage du prix d'origine dans la devise du user (informatif).
+        if ($basePriceXaf !== null) {
+            $currency = app(\App\Services\CurrencyService::class);
+            $display = $currency->displayFor($basePriceXaf, $currency->resolveCurrency(auth()->user()));
+            $baseData['base_currency'] = $display['base_currency'];
+            $baseData['display_currency'] = $display['display_currency'];
+            $baseData['display_original_price'] = $display['display_price'];
+            $baseData['display_original_price_formatted'] = $display['display_price_formatted'];
+        }
+
         switch ($type) {
             case 'App\Models\ExamPack':
                 return array_merge($baseData, [

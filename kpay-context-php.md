@@ -1,5 +1,3 @@
-Clé API : kpay_live_33990b77ff6139df62e864168424ab778f238ec5d8882a1d
-Clé Secrete : 902cb10a7db38814cb3d0847c2a6925a4d0a506414d1ce9c9606e1e0d1e432ee
 # KPay — Contexte d'intégration pour agents IA
 
 Ce document décrit l'intégralité de l'API KPay (paiements et retraits
@@ -11,7 +9,7 @@ préfixe de la clé d'API qui sélectionne l'environnement.
 - URL de base : `https://admin.kpay.site`
 - Devise de référence : `XAF` (chaque transaction utilise la devise du pays de l'opérateur)
 - Version d'API : `v1` (incluse dans le chemin, ex. `/api/v1/payments/init`)
-- Généré le : 2026-07-10T14:35:52.565Z
+- Généré le : 2026-07-11T16:32:12.267Z
 
 Les exemples d'appel sont fournis en PHP. Les clés sont lues
 depuis les variables d'environnement `KPAY_API_KEY` et `KPAY_SECRET_KEY`.

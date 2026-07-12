@@ -20,9 +20,23 @@ class CandidatePremiumServiceController extends Controller
      */
     public function index()
     {
+        $currency = app(\App\Services\CurrencyService::class);
+        $target = $currency->resolveCurrency(auth('sanctum')->user());
+
         $services = PremiumServiceConfig::where('is_active', true)
             ->orderBy('display_order')
-            ->get();
+            ->get()
+            ->map(function ($service) use ($currency, $target) {
+                // Prix de base (XAF) inchangé, source de vérité pour le débit.
+                // On ajoute l'affichage dans la devise du user (informatif).
+                $display = $currency->displayFor((float) $service->price, $target);
+                $service->base_currency = $display['base_currency'];
+                $service->display_currency = $display['display_currency'];
+                $service->display_price = $display['display_price'];
+                $service->display_price_formatted = $display['display_price_formatted'];
+
+                return $service;
+            });
 
         return response()->json([
             'success' => true,

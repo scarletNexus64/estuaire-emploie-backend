@@ -21,6 +21,49 @@ use Illuminate\Support\Str;
 class CompanyProductController extends Controller
 {
     /**
+     * Décore un produit (ou une collection) avec le prix d'affichage dans la
+     * devise du user. Particularité : le prix produit est libellé dans SA propre
+     * devise (`$product->currency`, souvent XAF mais parfois USD/EUR) — on
+     * convertit donc depuis cette devise-là, pas depuis XAF. Sans prix
+     * (billing_type ≠ fixed_price), on ne décore pas. `price`/`currency` bruts
+     * restent inchangés.
+     *
+     * @param  \Illuminate\Support\Collection|\App\Models\CompanyProduct  $products
+     */
+    private function decorateProductPrice($products)
+    {
+        $currency = app(\App\Services\CurrencyService::class);
+        $target = $currency->resolveCurrency(auth('sanctum')->user());
+
+        $decorate = function ($product) use ($currency, $target) {
+            $from = strtoupper($product->currency ?: 'XAF');
+            $product->display_currency = $target;
+
+            if ($product->price !== null) {
+                try {
+                    $converted = $currency->convert((float) $product->price, $from, $target);
+                    $product->display_price = $converted;
+                    $product->display_price_formatted = $currency->format($converted, $target);
+                } catch (\Throwable $e) {
+                    // Pas de taux : on affiche le prix dans sa devise d'origine.
+                    $product->display_currency = $from;
+                    $product->display_price = (float) $product->price;
+                    $product->display_price_formatted = $currency->format((float) $product->price, $from);
+                }
+            }
+
+            return $product;
+        };
+
+        if ($products instanceof \Illuminate\Support\Collection
+            || $products instanceof \Illuminate\Database\Eloquent\Collection) {
+            return $products->map($decorate);
+        }
+
+        return $decorate($products);
+    }
+
+    /**
      * Get all products/services for a company
      */
     public function index(Request $request, $companyId)
@@ -50,7 +93,7 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $products,
+                'data' => $this->decorateProductPrice($products),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -267,7 +310,7 @@ class CompanyProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $product,
+                'data' => $this->decorateProductPrice($product),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -486,11 +529,38 @@ class CompanyProductController extends Controller
                 ], 422);
             }
 
-            $amount = (float) $product->price;
+            // Prix affiché dans la devise du produit (record / facture).
+            $displayAmount = (float) $product->price;
+            $productCurrency = strtoupper($product->currency ?: 'XAF');
+
+            // Montant réellement débité : TOUJOURS en XAF (les wallets sont
+            // libellés en XAF). Si le produit est tarifé en USD/EUR, on convertit
+            // au taux LIVE ; débiter la valeur brute sur un solde XAF serait un
+            // sous/sur-paiement (money-critical). On refuse si les taux sont périmés.
+            $currencyService = app(\App\Services\CurrencyService::class);
+            if ($productCurrency !== 'XAF') {
+                if ($currencyService->ratesAreStale()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('wallet.exchange_rate_unavailable'),
+                    ], 503);
+                }
+                try {
+                    $amount = $currencyService->convert($displayAmount, $productCurrency, 'XAF');
+                } catch (\Throwable $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('wallet.exchange_rate_unavailable'),
+                    ], 503);
+                }
+            } else {
+                $amount = $displayAmount;
+            }
+
             $provider = $request->provider;
             $walletService = app(WalletService::class);
 
-            // Vérifier le solde de l'acheteur sur le provider choisi
+            // Vérifier le solde de l'acheteur sur le provider choisi (montant XAF)
             $canPay = $walletService->canPayWithWallet($buyer, $amount, $provider);
             if (!($canPay['can_pay'] ?? false)) {
                 return response()->json([
@@ -502,9 +572,9 @@ class CompanyProductController extends Controller
             }
 
             $purchase = DB::transaction(function () use (
-                $buyer, $seller, $product, $amount, $provider, $walletService
+                $buyer, $seller, $product, $amount, $displayAmount, $productCurrency, $provider, $walletService
             ) {
-                // Débit acheteur / crédit recruteur propriétaire
+                // Débit acheteur / crédit recruteur propriétaire (montant XAF).
                 $result = $walletService->transfer(
                     $buyer,
                     $seller,
@@ -518,8 +588,10 @@ class CompanyProductController extends Controller
                     'company_id' => $product->company_id,
                     'buyer_user_id' => $buyer->id,
                     'seller_user_id' => $seller->id,
-                    'amount' => $amount,
-                    'currency' => $product->currency,
+                    // Montant/devise affichés au produit ; le débit réel (XAF) est
+                    // tracé via wallet_transaction_id.
+                    'amount' => $displayAmount,
+                    'currency' => $productCurrency,
                     'provider' => $provider,
                     'status' => 'paid',
                     'invoice_number' => 'FAC-' . now()->format('Ymd') . '-'
@@ -527,8 +599,9 @@ class CompanyProductController extends Controller
                     'wallet_transaction_id' => $result['sender_transaction']->id ?? null,
                     'product_snapshot' => [
                         'name' => $product->name,
-                        'price' => $amount,
-                        'currency' => $product->currency,
+                        'price' => $displayAmount,
+                        'currency' => $productCurrency,
+                        'amount_charged_xaf' => $amount,
                         'type' => $product->type,
                     ],
                 ]);
@@ -539,8 +612,9 @@ class CompanyProductController extends Controller
                 'message' => __('company_product.purchase_success'),
                 'data' => [
                     'purchase_id' => $purchase->id,
-                    'amount' => $amount,
-                    'currency' => $product->currency,
+                    'amount' => $displayAmount,
+                    'currency' => $productCurrency,
+                    'amount_charged_xaf' => $amount,
                     'status' => $purchase->status,
                 ],
             ], 201);

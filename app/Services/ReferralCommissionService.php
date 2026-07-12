@@ -22,12 +22,14 @@ class ReferralCommissionService
      * Traite la commission de parrainage pour un achat payé via wallet
      * (pack candidat, pack recruteur, service, etc.).
      *
-     * Le parrain reçoit X% du montant dépensé, crédité sur le même provider
-     * de wallet (paypal ou freemopay) que celui utilisé par le filleul.
+     * Le parrain reçoit X% du montant dépensé, crédité sur son SOLDE DE
+     * PARRAINAGE dédié (`referral_balance`, en XAF). Ce solde n'est pas
+     * dépensable tel quel : le parrain le transfère explicitement vers son
+     * wallet (KPay/PayPal) depuis le dashboard, ce qui crée une transaction.
      *
      * @param User $user L'utilisateur qui a effectué l'achat
      * @param float $purchaseAmount Montant dépensé
-     * @param string $provider 'paypal' ou 'freemopay'
+     * @param string $provider 'paypal' ou 'freemopay' (provider de l'achat)
      * @param string $purchaseLabel Libellé de l'achat (ex: "Pack candidat C2")
      * @param string|null $reference Référence de la transaction (payment id, etc.)
      * @return ReferralCommission|null La commission créée, ou null si pas de parrain
@@ -94,27 +96,19 @@ class ReferralCommissionService
                 'commission_amount' => $commissionAmount,
             ]);
 
-            $this->walletService->credit(
-                $referrer,
-                $commissionAmount,
-                null,
-                "Commission de parrainage - {$purchaseLabel} de {$user->name}",
-                [
-                    'referral_commission_id' => $commission->id,
-                    'referred_user_id' => $user->id,
-                    'purchase_amount' => $purchaseAmount,
-                    'purchase_label' => $purchaseLabel,
-                ],
-                $provider
-            );
+            // Créditer le SOLDE DE PARRAINAGE (pas le wallet). Verrou de ligne
+            // pour éviter toute course sur le solde.
+            $lockedReferrer = User::whereKey($referrer->id)->lockForUpdate()->first();
+            $lockedReferrer->referral_balance = (float) $lockedReferrer->referral_balance + $commissionAmount;
+            $lockedReferrer->save();
 
             DB::commit();
 
-            Log::info('[ReferralCommission] ✅ Commission créditée avec succès', [
+            Log::info('[ReferralCommission] ✅ Commission ajoutée au solde de parrainage', [
                 'commission_id' => $commission->id,
                 'referrer_id' => $referrer->id,
                 'commission_amount' => $commissionAmount,
-                'provider' => $provider,
+                'referral_balance_after' => $lockedReferrer->referral_balance,
             ]);
 
             $this->sendReferralCommissionNotification(
@@ -169,11 +163,10 @@ class ReferralCommissionService
         string $purchaseLabel
     ): void {
         try {
-            $providerName = $provider === 'paypal' ? 'PayPal' : 'Mobile Money';
             $formattedAmount = number_format($commissionAmount, 0, ',', ' ');
 
             $title = "Commission de parrainage reçue !";
-            $body = "Vous avez reçu {$formattedAmount} FCFA sur votre wallet {$providerName} suite à l'achat de {$referred->name} ({$purchaseLabel}).";
+            $body = "Vous avez gagné {$formattedAmount} FCFA sur votre solde de parrainage suite à l'achat de {$referred->name} ({$purchaseLabel}). Transférez-le vers votre wallet depuis votre dashboard de parrainage.";
 
             $this->notificationService->sendToUser(
                 $referrer,

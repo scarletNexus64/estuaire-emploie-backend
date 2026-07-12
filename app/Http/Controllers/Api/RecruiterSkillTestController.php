@@ -208,11 +208,20 @@ class RecruiterSkillTestController extends Controller
         // Check if company has skills test access (payment required)
         $company = \App\Models\Company::find($companyId);
         if (!$this->purchaseService->hasSkillsTestAccess($company)) {
+            // Prix en XAF (source de vérité) + affichage dans la devise du user.
+            $priceXaf = 2000; // From AddonServiceConfigSeeder
+            $currency = app(\App\Services\CurrencyService::class);
+            $display = $currency->displayFor((float) $priceXaf, $currency->resolveCurrency(auth()->user()));
+
             return response()->json([
                 'success' => false,
                 'message' => __('skill_test.must_purchase_access'),
                 'requires_payment' => true,
-                'price' => 2000, // From AddonServiceConfigSeeder
+                'price' => $priceXaf,
+                'base_currency' => $display['base_currency'],
+                'display_currency' => $display['display_currency'],
+                'display_price' => $display['display_price'],
+                'display_price_formatted' => $display['display_price_formatted'],
             ], 403);
         }
 

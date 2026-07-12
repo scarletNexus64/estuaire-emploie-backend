@@ -236,6 +236,8 @@ class CountriesSeeder extends Seeder
             ['ZW', 'ZWE', '263', '🇿🇼', 'Zimbabwe'],
         ];
 
+        $kpaySet = array_flip(self::KPAY_COUNTRIES);
+
         foreach ($countries as $c) {
             Country::updateOrCreate(
                 ['code' => $c[0]],
@@ -243,10 +245,119 @@ class CountriesSeeder extends Seeder
                     'iso3' => $c[1],
                     'dial_code' => $c[2],
                     'flag' => $c[3],
+                    'currency' => self::CURRENCIES[$c[0]] ?? null, // devise ISO 4217
+                    'supports_kpay' => isset($kpaySet[$c[0]]),      // KPay opérationnel
                     'name' => $c[4],
                     'is_active' => true,
                 ]
             );
         }
     }
+
+    /**
+     * Pays où KPay (Mobile Money) est opérationnel — seuls activables dans le
+     * sélecteur mobile pour l'instant (les autres sont grisés). Codes ISO
+     * alpha-2, dérivés de kpay_countries.dart (20 pays). Source de vérité DB :
+     * élargir = ajouter un code ici puis reseeder (ou flag admin).
+     */
+    private const KPAY_COUNTRIES = [
+        'BJ', // Bénin
+        'BF', // Burkina Faso
+        'CI', // Côte d'Ivoire
+        'CM', // Cameroun
+        'CD', // RD Congo
+        'CG', // Congo
+        'ET', // Éthiopie
+        'GA', // Gabon
+        'GH', // Ghana
+        'KE', // Kenya
+        'LS', // Lesotho
+        'MZ', // Mozambique
+        'MW', // Malawi
+        'NG', // Nigeria
+        'RW', // Rwanda
+        'SN', // Sénégal
+        'SL', // Sierra Leone
+        'TZ', // Tanzanie
+        'UG', // Ouganda
+        'ZM', // Zambie
+    ];
+
+    /**
+     * Devise (ISO 4217) par pays (clé = code ISO alpha-2).
+     * Sert à pré-remplir users.preferred_currency au choix du pays.
+     * Les pays de la zone franc utilisent XAF (Afrique centrale) ou
+     * XOF (Afrique de l'Ouest) — libellés "FCFA" côté UI.
+     */
+    private const CURRENCIES = [
+        // Zone franc CFA — Afrique centrale (CEMAC) → XAF
+        'CM' => 'XAF', 'GA' => 'XAF', 'CG' => 'XAF', 'CF' => 'XAF',
+        'TD' => 'XAF', 'GQ' => 'XAF',
+        // Zone franc CFA — Afrique de l'Ouest (UEMOA) → XOF
+        'CI' => 'XOF', 'SN' => 'XOF', 'BJ' => 'XOF', 'BF' => 'XOF',
+        'TG' => 'XOF', 'NE' => 'XOF', 'ML' => 'XOF', 'GW' => 'XOF',
+        // Reste de l'Afrique
+        'CD' => 'CDF', 'GN' => 'GNF', 'GH' => 'GHS', 'NG' => 'NGN',
+        'SL' => 'SLL', 'LR' => 'LRD', 'MR' => 'MRU', 'GM' => 'GMD',
+        'MA' => 'MAD', 'DZ' => 'DZD', 'TN' => 'TND', 'LY' => 'LYD',
+        'EG' => 'EGP', 'KE' => 'KES', 'TZ' => 'TZS', 'UG' => 'UGX',
+        'RW' => 'RWF', 'BI' => 'BIF', 'ET' => 'ETB', 'SO' => 'SOS',
+        'DJ' => 'DJF', 'ZA' => 'ZAR', 'BW' => 'BWP', 'NA' => 'NAD',
+        'ZW' => 'ZWL', 'ZM' => 'ZMW', 'MW' => 'MWK', 'MZ' => 'MZN',
+        'AO' => 'AOA', 'MG' => 'MGA', 'MU' => 'MUR', 'SC' => 'SCR',
+        'CV' => 'CVE', 'KM' => 'KMF', 'ST' => 'STN', 'SD' => 'SDG',
+        'SS' => 'SSP', 'ER' => 'ERN', 'LS' => 'LSL', 'SZ' => 'SZL',
+        // Zone euro
+        'FR' => 'EUR', 'BE' => 'EUR', 'DE' => 'EUR', 'IT' => 'EUR',
+        'ES' => 'EUR', 'PT' => 'EUR', 'NL' => 'EUR', 'IE' => 'EUR',
+        'AT' => 'EUR', 'FI' => 'EUR', 'GR' => 'EUR', 'LU' => 'EUR',
+        'SK' => 'EUR', 'SI' => 'EUR', 'EE' => 'EUR', 'LV' => 'EUR',
+        'LT' => 'EUR', 'CY' => 'EUR', 'MT' => 'EUR', 'MC' => 'EUR',
+        'AD' => 'EUR', 'SM' => 'EUR', 'VA' => 'EUR', 'ME' => 'EUR',
+        // Reste de l'Europe
+        'CH' => 'CHF', 'LI' => 'CHF', 'GB' => 'GBP', 'GG' => 'GBP',
+        'JE' => 'GBP', 'GI' => 'GIP', 'DK' => 'DKK', 'SE' => 'SEK',
+        'NO' => 'NOK', 'IS' => 'ISK', 'PL' => 'PLN', 'CZ' => 'CZK',
+        'HU' => 'HUF', 'RO' => 'RON', 'BG' => 'BGN', 'HR' => 'EUR',
+        'RS' => 'RSD', 'BA' => 'BAM', 'MK' => 'MKD', 'AL' => 'ALL',
+        'MD' => 'MDL', 'UA' => 'UAH', 'BY' => 'BYN', 'RU' => 'RUB',
+        // Amériques
+        'US' => 'USD', 'CA' => 'CAD', 'MX' => 'MXN', 'BR' => 'BRL',
+        'AR' => 'ARS', 'CL' => 'CLP', 'CO' => 'COP', 'PE' => 'PEN',
+        'VE' => 'VES', 'EC' => 'USD', 'BO' => 'BOB', 'PY' => 'PYG',
+        'UY' => 'UYU', 'GY' => 'GYD', 'SR' => 'SRD', 'GF' => 'EUR',
+        'PA' => 'PAB', 'CR' => 'CRC', 'NI' => 'NIO', 'HN' => 'HNL',
+        'SV' => 'USD', 'GT' => 'GTQ', 'BZ' => 'BZD', 'CU' => 'CUP',
+        'DO' => 'DOP', 'HT' => 'HTG', 'JM' => 'JMD', 'TT' => 'TTD',
+        'BB' => 'BBD', 'BS' => 'BSD', 'PR' => 'USD',
+        // Moyen-Orient
+        'SA' => 'SAR', 'AE' => 'AED', 'QA' => 'QAR', 'KW' => 'KWD',
+        'BH' => 'BHD', 'OM' => 'OMR', 'JO' => 'JOD', 'LB' => 'LBP',
+        'IL' => 'ILS', 'PS' => 'ILS', 'IQ' => 'IQD', 'IR' => 'IRR',
+        'SY' => 'SYP', 'YE' => 'YER', 'TR' => 'TRY',
+        // Asie
+        'CN' => 'CNY', 'JP' => 'JPY', 'KR' => 'KRW', 'KP' => 'KPW',
+        'IN' => 'INR', 'PK' => 'PKR', 'BD' => 'BDT', 'LK' => 'LKR',
+        'NP' => 'NPR', 'BT' => 'BTN', 'MV' => 'MVR', 'AF' => 'AFN',
+        'ID' => 'IDR', 'MY' => 'MYR', 'SG' => 'SGD', 'TH' => 'THB',
+        'VN' => 'VND', 'PH' => 'PHP', 'MM' => 'MMK', 'KH' => 'KHR',
+        'LA' => 'LAK', 'BN' => 'BND', 'TL' => 'USD', 'MN' => 'MNT',
+        'KZ' => 'KZT', 'UZ' => 'UZS', 'TM' => 'TMT', 'KG' => 'KGS',
+        'TJ' => 'TJS', 'AZ' => 'AZN', 'AM' => 'AMD', 'GE' => 'GEL',
+        'HK' => 'HKD', 'MO' => 'MOP', 'TW' => 'TWD',
+        // Océanie
+        'AU' => 'AUD', 'NZ' => 'NZD', 'FJ' => 'FJD', 'PG' => 'PGK',
+        'WS' => 'WST', 'TO' => 'TOP', 'VU' => 'VUV', 'SB' => 'SBD',
+        'NC' => 'XPF', 'PF' => 'XPF', 'KI' => 'AUD', 'NR' => 'AUD',
+        'TV' => 'AUD', 'NU' => 'NZD', 'TK' => 'NZD', 'FM' => 'USD',
+        'MH' => 'USD', 'PW' => 'USD', 'GU' => 'USD', 'AS' => 'USD',
+        // Territoires & Caraïbes
+        'AG' => 'XCD', 'DM' => 'XCD', 'GD' => 'XCD', 'KN' => 'XCD',
+        'LC' => 'XCD', 'VC' => 'XCD', 'AI' => 'XCD', 'MS' => 'XCD',
+        'AW' => 'AWG', 'CW' => 'ANG', 'BM' => 'BMD',
+        // Territoires français d'outre-mer → EUR
+        'GP' => 'EUR', 'MQ' => 'EUR', 'RE' => 'EUR', 'YT' => 'EUR',
+        // Autres territoires
+        'GL' => 'DKK', 'SH' => 'SHP', 'AQ' => 'USD',
+    ];
 }

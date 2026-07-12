@@ -15,6 +15,27 @@ use Illuminate\Support\Facades\DB;
 class TrainingPackApiController extends Controller
 {
     /**
+     * Décore un pack avec le prix d'affichage dans la devise du user, dérivé de
+     * `price_xaf` (base, source de vérité). `display_price_formatted` est prêt à
+     * afficher. En promo gratuite, le prix affiché est 0.
+     */
+    private function decoratePackDisplayPrice($pack): void
+    {
+        $currency = app(\App\Services\CurrencyService::class);
+        $target = $currency->resolveCurrency(auth('sanctum')->user());
+
+        $baseXaf = ($pack->is_promotional ?? false)
+            ? (float) ($pack->promotional_price ?? 0)
+            : (float) $pack->price_xaf;
+
+        $display = $currency->displayFor($baseXaf, $target);
+        $pack->base_currency = $display['base_currency'];
+        $pack->display_currency = $display['display_currency'];
+        $pack->display_price = $display['display_price'];
+        $pack->display_price_formatted = $display['display_price_formatted'];
+    }
+
+    /**
      * Liste des packs de formation disponibles
      */
     public function index(Request $request)
@@ -82,6 +103,8 @@ class TrainingPackApiController extends Controller
                     $pack->promotional_price = null;
                 }
 
+                $this->decoratePackDisplayPrice($pack);
+
                 return $pack;
             });
         } else {
@@ -100,6 +123,7 @@ class TrainingPackApiController extends Controller
                     $pack->is_promotional = false;
                     $pack->promotional_price = null;
                 }
+                $this->decoratePackDisplayPrice($pack);
                 return $pack;
             });
         }
@@ -162,6 +186,11 @@ class TrainingPackApiController extends Controller
                 'remaining_activations' => $promotion->remaining_activations,
             ];
         }
+
+        // Prix d'affichage dans la devise du user (base = price_xaf ou promo).
+        $pack->is_promotional = $promotion !== null;
+        $pack->promotional_price = $promotion !== null ? 0 : null;
+        $this->decoratePackDisplayPrice($pack);
 
         return response()->json([
             'success' => true,
@@ -234,8 +263,13 @@ class TrainingPackApiController extends Controller
         // Vidéothèque gratuite si Mode Étudiant OU Pack C2+ (accès ressources).
         $isStudent = $user->hasLibraryAccess();
 
-        // Obtenir le prix dans la devise demandée
+        // Prix d'AFFICHAGE (devise demandée) — pour le record d'achat uniquement.
         $price = $pack->getPrice($currency);
+
+        // Prix de DÉBIT : toujours en XAF (les wallets sont libellés en XAF).
+        // Débiter price_usd/price_eur sur un solde XAF serait un sous/sur-paiement
+        // (money-critical). Source de vérité = price_xaf.
+        $priceXaf = $pack->getPrice('XAF');
 
         if ($price <= 0 && !$isStudent) {
             return response()->json([
@@ -291,29 +325,29 @@ class TrainingPackApiController extends Controller
             // Déterminer le champ wallet à utiliser
             $walletField = $paymentProvider === 'paypal' ? 'paypal_wallet_balance' : 'freemopay_wallet_balance';
 
-            // Vérifier le solde du wallet sélectionné
+            // Vérifier le solde du wallet sélectionné (comparaison en XAF)
             $currentBalance = $user->{$walletField} ?? 0;
-            if ($currentBalance < $price) {
+            if ($currentBalance < $priceXaf) {
                 return response()->json([
                     'success' => false,
                     'message' => __('training_pack.insufficient_wallet', ['provider' => ucfirst($paymentProvider)]),
-                    'required' => $price,
+                    'required' => $priceXaf,
                     'available' => $currentBalance,
                 ], 400);
             }
 
-            // Calculer le nouveau solde
+            // Calculer le nouveau solde (en XAF)
             $balanceBefore = $currentBalance;
-            $balanceAfter = $currentBalance - $price;
+            $balanceAfter = $currentBalance - $priceXaf;
 
-            // Débiter le wallet sélectionné
-            $user->decrement($walletField, $price);
+            // Débiter le wallet sélectionné (montant XAF)
+            $user->decrement($walletField, $priceXaf);
 
-            // Créer la transaction wallet
+            // Créer la transaction wallet (montant XAF, cohérent avec le solde)
             WalletTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'debit',
-                'amount' => $price,
+                'amount' => $priceXaf,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'description' => "Achat du pack de formation: {$pack->name}",
@@ -340,8 +374,8 @@ class TrainingPackApiController extends Controller
 
             DB::commit();
 
-            // Envoyer notification FCM pour l'achat
-            $this->sendPurchaseNotification($user, $pack, $price, $paymentProvider);
+            // Envoyer notification FCM pour l'achat (montant XAF réellement débité)
+            $this->sendPurchaseNotification($user, $pack, $priceXaf, $paymentProvider);
 
             return response()->json([
                 'success' => true,
