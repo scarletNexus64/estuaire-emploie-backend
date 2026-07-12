@@ -404,7 +404,7 @@ class WalletController extends Controller
                             // et c'est le WEBHOOK payment.failed (source de vérité) qui
                             // tranchera. Passé ce délai, un FAILED est considéré réel
                             // (filet de sécurité anti-pending éternel).
-                            $graceSeconds = 90;
+                            $graceSeconds = (int) config('kpay.ussd_grace_seconds', 90);
                             $age = now()->diffInSeconds($payment->created_at, true);
                             $withinUssdGrace = $age < $graceSeconds;
 

@@ -52,10 +52,13 @@ class EmailVerificationController extends Controller
 
         // Envoyer l'email avec le code
         try {
-            Mail::raw(
+            // Envoi via le canal Brevo (même que la messagerie) → délivrabilité
+            // rapide et hors spam, expéditeur vérifié sur le domaine.
+            Mail::mailer('brevo')->raw(
                 "Bonjour,\n\nVotre code de vérification Estuaire Emploie est : $code\n\nCe code expire dans 10 minutes.\n\nSi vous n'avez pas demandé ce code, ignorez cet email.\n\nL'équipe Estuaire Emploie",
                 function ($message) use ($email) {
                     $message->to($email)
+                        ->from(config('mail.support_from'), 'Estuaire Emploi')
                         ->subject('Code de vérification - Estuaire Emploie');
                 }
             );

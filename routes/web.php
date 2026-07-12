@@ -309,6 +309,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::middleware('permission:manage_subscriptions')->prefix('manual-subscriptions')->name('manual-subscriptions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'create'])->name('create');
+        Route::get('/search-users', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'searchUsers'])->name('search-users');
         Route::post('/', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'store'])->name('store');
         Route::get('/{assignment}', [\App\Http\Controllers\Admin\ManualSubscriptionController::class, 'show'])->name('show');
     });

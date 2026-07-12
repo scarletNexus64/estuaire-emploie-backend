@@ -46,7 +46,7 @@ class ProcessDepositPolling implements ShouldQueue
         $startTime = time();
         $attempts = 0;
         $interval = 6;          // 6s (rate limit KPay ~10 req/min/paiement)
-        $timeout = 90;
+        $timeout = (int) config('kpay.ussd_grace_seconds', 90); // fenêtre USSD partagée
         $maxAttempts = 15;
 
         $successStatuses = ['COMPLETED'];

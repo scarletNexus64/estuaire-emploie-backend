@@ -62,24 +62,31 @@
                             font-size: 0.75rem;
                         ">{{ ucfirst($assignment->user->role) }}</span>
                     </td>
+                    @php
+                        $cfg = $assignment->item_type === 'plan' ? $assignment->subscriptionPlan : $assignment->assignable;
+                        $g = $assignment->granted;
+                        $typeLabels = ['plan' => 'Pack', 'premium_service' => 'Service premium', 'addon_service' => 'Add-on'];
+                    @endphp
                     <td>
                         <span style="
-                            background: {{ $assignment->subscriptionPlan->color ?? 'var(--primary)' }};
+                            background: {{ $cfg->color ?? 'var(--primary)' }};
                             color: white;
                             padding: 0.25rem 0.5rem;
                             border-radius: 4px;
                             font-size: 0.85rem;
                             font-weight: 600;
                         ">
-                            {{ $assignment->subscriptionPlan->name }}
-                        </span>
+                            {{ $assignment->item_label }}
+                        </span><br>
+                        <small style="color: var(--secondary); font-size: 0.7rem;">{{ $typeLabels[$assignment->item_type] ?? $assignment->item_type }}</small>
                     </td>
                     <td>
-                        <strong>{{ number_format($assignment->subscriptionPlan->price, 0, ',', ' ') }}</strong> XAF
+                        <strong>{{ $cfg ? number_format($cfg->price, 0, ',', ' ') : '—' }}</strong> XAF
                     </td>
-                    <td>{{ $assignment->subscriptionPlan->duration_days }} jours</td>
+                    <td>{{ $cfg && $cfg->duration_days ? $cfg->duration_days . ' jours' : 'Permanent' }}</td>
                     <td>
-                        @if($assignment->userSubscriptionPlan->isValid())
+                        @php $valid = $g && method_exists($g, 'isValid') ? $g->isValid() : false; @endphp
+                        @if($valid)
                             <span style="
                                 background: var(--success);
                                 color: white;
@@ -87,30 +94,26 @@
                                 border-radius: 4px;
                                 font-size: 0.8rem;
                             ">✓ Actif</span>
+                            @if(optional($g)->expires_at)
                             <br>
                             <small style="color: var(--secondary); font-size: 0.75rem;">
-                                Expire: {{ $assignment->userSubscriptionPlan->expires_at->format('d/m/Y') }}
+                                Expire: {{ $g->expires_at->format('d/m/Y') }}
                             </small>
-                        @elseif($assignment->userSubscriptionPlan->isExpired())
+                            @endif
+                        @else
                             <span style="
                                 background: var(--danger);
                                 color: white;
                                 padding: 0.25rem 0.5rem;
                                 border-radius: 4px;
                                 font-size: 0.8rem;
-                            ">✗ Expiré</span>
+                            ">✗ Expiré / Inactif</span>
+                            @if(optional($g)->expires_at)
                             <br>
                             <small style="color: var(--secondary); font-size: 0.75rem;">
-                                Depuis: {{ $assignment->userSubscriptionPlan->expires_at->format('d/m/Y') }}
+                                {{ $g->expires_at->format('d/m/Y') }}
                             </small>
-                        @else
-                            <span style="
-                                background: var(--warning);
-                                color: white;
-                                padding: 0.25rem 0.5rem;
-                                border-radius: 4px;
-                                font-size: 0.8rem;
-                            ">⏳ En attente</span>
+                            @endif
                         @endif
                     </td>
                     <td>

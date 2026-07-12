@@ -202,10 +202,13 @@ class OtpController extends Controller
         );
 
         try {
-            Mail::raw(
+            // Envoi via le canal Brevo (même que la messagerie) → délivrabilité
+            // rapide et hors spam, expéditeur vérifié sur le domaine.
+            Mail::mailer('brevo')->raw(
                 "Votre OTP est \"{$code}\"\nIl est valable pendant 5 minutes. Ne le partagez avec personne.",
                 function ($message) use ($email) {
                     $message->to($email)
+                        ->from(config('mail.support_from'), 'Estuaire Emploi')
                         ->subject('Code de vérification – Estuaire Emploie');
                 }
             );
@@ -424,10 +427,13 @@ class OtpController extends Controller
         );
 
         try {
-            Mail::raw(
+            // Envoi via le canal Brevo (même que la messagerie) → délivrabilité
+            // rapide et hors spam, expéditeur vérifié sur le domaine.
+            Mail::mailer('brevo')->raw(
                 "Utilisez \"{$code}\" pour réinitialiser votre mot de passe.\nValable pendant 5 minutes. Ne le partagez avec personne.",
                 function ($message) use ($email) {
                     $message->to($email)
+                        ->from(config('mail.support_from'), 'Estuaire Emploi')
                         ->subject('Réinitialisation de mot de passe – Estuaire Emploie');
                 }
             );

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Modèle pour tracer les attributions manuelles de forfaits par les administrateurs
@@ -32,6 +33,11 @@ class ManualSubscriptionAssignment extends Model
 
     protected $fillable = [
         'user_id',
+        'item_type',
+        'assignable_type',
+        'assignable_id',
+        'granted_type',
+        'granted_id',
         'subscription_plan_id',
         'payment_id',
         'user_subscription_plan_id',
@@ -39,6 +45,38 @@ class ManualSubscriptionAssignment extends Model
         'notes',
         'reason',
     ];
+
+    public const ITEM_PLAN = 'plan';
+    public const ITEM_PREMIUM_SERVICE = 'premium_service';
+    public const ITEM_ADDON_SERVICE = 'addon_service';
+
+    /**
+     * La configuration attribuée (SubscriptionPlan, PremiumServiceConfig ou AddonServicesConfig)
+     */
+    public function assignable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * L'enregistrement utilisateur créé (UserSubscriptionPlan, UserPremiumService ou UserAddonService)
+     */
+    public function granted(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Libellé lisible de l'élément attribué (plan ou service)
+     */
+    public function getItemLabelAttribute(): string
+    {
+        if ($this->item_type === self::ITEM_PLAN && $this->subscriptionPlan) {
+            return $this->subscriptionPlan->name;
+        }
+
+        return $this->assignable?->name ?? '—';
+    }
 
     /**
      * L'utilisateur qui a reçu l'abonnement

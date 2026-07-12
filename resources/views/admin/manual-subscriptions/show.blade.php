@@ -68,12 +68,13 @@
                 </div>
 
                 <div>
+                    @php $typeLabels = ['plan' => 'Pack / Abonnement', 'premium_service' => 'Service premium', 'addon_service' => 'Add-on']; @endphp
                     <label style="font-weight: 600; color: var(--secondary); font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">
-                        Plan d'Abonnement
+                        {{ $typeLabels[$assignment->item_type] ?? 'Élément attribué' }}
                     </label>
                     <p style="margin: 0;">
                         <span style="
-                            background: {{ $assignment->subscriptionPlan->color ?? 'var(--primary)' }};
+                            background: {{ ($assignment->item_type === 'plan' ? ($assignment->subscriptionPlan->color ?? null) : ($assignment->assignable->color ?? null)) ?? 'var(--primary)' }};
                             color: white;
                             padding: 0.5rem 0.75rem;
                             border-radius: 6px;
@@ -81,7 +82,7 @@
                             font-weight: 600;
                             display: inline-block;
                         ">
-                            {{ $assignment->subscriptionPlan->name }}
+                            {{ $assignment->item_label }}
                         </span>
                     </p>
                 </div>
@@ -98,10 +99,11 @@
 
                 <div>
                     <label style="font-weight: 600; color: var(--secondary); font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">
-                        Statut de l'Abonnement
+                        Statut
                     </label>
+                    @php $granted = $assignment->granted; $grantedValid = $granted && method_exists($granted, 'isValid') ? $granted->isValid() : false; @endphp
                     <p style="margin: 0;">
-                        @if($assignment->userSubscriptionPlan->isValid())
+                        @if($grantedValid)
                             <span style="
                                 background: var(--success);
                                 color: white;
@@ -111,7 +113,7 @@
                                 font-weight: 600;
                                 display: inline-block;
                             ">✓ Actif</span>
-                        @elseif($assignment->userSubscriptionPlan->isExpired())
+                        @else
                             <span style="
                                 background: var(--danger);
                                 color: white;
@@ -120,17 +122,7 @@
                                 font-size: 0.9rem;
                                 font-weight: 600;
                                 display: inline-block;
-                            ">✗ Expiré</span>
-                        @else
-                            <span style="
-                                background: var(--warning);
-                                color: white;
-                                padding: 0.5rem 0.75rem;
-                                border-radius: 6px;
-                                font-size: 0.9rem;
-                                font-weight: 600;
-                                display: inline-block;
-                            ">⏳ En attente</span>
+                            ">✗ Expiré / Inactif</span>
                         @endif
                     </p>
                 </div>
@@ -160,6 +152,7 @@
         </div>
     </div>
 
+    @if($assignment->item_type === 'plan' && $assignment->subscriptionPlan)
     {{-- Détails du Plan --}}
     <div class="card">
         <div class="card-header">
@@ -294,6 +287,47 @@
             </div>
         </div>
     </div>
+    @else
+    {{-- Détails du Service (premium / add-on) --}}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Détails du Service</h3>
+        </div>
+        <div style="padding: 1.5rem;">
+            @php $cfg = $assignment->assignable; $g = $assignment->granted; @endphp
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                <div>
+                    <label style="font-weight: 600; color: var(--secondary); font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Prix</label>
+                    <p style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--primary);">
+                        {{ $cfg ? number_format($cfg->price, 0, ',', ' ') : '—' }} XAF
+                    </p>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: var(--secondary); font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Durée</label>
+                    <p style="margin: 0; font-size: 1.5rem; font-weight: 700;">
+                        {{ $cfg && $cfg->duration_days ? $cfg->duration_days . ' jours' : 'Permanent' }}
+                    </p>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: var(--secondary); font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Expiration</label>
+                    <p style="margin: 0; font-size: 1.1rem;">
+                        {{ optional($g)->expires_at ? $g->expires_at->format('d/m/Y à H:i') : 'Permanent' }}
+                    </p>
+                </div>
+            </div>
+            @if($cfg && is_array($cfg->features) && count($cfg->features) > 0)
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--light);">
+                <label style="font-weight: 600; color: var(--secondary); font-size: 0.875rem; display: block; margin-bottom: 0.75rem;">Fonctionnalités</label>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    @foreach($cfg->features as $feature)
+                        <span style="background: var(--light); padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.85rem;">✓ {{ $feature }}</span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
 
     {{-- Détails du Paiement --}}
     <div class="card">
