@@ -622,6 +622,18 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::put('/user/currency', [CurrencyController::class, 'updateUserCurrency']);
 
     // ------------------
+    // PARRAINAGE (Dashboard du parrain)
+    // ------------------
+    // Vue d'ensemble : code, stats, gains mensuels
+    Route::get('/referral/dashboard', [\App\Http\Controllers\Api\ReferralController::class, 'dashboard']);
+    // Liste paginée des filleuls
+    Route::get('/referral/filleuls', [\App\Http\Controllers\Api\ReferralController::class, 'filleuls']);
+    // Historique paginé des commissions gagnées
+    Route::get('/referral/commissions', [\App\Http\Controllers\Api\ReferralController::class, 'commissions']);
+    // Transférer le solde de parrainage vers le wallet
+    Route::post('/referral/transfer-to-wallet', [\App\Http\Controllers\Api\ReferralController::class, 'transferToWallet']);
+
+    // ------------------
     // RÔLES & FEATURES MULTI-PROFILS
     // ------------------
     // Récupérer les rôles disponibles (candidat, recruteur)

@@ -25,13 +25,25 @@ class MarketingCampaignController extends Controller
      */
     public function pricing(): JsonResponse
     {
+        $currency = app(\App\Services\CurrencyService::class);
+        $target = $currency->resolveCurrency(auth()->user());
+
         $configs = AdPricingConfig::where('is_active', true)
             ->get()
             ->map(fn ($c) => [
                 'audience_segment' => $c->audience_segment,
+                // Montants de base (XAF) — source de vérité pour la validation.
                 'price_per_user' => (float) $c->price_per_user,
                 'min_budget' => (float) $c->min_budget,
                 'max_budget' => (float) $c->max_budget,
+                // Affichage dans la devise du user (informatif).
+                'base_currency' => \App\Services\CurrencyService::BASE_CURRENCY,
+                'display_currency' => $target,
+                'display_price_per_user' => $currency->displayFor((float) $c->price_per_user, $target)['display_price'],
+                'display_min_budget' => $currency->displayFor((float) $c->min_budget, $target)['display_price'],
+                'display_min_budget_formatted' => $currency->displayFor((float) $c->min_budget, $target)['display_price_formatted'],
+                'display_max_budget' => $currency->displayFor((float) $c->max_budget, $target)['display_price'],
+                'display_max_budget_formatted' => $currency->displayFor((float) $c->max_budget, $target)['display_price_formatted'],
             ]);
 
         return response()->json(['success' => true, 'data' => $configs]);

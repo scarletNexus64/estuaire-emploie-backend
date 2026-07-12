@@ -218,6 +218,12 @@ class NavigationService
                         'permission' => 'manage_payments',
                     ],
                     [
+                        'name' => 'Wallets par Pays',
+                        'route' => 'admin.wallets.countries.index',
+                        'icon' => 'fas fa-globe-africa',
+                        'permission' => 'manage_payments',
+                    ],
+                    [
                         'name' => 'Demandes de Retrait',
                         'route' => 'admin.withdrawal-requests.index',
                         'icon' => 'fas fa-hand-holding-usd',

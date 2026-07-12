@@ -31,6 +31,7 @@ class User extends Authenticatable
         'wallet_balance', // Legacy - will be deprecated
         'freemopay_wallet_balance',
         'paypal_wallet_balance',
+        'referral_balance', // Solde de parrainage (XAF), transférable vers le wallet
         'preferred_currency', // XAF, USD, EUR
         'locale',
         'country', // Pays de résidence (code ISO alpha-2, ex: CM) — ciblage géographique
@@ -80,6 +81,7 @@ class User extends Authenticatable
             'wallet_balance' => 'decimal:2', // Legacy - will be deprecated
             'freemopay_wallet_balance' => 'decimal:2',
             'paypal_wallet_balance' => 'decimal:2',
+            'referral_balance' => 'decimal:2',
             'last_login_at' => 'datetime',
             'gfs_onboarded_at' => 'datetime',
         ];

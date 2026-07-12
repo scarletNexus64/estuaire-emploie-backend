@@ -1637,6 +1637,7 @@
                     'fas fa-crown' => 'mdi-crown',
                     'fas fa-credit-card' => 'mdi-credit-card',
                     'fas fa-wallet' => 'mdi-wallet',
+                    'fas fa-globe-africa' => 'mdi-earth',
                     'fas fa-university' => 'mdi-bank',
                     'fas fa-star' => 'mdi-star',
                     'fas fa-puzzle-piece' => 'mdi-puzzle',

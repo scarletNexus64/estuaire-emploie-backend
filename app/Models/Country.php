@@ -16,12 +16,15 @@ class Country extends Model
         'iso3',
         'dial_code',
         'flag',
+        'currency',
+        'supports_kpay',
         'name',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'supports_kpay' => 'boolean',
     ];
 
     /**

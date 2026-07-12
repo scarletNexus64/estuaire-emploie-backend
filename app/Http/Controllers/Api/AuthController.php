@@ -79,6 +79,7 @@ class AuthController extends Controller
             'device_id' => 'required|string', // Identifiant unique de l'appareil
             'referral_code' => 'nullable|string|exists:users,referral_code',
             'country' => 'nullable|string|size:2|exists:countries,code', // Pays de résidence (ISO alpha-2)
+            'preferred_currency' => 'nullable|string|size:3', // Devise ISO 4217 (déduite du pays)
         ]);
 
         // Au moins un identifiant (email ou téléphone) est requis
@@ -87,6 +88,29 @@ class AuthController extends Controller
                 'message' => __('auth.identifier_required'),
                 'errors'  => ['identifier' => [__('auth.identifier_required_short')]],
             ], 422);
+        }
+
+        // Inscription par TÉLÉPHONE : exiger un OTP SMS vérifié au préalable.
+        // Le client doit avoir appelé /otp/send puis /otp/verify (qui marque
+        // PhoneOtp.verified = true) avant de pouvoir créer le compte.
+        if (!empty($validated['phone'])) {
+            $cleanPhone = preg_replace('/\s+/', '', $validated['phone']);
+
+            $phoneVerified = \App\Models\PhoneOtp::where('phone', $cleanPhone)
+                ->where('verified', true)
+                ->exists();
+
+            if (!$phoneVerified) {
+                Log::warning('❌ [REGISTER] Téléphone non vérifié par OTP', ['phone' => $cleanPhone]);
+                return response()->json([
+                    'message' => __('auth.verify_phone_otp_first'),
+                    'errors'  => ['phone' => [__('auth.verify_phone_otp_first')]],
+                ], 422);
+            }
+
+            // Normaliser le numéro stocké (sans espaces) pour rester cohérent
+            // avec la vérification OTP et le login.
+            $validated['phone'] = $cleanPhone;
         }
 
         // Récupérer le parrain si un code parrain est fourni
@@ -116,6 +140,9 @@ class AuthController extends Controller
             'fcm_token'        => $validated['fcm_token'] ?? null,
             'device_id'        => $validated['device_id'], // Associer l'appareil au compte
             'country'          => $validated['country'] ?? 'CM', // Défaut Cameroun
+            'preferred_currency' => isset($validated['preferred_currency'])
+                ? strtoupper($validated['preferred_currency'])
+                : 'XAF', // Défaut FCFA (Cameroun)
             'role'             => 'candidate',
             'available_roles'  => ['candidate'], // ✅ Initialiser avec le rôle par défaut
             'email_verified_at'=> !empty($validated['email']) ? now() : null,
@@ -127,6 +154,12 @@ class AuthController extends Controller
             'fcm_token_saved' => !empty($user->fcm_token),
             'has_referrer' => !empty($referrerId),
         ]);
+
+        // Consommer l'OTP téléphone : on le supprime pour empêcher qu'il serve
+        // à créer un second compte avec le même numéro.
+        if (!empty($validated['phone'])) {
+            \App\Models\PhoneOtp::where('phone', $validated['phone'])->delete();
+        }
 
         // Attribuer automatiquement le pack gratuit de 50Mo
         $this->storagePackService->assignFreePackToUser($user);
@@ -585,7 +618,13 @@ public function login(Request $request)
             'portfolio_url' => 'nullable|url',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'country' => 'nullable|string|size:2|exists:countries,code', // Pays de résidence (ISO alpha-2)
+            'preferred_currency' => 'nullable|string|size:3', // Devise ISO 4217 (déduite du pays)
         ]);
+
+        // Normaliser la devise en majuscules si fournie
+        if (!empty($validated['preferred_currency'])) {
+            $validated['preferred_currency'] = strtoupper($validated['preferred_currency']);
+        }
 
         $user = auth()->user();
 

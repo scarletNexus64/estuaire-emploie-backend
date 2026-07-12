@@ -16,6 +16,14 @@ Schedule::command('subscriptions:check-expirations')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/subscription-expirations.log'));
 
+// Synchronisation quotidienne des taux de change (exchangerate-api).
+// Alimente currency_rates pour la conversion des prix vers la devise du user.
+Schedule::command('currency:sync-rates')
+    ->dailyAt('05:00')
+    ->timezone('Africa/Douala')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/currency-sync.log'));
+
 // Envoi des rappels push d'expiration d'abonnement (J-7, J-3, J-1)
 Schedule::command('subscriptions:send-expiry-reminders')
     ->dailyAt('09:00')

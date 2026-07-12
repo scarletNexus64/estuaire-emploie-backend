@@ -136,7 +136,12 @@ class SubscriptionPlanController extends Controller
      */
     private function addPromotionInfo($plans)
     {
-        return $plans->map(function ($plan) {
+        $currency = app(\App\Services\CurrencyService::class);
+        // Route publique : résoudre le user via le guard sanctum (Bearer token),
+        // sinon auth()->user() est null et la devise retombe sur XAF.
+        $target = $currency->resolveCurrency(auth('sanctum')->user());
+
+        return $plans->map(function ($plan) use ($currency, $target) {
             $plan->loadMissing('translations');
             $plan->name = $plan->t('name');
             $plan->description = $plan->t('description');
@@ -156,8 +161,31 @@ class SubscriptionPlanController extends Controller
                 $plan->promotional_price = null;
             }
 
+            $this->decoratePlanDisplayPrice($plan, $currency, $target);
+
             return $plan;
         });
+    }
+
+    /**
+     * Ajoute au plan les champs d'affichage dans la devise cible :
+     * `display_currency`, `display_price`, `display_price_formatted` (prix de
+     * base XAF) et, si promo, `display_promotional_price(_formatted)`.
+     * Le `price` reste la source de vérité (XAF), jamais modifié.
+     */
+    private function decoratePlanDisplayPrice($plan, \App\Services\CurrencyService $currency, string $target): void
+    {
+        $display = $currency->displayFor((float) $plan->price, $target);
+        $plan->base_currency = $display['base_currency'];
+        $plan->display_currency = $display['display_currency'];
+        $plan->display_price = $display['display_price'];
+        $plan->display_price_formatted = $display['display_price_formatted'];
+
+        if ($plan->promotional_price !== null) {
+            $promo = $currency->displayFor((float) $plan->promotional_price, $target);
+            $plan->display_promotional_price = $promo['display_price'];
+            $plan->display_promotional_price_formatted = $promo['display_price_formatted'];
+        }
     }
 
     /**
@@ -247,6 +275,14 @@ class SubscriptionPlanController extends Controller
             $plan->is_promotional = false;
             $plan->promotional_price = null;
         }
+
+        $currency = app(\App\Services\CurrencyService::class);
+        $this->decoratePlanDisplayPrice(
+            $plan,
+            $currency,
+            // Route publique : guard sanctum pour lire le Bearer token.
+            $currency->resolveCurrency(auth('sanctum')->user())
+        );
 
         return response()->json([
             'success' => true,

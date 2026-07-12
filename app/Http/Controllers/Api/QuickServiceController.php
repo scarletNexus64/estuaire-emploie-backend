@@ -14,6 +14,45 @@ use Illuminate\Support\Facades\Validator;
 class QuickServiceController extends Controller
 {
     /**
+     * Décore un service (ou une collection) avec les prix d'affichage dans la
+     * devise du user : `display_currency`, `display_price_min(_formatted)`,
+     * `display_price_max(_formatted)`. Les `price_min`/`price_max` bruts (XAF)
+     * restent inchangés — source de vérité.
+     *
+     * @param  \Illuminate\Support\Collection|\App\Models\QuickService  $services
+     */
+    private function decoratePrices($services)
+    {
+        $currency = app(\App\Services\CurrencyService::class);
+        $target = $currency->resolveCurrency(auth('sanctum')->user());
+
+        $decorate = function ($service) use ($currency, $target) {
+            $service->base_currency = \App\Services\CurrencyService::BASE_CURRENCY;
+            $service->display_currency = $target;
+
+            if ($service->price_min !== null) {
+                $min = $currency->displayFor((float) $service->price_min, $target);
+                $service->display_price_min = $min['display_price'];
+                $service->display_price_min_formatted = $min['display_price_formatted'];
+            }
+            if ($service->price_max !== null) {
+                $max = $currency->displayFor((float) $service->price_max, $target);
+                $service->display_price_max = $max['display_price'];
+                $service->display_price_max_formatted = $max['display_price_formatted'];
+            }
+
+            return $service;
+        };
+
+        if ($services instanceof \Illuminate\Support\Collection
+            || $services instanceof \Illuminate\Database\Eloquent\Collection) {
+            return $services->map($decorate);
+        }
+
+        return $decorate($services);
+    }
+
+    /**
      * Liste des services rapides avec filtres
      */
     public function index(Request $request): JsonResponse
@@ -66,6 +105,7 @@ class QuickServiceController extends Controller
         }
 
         $services = $query->paginate(15);
+        $services->setCollection($this->decoratePrices($services->getCollection()));
 
         return response()->json([
             'success' => true,
@@ -182,7 +222,7 @@ class QuickServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $service,
+            'data' => $this->decoratePrices($service),
         ]);
     }
 
@@ -402,6 +442,7 @@ class QuickServiceController extends Controller
             ->where('user_id', auth()->id())
             ->latest()
             ->paginate(15);
+        $services->setCollection($this->decoratePrices($services->getCollection()));
 
         return response()->json([
             'success' => true,

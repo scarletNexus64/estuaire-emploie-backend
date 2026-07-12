@@ -26,6 +26,8 @@ class CountryController extends Controller
                 'iso3' => $c->iso3,
                 'dial_code' => $c->dial_code,
                 'flag' => $c->flag,
+                'currency' => $c->currency,
+                'supports_kpay' => $c->supports_kpay,
                 'name' => $c->name,
             ]);
 

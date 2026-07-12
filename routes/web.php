@@ -325,6 +325,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::middleware('permission:manage_payments')->prefix('wallets')->name('wallets.')->group(function () {
         Route::get('/', [WalletController::class, 'index'])->name('index');
         Route::get('/transactions', [WalletController::class, 'transactions'])->name('transactions');
+        // Reporting agrégé par pays (doit précéder /{user} pour ne pas être capté comme un user).
+        Route::get('/countries', [\App\Http\Controllers\Admin\CountryReportController::class, 'index'])->name('countries.index');
+        Route::get('/countries/{code}', [\App\Http\Controllers\Admin\CountryReportController::class, 'show'])->name('countries.show');
         Route::get('/{user}', [WalletController::class, 'show'])->name('show');
         Route::get('/{user}/adjust', [WalletController::class, 'adjustForm'])->name('adjust');
         Route::post('/{user}/adjust', [WalletController::class, 'adjust'])->name('adjust.submit');

@@ -48,6 +48,33 @@ class PayPalService
     }
 
     /**
+     * Convertit un montant pour le CHARGER réellement chez PayPal.
+     *
+     * Money-critical : on refuse de convertir avec des taux périmés (garde
+     * {@see CurrencyService::ratesAreStale()}) plutôt que de facturer un
+     * mauvais montant à l'utilisateur. Retourne le montant inchangé si les
+     * devises sont identiques.
+     *
+     * @throws \Exception si les taux sont périmés ou la conversion échoue.
+     */
+    protected function convertForCharge(float $amount, string $from, string $to): float
+    {
+        if (strtoupper($from) === strtoupper($to)) {
+            return $amount;
+        }
+
+        if ($this->currencyService->ratesAreStale()) {
+            Log::error('[PayPal Service] ❌ Taux de change périmés — conversion refusée', [
+                'from' => $from,
+                'to' => $to,
+            ]);
+            throw new \Exception('Taux de change indisponibles ou périmés. Réessayez plus tard.');
+        }
+
+        return $this->currencyService->convert($amount, $from, $to);
+    }
+
+    /**
      * Initialize a PayPal payment
      *
      * @param User|Company $payer The entity making the payment
@@ -334,8 +361,8 @@ class PayPalService
                 ]);
 
                 try {
-                    $amountInPaypalCurrency = $this->currencyService->convert(
-                        $payment->amount,
+                    $amountInPaypalCurrency = $this->convertForCharge(
+                        (float) $payment->amount,
                         $paymentCurrency,
                         $paypalCurrency
                     );
@@ -559,8 +586,8 @@ class PayPalService
                     'original_amount' => $payment->amount,
                 ]);
 
-                $amountInPaypalCurrency = $this->currencyService->convert(
-                    $payment->amount,
+                $amountInPaypalCurrency = $this->convertForCharge(
+                    (float) $payment->amount,
                     $paymentCurrency,
                     $paypalCurrency
                 );

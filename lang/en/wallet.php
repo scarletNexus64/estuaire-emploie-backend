@@ -34,6 +34,7 @@ return [
     // Balances & withdrawals
     'insufficient_freemopay_balance' => 'Insufficient FreeMoPay balance. Available: :amount FCFA',
     'insufficient_paypal_balance' => 'Insufficient PayPal balance. Available: :amount FCFA (~:usd USD)',
+    'exchange_rate_unavailable' => 'Exchange rates are unavailable or outdated. Please try again later.',
     'withdrawal_processing' => 'Withdrawal is being processed. You will be notified once completed.',
     'withdrawal_processing_detail' => 'Withdrawal is in progress. You will receive a push notification as soon as it is completed (about 1-2 minutes).',
     'paypal_withdrawal_processing' => 'PayPal withdrawal is being processed. You will be notified once completed.',
