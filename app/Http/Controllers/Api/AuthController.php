@@ -90,27 +90,16 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Inscription par TÉLÉPHONE : exiger un OTP SMS vérifié au préalable.
-        // Le client doit avoir appelé /otp/send puis /otp/verify (qui marque
-        // PhoneOtp.verified = true) avant de pouvoir créer le compte.
+        // Inscription par TÉLÉPHONE : normaliser le numéro stocké (sans espaces)
+        // pour rester cohérent avec la vérification OTP et le login.
+        //
+        // NOTE (2026-07-13) : le garde-fou OTP-first (exiger PhoneOtp.verified)
+        // est temporairement désactivé — l'app en production n'appelle pas encore
+        // /otp/send + /otp/verify avant /register, ce qui bloquait 100 % des
+        // inscriptions par téléphone. À réactiver (idéalement derrière un feature
+        // flag) une fois que l'app mobile embarque le flux OTP-first.
         if (!empty($validated['phone'])) {
-            $cleanPhone = preg_replace('/\s+/', '', $validated['phone']);
-
-            $phoneVerified = \App\Models\PhoneOtp::where('phone', $cleanPhone)
-                ->where('verified', true)
-                ->exists();
-
-            if (!$phoneVerified) {
-                Log::warning('❌ [REGISTER] Téléphone non vérifié par OTP', ['phone' => $cleanPhone]);
-                return response()->json([
-                    'message' => __('auth.verify_phone_otp_first'),
-                    'errors'  => ['phone' => [__('auth.verify_phone_otp_first')]],
-                ], 422);
-            }
-
-            // Normaliser le numéro stocké (sans espaces) pour rester cohérent
-            // avec la vérification OTP et le login.
-            $validated['phone'] = $cleanPhone;
+            $validated['phone'] = preg_replace('/\s+/', '', $validated['phone']);
         }
 
         // Récupérer le parrain si un code parrain est fourni
@@ -260,10 +249,11 @@ public function login(Request $request)
     ]);
 
     // 4. VÉRIFICATION DU DEVICE_ID
-    // Bypass device check pour le compte de review Apple
-    $appleReviewEmails = ['jrkira84@gmail.com'];
-    if (in_array(strtolower($user->email ?? ''), $appleReviewEmails, true)) {
-        Log::info('🍎 [LOGIN] Bypass device check (Apple review account)', [
+    // Bypass device check pour les comptes de review/test (Apple, testeurs pawapay…).
+    // Configurable via DEVICE_BYPASS_EMAILS dans le .env (voir config/app.php).
+    $bypassEmails = config('app.device_bypass_emails', []);
+    if (in_array(strtolower($user->email ?? ''), $bypassEmails, true)) {
+        Log::info('🍎 [LOGIN] Bypass device check (review/test account)', [
             'user_id' => $user->id,
             'email' => $user->email,
         ]);
