@@ -123,6 +123,33 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Action au clic</label>
+                        <select name="redirect_type" id="redirect_type" class="form-control @error('redirect_type') is-invalid @enderror">
+                            @php $currentRedirectType = old('redirect_type', $ad->redirect_type ?? 'none'); @endphp
+                            <option value="none" {{ $currentRedirectType == 'none' ? 'selected' : '' }}>Aucune (bannière informative)</option>
+                            <option value="internal_route" {{ $currentRedirectType == 'internal_route' ? 'selected' : '' }}>Écran de l'application</option>
+                            <option value="external_url" {{ $currentRedirectType == 'external_url' ? 'selected' : '' }}>Lien externe (http/https)</option>
+                            <option value="deeplink" {{ $currentRedirectType == 'deeplink' ? 'selected' : '' }}>Deeplink ({{ config('app.app_scheme') }}://…)</option>
+                            <option value="whatsapp" {{ $currentRedirectType == 'whatsapp' ? 'selected' : '' }}>Contact WhatsApp</option>
+                        </select>
+                        @error('redirect_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="form-group" id="redirect_target_group">
+                        <label class="form-label">Destination</label>
+                        <input type="text" name="redirect_target" id="redirect_target"
+                               class="form-control @error('redirect_target') is-invalid @enderror"
+                               value="{{ old('redirect_target', $ad->redirect_target ?? '') }}"
+                               maxlength="2048">
+                        <small class="form-text" id="redirect_target_help">
+                            Écran : <code>/search</code>, <code>/companies-directory</code>,
+                            <code>/student-space/training-packs</code>, <code>/services-list</code>, <code>/cv-library</code>.
+                            Lien externe : URL complète. WhatsApp : numéro au format international, ex. <code>237696118389</code>.
+                        </small>
+                        @error('redirect_target') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label required">Ordre d'Affichage</label>
                         <input type="number" name="display_order" class="form-control @error('display_order') is-invalid @enderror"
                                value="{{ old('display_order', $ad->display_order ?? 0) }}" required min="0">
@@ -215,6 +242,31 @@ document.addEventListener('DOMContentLoaded', function() {
             imagePreview.style.display = 'none';
         }
     });
+
+    // Le champ Destination n'a de sens que si une action au clic est choisie.
+    const redirectType = document.getElementById('redirect_type');
+    const redirectTargetGroup = document.getElementById('redirect_target_group');
+    const redirectTarget = document.getElementById('redirect_target');
+
+    const placeholders = {
+        internal_route: '/search',
+        external_url: 'https://exemple.com',
+        deeplink: '{{ config('app.app_scheme') }}://job/12',
+        whatsapp: '237696118389',
+    };
+
+    function syncRedirectTarget() {
+        const type = redirectType.value;
+        const isNone = type === 'none';
+        redirectTargetGroup.style.display = isNone ? 'none' : 'block';
+        redirectTarget.placeholder = placeholders[type] || '';
+        if (isNone) {
+            redirectTarget.value = '';
+        }
+    }
+
+    redirectType.addEventListener('change', syncRedirectTarget);
+    syncRedirectTarget();
 });
 </script>
 @endsection

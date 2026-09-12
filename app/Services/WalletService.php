@@ -120,7 +120,10 @@ class WalletService
                 $user,
                 (float) $fresh->amount,
                 $fresh,
-                'Recharge wallet via ' . strtoupper($provider),
+                // L'utilisateur n'a pas à connaître l'agrégateur (KPay,
+                // FreeMoPay…) : on nomme le moyen de paiement, pas le
+                // prestataire technique.
+                $this->rechargeLabel($provider),
                 ['payment_id' => $fresh->id],
                 $provider
             );
@@ -146,6 +149,22 @@ class WalletService
             'paypal' => 'paypal',
             'kpay' => 'kpay',
             default => 'freemopay',
+        };
+    }
+
+    /**
+     * Libellé d'une recharge affiché dans l'historique du wallet.
+     *
+     * On nomme le moyen de paiement tel que l'utilisateur le connaît, jamais
+     * l'agrégateur technique : « Recharge wallet via KPAY » n'a aucun sens
+     * pour un client qui a payé avec Orange Money.
+     */
+    protected function rechargeLabel(string $provider): string
+    {
+        return match ($provider) {
+            'paypal' => 'Recharge par PayPal',
+            'card' => 'Recharge par carte bancaire',
+            default => 'Recharge par Mobile Money',
         };
     }
 
@@ -429,9 +448,16 @@ class WalletService
         $paypalBalanceXAF = $user->paypal_wallet_balance ?? 0;
         $totalBalanceXAF = $freemopayBalanceXAF + $paypalBalanceXAF;
 
-        // Stats par provider
-        $freemopayCreditsXAF = $transactions->clone()->where('provider', 'freemopay')->credits()->sum('amount');
-        $freemopayDebitsXAF = abs($transactions->clone()->where('provider', 'freemopay')->debits()->sum('amount'));
+        // Stats par provider.
+        //
+        // Le bucket « Mobile Money » regroupe KPay et l'historique FreeMoPay :
+        // les deux alimentent le même solde (`freemopay_wallet_balance`).
+        // Ne compter que `freemopay` rendait invisibles toutes les recharges
+        // KPay, d'où un total de crédits affiché à 0 malgré un solde positif.
+        $mobileMoneyProviders = ['kpay', 'freemopay'];
+
+        $freemopayCreditsXAF = $transactions->clone()->whereIn('provider', $mobileMoneyProviders)->credits()->sum('amount');
+        $freemopayDebitsXAF = abs($transactions->clone()->whereIn('provider', $mobileMoneyProviders)->debits()->sum('amount'));
 
         $paypalCreditsXAF = $transactions->clone()->where('provider', 'paypal')->credits()->sum('amount');
         $paypalDebitsXAF = abs($transactions->clone()->where('provider', 'paypal')->debits()->sum('amount'));

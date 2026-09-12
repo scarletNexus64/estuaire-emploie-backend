@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             CurrencySeeder::class, // Devises mondiales (XAF, USD, EUR...)
             CountriesSeeder::class, // Pays du monde (CM par défaut) — ciblage géographique des annonces
             ServiceCategorySeeder::class, // Catégories des services rapides (Plomberie, Électricité…)
+            CompanyCategorySeeder::class, // Annuaire des catégories d'entreprise (3 niveaux) — requis par JobSeeder (FK jobs.category_id)
             DomainsAndSectorsSeeder::class, // Domaines + secteurs depuis config/domains_sectors.php
             ProficiencyLevelsSeeder::class, // Niveaux skill / language / training
 
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
             PremiumServiceConfigSeeder::class, // Services premium individuels pour candidats
             AddonServiceConfigSeeder::class, // Services à la carte pour recruteurs
             AdPricingConfigSeeder::class, // Grille tarifaire du sponsoring (Marketing Digital)
+            DefaultAdvertisementSeeder::class, // 13 bannières de repli de l'accueil (avec redirections)
 
             // Utilisateurs et données de test
             SuperAdminSeeder::class, // Admin principal (à exécuter en premier)
@@ -33,6 +35,7 @@ class DatabaseSeeder extends Seeder
             JobSeeder::class,
             ApplicationSeeder::class,
             StudentQuickServiceSeeder::class, // Services rapides « jobs étudiants » (cours, livraison, baby-sitting…)
+            StudentProgramSeeder::class, // Programmes rémunérés du groupe (apporteurs d'affaires, coursier Merci-E)
 
             // Configuration Académique (Spécialités et Catégories)
             SpecialtySeeder::class, // Spécialités pour épreuves et packs d'épreuves

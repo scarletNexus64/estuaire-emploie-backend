@@ -168,7 +168,13 @@ class PaymentCallbackController extends Controller
         $user = $payment->user;
         $metadata = $payment->metadata ?? [];
 
-        $description = "Recharge wallet via " . strtoupper($payment->payment_method);
+        // Libellé orienté utilisateur : le moyen de paiement, jamais
+        // l'agrégateur technique (KPay, FreeMoPay…).
+        $description = match ($payment->payment_method) {
+            'paypal' => 'Recharge par PayPal',
+            'card' => 'Recharge par carte bancaire',
+            default => 'Recharge par Mobile Money',
+        };
         if (isset($metadata['currency_conversion'])) {
             $description .= " ({$metadata['currency_conversion']['converted_amount']} {$metadata['currency_conversion']['converted_currency']})";
         }

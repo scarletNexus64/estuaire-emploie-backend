@@ -14,6 +14,7 @@ return [
     'recharge_success' => 'Recarga realizada con éxito',
     'recharge_initiated' => 'Recarga iniciada con éxito',
     'recharge_init_error' => 'Error al iniciar la recarga',
+    'card_unavailable' => 'El pago con tarjeta no está disponible por el momento.',
     'verification_error' => 'Error de verificación',
 
     // Payments

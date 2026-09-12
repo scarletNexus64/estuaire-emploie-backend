@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AddonServiceConfig;
 use App\Models\Application;
 use App\Models\CompanyCategory;
 use App\Models\Resume;
@@ -221,6 +222,13 @@ class RecruiterCvLibraryController extends Controller
         // Flag consommé par le client : conditionne les actions premium
         // (chat, déblocage coordonnées, infos détaillées) sans bloquer la consultation.
         $response['has_active_subscription'] = $hasActiveSubscription;
+
+        // Tarif du déblocage des coordonnées, pour que le client puisse
+        // l'annoncer avant confirmation (POST .../candidate-contact-by-user).
+        $contactService = AddonServiceConfig::where('service_type', 'candidate_contact')
+            ->where('is_active', true)
+            ->first();
+        $response['contact_unlock_price'] = $contactService ? (float) $contactService->price : null;
 
         return response()->json($response);
     }

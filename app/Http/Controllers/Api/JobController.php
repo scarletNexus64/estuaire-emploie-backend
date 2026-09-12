@@ -365,6 +365,11 @@ class JobController extends Controller
             ->where('status', 'published')
             ->where('is_featured', true);
 
+        // Même règle de visibilité géographique que le listing : une offre
+        // ciblée « locale » ne doit pas remonter à la une dans tout le pays.
+        $candidateCity = $request->input('candidate_city');
+        $query->visibleFor(is_string($candidateCity) ? $candidateCity : null);
+
         // Home candidat : exclure les offres de type Stage (slug `stage`),
         // présentées dans la section étudiant.
         if ($request->boolean('exclude_internships')) {
@@ -446,9 +451,16 @@ class JobController extends Controller
             ], 403);
         }
 
-        // 🎯 Vérifier l'abonnement recruteur actif (pas candidat)
+        // 🎯 Abonnement recruteur actif (pas candidat).
+        //
+        // Sans abonnement, le middleware `subscription:can_post_job` a déjà
+        // laissé passer la première offre (quota gratuit, cf.
+        // CheckSubscriptionLimits). On ne la re-bloque donc pas ici : ce
+        // double contrôle rendait le quota gratuit inatteignable, aucune
+        // offre ne pouvant être publiée sans abonnement.
         $subscription = $user->activeSubscription($user->role);
-        if (!$subscription || !$subscription->isValid()) {
+
+        if ($subscription && !$subscription->isValid()) {
             return response()->json([
                 'message' => __('job.subscription_required_publish'),
                 'error_code' => 'NO_SUBSCRIPTION',
@@ -457,7 +469,7 @@ class JobController extends Controller
         }
 
         // Vérifier la limite de jobs (utilise les limites effectives cumulées)
-        if (!$subscription->canPostJob()) {
+        if ($subscription && !$subscription->canPostJob()) {
             $effectiveJobsLimit = $subscription->getEffectiveJobsLimit();
             return response()->json([
                 'message' => __('job.jobs_limit_reached', ['limit' => $effectiveJobsLimit]),
@@ -505,9 +517,9 @@ class JobController extends Controller
             'status' => 'pending', // Admin doit approuver
         ]));
 
-        // Incrémenter le compteur de jobs utilisés dans l'abonnement
-        // $subscription est déjà défini plus haut
-        $subscription->incrementJobsUsed();
+        // Incrémenter le compteur de jobs utilisés dans l'abonnement.
+        // Null quand l'offre relève du quota gratuit : rien à décompter.
+        $subscription?->incrementJobsUsed();
 
         return response()->json([
             'message' => __('job.created'),
@@ -695,14 +707,13 @@ class JobController extends Controller
             ], 409);
         }
 
-        // Vérifier l'abonnement actif
-        if (!$user->hasActiveSubscription()) {
-            return response()->json([
-                'message' => __('job.subscription_required_dashboard'),
-                'error_code' => 'NO_SUBSCRIPTION',
-                'subscription_required' => true,
-            ], 403);
-        }
+        // Mode aperçu : sans abonnement recruteur valide, le tableau de bord
+        // reste consultable (stats de base, offres, candidatures). Les blocs
+        // premium se dégradent d'eux-mêmes plus bas (`can_see_analytics`), et
+        // la réponse porte `is_preview_mode` pour que le client affiche son
+        // bandeau « débloquez toutes les fonctionnalités ».
+        $recruiterSubscription = $user->activeSubscription('recruiter');
+        $isPreviewMode = !$recruiterSubscription || !$recruiterSubscription->isValid();
 
         // Statistiques de base (toujours disponibles)
         $stats = [
@@ -791,6 +802,9 @@ class JobController extends Controller
             'pending_jobs' => $pendingJobs,
             'recent_applications' => $recentApplications,
             'subscription' => $subscriptionInfo,
+            // Le client affiche un bandeau « mode aperçu » plutôt que de
+            // masquer le tableau de bord.
+            'is_preview_mode' => $isPreviewMode,
         ]);
     }
 

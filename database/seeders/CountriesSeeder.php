@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Country;
+use App\Services\Payment\KPayCatalog;
 use Illuminate\Database\Seeder;
 
 /**
@@ -236,7 +237,7 @@ class CountriesSeeder extends Seeder
             ['ZW', 'ZWE', '263', '🇿🇼', 'Zimbabwe'],
         ];
 
-        $kpaySet = array_flip(self::KPAY_COUNTRIES);
+        $kpaySet = array_flip(KPayCatalog::iso2Codes());
 
         foreach ($countries as $c) {
             Country::updateOrCreate(
@@ -253,35 +254,6 @@ class CountriesSeeder extends Seeder
             );
         }
     }
-
-    /**
-     * Pays où KPay (Mobile Money) est opérationnel — seuls activables dans le
-     * sélecteur mobile pour l'instant (les autres sont grisés). Codes ISO
-     * alpha-2, dérivés de kpay_countries.dart (20 pays). Source de vérité DB :
-     * élargir = ajouter un code ici puis reseeder (ou flag admin).
-     */
-    private const KPAY_COUNTRIES = [
-        'BJ', // Bénin
-        'BF', // Burkina Faso
-        'CI', // Côte d'Ivoire
-        'CM', // Cameroun
-        'CD', // RD Congo
-        'CG', // Congo
-        'ET', // Éthiopie
-        'GA', // Gabon
-        'GH', // Ghana
-        'KE', // Kenya
-        'LS', // Lesotho
-        'MZ', // Mozambique
-        'MW', // Malawi
-        'NG', // Nigeria
-        'RW', // Rwanda
-        'SN', // Sénégal
-        'SL', // Sierra Leone
-        'TZ', // Tanzanie
-        'UG', // Ouganda
-        'ZM', // Zambie
-    ];
 
     /**
      * Devise (ISO 4217) par pays (clé = code ISO alpha-2).

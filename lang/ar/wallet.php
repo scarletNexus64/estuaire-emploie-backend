@@ -14,6 +14,7 @@ return [
     'recharge_success' => 'تمت إعادة الشحن بنجاح',
     'recharge_initiated' => 'تم بدء إعادة الشحن بنجاح',
     'recharge_init_error' => 'حدث خطأ أثناء بدء إعادة الشحن',
+    'card_unavailable' => 'الدفع بالبطاقة المصرفية غير متاح حاليًا.',
     'verification_error' => 'حدث خطأ أثناء التحقق',
 
     // Payments

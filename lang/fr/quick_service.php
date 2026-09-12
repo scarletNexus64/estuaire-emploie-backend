@@ -14,4 +14,30 @@ return [
     'response_accepted' => 'Réponse acceptée avec succès',
     'not_authorized_reject' => 'Vous n\'êtes pas autorisé à rejeter cette réponse',
     'response_rejected' => 'Réponse rejetée',
+
+    'price_negotiable' => 'À négocier',
+    'compensation_and' => 'et',
+    'compensation_separator' => 'ou',
+    'commission' => [
+        'first_month_revenue' => ':rate % du premier mois de chiffre d\'affaires généré',
+        'first_transaction' => ':rate % de la première transaction',
+        'per_transaction' => ':rate % à chaque transaction',
+        'per_course' => ':rate % du montant de la course',
+    ],
+    'commission_cap' => '(plafonné à :amount FCFA)',
+    'fixed_bonus' => 'prime fixe de :amount FCFA :basis',
+    'bonus_basis' => [
+        'per_partner' => 'par partenaire actif',
+        'per_company' => 'par entreprise inscrite et validée',
+    ],
+    'programs_title' => 'Jobs étudiants',
+    'programs_subtitle' => 'Gagnez de l\'argent en recommandant les services du groupe Estuaire',
+    'program_type' => [
+        'business_provider' => "Apporteur d'affaires",
+        'courier' => 'Coursier',
+    ],
+    'program_type_description' => [
+        'business_provider' => 'Recommandez un partenaire et touchez une commission sur son activité.',
+        'courier' => 'Effectuez des livraisons et gardez la moitié du montant de chaque course.',
+    ],
 ];

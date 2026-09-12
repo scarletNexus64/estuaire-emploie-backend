@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Job;
 use App\Models\Company;
-use App\Models\Category;
+use App\Models\CompanyCategory;
 use App\Models\ContractType;
-use App\Models\Recruiter;
+use App\Models\Job;
 use Illuminate\Database\Seeder;
 
 class JobSeeder extends Seeder
@@ -14,7 +13,9 @@ class JobSeeder extends Seeder
     public function run(): void
     {
         $companies = Company::where('status', 'verified')->get();
-        $categories = Category::all();
+        // jobs.category_id référence company_categories depuis la migration
+        // 2026_05_22_000001 : le recruteur choisit une catégorie de niveau 3.
+        $categories = CompanyCategory::whereNotNull('level_3')->get();
         $contractTypes = ContractType::all();
 
         $jobs = [
@@ -83,7 +84,7 @@ class JobSeeder extends Seeder
             if ($recruiter) {
                 Job::create(array_merge($jobData, [
                     'company_id' => $company->id,
-                    'category_id' => $categories->random()->id,
+                    'category_id' => $categories->isNotEmpty() ? $categories->random()->id : null,
                     'visibility' => collect(['national', 'local'])->random(),
                     'contract_type_id' => $contractTypes->random()->id,
                     'posted_by' => $recruiter->user_id,

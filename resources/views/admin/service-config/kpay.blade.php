@@ -112,6 +112,46 @@
                     </small>
                 </div>
 
+                <div class="mb-3">
+                    <label for="kpay_gateway_secret" class="form-label">
+                        Gateway Secret (signature du retour passerelle) <span class="text-muted">(optionnel)</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="password" class="form-control @error('kpay_gateway_secret') is-invalid @enderror"
+                               id="kpay_gateway_secret" name="kpay_gateway_secret"
+                               value="{{ old('kpay_gateway_secret', $config?->kpay_gateway_secret ?? '') }}"
+                               placeholder="gwsec_xxxxxxxxxxxxxxxx">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('kpay_gateway_secret')">
+                            <i class="mdi mdi-eye"></i>
+                        </button>
+                    </div>
+                    @error('kpay_gateway_secret')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">
+                        Vérifie la redirection de retour du paiement par carte
+                        (<code>status|reference|externalId|ts</code>). Distinct du secret webhook.
+                    </small>
+                </div>
+
+                <h5 class="mt-4 mb-3">Paiement par carte bancaire</h5>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               id="kpay_card_enabled" name="kpay_card_enabled" value="1"
+                               {{ old('kpay_card_enabled', $config?->kpay_card_enabled) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="kpay_card_enabled">
+                            Proposer Visa / Mastercard dans l'application
+                        </label>
+                    </div>
+                    <small class="text-muted">
+                        À n'activer qu'après avoir autorisé le moyen <code>CARD</code> sur
+                        l'application dans le dashboard KPay. Sans cette autorisation, KPay
+                        refuse l'initialisation et le bouton échoue côté client.
+                    </small>
+                </div>
+
                 <h5 class="mt-4 mb-3">URLs de callback (à configurer aussi dans le dashboard KPay)</h5>
 
                 <div class="mb-3">

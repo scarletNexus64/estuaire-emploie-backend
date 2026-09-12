@@ -14,6 +14,7 @@ return [
     'recharge_success' => 'Top-up completed successfully',
     'recharge_initiated' => 'Top-up initiated successfully',
     'recharge_init_error' => 'Error initiating the top-up',
+    'card_unavailable' => 'Card payment is not available at the moment.',
     'verification_error' => 'Verification error',
 
     // Payments

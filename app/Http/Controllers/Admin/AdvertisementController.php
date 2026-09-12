@@ -34,6 +34,10 @@ class AdvertisementController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'background_color' => 'required|string|max:7',
             'ad_type' => 'required|in:homepage_banner,search_banner,featured_company,sidebar,custom',
+            'redirect_type' => 'nullable|in:none,internal_route,external_url,deeplink,whatsapp',
+            // Destination du clic : URL, route interne, deeplink ou numéro WhatsApp
+            // selon le type choisi. Obligatoire dès que le type n'est pas « none ».
+            'redirect_target' => 'nullable|string|max:2048',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'display_order' => 'required|integer|min:0',
@@ -46,6 +50,7 @@ class AdvertisementController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['status'] = 'active';
+        $validated = $this->normalizeRedirect($validated);
 
         Advertisement::create($validated);
 
@@ -73,6 +78,10 @@ class AdvertisementController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'background_color' => 'required|string|max:7',
             'ad_type' => 'required|in:homepage_banner,search_banner,featured_company,sidebar,custom',
+            'redirect_type' => 'nullable|in:none,internal_route,external_url,deeplink,whatsapp',
+            // Destination du clic : URL, route interne, deeplink ou numéro WhatsApp
+            // selon le type choisi. Obligatoire dès que le type n'est pas « none ».
+            'redirect_target' => 'nullable|string|max:2048',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'display_order' => 'required|integer|min:0',
@@ -88,6 +97,7 @@ class AdvertisementController extends Controller
         }
 
         $validated['is_active'] = $request->boolean('is_active');
+        $validated = $this->normalizeRedirect($validated);
 
         $ad->update($validated);
 
@@ -108,6 +118,23 @@ class AdvertisementController extends Controller
 
         return redirect()->route('admin.advertisements.index')
             ->with('success', 'Publicité supprimée avec succès');
+    }
+
+    /**
+     * Une bannière sans redirection ne doit pas conserver de destination
+     * résiduelle : on vide la cible dès que le type retombe sur « none ».
+     */
+    private function normalizeRedirect(array $validated): array
+    {
+        $validated['redirect_type'] = $validated['redirect_type'] ?? 'none';
+
+        if ($validated['redirect_type'] === 'none' || blank($validated['redirect_target'] ?? null)) {
+            $validated['redirect_type'] = 'none';
+            $validated['redirect_target'] = null;
+            $validated['redirect_params'] = null;
+        }
+
+        return $validated;
     }
 
     public function toggle($id)

@@ -43,6 +43,34 @@ class RecruiterServicePurchaseService
     }
 
     /**
+     * Débloque les coordonnées d'un candidat SANS candidature associée.
+     *
+     * Même service payant que purchaseCandidateContact(), mais déclenché depuis
+     * la CVThèque où le recruteur consulte des profils qui n'ont pas postulé
+     * chez lui : l'accès est donc rattaché au seul candidat (related_user_id),
+     * related_job_id restant null.
+     */
+    public function purchaseCandidateContactByUser(User $user, Company $company, User $candidate, string $paymentProvider = 'freemopay'): array
+    {
+        $service = AddonServiceConfig::where('service_type', 'candidate_contact')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        // Déjà débloqué (peu importe la voie : candidature ou CVThèque).
+        if ($this->hasAccessToCandidateContact($company, $candidate)) {
+            return [
+                'success' => false,
+                'message' => __('recruiter_service.candidate_contact_already_purchased'),
+                'already_purchased' => true,
+            ];
+        }
+
+        return $this->processPurchase($user, $company, $service, $paymentProvider, [
+            'related_user_id' => $candidate->id,
+        ]);
+    }
+
+    /**
      * Purchase diploma verification
      */
     public function purchaseDiplomaVerification(User $user, Company $company, Application $application, string $paymentProvider = 'freemopay'): array

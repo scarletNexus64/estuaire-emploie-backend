@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\User;
 use App\Services\Recruiter\RecruiterServicePurchaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,64 @@ class RecruiterServicePurchaseController extends Controller
             $application,
             $request->payment_provider
         );
+
+        $status = $result['success'] ? 200 : 400;
+        return response()->json($result, $status);
+    }
+
+    /**
+     * Débloque les coordonnées d'un candidat depuis la CVThèque.
+     *
+     * Variante de purchaseCandidateContact() sans candidature : dans la
+     * CVThèque le recruteur consulte des profils qui n'ont pas postulé chez
+     * lui, il n'existe donc pas d'application_id à fournir. Même service et
+     * même tarif ; l'accès est rattaché au seul candidat.
+     */
+    public function purchaseCandidateContactByUser(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'payment_provider' => 'required|string|in:kpay,freemopay,paypal',
+        ]);
+
+        $user = Auth::user();
+        $company = $user->currentCompany;
+
+        if (!$company) {
+            return response()->json([
+                'success' => false,
+                'message' => __('recruiter_service.select_active_company_for_purchase'),
+                'error_code' => 'NO_CURRENT_COMPANY',
+            ], 409);
+        }
+
+        $candidate = User::where('role', 'candidate')->find($request->user_id);
+
+        if (!$candidate) {
+            return response()->json([
+                'success' => false,
+                'message' => __('recruiter_service.candidate_not_found'),
+                'error_code' => 'CANDIDATE_NOT_FOUND',
+            ], 404);
+        }
+
+        $result = $this->purchaseService->purchaseCandidateContactByUser(
+            $user,
+            $company,
+            $candidate,
+            $request->payment_provider
+        );
+
+        // Coordonnées renvoyées directement en cas de succès : le client peut
+        // les afficher sans recharger toute la liste.
+        if ($result['success']) {
+            $result['candidate'] = [
+                'id' => $candidate->id,
+                'name' => $candidate->name,
+                'email' => $candidate->email,
+                'phone' => $candidate->phone,
+            ];
+        }
 
         $status = $result['success'] ? 200 : 400;
         return response()->json($result, $status);

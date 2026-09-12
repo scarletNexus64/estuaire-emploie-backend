@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,9 +13,16 @@ use Illuminate\Support\Facades\Storage;
 
 class Advertisement extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTranslations, SoftDeletes;
+
+    /**
+     * Les bannières par défaut sont servies à toutes les langues de l'app,
+     * leurs textes sont donc traduisibles (table polymorphe `translations`).
+     */
+    protected array $translatable = ['title', 'description'];
 
     protected $fillable = [
+        'slug',
         'company_id',
         'created_by_user_id',
         'title',
@@ -29,6 +38,9 @@ class Advertisement extends Model
         'payment_id',
         'source',
         'ad_type',
+        'redirect_type',
+        'redirect_target',
+        'redirect_params',
         'start_date',
         'end_date',
         'impressions_count',
@@ -36,6 +48,8 @@ class Advertisement extends Model
         'ctr',
         'display_order',
         'is_active',
+        'is_default',
+        'default_order',
         'status',
     ];
 
@@ -52,6 +66,9 @@ class Advertisement extends Model
             'ctr' => 'decimal:2',
             'is_active' => 'boolean',
             'target_countries' => 'array',
+            'redirect_params' => 'array',
+            'is_default' => 'boolean',
+            'default_order' => 'integer',
         ];
     }
 
@@ -121,6 +138,61 @@ class Advertisement extends Model
             return url(Storage::url($this->image));
         }
         return null;
+    }
+
+    /**
+     * Carrousel de repli : bannières maison diffusées lorsqu'aucune campagne
+     * payante n'est disponible pour l'audience. Elles ne sont pas soumises aux
+     * fenêtres start_date/end_date, qui n'ont de sens que pour une campagne.
+     */
+    public function scopeDefaults(Builder $query): Builder
+    {
+        return $query->where('is_default', true)
+            ->where('is_active', true)
+            ->orderBy('default_order');
+    }
+
+    /**
+     * Destination normalisée du clic, consommée telle quelle par l'application.
+     *
+     * `target` est déjà prêt à l'emploi : pour WhatsApp on construit l'URL
+     * wa.me complète (numéro + message pré-rempli) afin que le client n'ait
+     * aucune règle de formatage à dupliquer.
+     */
+    protected function redirect(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $type = $this->redirect_type ?? 'none';
+
+                if ($type === 'none' || $this->redirect_target === null) {
+                    return ['type' => 'none', 'target' => null, 'params' => null];
+                }
+
+                return [
+                    'type' => $type,
+                    'target' => $type === 'whatsapp'
+                        ? $this->buildWhatsAppUrl()
+                        : $this->redirect_target,
+                    'params' => $this->redirect_params,
+                ];
+            },
+        );
+    }
+
+    /**
+     * Lien wa.me avec message pré-rempli. Le message peut être fourni dans
+     * redirect_params.message, sinon on retombe sur un texte traduit qui
+     * reprend le titre de la bannière.
+     */
+    protected function buildWhatsAppUrl(): string
+    {
+        $number = preg_replace('/\D/', '', (string) $this->redirect_target);
+
+        $message = $this->redirect_params['message']
+            ?? __('advertisement.whatsapp_default_message', ['subject' => $this->t('title')]);
+
+        return 'https://wa.me/' . $number . '?text=' . rawurlencode($message);
     }
 
     public function isActive(): bool

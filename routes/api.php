@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\InsamIaController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
@@ -129,6 +130,10 @@ Route::get('/service-categories', [QuickServiceController::class, 'categories'])
 // La contrainte numérique sur {id} évite que ce détail public n'intercepte
 // les sous-routes protégées (/quick-services/favorites, /categories, …).
 Route::get('/quick-services', [QuickServiceController::class, 'index']);
+// Programmes « jobs étudiants » de la plateforme (apporteurs d'affaires,
+// coursier Merci-E). Déclarée avant /{id} : la contrainte numérique protège
+// déjà le détail, on garde l'ordre pour rester lisible.
+Route::get('/quick-services/student-programs', [QuickServiceController::class, 'studentPrograms']);
 Route::get('/quick-services/{id}', [QuickServiceController::class, 'show'])->whereNumber('id');
 
 // Roadmaps (parcours d'apprentissage gamifiés) — consultation PUBLIQUE (mode
@@ -175,7 +180,10 @@ Route::get('/candidate/premium-services', [CandidatePremiumServiceController::cl
 // {slug} exclut les segments réservés aux sous-routes protégées du groupe auth
 // (student-access, my-services, check-access) pour ne pas les intercepter.
 Route::get('/candidate/premium-services/{slug}', [CandidatePremiumServiceController::class, 'show'])
-    ->where('slug', '^(?!student-access$|my-services$|check-access$).+$');
+    // `[^/]+` est essentiel : une contrainte permissive (`.+`) matche aussi les
+    // slashes et capture alors `check-access/student_mode` en entier, ce qui
+    // renvoyait un 404 « Service not found » sur la vérification d'accès.
+    ->where('slug', '^(?!student-access$|my-services$|check-access$)[^/]+$');
 
 // Niveaux de proficience (skill / language / training) — référentiel multilingue
 Route::get('/proficiency-levels', [ProficiencyLevelController::class, 'index']);
@@ -271,16 +279,22 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // Créer une offre d'emploi (recruteur) - vérifie la limite du plan
     Route::post('/jobs', [JobController::class, 'store'])->middleware('subscription:can_post_job');
-    // Mettre à jour une offre d'emploi (recruteur) - vérifie que l'abonnement est valide
-    Route::put('/jobs/{id}', [JobController::class, 'update'])->middleware('subscription:valid');
-    // Supprimer une offre d'emploi (recruteur) - vérifie que l'abonnement est valide
-    Route::delete('/jobs/{id}', [JobController::class, 'destroy'])->middleware('subscription:valid');
-    // Mes offres (recruteur) - vérifie que l'abonnement est valide
-    Route::get('/recruiter/jobs', [JobController::class, 'myJobs'])->middleware('subscription:valid');
-    // Détails d'une offre (recruteur) - vérifie que l'abonnement est valide
-    Route::get('/recruiter/jobs/{id}', [JobController::class, 'showRecruiterJob'])->middleware('subscription:valid');
-    // Dashboard recruteur (statistiques + données récentes) - vérifie que l'abonnement est valide
-    Route::get('/recruiter/dashboard', [JobController::class, 'dashboard'])->middleware('subscription:valid');
+    // Modifier / supprimer SES offres : pas de garde d'abonnement non plus.
+    // Publier est le geste facturé (POST ci-dessus) ; reprendre ou retirer une
+    // offre déjà publiée doit rester possible, y compris après expiration —
+    // sinon le recruteur ne peut plus dépublier ce qui est en ligne.
+    // Les contrôleurs vérifient déjà que l'offre appartient à l'entreprise.
+    Route::put('/jobs/{id}', [JobController::class, 'update']);
+    Route::delete('/jobs/{id}', [JobController::class, 'destroy']);
+    // Lectures du recruteur : pas de garde d'abonnement. Consulter ses
+    // propres offres et son tableau de bord relève du « mode aperçu » — la
+    // tolérance du middleware étant plafonnée au quota gratuit, un recruteur
+    // dont l'abonnement expire perdait l'accès à ses propres données.
+    // Les contrôleurs restreignent déjà à l'entreprise active, et les blocs
+    // premium se dégradent via `can_see_analytics`.
+    Route::get('/recruiter/jobs', [JobController::class, 'myJobs']);
+    Route::get('/recruiter/jobs/{id}', [JobController::class, 'showRecruiterJob']);
+    Route::get('/recruiter/dashboard', [JobController::class, 'dashboard']);
 
     // ------------------
     // RECRUTEUR - GESTION DES CANDIDATURES
@@ -314,6 +328,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // Acheter l'accès aux coordonnées d'un candidat
     Route::post('/recruiter/services/purchase/candidate-contact', [RecruiterServicePurchaseController::class, 'purchaseCandidateContact'])
+        ->middleware('subscription:valid');
+    // Idem depuis la CVThèque, où le candidat n'a pas forcément postulé chez le
+    // recruteur : on cible alors le candidat par son user_id.
+    Route::post('/recruiter/services/purchase/candidate-contact-by-user', [RecruiterServicePurchaseController::class, 'purchaseCandidateContactByUser'])
         ->middleware('subscription:valid');
     // Acheter la vérification de diplômes
     Route::post('/recruiter/services/purchase/diploma-verification', [RecruiterServicePurchaseController::class, 'purchaseDiplomaVerification'])
@@ -540,6 +558,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // Helpers KPay : auto-détection opérateur + disponibilité des opérateurs
     Route::post('/wallet/predict-provider', [WalletController::class, 'predictProvider']);
     Route::get('/wallet/payment-availability', [WalletController::class, 'paymentAvailability']);
+
+    // Catalogue pays → opérateurs (sélecteur « pays puis opérateur » de l'app)
+    Route::get('/wallet/payment-countries', [WalletController::class, 'paymentCountries']);
     // Vérifier le statut d'un retrait
     Route::get('/wallet/withdrawal-status/{withdrawalId}', [WalletController::class, 'checkWithdrawalStatus']);
     // Historique des retraits
@@ -731,6 +752,43 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::post('/roadmaps/{roadmap}/levels/{level}/quiz', [RoadmapController::class, 'submitQuiz']);
 
     // ------------------
+    // INSAM-IA — ressources pédagogiques de l'espace étudiant
+    // ------------------
+    // Contenu servi par insam-ia.com : packs d'épreuves, fiches de révision et
+    // évaluations. L'accès suit le même gating que la bibliothèque étudiante
+    // (Mode Étudiant ou abonnement C2/C3), appliqué dans le contrôleur.
+    // Les attestations, elles, sont délivrées et générées par Estuaire.
+    Route::prefix('insam-ia')->name('insam-ia.')->group(function () {
+        Route::get('/status', [InsamIaController::class, 'status'])->name('status');
+        Route::get('/categories', [InsamIaController::class, 'categories'])->name('categories');
+
+        // Ressource 1 — Packs d'épreuves
+        Route::get('/exams', [InsamIaController::class, 'exams'])->name('exams.index');
+        Route::get('/exams/{id}', [InsamIaController::class, 'exam'])->whereNumber('id')->name('exams.show');
+        Route::get('/exams/{id}/download', [InsamIaController::class, 'downloadExam'])->whereNumber('id')->name('exams.download');
+
+        // Ressource 5 — Module révision
+        Route::get('/revision-cards', [InsamIaController::class, 'revisionCards'])->name('revision.index');
+        Route::post('/revision-cards/generate', [InsamIaController::class, 'generateRevisionCard'])->name('revision.generate');
+        Route::get('/revision-cards/{id}', [InsamIaController::class, 'revisionCard'])->whereNumber('id')->name('revision.show');
+
+        // Ressource 4 — Progression de lecture
+        Route::post('/reading-progress', [InsamIaController::class, 'trackReading'])->name('progress.track');
+        Route::get('/progress', [InsamIaController::class, 'progress'])->name('progress.show');
+
+        // Ressource 4 — Évaluations
+        Route::get('/evaluations/active', [InsamIaController::class, 'activeSessions'])->name('evaluations.active');
+        Route::get('/evaluations/my-attempts', [InsamIaController::class, 'myAttempts'])->name('evaluations.mine');
+        Route::post('/evaluations/start', [InsamIaController::class, 'startEvaluation'])->name('evaluations.start');
+        Route::post('/evaluations/{attempt}/submit', [InsamIaController::class, 'submitEvaluation'])->whereNumber('attempt')->name('evaluations.submit');
+        Route::post('/evaluations/{attempt}/attestation', [InsamIaController::class, 'issueAttestation'])->whereNumber('attempt')->name('evaluations.attestation');
+
+        // Ressource 4 — Attestations (générées par Estuaire)
+        Route::get('/attestations', [InsamIaController::class, 'attestations'])->name('attestations.index');
+        Route::get('/attestations/{attestation}/download', [InsamIaController::class, 'downloadAttestation'])->whereNumber('attestation')->name('attestations.download');
+    });
+
+    // ------------------
     // SERVICES RAPIDES / PETITS JOBS
     // ------------------
     // Liste des catégories de services
@@ -808,3 +866,10 @@ Route::post('/webhooks/kpay/deposits', [\App\Http\Controllers\Api\KPayWebhookCon
     ->name('api.webhooks.kpay.deposits');
 Route::post('/webhooks/kpay/withdrawals', [\App\Http\Controllers\Api\KPayWebhookController::class, 'handleWithdrawal'])
     ->name('api.webhooks.kpay.withdrawals');
+
+// Retour de la passerelle carte bancaire : URL publique (le client y arrive
+// depuis la page hébergée KPay, sans jeton d'auth). Ne crédite rien — le
+// webhook reste la source de vérité ; l'app détecte cette URL pour fermer
+// sa WebView puis poll le statut réel.
+Route::get('/payments/kpay/return', [\App\Http\Controllers\Api\KPayGatewayReturnController::class, 'handle'])
+    ->name('api.payments.kpay.return');

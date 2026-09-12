@@ -52,6 +52,8 @@ class ServiceConfiguration extends Model
         'kpay_api_key',
         'kpay_secret_key',
         'kpay_webhook_secret',
+        'kpay_gateway_secret',
+        'kpay_card_enabled',
         'kpay_deposit_callback_url',
         'kpay_withdrawal_callback_url',
         'kpay_environment',
@@ -158,6 +160,18 @@ class ServiceConfiguration extends Model
     public static function getKPayMinWithdrawal(): int
     {
         return (int) (self::getKPayConfig()?->kpay_min_withdrawal ?? 100);
+    }
+
+    /**
+     * Le paiement par carte bancaire (Visa/Mastercard) est-il proposable ?
+     *
+     * Le moyen `CARD` doit être autorisé sur l'application côté KPay avant
+     * d'être activé ici ; sinon l'API refuse l'initialisation et l'utilisateur
+     * se heurte à un bouton qui échoue systématiquement.
+     */
+    public static function isKPayCardEnabled(): bool
+    {
+        return (bool) (self::getKPayConfig()?->kpay_card_enabled ?? false);
     }
 
     /**

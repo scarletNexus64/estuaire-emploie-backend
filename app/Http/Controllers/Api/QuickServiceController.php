@@ -60,6 +60,9 @@ class QuickServiceController extends Controller
         $query = QuickService::with(['user', 'category', 'responses'])
             ->active()
             ->approved() // Seulement les services approuvés par admin
+            // Les programmes de la plateforme sont épinglés séparément en tête
+            // de liste (voir plus bas) : on ne les mélange pas à la pagination.
+            ->excludingStudentPrograms()
             ->latest();
 
         // Recherche textuelle
@@ -110,6 +113,12 @@ class QuickServiceController extends Controller
         return response()->json([
             'success' => true,
             'data' => $services,
+            // Programmes rémunérés du groupe, épinglés en tête de liste à la
+            // manière d'annonces sponsorisées : permanents, hors pagination, et
+            // servis dès la première page uniquement.
+            'featured_programs' => $request->integer('page', 1) === 1
+                ? $this->studentProgramsPayload()
+                : [],
         ]);
     }
 
@@ -472,6 +481,101 @@ class QuickServiceController extends Controller
     /**
      * Liste des catégories de services
      */
+    /**
+     * @OA\Get(
+     *     path="/api/quick-services/student-programs",
+     *     summary="Programmes « jobs étudiants » du groupe Estuaire",
+     *     description="Programmes permanents publiés par la plateforme : apporteurs d'affaires (Estuaire Eat, Achats, Emploi) et coursier Merci-E. Rémunérés à la commission, ouverts dans tout le pays.",
+     *     tags={"Quick Services"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des programmes",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="slug", type="string", example="student-program-merci-e"),
+     *                     @OA\Property(property="title", type="string"),
+     *                     @OA\Property(property="description", type="string"),
+     *                     @OA\Property(property="program_partner", type="string", enum={"estuaire_eat","estuaire_achats","estuaire_emploi","merci_e"}),
+     *                     @OA\Property(property="commission_rate", type="number", format="float", example=50),
+     *                     @OA\Property(property="commission_basis", type="string", enum={"first_month_revenue","first_transaction","per_transaction","per_course"}),
+     *                     @OA\Property(property="commission_cap", type="number", format="float", nullable=true),
+     *                     @OA\Property(property="fixed_bonus", type="number", format="float", nullable=true),
+     *                     @OA\Property(property="has_rating_system", type="boolean"),
+     *                     @OA\Property(property="formatted_compensation", type="string", example="50 % du montant de la course")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function studentPrograms(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $this->studentProgramsPayload(),
+        ]);
+    }
+
+    /**
+     * Payload des programmes de la plateforme, partagé par l'endpoint dédié et
+     * par les programmes épinglés en tête de la liste des services rapides.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function studentProgramsPayload()
+    {
+        $programs = QuickService::with(['category', 'translations'])
+            ->studentPrograms()
+            ->approved()
+            ->get();
+
+        return $programs->map(fn (QuickService $program) => [
+            'id' => $program->id,
+            'slug' => $program->slug,
+            'title' => $program->t('title'),
+            'description' => $program->t('description'),
+            'program_partner' => $program->program_partner,
+            'program_type' => $program->program_type,
+            // Libellés de la famille, prêts à afficher en en-tête de groupe.
+            'program_type_label' => $program->program_type
+                ? __('quick_service.program_type.' . $program->program_type)
+                : null,
+            'program_type_description' => $program->program_type
+                ? __('quick_service.program_type_description.' . $program->program_type)
+                : null,
+            'category' => $program->category ? [
+                'id' => $program->category->id,
+                'name' => $program->category->t('name'),
+                'slug' => $program->category->slug,
+                'icon' => $program->category->icon,
+                'color' => $program->category->color,
+            ] : null,
+            'price_type' => $program->price_type,
+            'commission_rate' => $program->commission_rate,
+            'commission_basis' => $program->commission_basis,
+            'commission_cap' => $program->commission_cap,
+            'fixed_bonus' => $program->fixed_bonus,
+            'fixed_bonus_basis' => $program->fixed_bonus_basis,
+            'bonus_is_cumulative' => $program->bonus_is_cumulative,
+            'min_active_days' => $program->min_active_days,
+            'has_rating_system' => $program->has_rating_system,
+            // Rémunération déjà mise en phrase dans la locale courante :
+            // l'application n'a aucune règle de formatage à dupliquer.
+            'formatted_compensation' => $program->formatted_compensation,
+            'location_name' => $program->location_name,
+            'estimated_duration' => $program->estimated_duration,
+            'status' => $program->status,
+            'is_student_program' => true,
+            'program_order' => $program->program_order,
+            'views_count' => $program->views_count,
+        ]);
+    }
+
     public function categories(): JsonResponse
     {
         $categories = ServiceCategory::active()

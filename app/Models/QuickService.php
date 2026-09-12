@@ -16,6 +16,7 @@ class QuickService extends Model
     protected array $translatable = ['title', 'description'];
 
     protected $fillable = [
+        'slug',
         'user_id',
         'service_category_id',
         'title',
@@ -35,6 +36,19 @@ class QuickService extends Model
         'approved_at',
         'images',
         'views_count',
+        // Programmes « jobs étudiants » publiés par la plateforme
+        'is_student_program',
+        'program_partner',
+        'program_type',
+        'commission_rate',
+        'commission_basis',
+        'commission_cap',
+        'fixed_bonus',
+        'fixed_bonus_basis',
+        'bonus_is_cumulative',
+        'min_active_days',
+        'has_rating_system',
+        'program_order',
     ];
 
     protected function casts(): array
@@ -47,6 +61,14 @@ class QuickService extends Model
             'price_min' => 'decimal:2',
             'price_max' => 'decimal:2',
             'views_count' => 'integer',
+            'is_student_program' => 'boolean',
+            'commission_rate' => 'decimal:2',
+            'commission_cap' => 'decimal:2',
+            'fixed_bonus' => 'decimal:2',
+            'bonus_is_cumulative' => 'boolean',
+            'min_active_days' => 'integer',
+            'has_rating_system' => 'boolean',
+            'program_order' => 'integer',
         ];
     }
 
@@ -179,12 +201,79 @@ class QuickService extends Model
      */
     public function getFormattedPriceAttribute(): string
     {
-        if ($this->price_type === 'negotiable') {
-            return 'À négocier';
+        if ($this->price_type === 'commission') {
+            return $this->formatted_compensation;
+        } elseif ($this->price_type === 'negotiable') {
+            return __('quick_service.price_negotiable');
         } elseif ($this->price_type === 'range') {
             return number_format($this->price_min, 0, ',', ' ') . ' - ' . number_format($this->price_max, 0, ',', ' ') . ' FCFA';
         } else {
             return number_format($this->price_min, 0, ',', ' ') . ' FCFA';
         }
+    }
+
+    /**
+     * Programmes « jobs étudiants » publiés par la plateforme (apporteurs
+     * d'affaires, coursier), par opposition aux demandes ponctuelles des
+     * recruteurs. Ordonnés pour un affichage stable côté application.
+     */
+    public function scopeStudentPrograms($query)
+    {
+        return $query->where('is_student_program', true)
+            ->orderBy('program_order');
+    }
+
+    /**
+     * Exclut les programmes de la plateforme d'une liste de services rapides,
+     * qui sont présentés dans leur propre section.
+     */
+    public function scopeExcludingStudentPrograms($query)
+    {
+        return $query->where('is_student_program', false);
+    }
+
+    /**
+     * Rémunération d'un programme, en une phrase lisible :
+     * « 5 % du premier mois de chiffre d'affaires », « 3 % de la première
+     * transaction (max 50 000 FCFA) », éventuellement suivie de la prime fixe.
+     */
+    public function getFormattedCompensationAttribute(): string
+    {
+        $parts = [];
+
+        if ($this->commission_rate !== null && $this->commission_basis !== null) {
+            $rate = rtrim(rtrim(number_format((float) $this->commission_rate, 2, ',', ' '), '0'), ',');
+
+            $commission = __('quick_service.commission.' . $this->commission_basis, ['rate' => $rate]);
+
+            if ($this->commission_cap !== null) {
+                $commission .= ' ' . __('quick_service.commission_cap', [
+                    'amount' => number_format((float) $this->commission_cap, 0, ',', ' '),
+                ]);
+            }
+
+            $parts[] = $commission;
+        }
+
+        if ($this->fixed_bonus !== null) {
+            $parts[] = __('quick_service.fixed_bonus', [
+                'amount' => number_format((float) $this->fixed_bonus, 0, ',', ' '),
+                'basis' => $this->fixed_bonus_basis
+                    ? __('quick_service.bonus_basis.' . $this->fixed_bonus_basis)
+                    : '',
+            ]);
+        }
+
+        if ($parts === []) {
+            return __('quick_service.price_negotiable');
+        }
+
+        // « ou » quand la prime remplace la commission (Estuaire Eat),
+        // « et » quand les deux se cumulent (Estuaire Emploi).
+        $separator = $this->bonus_is_cumulative
+            ? __('quick_service.compensation_and')
+            : __('quick_service.compensation_separator');
+
+        return implode(' ' . $separator . ' ', $parts);
     }
 }

@@ -14,6 +14,7 @@ return [
     'recharge_success' => 'Recharge effectuée avec succès',
     'recharge_initiated' => 'Recharge initiée avec succès',
     'recharge_init_error' => 'Erreur lors de l\'initiation de la recharge',
+    'card_unavailable' => 'Le paiement par carte bancaire n\'est pas disponible pour le moment.',
     'verification_error' => 'Erreur lors de la vérification',
 
     // Payments

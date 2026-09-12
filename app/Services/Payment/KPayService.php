@@ -55,6 +55,8 @@ class KPayService
      *
      * @param  User|Company  $payer
      * @param  string|null   $providerCode  Code opérateur KPay (ex. MTN_MOMO_CMR). Dérivé si null.
+     * @param  string|null   $countryIso3   Pays sélectionné dans l'app (ex. CMR), utilisé
+     *                                      pour préfixer un numéro saisi au format national.
      * @throws KPayException
      */
     public function initDeposit(
@@ -65,15 +67,27 @@ class KPayService
         ?string $externalId = null,
         $payable = null,
         ?string $paymentType = null,
-        ?string $providerCode = null
+        ?string $providerCode = null,
+        ?string $countryIso3 = null
     ): Payment {
         if (!$this->config || !$this->config->isConfigured()) {
             throw new KPayException('Le service KPay n\'est pas configuré correctement.', 0, 'NOT_CONFIGURED');
         }
 
-        $normalizedPhone = $this->normalizePhoneNumber($phoneNumber);
+        $normalizedPhone = $this->normalizePhoneNumber($phoneNumber, true, $countryIso3);
         $externalId = $this->ensureUniqueExternalId($externalId ?: $this->generateExternalId());
         $providerCode = $providerCode ?: $this->deriveProviderCode($normalizedPhone);
+
+        // Un provider inconnu partait auparavant tel quel (voire `null`) dans le
+        // payload : KPay répondait 400 et le Payment restait échoué sans motif
+        // exploitable. On tranche ici, avant toute écriture en base.
+        if (!KPayCatalog::isValidProvider($providerCode)) {
+            throw new KPayException(
+                'Opérateur indéterminé pour ce numéro. Sélectionnez votre opérateur.',
+                0,
+                'PROVIDER_REQUIRED'
+            );
+        }
 
         Log::info('[KPay] Init dépôt', [
             'amount' => $amount,
@@ -115,7 +129,7 @@ class KPayService
         // 2. Appeler KPay /payments/init
         try {
             $response = $this->client->post('payments/init', [
-                'amount' => (int) round($amount),
+                'amount' => $this->formatAmount($amount, $providerCode),
                 'provider' => $providerCode,
                 'phoneNumber' => $normalizedPhone,
                 'externalId' => $externalId,
@@ -144,6 +158,167 @@ class KPayService
             $payment->markAsFailed($e->getMessage());
             throw $e;
         }
+    }
+
+    // =====================================================================
+    //  DÉPÔT PAR CARTE BANCAIRE (Visa / Mastercard) — passerelle hébergée
+    // =====================================================================
+
+    /**
+     * Initie un dépôt par carte bancaire via la passerelle hébergée KPay.
+     *
+     * La carte n'existe pas en USSD : aucun push téléphone n'est possible. On
+     * envoie donc `paymentMethod: CARD` + `returnUrl`, sans `provider` ni
+     * `phoneNumber`, et KPay répond avec une `gatewayUrl` sur laquelle le
+     * client saisit sa carte (l'app l'ouvre dans une WebView). Ce mode force la
+     * passerelle même si l'application KPay est configurée en USSD.
+     *
+     * Le statut final n'est jamais connu de façon synchrone : il arrive par
+     * webhook (source de vérité), avec le polling en secours. Le retour de
+     * passerelle est seulement un signal de redirection, jamais une preuve de
+     * paiement — d'où la vérification de signature dans `verifyGatewaySignature`.
+     *
+     * @return array{payment: Payment, gateway_url: string, expires_at: string|null}
+     * @throws KPayException
+     */
+    public function initCardDeposit(
+        User|Company $payer,
+        float $amount,
+        string $returnUrl,
+        string $description,
+        ?string $externalId = null,
+        $payable = null,
+        ?string $paymentType = null,
+        ?string $customerEmail = null,
+        ?string $cancelUrl = null,
+        string $currency = 'XAF'
+    ): array {
+        if (!$this->config || !$this->config->isConfigured()) {
+            throw new KPayException('Le service KPay n\'est pas configuré correctement.', 0, 'NOT_CONFIGURED');
+        }
+
+        $externalId = $this->ensureUniqueExternalId($externalId ?: $this->generateExternalId('CARD'));
+
+        Log::info('[KPay] Init dépôt carte', [
+            'amount' => $amount,
+            'external_id' => $externalId,
+        ]);
+
+        $payment = DB::transaction(function () use ($payer, $amount, $description, $externalId, $payable, $paymentType, $currency) {
+            $data = [
+                'amount' => $amount,
+                'fees' => 0,
+                'total' => $amount,
+                'description' => $description,
+                'external_id' => $externalId,
+                'status' => 'pending',
+                'provider' => 'kpay',
+                'payment_method' => 'card',
+                'payment_type' => $paymentType,
+                'currency' => $currency,
+                'metadata' => ['kpay_mode' => 'GATEWAY', 'kpay_payment_method' => 'CARD'],
+            ];
+
+            if ($payer instanceof Company) {
+                $data['company_id'] = $payer->id;
+            } elseif ($payer instanceof User) {
+                $data['user_id'] = $payer->id;
+            }
+
+            if ($payable) {
+                $data['payable_type'] = get_class($payable);
+                $data['payable_id'] = $payable->id;
+            }
+
+            return Payment::create($data);
+        });
+
+        try {
+            $body = [
+                'amount' => (int) round($amount),
+                'paymentMethod' => 'CARD',
+                'externalId' => $externalId,
+                'returnUrl' => $returnUrl,
+                'description' => $this->merchantDescription(),
+                'metadata' => ['payment_id' => $payment->id],
+            ];
+
+            if ($cancelUrl) {
+                $body['cancelUrl'] = $cancelUrl;
+            }
+
+            if ($customerEmail) {
+                $body['customerEmail'] = $customerEmail;
+            }
+
+            $response = $this->client->post('payments/init', $body);
+
+            $kpayId = $response['id'] ?? null;
+            $gatewayUrl = $response['gatewayUrl'] ?? null;
+
+            if (!$kpayId || !$gatewayUrl) {
+                $payment->markAsFailed('Réponse KPay sans gatewayUrl');
+                throw new KPayException(
+                    'La page de paiement par carte est indisponible. Réessayez dans quelques instants.',
+                    0,
+                    'NO_GATEWAY_URL'
+                );
+            }
+
+            $payment->update([
+                'provider_reference' => $kpayId,
+                'payment_provider_response' => $response,
+            ]);
+
+            ProcessDepositPolling::dispatch($payment->id)->delay(now()->addSeconds(15));
+
+            Log::info('[KPay] Dépôt carte initié', ['payment_id' => $payment->id, 'kpay_id' => $kpayId]);
+
+            return [
+                'payment' => $payment->fresh(),
+                'gateway_url' => $gatewayUrl,
+                'expires_at' => $response['expiresAt'] ?? null,
+            ];
+        } catch (KPayException $e) {
+            $payment->markAsFailed($e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Vérifie la signature d'un retour de passerelle.
+     *
+     * La chaîne signée est `status|reference|externalId|ts`, en HMAC-SHA256 hex
+     * avec le secret passerelle. Un `ts` de plus de 10 minutes est rejeté
+     * (anti-rejeu). Même valide, cette signature n'autorise jamais à créditer
+     * un wallet : elle dit seulement que la redirection vient bien de KPay.
+     */
+    public function verifyGatewaySignature(
+        string $status,
+        string $reference,
+        string $externalId,
+        string $timestamp,
+        string $signature
+    ): bool {
+        $secret = $this->config->kpay_gateway_secret ?? $this->config->kpay_webhook_secret ?? null;
+
+        if (!$secret) {
+            Log::warning('[KPay] Signature passerelle non vérifiable : aucun secret configuré');
+
+            return false;
+        }
+
+        // `ts` est en millisecondes dans la query de retour.
+        $ageSeconds = abs((now()->timestamp * 1000 - (int) $timestamp) / 1000);
+        if ($ageSeconds > 600) {
+            Log::warning('[KPay] Retour passerelle expiré', ['age_seconds' => $ageSeconds]);
+
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', "{$status}|{$reference}|{$externalId}|{$timestamp}", $secret);
+
+        return hash_equals($expected, $signature);
     }
 
     /**
@@ -270,7 +445,7 @@ class KPayService
      *
      * @param  bool  $strict  Si true, valide la longueur (12 chiffres CMR/RDC).
      */
-    public function normalizePhoneNumber(string $phone, bool $strict = true): string
+    public function normalizePhoneNumber(string $phone, bool $strict = true, ?string $countryIso3 = null): string
     {
         if (!$phone) {
             throw new KPayException('Le numéro de téléphone est requis.', 0, 'PHONE_REQUIRED');
@@ -278,8 +453,20 @@ class KPayService
 
         $cleaned = preg_replace('/[\s\-+()]/', '', $phone);
 
-        // Numéro local Cameroun (9 chiffres, commence par 6) → préfixe 237
-        if (strlen($cleaned) === 9 && str_starts_with($cleaned, '6')) {
+        // Numéro saisi au format national (sans indicatif) : on préfixe avec
+        // l'indicatif du pays sélectionné dans l'app.
+        //
+        // Le « 0 » de tête n'est retiré que là où il est un préfixe d'appel
+        // national. En Côte d'Ivoire il appartient au numéro lui-même : KPay
+        // attend bien `2250503456089`, et le supprimer casserait le paiement.
+        if ($countryIso3 && ($country = KPayCatalog::country($countryIso3))) {
+            $dial = $country['dial'];
+            if (!str_starts_with($cleaned, $dial)) {
+                $keepsLeadingZero = in_array(strtoupper($countryIso3), ['CIV', 'COG'], true);
+                $cleaned = $dial . ($keepsLeadingZero ? $cleaned : ltrim($cleaned, '0'));
+            }
+        } elseif (strlen($cleaned) === 9 && str_starts_with($cleaned, '6')) {
+            // Rétrocompatibilité : numéro local Cameroun (9 chiffres, commence par 6).
             $cleaned = '237' . $cleaned;
         }
 
@@ -287,14 +474,22 @@ class KPayService
             throw new KPayException("Format de numéro invalide: {$phone}", 0, 'INVALID_PHONE');
         }
 
-        // En mode strict on garde la validation CMR/RDC (12 chiffres) pour
-        // rester aligné avec le périmètre actuel ; pour le multi-pays on
-        // accepte tout numéro international 8-15 chiffres.
-        if ($strict && (str_starts_with($cleaned, '237') || str_starts_with($cleaned, '243'))) {
-            if (strlen($cleaned) !== 12) {
-                throw new KPayException("Numéro CMR/RDC attendu sur 12 chiffres: {$phone}", 0, 'INVALID_PHONE');
+        // Le numéro doit appartenir à un pays couvert par KPay. La longueur
+        // n'est plus figée à 12 chiffres (règle CMR appliquée à tort à la RDC,
+        // dont les numéros font 12 ou 13 chiffres) : on valide l'indicatif,
+        // puis une longueur internationale plausible.
+        if ($strict) {
+            $iso3 = KPayCatalog::countryForPhone($cleaned);
+            if (!$iso3) {
+                throw new KPayException(
+                    "Pays non pris en charge pour ce numéro: {$phone}",
+                    0,
+                    'UNSUPPORTED_COUNTRY'
+                );
             }
-        } elseif (strlen($cleaned) < 8 || strlen($cleaned) > 15) {
+        }
+
+        if (strlen($cleaned) < 8 || strlen($cleaned) > 15) {
             throw new KPayException("Numéro international invalide (8-15 chiffres): {$phone}", 0, 'INVALID_PHONE');
         }
 
@@ -302,38 +497,17 @@ class KPayService
     }
 
     /**
-     * Dérive le code opérateur KPay depuis un numéro international normalisé.
-     * Couvre le Cameroun (237) et la RDC (243). Pour les autres pays, retourne
-     * null → le frontend doit fournir provider_code explicitement.
+     * Dérive le code opérateur KPay depuis un numéro international normalisé,
+     * en s'appuyant sur le catalogue (12 pays, 23 opérateurs).
+     *
+     * Retourne null quand l'opérateur ne peut pas être tranché de façon fiable :
+     * l'appelant doit alors exiger un `provider_code` explicite. L'ancien
+     * fallback « tout numéro 237 inconnu → MTN » est supprimé, car il envoyait
+     * des paiements Orange vers MTN (refus opérateur côté KPay).
      */
     public function deriveProviderCode(string $intlPhone): ?string
     {
-        // Cameroun (237) - XAF
-        if (str_starts_with($intlPhone, '237')) {
-            $p2 = substr($intlPhone, 3, 2);
-            $p3 = substr($intlPhone, 3, 3);
-
-            if (in_array($p2, ['67', '68']) || in_array($p3, ['650', '651', '652', '653', '654'])) {
-                return 'MTN_MOMO_CMR';
-            }
-            if ($p2 === '69' || in_array($p3, ['655', '656', '657', '658', '659'])) {
-                return 'ORANGE_CMR';
-            }
-            return 'MTN_MOMO_CMR'; // défaut CMR
-        }
-
-        // RDC (243)
-        if (str_starts_with($intlPhone, '243')) {
-            $p2 = substr($intlPhone, 3, 2);
-            if (in_array($p2, ['81', '82', '83', '84', '85'])) {
-                return 'AIRTEL_COD';
-            }
-            if (in_array($p2, ['89', '80'])) {
-                return 'ORANGE_COD';
-            }
-        }
-
-        return null;
+        return KPayCatalog::guessProvider($intlPhone);
     }
 
     /**
@@ -354,21 +528,26 @@ class KPayService
     }
 
     /**
-     * Devise dérivée du code opérateur (XAF par défaut pour la zone CEMAC).
+     * Devise dérivée du code opérateur, via le catalogue KPay.
+     *
+     * XAF ne sert plus de défaut aveugle : un provider hors catalogue
+     * enregistrait auparavant un paiement CDF/KES/UGX/ZMW en XAF.
      */
     protected function currencyForProvider(?string $providerCode): string
     {
-        if (!$providerCode) {
-            return 'XAF';
-        }
-        // Suffixe pays → devise (sous-ensemble courant ; XAF par défaut)
-        return match (true) {
-            str_ends_with($providerCode, '_CMR'), str_ends_with($providerCode, '_GAB'),
-            str_ends_with($providerCode, '_COG') => 'XAF',
-            str_ends_with($providerCode, '_BEN'), str_ends_with($providerCode, '_CIV'),
-            str_ends_with($providerCode, '_SEN'), str_ends_with($providerCode, '_BFA') => 'XOF',
-            default => 'XAF',
-        };
+        return KPayCatalog::currencyForProvider($providerCode) ?? 'XAF';
+    }
+
+    /**
+     * Montant transmis à KPay : entier pour les providers sans décimales,
+     * arrondi à 2 décimales pour ceux qui les acceptent (AIRTEL_GAB,
+     * ORANGE_COD, MTN_MOMO_UGA, zone ZMB…).
+     */
+    protected function formatAmount(float $amount, ?string $providerCode): int|float
+    {
+        return KPayCatalog::supportsDecimals($providerCode)
+            ? round($amount, 2)
+            : (int) round($amount);
     }
 
     protected function generateExternalId(string $prefix = 'PAY'): string

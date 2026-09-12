@@ -90,11 +90,27 @@ class WalletController extends Controller
         $minDeposit = \App\Models\ServiceConfiguration::getKPayMinDeposit();
         $validator = Validator::make($request->all(), [
             'amount' => "required|numeric|min:{$minDeposit}", // Minimum configurable (admin)
-            'payment_method' => 'required|in:kpay,paypal',
-            'phone_number' => 'required_if:payment_method,kpay|string', // Requis pour KPay (USSD)
-            'provider_code' => 'nullable|string', // Code opérateur KPay (ex. MTN_MOMO_CMR), sinon dérivé
+            // `card` = Visa/Mastercard via la passerelle hébergée KPay.
+            // `freemopay` reste accepté comme alias de `kpay` : les versions
+            // déjà installées de l'app envoient encore l'ancien libellé, et
+            // les rejeter renvoyait un 422 incompréhensible à l'utilisateur.
+            'payment_method' => 'required|in:kpay,freemopay,card,paypal',
+            'phone_number' => 'required_if:payment_method,kpay,freemopay|string', // Requis en USSD
+            'provider_code' => [ // Code opérateur KPay (ex. MTN_MOMO_CMR), sinon dérivé du numéro
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::in(\App\Services\Payment\KPayCatalog::providerCodes()),
+            ],
+            'country' => [ // ISO3 du pays choisi dans l'app (ex. CMR)
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::in(\App\Services\Payment\KPayCatalog::countryCodes()),
+            ],
+            'return_url' => 'nullable|url', // Retour de passerelle (carte)
         ], [
             'amount.min' => "Le montant minimum de recharge est {$minDeposit} FCFA.",
+            'provider_code.in' => "Cet opérateur n'est pas pris en charge.",
+            'country.in' => "Ce pays n'est pas pris en charge.",
         ]);
 
         if ($validator->fails()) {
@@ -115,12 +131,70 @@ class WalletController extends Controller
             $paymentMethod = $request->payment_method;
             $phoneNumber = $request->phone_number;
 
+            // `freemopay` est l'ancien libellé encore émis par les versions
+            // déjà déployées de l'app : on le ramène sur KPay.
+            if ($paymentMethod === 'freemopay') {
+                $paymentMethod = 'kpay';
+            }
+
             \Log::info("[WalletController] 📝 Request details", [
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'payment_method' => $paymentMethod,
+                'provider_code' => $request->provider_code,
+                'country' => $request->input('country'),
                 'phone_number' => $phoneNumber ? substr($phoneNumber, 0, 3) . '****' . substr($phoneNumber, -2) : null,
             ]);
+
+            // Carte bancaire (Visa/Mastercard) : passerelle hébergée KPay.
+            if ($paymentMethod === 'card') {
+                \Log::info("[WalletController] 💳 Using KPay CARD (hosted gateway)");
+
+                if (!\App\Models\ServiceConfiguration::isKPayCardEnabled()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('wallet.card_unavailable'),
+                        'code' => 'CARD_DISABLED',
+                    ], 422);
+                }
+
+                $kpayService = app(\App\Services\Payment\KPayService::class);
+
+                $result = $kpayService->initCardDeposit(
+                    $user,
+                    $amount,
+                    $request->input('return_url') ?: url('/payments/kpay/return'),
+                    'Recharge wallet',
+                    null,
+                    null,
+                    'wallet_recharge',
+                    $user->email,
+                    null,
+                    'XAF'
+                );
+
+                $payment = $result['payment'];
+
+                \Log::info("[WalletController] ✅ KPay card payment initiated", [
+                    'payment_id' => $payment->id,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Finalisez le paiement sur la page sécurisée.',
+                    'data' => [
+                        'payment_id' => $payment->id,
+                        'payment_url' => $result['gateway_url'],
+                        'gateway_url' => $result['gateway_url'],
+                        'expires_at' => $result['expires_at'],
+                        'amount' => $amount,
+                        'payment_method' => 'card',
+                        'status' => $payment->status,
+                        'poll_url' => "/api/wallet/payment-status/{$payment->id}",
+                        'ussd_hint' => false,
+                    ],
+                ]);
+            }
 
             // Générer l'URL/référence de paiement selon la méthode
             if ($paymentMethod === 'kpay') {
@@ -143,7 +217,8 @@ class WalletController extends Controller
                     null,
                     null,
                     'wallet_recharge',
-                    $request->provider_code
+                    $request->provider_code,
+                    $request->input('country')
                 );
 
                 \Log::info("[WalletController] ✅ KPay payment initiated (pending)", [
@@ -205,6 +280,23 @@ class WalletController extends Controller
                     ],
                 ]);
             }
+        } catch (\App\Services\Payment\KPayException $e) {
+            // Saisie utilisateur invalide (numéro, opérateur, pays) : l'app doit
+            // pouvoir corriger l'écran plutôt qu'afficher une panne serveur.
+            $userInputCodes = ['PHONE_REQUIRED', 'INVALID_PHONE', 'UNSUPPORTED_COUNTRY', 'PROVIDER_REQUIRED'];
+            $isUserInput = in_array($e->kpayCode, $userInputCodes, true);
+
+            \Log::warning("[WalletController] ⚠️ KPay recharge refusée", [
+                'kpay_code' => $e->kpayCode,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->kpayCode,
+                'retryable' => $e->isRetryable(),
+            ], $isUserInput ? 422 : 502);
         } catch (\Exception $e) {
             \Log::error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             \Log::error("[WalletController] ❌ WALLET RECHARGE FAILED");
@@ -844,7 +936,13 @@ class WalletController extends Controller
         $user = $payment->user;
         $metadata = $payment->metadata ?? [];
 
-        $description = "Recharge wallet via " . strtoupper($payment->payment_method);
+        // Libellé orienté utilisateur : le moyen de paiement, jamais
+        // l'agrégateur technique (KPay, FreeMoPay…).
+        $description = match ($payment->payment_method) {
+            'paypal' => 'Recharge par PayPal',
+            'card' => 'Recharge par carte bancaire',
+            default => 'Recharge par Mobile Money',
+        };
         if (isset($metadata['currency_conversion'])) {
             $description .= " ({$metadata['currency_conversion']['converted_amount']} {$metadata['currency_conversion']['converted_currency']})";
         }
@@ -1072,6 +1170,76 @@ class WalletController extends Controller
     }
 
     /**
+     * Catalogue des pays et opérateurs Mobile Money supportés.
+     *
+     * Alimente le sélecteur « pays puis opérateur » de l'app : le frontend ne
+     * devine plus l'opérateur (c'est ce qui faisait échouer les paiements hors
+     * Cameroun), il envoie le `provider_code` exact retourné ici.
+     *
+     * La disponibilité temps réel de KPay est fusionnée quand elle est
+     * joignable ; sinon le catalogue est renvoyé sans statut plutôt que de
+     * priver l'utilisateur de tout moyen de paiement.
+     *
+     * GET /api/wallet/payment-countries?operation=DEPOSIT|PAYOUT
+     */
+    public function paymentCountries(Request $request)
+    {
+        $operationType = strtoupper($request->query('operation', 'DEPOSIT'));
+        if (!in_array($operationType, ['DEPOSIT', 'PAYOUT'], true)) {
+            $operationType = 'DEPOSIT';
+        }
+
+        $availabilityMap = null;
+
+        try {
+            $kpay = app(\App\Services\Payment\KPayService::class);
+
+            // Réponse KPay : [{country, providers:[{provider, operationTypes}]}]
+            // `operationTypes` arrive tantôt en objet {DEPOSIT: "OPERATIONAL"},
+            // tantôt en liste [{operationType, status}] : on absorbe les deux.
+            $availabilityMap = [];
+            foreach ($kpay->getAvailability() as $country) {
+                foreach ($country['providers'] ?? [] as $provider) {
+                    $code = $provider['provider'] ?? null;
+                    if (!$code) {
+                        continue;
+                    }
+
+                    $types = $provider['operationTypes'] ?? [];
+                    $statuses = [];
+
+                    if (array_is_list($types)) {
+                        foreach ($types as $entry) {
+                            if (isset($entry['operationType'])) {
+                                $statuses[$entry['operationType']] = $entry['status'] ?? null;
+                            }
+                        }
+                    } else {
+                        $statuses = $types;
+                    }
+
+                    $availabilityMap[$code] = $statuses;
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('[WalletController] paymentCountries availability error: ' . $e->getMessage());
+            $availabilityMap = null;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'countries' => \App\Services\Payment\KPayCatalog::toArray($availabilityMap, $operationType),
+                // La carte n'est proposée que si le moyen `CARD` est activé
+                // côté KPay : sinon l'initialisation échoue à coup sûr.
+                'card_enabled' => \App\Models\ServiceConfiguration::isKPayCardEnabled(),
+                'min_deposit' => \App\Models\ServiceConfiguration::getKPayMinDeposit(),
+                'min_withdrawal' => \App\Models\ServiceConfiguration::getKPayMinWithdrawal(),
+            ],
+        ]);
+    }
+
+    /**
      * Initie un retrait FreeMoPay depuis le wallet
      *
      * POST /api/wallet/withdraw/freemopay
@@ -1092,12 +1260,26 @@ class WalletController extends Controller
         $minWithdrawal = \App\Models\ServiceConfiguration::getKPayMinWithdrawal();
         $validator = Validator::make($request->all(), [
             'amount' => "required|numeric|min:{$minWithdrawal}", // Minimum configurable (admin)
-            'payment_method' => 'required|in:om,momo',
+            // `om`/`momo` sont les libellés Cameroun historiques, conservés pour
+            // les versions déjà installées ; `mobile_money` est le libellé
+            // multi-pays, l'opérateur réel étant porté par `provider_code`.
+            'payment_method' => 'required|in:om,momo,mobile_money',
             'phone' => 'required|string',
-            'provider_code' => 'nullable|string',
+            'provider_code' => [
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::in(\App\Services\Payment\KPayCatalog::providerCodes()),
+            ],
+            'country' => [
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rule::in(\App\Services\Payment\KPayCatalog::countryCodes()),
+            ],
             'notes' => 'nullable|string|max:500',
         ], [
             'amount.min' => "Le montant minimum de retrait est {$minWithdrawal} FCFA.",
+            'provider_code.in' => "Cet opérateur n'est pas pris en charge.",
+            'country.in' => "Ce pays n'est pas pris en charge.",
         ]);
 
         if ($validator->fails()) {
@@ -1135,11 +1317,15 @@ class WalletController extends Controller
             DB::beginTransaction();
 
             $kpay = app(\App\Services\Payment\KPayService::class);
-            $normalizedPhone = $kpay->normalizePhoneNumber($phone);
+            $normalizedPhone = $kpay->normalizePhoneNumber($phone, true, $request->input('country'));
             $providerCode = $request->provider_code ?: $kpay->deriveProviderCode($normalizedPhone);
 
-            if (!$providerCode) {
-                throw new \Exception('Opérateur indéterminé pour ce numéro. Précisez provider_code.');
+            if (!\App\Services\Payment\KPayCatalog::isValidProvider($providerCode)) {
+                throw new \App\Services\Payment\KPayException(
+                    'Opérateur indéterminé pour ce numéro. Sélectionnez votre opérateur.',
+                    0,
+                    'PROVIDER_REQUIRED'
+                );
             }
 
             $withdrawal = PlatformWithdrawal::create([
@@ -1231,6 +1417,24 @@ class WalletController extends Controller
                     'message' => __('wallet.withdrawal_processing_detail'),
                 ],
             ]);
+        } catch (\App\Services\Payment\KPayException $e) {
+            DB::rollBack();
+
+            // Saisie corrigeable par l'utilisateur → 422, panne opérateur → 502.
+            $userInputCodes = ['PHONE_REQUIRED', 'INVALID_PHONE', 'UNSUPPORTED_COUNTRY', 'PROVIDER_REQUIRED'];
+            $isUserInput = in_array($e->kpayCode, $userInputCodes, true);
+
+            \Log::warning("[WalletController] ⚠️ KPay withdrawal refusé", [
+                'kpay_code' => $e->kpayCode,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->kpayCode,
+                'retryable' => $e->isRetryable(),
+            ], $isUserInput ? 422 : 502);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error("[WalletController] ❌ KPay withdrawal error: " . $e->getMessage());
