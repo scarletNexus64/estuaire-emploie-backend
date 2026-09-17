@@ -3,6 +3,10 @@
 return [
     'unavailable' => 'Le service INSAM-IA est momentanément indisponible. Réessayez dans quelques instants.',
     'not_configured' => "L'intégration INSAM-IA n'est pas encore activée sur cette plateforme.",
+    'pdf_not_readable' => "Ce PDF est une image scannée : aucun texte n'a pu en être lu. Recopiez vos réponses en texte pour obtenir une correction fiable.",
+    'copy_without_subject' => "Sujet non précisé",
+    'copy_correction' => "Correction de copie",
+    'contribution_locked' => "Ce sujet a été validé et fait désormais partie de la banque commune : il ne peut plus être retiré.",
     'not_found' => 'Contenu INSAM-IA introuvable.',
     'student_mode_required' => 'Le Mode Étudiant est requis pour accéder aux ressources INSAM-IA.',
     'attempt_not_found' => 'Tentative introuvable.',
@@ -12,8 +16,17 @@ return [
     'generation_ready_body' => 'Votre fiche de révision « :title » est disponible.',
     'generation_failed_title' => 'Génération impossible',
     'generation_failed_body' => 'La fiche de révision n\'a pas pu être générée. Réessayez plus tard.',
+    'exercises_expired' => "Les exercices ont expiré. Relancez-les pour obtenir de nouvelles questions.",
+    'study_profile_saved' => "Profil d'études enregistré.",
+    'study_profile_required' => "Choisissez votre spécialité et votre niveau pour accéder à vos contenus.",
+    'levels' => [
+        '1' => "1ère année",
+        '2' => "2ème année",
+        '3' => "3ème année",
+    ],
     'progress_saved' => 'Progression enregistrée.',
     'attestation_issued' => 'Votre attestation a été délivrée.',
+    'training_attestation_issued' => 'Votre attestation de formation a été délivrée.',
 
     'mention' => [
         'excellent' => 'Excellent',
@@ -27,6 +40,8 @@ return [
         'below_threshold' => 'Une note d\'au moins :threshold % est requise pour obtenir l\'attestation.',
         'not_available' => 'Aucune attestation disponible pour cette évaluation.',
         'pdf_unavailable' => "Le document n'a pas pu être généré. Réessayez dans un instant.",
+        'training_incomplete' => 'Toutes les vidéos de la formation doivent être visionnées pour obtenir l\'attestation (:completed sur :total).',
+        'training_without_videos' => "Cette formation ne contient aucune vidéo : aucune attestation ne peut être délivrée.",
     ],
 
     'attestation' => [
@@ -45,6 +60,9 @@ return [
         'signatory' => 'La Direction',
         'verify' => 'Document vérifiable auprès d\'Estuaire Emploi à l\'aide de la référence :reference.',
         'default_course' => 'Parcours de formation',
+        'statement_training' => 'pour avoir suivi dans son intégralité la formation :course',
+        'videos_watched' => 'Vidéos suivies',
+        'default_training' => 'Formation',
         'unknown_holder' => 'Étudiant',
     ],
 ];

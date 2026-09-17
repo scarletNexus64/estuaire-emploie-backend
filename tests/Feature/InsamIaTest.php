@@ -134,20 +134,33 @@ class InsamIaTest extends TestCase
         $this->assertSame(2, $response->json('data.0.id'));
     }
 
-    public function test_exam_download_is_proxied_through_estuaire(): void
+    /**
+     * Les épreuves ne se téléchargent plus : elles se lisent en ligne. La
+     * route de téléchargement a été retirée, seul le texte est servi.
+     */
+    public function test_exams_are_read_online_and_no_longer_downloadable(): void
     {
         $this->fakeInsamIa([
-            'insam-ia.test/api/exams/1/download' => Http::response('CONTENU-BINAIRE', 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="sujet.pdf"',
+            'insam-ia.test/api/external/exams/1/contenu' => Http::response([
+                'success' => true,
+                'format' => 'docx',
+                'titre' => 'Épreuve de réseaux',
+                'sujet' => 'Question 1 : définir une adresse IP.',
+                'a_un_corrige' => true,
             ]),
         ]);
 
         $response = $this->actingAs($this->student(), 'sanctum')
-            ->get('/api/insam-ia/exams/1/download');
+            ->getJson('/api/insam-ia/exams/1/content');
 
         $response->assertOk();
-        $this->assertSame('CONTENU-BINAIRE', $response->streamedContent());
+        $this->assertSame('Question 1 : définir une adresse IP.', $response->json('data.sujet'));
+        $this->assertTrue($response->json('data.has_correction'));
+
+        // Plus aucune route ne sert le fichier.
+        $this->actingAs($this->student(), 'sanctum')
+            ->get('/api/insam-ia/exams/1/download')
+            ->assertNotFound();
     }
 
     // ------------------------------------------------------------------

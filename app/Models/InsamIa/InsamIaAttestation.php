@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 /**
- * Attestation de fin de parcours, délivrée par Estuaire à l'issue d'une
- * évaluation réussie et matérialisée par un PDF généré côté backend.
+ * Attestation de fin de parcours, délivrée par Estuaire et matérialisée par
+ * un PDF généré côté backend.
+ *
+ * Deux origines possibles, distinguées par `source` : une évaluation (QCM)
+ * réussie, ou une formation vidéo dont toutes les vidéos ont été visionnées.
  */
 class InsamIaAttestation extends Model
 {
@@ -20,9 +23,22 @@ class InsamIaAttestation extends Model
      */
     public const PASS_THRESHOLD = 70;
 
+    /**
+     * Attestation délivrée sur un QCM réussi (comportement historique).
+     */
+    public const SOURCE_EVALUATION = 'evaluation';
+
+    /**
+     * Attestation délivrée sur une formation vidéo achevée.
+     */
+    public const SOURCE_TRAINING = 'training';
+
     protected $fillable = [
         'user_id',
         'attempt_id',
+        'source',
+        'formation_id',
+        'videos_total',
         'reference',
         'title',
         'specialite',
@@ -37,6 +53,8 @@ class InsamIaAttestation extends Model
     protected function casts(): array
     {
         return [
+            'formation_id' => 'integer',
+            'videos_total' => 'integer',
             'score' => 'integer',
             'total' => 'integer',
             'percentage' => 'integer',
@@ -52,6 +70,17 @@ class InsamIaAttestation extends Model
     public function attempt(): BelongsTo
     {
         return $this->belongsTo(InsamIaAttempt::class, 'attempt_id');
+    }
+
+    /**
+     * L'attestation sanctionne-t-elle une formation vidéo ?
+     *
+     * Le PDF et l'API en dépendent : « score 8/10 » ne veut pas dire la même
+     * chose pour un QCM et pour un nombre de vidéos vues.
+     */
+    public function isTraining(): bool
+    {
+        return $this->source === self::SOURCE_TRAINING;
     }
 
     /**

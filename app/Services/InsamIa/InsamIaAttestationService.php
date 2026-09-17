@@ -4,6 +4,8 @@ namespace App\Services\InsamIa;
 
 use App\Models\InsamIa\InsamIaAttempt;
 use App\Models\InsamIa\InsamIaAttestation;
+use App\Models\User;
+use App\Services\TrainingProgressService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -11,12 +13,17 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Délivrance des attestations de fin de parcours.
  *
- * Le QCM est corrigé par INSAM-IA, mais l'attestation est un document
- * d'Estuaire : c'est nous qui la délivrons, la référençons et en produisons
- * le PDF. Elle reste donc consultable même si INSAM-IA est indisponible.
+ * Le QCM est corrigé par INSAM-IA et les vidéos sont hébergées par
+ * InsamTechs, mais l'attestation est un document d'Estuaire : c'est nous qui
+ * la délivrons, la référençons et en produisons le PDF. Elle reste donc
+ * consultable même si les services tiers sont indisponibles.
  */
 class InsamIaAttestationService
 {
+    public function __construct(private readonly TrainingProgressService $trainingProgress)
+    {
+    }
+
     /**
      * Délivre l'attestation d'une tentative réussie.
      *
@@ -51,6 +58,9 @@ class InsamIaAttestationService
         $attestation = InsamIaAttestation::create([
             'user_id' => $attempt->user_id,
             'attempt_id' => $attempt->id,
+            // Posée explicitement : la valeur par défaut de la colonne ne
+            // couvre pas les écritures où la source est significative.
+            'source' => InsamIaAttestation::SOURCE_EVALUATION,
             'reference' => InsamIaAttestation::generateReference(),
             'title' => $this->courseTitle($attempt),
             'specialite' => $attempt->specialite,
@@ -58,6 +68,65 @@ class InsamIaAttestationService
             'total' => $attempt->total,
             'percentage' => $attempt->percentage,
             'mention' => InsamIaAttestation::mentionFor($attempt->percentage),
+            'issued_at' => now(),
+        ]);
+
+        return $this->ensurePdf($attestation);
+    }
+
+    /**
+     * Délivre l'attestation d'une formation vidéo achevée.
+     *
+     * Le nombre de vidéos vient du catalogue InsamTechs : notre base ne
+     * connaît que celles déjà ouvertes par l'étudiant, l'appelant doit donc
+     * fournir le total attendu.
+     *
+     * Idempotent : une formation déjà attestée renvoie son attestation
+     * existante plutôt que d'en créer une seconde.
+     *
+     * @throws InsamIaAttestationException si la formation n'est pas achevée
+     */
+    public function issueForTraining(
+        User $user,
+        int $formationId,
+        string $formationTitle,
+        int $videosTotal,
+    ): InsamIaAttestation {
+        if ($videosTotal <= 0) {
+            throw InsamIaAttestationException::trainingWithoutVideos();
+        }
+
+        $existing = InsamIaAttestation::where('user_id', $user->id)
+            ->where('formation_id', $formationId)
+            ->first();
+
+        if ($existing) {
+            // Le PDF a pu être purgé du stockage : on le régénère au besoin.
+            return $this->ensurePdf($existing);
+        }
+
+        $progress = $this->trainingProgress->formationProgress($user, $formationId, $videosTotal);
+
+        if (!$progress['completed']) {
+            throw InsamIaAttestationException::trainingIncomplete(
+                $progress['videos_completed'],
+                $progress['videos_total'],
+            );
+        }
+
+        $attestation = InsamIaAttestation::create([
+            'user_id' => $user->id,
+            'source' => InsamIaAttestation::SOURCE_TRAINING,
+            'formation_id' => $formationId,
+            'videos_total' => $videosTotal,
+            'reference' => InsamIaAttestation::generateReference(),
+            'title' => $this->trainingTitle($formationTitle),
+            // Le score est ici un décompte de vidéos vues, pas une note : la
+            // formation étant achevée, le résultat est nécessairement de 100 %.
+            'score' => $progress['videos_completed'],
+            'total' => $videosTotal,
+            'percentage' => 100,
+            'mention' => InsamIaAttestation::mentionFor(100),
             'issued_at' => now(),
         ]);
 
@@ -133,6 +202,19 @@ class InsamIaAttestationService
         return $title !== ''
             ? $title
             : __('insam_ia.attestation.default_course');
+    }
+
+    /**
+     * Intitulé de la formation, nettoyé comme celui des QCM : les titres du
+     * catalogue InsamTechs contiennent eux aussi des retours à la ligne.
+     */
+    private function trainingTitle(string $formationTitle): string
+    {
+        $title = trim(preg_replace('/\s+/u', ' ', $formationTitle) ?: '');
+
+        return $title !== ''
+            ? $title
+            : __('insam_ia.attestation.default_training');
     }
 
     private function holderName(InsamIaAttestation $attestation): string

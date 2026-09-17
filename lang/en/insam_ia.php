@@ -3,6 +3,10 @@
 return [
     'unavailable' => 'The INSAM-IA service is temporarily unavailable. Please try again shortly.',
     'not_configured' => 'The INSAM-IA integration is not enabled on this platform yet.',
+    'pdf_not_readable' => "This PDF is a scanned image: no text could be read from it. Please retype your answers as text to get a reliable correction.",
+    'copy_without_subject' => "Subject not specified",
+    'copy_correction' => "Copy correction",
+    'contribution_locked' => "This paper has been approved and is now part of the shared bank: it can no longer be removed.",
     'not_found' => 'INSAM-IA content not found.',
     'student_mode_required' => 'Student Mode is required to access INSAM-IA resources.',
     'attempt_not_found' => 'Attempt not found.',
@@ -12,8 +16,17 @@ return [
     'generation_ready_body' => 'Your revision sheet ":title" is available.',
     'generation_failed_title' => 'Generation failed',
     'generation_failed_body' => 'The revision sheet could not be generated. Please try again later.',
+    'exercises_expired' => "The exercises have expired. Start them again to get new questions.",
+    'study_profile_saved' => "Study profile saved.",
+    'study_profile_required' => "Choose your specialty and year to access your content.",
+    'levels' => [
+        '1' => "1st year",
+        '2' => "2nd year",
+        '3' => "3rd year",
+    ],
     'progress_saved' => 'Progress saved.',
     'attestation_issued' => 'Your certificate has been issued.',
+    'training_attestation_issued' => 'Your training certificate has been issued.',
 
     'mention' => [
         'excellent' => 'Excellent',
@@ -27,6 +40,8 @@ return [
         'below_threshold' => 'A score of at least :threshold% is required to obtain the certificate.',
         'not_available' => 'No certificate available for this assessment.',
         'pdf_unavailable' => 'The document could not be generated. Please try again shortly.',
+        'training_incomplete' => 'All the training videos must be watched to obtain the certificate (:completed of :total).',
+        'training_without_videos' => 'This training contains no video: no certificate can be issued.',
     ],
 
     'attestation' => [
@@ -45,6 +60,9 @@ return [
         'signatory' => 'Management',
         'verify' => 'Document verifiable with Estuaire Emploi using reference :reference.',
         'default_course' => 'Training pathway',
+        'statement_training' => 'for completing the :course training in full',
+        'videos_watched' => 'Videos watched',
+        'default_training' => 'Training',
         'unknown_holder' => 'Student',
     ],
 ];

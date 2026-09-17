@@ -31,6 +31,10 @@ class InsamIaRevisionCard extends Model
         'category_id',
         'category_name',
         'category_filiere',
+        'document_id',
+        'document_title',
+        'ue_code',
+        'ue_nom',
         'generated_by',
         'remote_updated_at',
         'synced_at',
@@ -41,6 +45,7 @@ class InsamIaRevisionCard extends Model
         return [
             'remote_id' => 'integer',
             'category_id' => 'integer',
+            'document_id' => 'integer',
             'key_points' => 'array',
             'remote_updated_at' => 'datetime',
             'synced_at' => 'datetime',
@@ -73,7 +78,11 @@ class InsamIaRevisionCard extends Model
     public function toApiArray(bool $withContent = false): array
     {
         $payload = [
-            'id' => $this->remote_id,
+            // Une fiche tirée d'un cours n'existe pas chez INSAM-IA et n'a
+            // donc pas de `remote_id` : son identifiant local en tient lieu.
+            // Les deux espaces ne se croisent pas, la fiche étant toujours
+            // désignée avec sa `source`.
+            'id' => $this->remote_id ?? $this->id,
             'title' => $this->title ?? '',
             'summary' => $this->summary,
             'key_points' => $this->key_points ?? [],
@@ -84,6 +93,16 @@ class InsamIaRevisionCard extends Model
                     'id' => $this->category_id,
                     'name' => $this->category_name ?? '',
                     'filiere' => $this->category_filiere,
+                ]
+                : null,
+            // Cours dont la fiche est tirée. Absent pour les fiches
+            // historiques, générées par filière.
+            'course' => $this->document_id !== null
+                ? [
+                    'document_id' => $this->document_id,
+                    'title' => $this->document_title,
+                    'ue_code' => $this->ue_code,
+                    'ue_nom' => $this->ue_nom,
                 ]
                 : null,
             'updated_at' => optional($this->remote_updated_at)->toIso8601String(),

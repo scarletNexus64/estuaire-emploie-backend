@@ -55,6 +55,13 @@ class User extends Authenticatable
         'level',
         'interests',
         'specialty',
+        // Profil d'études Estuaire AI — sert de filtre à tous les contenus
+        // INSAM-IA (cours, épreuves, évaluations).
+        'insam_ia_category_id',
+        'insam_ia_specialite',
+        'insam_ia_filiere',
+        'insam_ia_niveau',
+        'insam_ia_profile_completed_at',
         // Compte GFSolutions (G-Financials) offert à la souscription
         'gfs_client_number',
         'gfs_account_number',
@@ -84,7 +91,22 @@ class User extends Authenticatable
             'referral_balance' => 'decimal:2',
             'last_login_at' => 'datetime',
             'gfs_onboarded_at' => 'datetime',
+            'insam_ia_category_id' => 'integer',
+            'insam_ia_niveau' => 'integer',
+            'insam_ia_profile_completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Le profil d'études Estuaire AI est-il renseigné ?
+     *
+     * Il commande l'accès à l'espace : sans spécialité ni niveau, les contenus
+     * seraient servis toutes filières confondues, ce qui revient à ne rien
+     * proposer d'utile à l'étudiant.
+     */
+    public function hasInsamIaStudyProfile(): bool
+    {
+        return $this->insam_ia_category_id !== null && $this->insam_ia_niveau !== null;
     }
 
     /**

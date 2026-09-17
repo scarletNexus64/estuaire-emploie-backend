@@ -3,6 +3,10 @@
 return [
     'unavailable' => 'El servicio INSAM-IA no está disponible momentáneamente. Inténtelo de nuevo en unos instantes.',
     'not_configured' => 'La integración INSAM-IA aún no está activada en esta plataforma.',
+    'pdf_not_readable' => "Este PDF es una imagen escaneada: no se ha podido leer ningún texto. Vuelve a escribir tus respuestas como texto para obtener una corrección fiable.",
+    'copy_without_subject' => "Tema no especificado",
+    'copy_correction' => "Corrección de copia",
+    'contribution_locked' => "Este tema ha sido validado y ya forma parte del banco común: ya no se puede retirar.",
     'not_found' => 'Contenido INSAM-IA no encontrado.',
     'student_mode_required' => 'Se requiere el Modo Estudiante para acceder a los recursos INSAM-IA.',
     'attempt_not_found' => 'Intento no encontrado.',
@@ -12,8 +16,17 @@ return [
     'generation_ready_body' => 'Su ficha de repaso «:title» está disponible.',
     'generation_failed_title' => 'Generación imposible',
     'generation_failed_body' => 'No se pudo generar la ficha de repaso. Inténtelo más tarde.',
+    'exercises_expired' => "Los ejercicios han expirado. Vuelve a iniciarlos para obtener nuevas preguntas.",
+    'study_profile_saved' => "Perfil de estudios guardado.",
+    'study_profile_required' => "Elige tu especialidad y tu curso para acceder a tus contenidos.",
+    'levels' => [
+        '1' => "1er año",
+        '2' => "2º año",
+        '3' => "3er año",
+    ],
     'progress_saved' => 'Progreso guardado.',
     'attestation_issued' => 'Su certificado ha sido emitido.',
+    'training_attestation_issued' => 'Su certificado de formación ha sido emitido.',
 
     'mention' => [
         'excellent' => 'Excelente',
@@ -27,6 +40,8 @@ return [
         'below_threshold' => 'Se requiere una nota de al menos :threshold % para obtener el certificado.',
         'not_available' => 'No hay certificado disponible para esta evaluación.',
         'pdf_unavailable' => 'No se pudo generar el documento. Inténtelo de nuevo en un instante.',
+        'training_incomplete' => 'Debe visualizar todos los vídeos de la formación para obtener el certificado (:completed de :total).',
+        'training_without_videos' => 'Esta formación no contiene ningún vídeo: no se puede emitir ningún certificado.',
     ],
 
     'attestation' => [
@@ -45,6 +60,9 @@ return [
         'signatory' => 'La Dirección',
         'verify' => 'Documento verificable ante Estuaire Emploi mediante la referencia :reference.',
         'default_course' => 'Itinerario formativo',
+        'statement_training' => 'por haber seguido íntegramente la formación :course',
+        'videos_watched' => 'Vídeos vistos',
+        'default_training' => 'Formación',
         'unknown_holder' => 'Estudiante',
     ],
 ];

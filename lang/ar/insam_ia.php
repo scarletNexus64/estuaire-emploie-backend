@@ -3,6 +3,10 @@
 return [
     'unavailable' => 'خدمة INSAM-IA غير متاحة مؤقتاً. يُرجى المحاولة بعد قليل.',
     'not_configured' => 'لم يتم تفعيل تكامل INSAM-IA على هذه المنصة بعد.',
+    'pdf_not_readable' => "هذا الملف صورة ممسوحة ضوئياً: تعذّرت قراءة أي نص منه. أعد كتابة إجاباتك نصاً للحصول على تصحيح موثوق.",
+    'copy_without_subject' => "الموضوع غير محدد",
+    'copy_correction' => "تصحيح الورقة",
+    'contribution_locked' => "تمت الموافقة على هذا الموضوع وأصبح جزءاً من البنك المشترك: لم يعد بالإمكان حذفه.",
     'not_found' => 'محتوى INSAM-IA غير موجود.',
     'student_mode_required' => 'وضع الطالب مطلوب للوصول إلى موارد INSAM-IA.',
     'attempt_not_found' => 'المحاولة غير موجودة.',
@@ -12,8 +16,17 @@ return [
     'generation_ready_body' => 'بطاقة المراجعة «:title» متاحة الآن.',
     'generation_failed_title' => 'تعذّر الإنشاء',
     'generation_failed_body' => 'تعذّر إنشاء بطاقة المراجعة. يُرجى المحاولة لاحقاً.',
+    'exercises_expired' => "انتهت صلاحية التمارين. أعد تشغيلها للحصول على أسئلة جديدة.",
+    'study_profile_saved' => "تم حفظ ملف الدراسة.",
+    'study_profile_required' => "اختر تخصصك ومستواك للوصول إلى محتواك.",
+    'levels' => [
+        '1' => "السنة الأولى",
+        '2' => "السنة الثانية",
+        '3' => "السنة الثالثة",
+    ],
     'progress_saved' => 'تم حفظ التقدّم.',
     'attestation_issued' => 'تم إصدار شهادتك.',
+    'training_attestation_issued' => 'تم إصدار شهادة التكوين الخاصة بك.',
 
     'mention' => [
         'excellent' => 'ممتاز',
@@ -27,6 +40,8 @@ return [
         'below_threshold' => 'يلزم الحصول على :threshold٪ على الأقل للحصول على الشهادة.',
         'not_available' => 'لا توجد شهادة متاحة لهذا التقييم.',
         'pdf_unavailable' => 'تعذّر إنشاء المستند. يُرجى المحاولة بعد قليل.',
+        'training_incomplete' => 'يجب مشاهدة جميع فيديوهات التكوين للحصول على الشهادة (:completed من أصل :total).',
+        'training_without_videos' => 'لا يحتوي هذا التكوين على أي فيديو: لا يمكن إصدار أي شهادة.',
     ],
 
     'attestation' => [
@@ -45,6 +60,9 @@ return [
         'signatory' => 'الإدارة',
         'verify' => 'يمكن التحقّق من هذا المستند لدى Estuaire Emploi باستخدام المرجع :reference.',
         'default_course' => 'مسار تكويني',
+        'statement_training' => 'لمتابعته تكوين :course كاملاً',
+        'videos_watched' => 'الفيديوهات المُشاهَدة',
+        'default_training' => 'تكوين',
         'unknown_holder' => 'طالب',
     ],
 ];

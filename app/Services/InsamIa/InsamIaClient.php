@@ -64,6 +64,19 @@ class InsamIaClient
     }
 
     /**
+     * La clé API `/api/external/*` est-elle disponible ?
+     *
+     * Les supports de cours en dépendent : sans elle, l'intégration reste
+     * utilisable (épreuves, évaluations) mais la bibliothèque de cours ne
+     * peut rien servir. L'état est remonté au frontend pour qu'il annonce
+     * l'indisponibilité au lieu d'afficher un onglet vide.
+     */
+    public function hasApiKey(): bool
+    {
+        return !empty($this->apiKey);
+    }
+
+    /**
      * Requête publique : ni token, ni clé API (routes `/api/public/*`).
      *
      * @throws InsamIaException
@@ -103,6 +116,20 @@ class InsamIaClient
     }
 
     /**
+     * Requête authentifiée en DELETE (suppression d'une épreuve générée).
+     *
+     * @throws InsamIaException
+     */
+    public function delete(string $path, ?int $timeout = null): array
+    {
+        return $this->sendAuthenticated(
+            fn (PendingRequest $request) => $request->delete($this->url($path)),
+            $path,
+            $timeout
+        );
+    }
+
+    /**
      * Requête non authentifiée en POST (sessions d'évaluation publiques).
      *
      * @throws InsamIaException
@@ -121,7 +148,7 @@ class InsamIaClient
      *
      * @throws InsamIaException
      */
-    public function postExternal(string $path, array $payload = []): array
+    public function postExternal(string $path, array $payload = [], ?int $timeout = null): array
     {
         if (empty($this->apiKey)) {
             throw InsamIaException::notConfigured();
@@ -131,7 +158,31 @@ class InsamIaClient
             fn (PendingRequest $request) => $request
                 ->withHeaders(['X-API-Key' => $this->apiKey])
                 ->post($this->url($path), $payload),
-            $path
+            $path,
+            $timeout
+        );
+    }
+
+    /**
+     * Lecture sur `/api/external/*`, authentifiée par clé API.
+     *
+     * Pendant du [postExternal] : les ressources pédagogiques (bibliothèque,
+     * chapitres d'UE, contenu d'une épreuve) se lisent en GET.
+     *
+     * @throws InsamIaException
+     */
+    public function getExternal(string $path, array $query = [], ?int $timeout = null): array
+    {
+        if (empty($this->apiKey)) {
+            throw InsamIaException::notConfigured();
+        }
+
+        return $this->send(
+            fn (PendingRequest $request) => $request
+                ->withHeaders(['X-API-Key' => $this->apiKey])
+                ->get($this->url($path), $query),
+            $path,
+            $timeout
         );
     }
 

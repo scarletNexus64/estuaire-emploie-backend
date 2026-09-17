@@ -762,10 +762,59 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
         Route::get('/status', [InsamIaController::class, 'status'])->name('status');
         Route::get('/categories', [InsamIaController::class, 'categories'])->name('categories');
 
-        // Ressource 1 — Packs d'épreuves
+        // Profil d'études — spécialité et niveau, demandés une fois à l'entrée
+        // de l'espace. Volontairement hors du gating : c'est cet écran qui
+        // permet de lever le blocage, il ne peut pas être bloqué lui-même.
+        Route::get('/study-profile', [InsamIaController::class, 'studyProfile'])->name('study-profile.show');
+        Route::post('/study-profile', [InsamIaController::class, 'saveStudyProfile'])->name('study-profile.save');
+
+        // Ressource 1 — Épreuves, consultables en ligne uniquement.
+        // Le téléchargement a été retiré : servir le fichier revenait à en
+        // perdre le contrôle dès le premier partage. Seul le texte circule,
+        // et il est lu dans l'application.
         Route::get('/exams', [InsamIaController::class, 'exams'])->name('exams.index');
         Route::get('/exams/{id}', [InsamIaController::class, 'exam'])->whereNumber('id')->name('exams.show');
-        Route::get('/exams/{id}/download', [InsamIaController::class, 'downloadExam'])->whereNumber('id')->name('exams.download');
+        Route::get('/exams/{id}/content', [InsamIaController::class, 'examContent'])->whereNumber('id')->name('exams.content');
+        Route::get('/exams/{id}/correction', [InsamIaController::class, 'examCorrection'])->whereNumber('id')->name('exams.correction');
+        Route::post('/exams/{id}/evaluate', [InsamIaController::class, 'evaluateExamCopy'])->whereNumber('id')->name('exams.evaluate');
+
+        // Espace de travail « épreuves » — hébergé par Estuaire.
+        // INSAM-IA génère et supprime les épreuves mais ne sait pas les
+        // lister ; le dépôt de sujets et le suivi de progression restent
+        // chez nous, leurs routes distantes étant hors service.
+        Route::get('/generated-exams', [InsamIaController::class, 'generatedExams'])->name('generated.index');
+        Route::post('/generated-exams', [InsamIaController::class, 'generateExam'])->name('generated.store');
+        Route::get('/generated-exams/{id}', [InsamIaController::class, 'generatedExam'])->whereNumber('id')->name('generated.show');
+        Route::delete('/generated-exams/{id}', [InsamIaController::class, 'deleteGeneratedExam'])->whereNumber('id')->name('generated.destroy');
+
+        // Correction d'une copie : texte collé ou PDF (le texte en est extrait).
+        Route::post('/correct-copy', [InsamIaController::class, 'correctCopy'])->name('correct-copy');
+
+        // Enrichissement de la banque : dépôts d'étudiants, modérés chez nous.
+        Route::get('/contributions/options', [InsamIaController::class, 'contributionOptions'])->name('contributions.options');
+        Route::get('/contributions/subjects/{categoryId}', [InsamIaController::class, 'contributionSubjects'])
+            ->whereNumber('categoryId')
+            ->name('contributions.subjects');
+        Route::get('/contributions', [InsamIaController::class, 'contributions'])->name('contributions.index');
+        Route::post('/contributions', [InsamIaController::class, 'storeContribution'])->name('contributions.store');
+        Route::delete('/contributions/{id}', [InsamIaController::class, 'deleteContribution'])->whereNumber('id')->name('contributions.destroy');
+
+        // Progression : activités notées de l'espace étudiant.
+        Route::get('/course-progress', [InsamIaController::class, 'courseProgress'])->name('course-progress.index');
+        Route::post('/course-progress', [InsamIaController::class, 'trackCourseProgress'])->name('course-progress.store');
+
+        // Supports de cours — la bibliothèque vient d'INSAM-IA.
+        Route::get('/courses', [InsamIaController::class, 'courses'])->name('courses.index');
+        Route::get('/courses/{id}', [InsamIaController::class, 'course'])->whereNumber('id')->name('courses.show');
+        Route::get('/courses/{code}/chapters', [InsamIaController::class, 'courseChapters'])
+            ->where('code', '[A-Za-z0-9._-]+')
+            ->name('courses.chapters');
+        Route::post('/courses/{id}/assistant', [InsamIaController::class, 'courseAssistant'])->whereNumber('id')->name('courses.assistant');
+
+        // Évaluations rattachées à un cours : les questions sortent du support
+        // lui-même, là où les sessions ne portent que sur une spécialité.
+        Route::post('/courses/{id}/exercises', [InsamIaController::class, 'courseExercises'])->whereNumber('id')->name('courses.exercises');
+        Route::post('/courses/{id}/exercises/submit', [InsamIaController::class, 'submitCourseExercises'])->whereNumber('id')->name('courses.exercises.submit');
 
         // Ressource 5 — Module révision
         Route::get('/revision-cards', [InsamIaController::class, 'revisionCards'])->name('revision.index');
@@ -782,6 +831,18 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
         Route::post('/evaluations/start', [InsamIaController::class, 'startEvaluation'])->name('evaluations.start');
         Route::post('/evaluations/{attempt}/submit', [InsamIaController::class, 'submitEvaluation'])->whereNumber('attempt')->name('evaluations.submit');
         Route::post('/evaluations/{attempt}/attestation', [InsamIaController::class, 'issueAttestation'])->whereNumber('attempt')->name('evaluations.attestation');
+
+        // Formations vidéo — la progression de visionnage vit chez Estuaire
+        // (InsamTechs ne la conserve pas) et ouvre droit à l'attestation.
+        Route::get('/trainings/{formation}/progress', [InsamIaController::class, 'showTrainingProgress'])
+            ->whereNumber('formation')
+            ->name('trainings.progress.show');
+        Route::post('/trainings/{formation}/progress', [InsamIaController::class, 'trackTrainingVideo'])
+            ->whereNumber('formation')
+            ->name('trainings.progress.track');
+        Route::post('/trainings/{formation}/attestation', [InsamIaController::class, 'issueTrainingAttestation'])
+            ->whereNumber('formation')
+            ->name('trainings.attestation');
 
         // Ressource 4 — Attestations (générées par Estuaire)
         Route::get('/attestations', [InsamIaController::class, 'attestations'])->name('attestations.index');

@@ -141,7 +141,11 @@
         <div class="holder">{{ $holderName }}</div>
 
         <div class="course">
-            {!! __('insam_ia.attestation.statement', [
+            {{-- Une formation vidéo n'est pas « validée » par une note : elle
+                 est suivie intégralement, le libellé le dit autrement. --}}
+            {!! __($attestation->isTraining()
+                ? 'insam_ia.attestation.statement_training'
+                : 'insam_ia.attestation.statement', [
                 'course' => '<strong>' . e($attestation->title) . '</strong>',
             ]) !!}
             @if ($attestation->specialite)
@@ -152,7 +156,13 @@
         <table class="scores">
             <tr>
                 <td>
-                    <div class="label">{{ __('insam_ia.attestation.score') }}</div>
+                    {{-- « 8 / 10 » se lit comme une note sur un QCM, comme un
+                         nombre de vidéos vues sur une formation. --}}
+                    <div class="label">
+                        {{ __($attestation->isTraining()
+                            ? 'insam_ia.attestation.videos_watched'
+                            : 'insam_ia.attestation.score') }}
+                    </div>
                     <div class="value">{{ $attestation->score }} / {{ $attestation->total }}</div>
                 </td>
                 <td>
