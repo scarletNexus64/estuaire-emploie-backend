@@ -32,6 +32,12 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class, // Utilisateurs de test (recruteurs et candidats)
             CompanySeeder::class,
             RecruiterSeeder::class,
+            // Annuaire réel : 314 entreprises de Douala, Yaoundé et Bafoussam
+            // (GPS + téléphone + note Google) importées depuis
+            // `entreprises_douala_yaounde_bafoussam.xlsx`. Chaque entreprise
+            // reçoit son compte propriétaire (User recruiter + Recruiter).
+            // Idempotent et strictement additif.
+            EntreprisesCamerounSeeder::class,
             JobSeeder::class,
             ApplicationSeeder::class,
             StudentQuickServiceSeeder::class, // Services rapides « jobs étudiants » (cours, livraison, baby-sitting…)
