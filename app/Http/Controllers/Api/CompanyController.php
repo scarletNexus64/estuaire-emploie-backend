@@ -86,7 +86,17 @@ class CompanyController extends Controller
             });
         }
 
-        $companies = $query->latest()->paginate(20);
+        // La carte de l'annuaire consomme cet endpoint en repli quand le GPS
+        // est indisponible : sans coordonnees, une entreprise ne peut pas y
+        // etre affichee. On remonte donc les geolocalisees en premier, et on
+        // sert une page assez large pour couvrir l'annuaire d'un seul appel.
+        $perPage = (int) $request->input('per_page', 200);
+        $perPage = max(1, min($perPage, 500));
+
+        $companies = $query
+            ->orderByRaw('(latitude IS NULL OR longitude IS NULL) ASC')
+            ->latest()
+            ->paginate($perPage);
 
         return response()->json($companies);
     }
@@ -1021,6 +1031,40 @@ class CompanyController extends Controller
 
             $companies = $query->get();
 
+            // Repli hors zone de couverture : le rayon est centre sur la
+            // position reelle de l'appareil. Depuis un emulateur (Mountain
+            // View par defaut) ou simplement hors du Cameroun, la recherche
+            // est vide alors que l'annuaire est plein, et la carte reste
+            // desesperement blanche. Plutot que de ne rien afficher, on
+            // retombe sur l'annuaire geolocalise complet.
+            // Le seuil (et non `isEmpty`) couvre le cas ou quelques fiches
+            // isolees se trouvent pres de la position : 3 marqueurs perdus
+            // donnent une carte tout aussi inutilisable qu'une carte vide.
+            $fallbackApplied = false;
+            $minResults = 5;
+
+            if ($companies->count() < $minResults) {
+                $fallbackQuery = Company::whereNotNull('latitude')
+                    ->whereNotNull('longitude')
+                    ->where('status', 'verified')
+                    ->with('categories')
+                    ->withCount('jobs');
+
+                if (! empty($validated['level_1'])) {
+                    $level1 = $validated['level_1'];
+                    $fallbackQuery->whereHas('categories', function ($q) use ($level1) {
+                        $q->where('level_1', $level1);
+                    });
+                }
+
+                $fallback = $fallbackQuery->latest()->limit(500)->get();
+
+                if ($fallback->count() > $companies->count()) {
+                    $companies = $fallback;
+                    $fallbackApplied = true;
+                }
+            }
+
             return response()->json([
                 'data' => $companies,
                 'meta' => [
@@ -1030,6 +1074,10 @@ class CompanyController extends Controller
                         'latitude' => $latitude,
                         'longitude' => $longitude,
                     ],
+                    // true => aucun resultat dans le rayon, l'annuaire complet
+                    // a ete servi a la place. Le frontend actuel ignore ce
+                    // champ, il est la pour le debug et un usage ulterieur.
+                    'fallback_applied' => $fallbackApplied,
                 ],
             ]);
 
