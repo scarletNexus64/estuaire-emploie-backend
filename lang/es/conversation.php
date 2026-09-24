@@ -9,4 +9,5 @@ return [
     'created' => 'Conversación creada con éxito',
     'service_already_exists' => 'La conversación de servicio ya existe',
     'service_created' => 'Conversación de servicio creada con éxito',
+    'support_unavailable' => 'El soporte no está disponible por el momento. Inténtelo más tarde.',
 ];

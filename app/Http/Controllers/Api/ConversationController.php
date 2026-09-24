@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
+use Database\Seeders\SupportAccountSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -332,4 +334,40 @@ class ConversationController extends Controller
         ], 201);
     }
 
+
+    /**
+     * Ouvre (ou retrouve) la conversation de support avec le compte officiel
+     * « Estuaire Emploi ».
+     *
+     * L'application n'a pas à connaître l'identifiant du compte support : elle
+     * appelle cette route, qui le résout côté serveur et délègue à
+     * `getOrCreateServiceConversation`. Le compte est ainsi remplaçable sans
+     * livrer une nouvelle version de l'app.
+     */
+    public function openSupportConversation(Request $request)
+    {
+        $support = User::where('email', SupportAccountSeeder::EMAIL)->first();
+
+        if (! $support) {
+            \Log::error('💬 Compte support introuvable', [
+                'expected_email' => SupportAccountSeeder::EMAIL,
+            ]);
+
+            return response()->json([
+                'message' => __('conversation.support_unavailable'),
+            ], 503);
+        }
+
+        // Un membre du support qui ouvrirait l'app ne peut pas se contacter
+        // lui-même : la validation de `provider_id` l'interdit (`different`).
+        if ((int) Auth::id() === (int) $support->id) {
+            return response()->json([
+                'message' => __('conversation.support_unavailable'),
+            ], 422);
+        }
+
+        $request->merge(['provider_id' => $support->id]);
+
+        return $this->getOrCreateServiceConversation($request);
+    }
 }

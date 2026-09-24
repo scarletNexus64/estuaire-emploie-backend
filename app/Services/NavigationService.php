@@ -276,6 +276,12 @@ class NavigationService
                         'icon' => 'fas fa-envelope',
                         'permission' => 'manage_messagerie',
                     ],
+                    [
+                        'name' => 'Support in-app',
+                        'route' => 'admin.support.index',
+                        'icon' => 'fas fa-comments',
+                        'permission' => 'manage_messagerie',
+                    ],
                 ],
             ],
             [

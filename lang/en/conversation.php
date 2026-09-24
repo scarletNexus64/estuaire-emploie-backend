@@ -9,4 +9,5 @@ return [
     'created' => 'Conversation created successfully',
     'service_already_exists' => 'Service conversation already exists',
     'service_created' => 'Service conversation created successfully',
+    'support_unavailable' => 'Support is temporarily unavailable. Please try again later.',
 ];

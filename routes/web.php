@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SupportConversationController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\JobController;
 use App\Http\Controllers\Admin\QuickServiceController;
@@ -633,6 +634,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/api/packs/{type}', [PackPromotionController::class, 'getPacksByType'])->name('api.packs.by-type');
 
     // Messagerie / Support (emails entrants & sortants)
+    // Support in-app : conversations ouvertes depuis l'application vers le
+    // compte « Estuaire Emploi ». Distinct de la messagerie e-mail ci-dessous.
+    Route::middleware('permission:manage_messagerie')->prefix('support')->name('support.')->group(function () {
+        Route::get('/', [SupportConversationController::class, 'index'])->name('index');
+        Route::get('/{conversation}', [SupportConversationController::class, 'show'])->name('show');
+        Route::post('/{conversation}/reply', [SupportConversationController::class, 'reply'])->name('reply');
+    });
+
     Route::middleware('permission:manage_messagerie')->prefix('messagerie')->name('messagerie.')->group(function () {
         Route::get('/', [MessagerieController::class, 'index'])->name('index');
         Route::get('/compose', [MessagerieController::class, 'compose'])->name('compose');

@@ -679,6 +679,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
         ->middleware('subscription:can_contact');
     // Créer ou récupérer une conversation de service (sans limitation)
     Route::post('/conversations/service', [ConversationController::class, 'getOrCreateServiceConversation']);
+    // Ouvrir la conversation de support avec le compte officiel Estuaire Emploi
+    Route::post('/conversations/support', [ConversationController::class, 'openSupportConversation']);
     // Récupérer les messages d'une conversation
     Route::get('/conversations/{conversationId}/messages', [ChatController::class, 'getMessages']);
     // Envoyer un message
