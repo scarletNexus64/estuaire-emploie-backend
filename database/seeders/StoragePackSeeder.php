@@ -23,33 +23,37 @@ class StoragePackSeeder extends Seeder
                 'is_active' => true,
                 'display_order' => 0,
             ],
+            // Grille Estuaire Cloud : 5-10 Go = 1 000 FCFA, 15-50 Go = 1 500 FCFA,
+            // 50-1000 Go = 5 000 FCFA. Chaque pack offre le haut de sa tranche.
+            // Les slugs existants sont conservés : les achats en cours gardent
+            // leur propre copie de l'espace (user_storage_packs.storage_mb).
             [
                 'name' => 'Pack Basic',
                 'slug' => 'pack-basic',
-                'storage_mb' => 250,
+                'storage_mb' => 10 * 1024, // 10 Go
                 'duration_days' => 30,
                 'price' => 1000,
-                'description' => 'Pack de base avec 250 Mo de stockage pour 1 mois. Idéal pour stocker vos documents essentiels.',
+                'description' => 'Pack de base avec 10 Go de stockage pour 1 mois. Idéal pour stocker vos documents, CV et diplômes.',
                 'is_active' => true,
                 'display_order' => 1,
             ],
             [
                 'name' => 'Pack Standard',
                 'slug' => 'pack-standard',
-                'storage_mb' => 512,
-                'duration_days' => 90,
-                'price' => 2500,
-                'description' => 'Pack standard avec 512 Mo de stockage pour 3 mois. Parfait pour vos projets à moyen terme.',
+                'storage_mb' => 50 * 1024, // 50 Go
+                'duration_days' => 30,
+                'price' => 1500,
+                'description' => 'Pack standard avec 50 Go de stockage pour 1 mois. Parfait pour vos projets, photos et vidéos.',
                 'is_active' => true,
                 'display_order' => 2,
             ],
             [
                 'name' => 'Pack Premium',
                 'slug' => 'pack-premium',
-                'storage_mb' => 1024,
-                'duration_days' => 360,
+                'storage_mb' => 1000 * 1024, // 1000 Go
+                'duration_days' => 30,
                 'price' => 5000,
-                'description' => 'Pack premium avec 1 Go de stockage pour 1 an. La solution complète pour tous vos besoins de stockage.',
+                'description' => 'Pack premium avec 1000 Go de stockage pour 1 mois. La solution complète pour tous vos besoins de stockage.',
                 'is_active' => true,
                 'display_order' => 3,
             ],

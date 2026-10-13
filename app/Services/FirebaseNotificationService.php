@@ -218,14 +218,33 @@ class FirebaseNotificationService
      */
     public function sendToTopic(string $topic, string $title, string $body, array $data = []): bool
     {
+        return $this->sendToTarget('topic', $topic, $title, $body, $data);
+    }
+
+    /**
+     * Envoyer une notification push à une condition FCM combinant des topics,
+     * ex: "'role_candidate' in topics && !('role_recruiter' in topics)".
+     * Un seul appel Firebase, quel que soit le nombre d'abonnés (5 topics max).
+     */
+    public function sendToCondition(string $condition, string $title, string $body, array $data = []): bool
+    {
+        return $this->sendToTarget('condition', $condition, $title, $body, $data);
+    }
+
+    /**
+     * Envoi commun topic / condition. Ne lève jamais d'exception : un échec
+     * FCM est journalisé et renvoie false.
+     */
+    private function sendToTarget(string $type, string $target, string $title, string $body, array $data = []): bool
+    {
         if (! $this->isEnabled()) {
-            Log::warning('FCM non configuré : notification topic ignorée', ['topic' => $topic]);
+            Log::warning('FCM non configuré : notification ignorée', [$type => $target]);
 
             return false;
         }
 
         try {
-            $message = CloudMessage::withTarget('topic', $topic)
+            $message = CloudMessage::withTarget($type, $target)
                 ->withNotification(Notification::create($title, $body))
                 ->withData($data)
                 ->withApnsConfig(
@@ -259,14 +278,14 @@ class FirebaseNotificationService
             $result = $this->messaging->send($message);
 
             Log::info('FCM topic notification sent successfully', [
-                'topic' => $topic,
+                $type => $target,
                 'title' => $title,
             ]);
 
             return true;
         } catch (\Throwable $e) {
             Log::error('FCM topic notification failed', [
-                'topic' => $topic,
+                $type => $target,
                 'error' => $e->getMessage(),
             ]);
 

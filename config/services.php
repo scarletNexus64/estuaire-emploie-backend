@@ -16,6 +16,9 @@ return [
 
     'insamtechs' => [
         'api_url' => env('INSAMTECHS_API_URL', 'http://127.0.0.1:8001/api'),
+        // API publique du catalogue (formations vidéo), synchronisée pour la
+        // recherche par compétence / spécialité / secteur.
+        'public_api_url' => env('INSAMTECHS_PUBLIC_API_URL', 'https://admin.insamtechs.com/api'),
     ],
 
     // GFSolutions (G-Financials) — compte bancaire offert lors de la

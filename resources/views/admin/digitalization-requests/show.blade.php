@@ -25,7 +25,11 @@
 
             <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                 <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
-                    <span style="color: var(--secondary); font-weight: 600;">Nom du projet</span>
+                    <span style="color: var(--secondary); font-weight: 600;">Catégorie</span>
+                    <span>{{ $digitalizationRequest->category_label }}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
+                    <span style="color: var(--secondary); font-weight: 600;">Besoin</span>
                     <strong>{{ $digitalizationRequest->project_name }}</strong>
                 </div>
                 <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
@@ -42,7 +46,23 @@
                 </div>
                 <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
                     <span style="color: var(--secondary); font-weight: 600;">Contact</span>
-                    <strong>{{ $digitalizationRequest->contact }}</strong>
+                    <strong>{{ $digitalizationRequest->contact ?? '—' }}</strong>
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
+                    <span style="color: var(--secondary); font-weight: 600;">Canaux de contact</span>
+                    <span>{{ collect($digitalizationRequest->channels ?? [])->map(fn ($c) => \App\Models\DigitalizationRequest::CHANNELS[$c] ?? $c)->join(', ') ?: '—' }}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
+                    <span style="color: var(--secondary); font-weight: 600;">Pièce jointe</span>
+                    @if ($digitalizationRequest->attachment_url)
+                        <a href="{{ $digitalizationRequest->attachment_url }}" target="_blank" rel="noopener">{{ $digitalizationRequest->attachment_name ?? 'Ouvrir' }}</a>
+                    @else
+                        <span>—</span>
+                    @endif
+                </div>
+                <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
+                    <span style="color: var(--secondary); font-weight: 600;">Diffusion FCM</span>
+                    <span>{{ $digitalizationRequest->notified_at ? 'Terminée le '.$digitalizationRequest->notified_at->format('d/m/Y à H:i') : 'En cours / en attente' }}</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 160px 1fr; gap: 1rem; align-items: start;">
                     <span style="color: var(--secondary); font-weight: 600;">Demandeur (compte)</span>

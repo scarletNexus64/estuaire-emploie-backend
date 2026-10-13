@@ -39,6 +39,8 @@ class MessageSent implements ShouldBroadcastNow
             'sender_name' => $this->message->user->name,
             'message' => $this->message->message,
             'status' => $this->message->status,
+            // Contexte épinglé (produit taggé, demande de prestation…).
+            'metadata' => $this->message->metadata,
             'created_at' => $this->message->created_at->toDateTimeString(),
             'updated_at' => $this->message->updated_at->toDateTimeString(),
         ];

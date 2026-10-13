@@ -37,6 +37,13 @@ Schedule::command('mailbox:fetch')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/mailbox-fetch.log'));
 
+// Copie locale du catalogue InsamTechs (recherche des formations vidéo par
+// compétence / spécialité / secteur) : l'API InsamTechs n'a pas de recherche.
+Schedule::command('insamtechs:sync-catalog')
+    ->everySixHours()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/insamtechs-catalog.log'));
+
 // Désactivation quotidienne des packs de stockage expirés
 Schedule::call(function () {
     $storagePackService = app(\App\Services\StoragePackService::class);

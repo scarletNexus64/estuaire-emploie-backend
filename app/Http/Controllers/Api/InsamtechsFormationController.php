@@ -13,6 +13,60 @@ use Illuminate\Support\Facades\DB;
 class InsamtechsFormationController extends Controller
 {
     /**
+     * Recherche dans la vidéothèque InsamTechs (public, mode vitrine).
+     * GET /api/insamtechs-formations/search?q=&sector=&specialty=&sort=&page=&per_page=
+     * sort : relevance (défaut) | popular | recent | videos
+     *
+     * q = compétence (texte libre), specialty = clé de spécialité, sector = clé
+     * de secteur d'activité (cf. GET /api/insamtechs-formations/filters).
+     * Pagination au format Laravel ; les formations gardent le format de l'API
+     * InsamTechs.
+     */
+    public function search(Request $request, \App\Services\InsamtechsCatalogService $catalog)
+    {
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:100',
+            'sector' => 'nullable|string|max:40',
+            'specialty' => 'nullable|string|max:100',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:50',
+            'sort' => 'nullable|in:'.implode(',', \App\Services\InsamtechsCatalogService::SORTS),
+        ]);
+
+        try {
+            $result = $catalog->search(
+                $validated['q'] ?? null,
+                $validated['sector'] ?? null,
+                $validated['specialty'] ?? null,
+                (int) ($validated['page'] ?? 1),
+                (int) ($validated['per_page'] ?? 20),
+                $validated['sort'] ?? 'relevance',
+            );
+        } catch (\Throwable $e) {
+            \Log::error('[InsamtechsSearch] Recherche impossible', ['error' => $e->getMessage()]);
+            $result = ['data' => [], 'current_page' => 1, 'last_page' => 1, 'per_page' => 20, 'total' => 0];
+        }
+
+        return response()->json(['success' => true, 'data' => $result]);
+    }
+
+    /**
+     * Secteurs d'activité et spécialités de la vidéothèque, avec effectifs.
+     * GET /api/insamtechs-formations/filters
+     */
+    public function filters(Request $request, \App\Services\InsamtechsCatalogService $catalog)
+    {
+        try {
+            $sectors = $catalog->filters(str_starts_with((string) app()->getLocale(), 'en') ? 'en' : 'fr');
+        } catch (\Throwable $e) {
+            \Log::error('[InsamtechsSearch] Filtres indisponibles', ['error' => $e->getMessage()]);
+            $sectors = [];
+        }
+
+        return response()->json(['success' => true, 'data' => ['sectors' => $sectors]]);
+    }
+
+    /**
      * Retourne les prix actifs pour toutes les formations InsamTechs
      * Le Flutter merge ensuite ces prix avec les formations récupérées depuis InsamTechs
      */

@@ -167,6 +167,9 @@ Route::get('/exam-packs/{id}', [\App\Http\Controllers\Api\ExamPackApiController:
 // Auth optionnelle côté contrôleur (auth('sanctum')->check()). filters AVANT
 // {id} numérique ; purchase, my-training-packs, check-access, view/stream/
 // complete restent protégés (nécessitent un vrai utilisateur).
+// Vidéothèque InsamTechs : recherche par compétence / spécialité / secteur (public)
+Route::get('/insamtechs-formations/search', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'search']);
+Route::get('/insamtechs-formations/filters', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'filters']);
 Route::get('/training-packs', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'index']);
 Route::get('/training-packs/filters', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'filters']);
 Route::get('/training-packs/{id}', [\App\Http\Controllers\Api\TrainingPackApiController::class, 'show'])->whereNumber('id');
@@ -224,8 +227,23 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     Route::post('/digitalization-requests', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'store']);
     Route::get('/my-digitalization-requests', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'myRequests']);
+    Route::get('/digitalization-requests/feed', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'feed']);
+    Route::get('/digitalization-requests/{id}', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'show'])->whereNumber('id');
+    Route::post('/digitalization-requests/{id}/respond', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'respond'])->whereNumber('id');
     Route::delete('/digitalization-requests/bulk', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'bulkDestroy']);
     Route::delete('/digitalization-requests/{id}', [\App\Http\Controllers\Api\DigitalizationRequestController::class, 'destroy']);
+
+    // ------------------
+    // CVTHÈQUE - DEMANDES DE PROFIL (publiées par une entreprise, diffusées à
+    // tous progressivement, réponses par la messagerie avec la demande épinglée)
+    // ------------------
+    Route::post('/cv-profile-requests', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'store']);
+    Route::get('/cv-profile-requests/mine', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'mine']);
+    Route::get('/cv-profile-requests/feed', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'feed']);
+    Route::get('/cv-profile-requests/{id}', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'show'])->whereNumber('id');
+    Route::post('/cv-profile-requests/{id}/respond', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'respond'])->whereNumber('id');
+    Route::post('/cv-profile-requests/{id}/close', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'close'])->whereNumber('id');
+    Route::delete('/cv-profile-requests/{id}', [\App\Http\Controllers\Api\CvProfileRequestController::class, 'destroy'])->whereNumber('id');
 
     // ------------------
     // CANDIDATURES (Candidat & Recruteur)
