@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CompanyCategoryController;
 use App\Http\Controllers\Api\CompanyProductController;
+use App\Http\Controllers\Api\CompanyReviewController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\OtpController;
@@ -87,6 +88,7 @@ Route::get('/companies', [CompanyController::class, 'index']);
 Route::get('/companies/nearby', [CompanyController::class, 'getNearbyCompanies']); // Récupérer les entreprises à proximité par GPS
 Route::get('/companies/search', [CompanyController::class, 'search']); // Recherche full-text (nom, description, niveaux 1/2/3, ville…) + tri par distance
 Route::get('/companies/{company}', [CompanyController::class, 'show']);
+Route::get('/companies/{company}/reviews', [CompanyReviewController::class, 'index']);
 
 // Produits/Services d'entreprises (publics)
 Route::get('/companies/{companyId}/products', [CompanyProductController::class, 'index']); // Liste des produits d'une entreprise
@@ -441,6 +443,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // Récupérer les prix des formations InsamTechs
     Route::get('/insamtechs-formations/pricing', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'pricing']);
+    Route::get('/insamtechs-usb/pricing', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'pricing']);
+    Route::get('/insamtechs-usb/orders', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'index']);
+    Route::post('/insamtechs-usb/orders', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'store']);
     // Mes achats de formations InsamTechs
     Route::get('/my-insamtechs-formations', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'myPurchases']);
     // Acheter une formation InsamTechs
@@ -483,6 +488,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // ------------------
     // RECRUTEUR - GESTION DE L'ENTREPRISE
     // ------------------
+    Route::post('/companies/{company}/reviews', [CompanyReviewController::class, 'store'])->middleware('throttle:10,1');
     // Créer une entreprise (un user peut en créer plusieurs)
     Route::post('/companies', [CompanyController::class, 'store']);
     // Liste de toutes mes entreprises (multi-entreprises)

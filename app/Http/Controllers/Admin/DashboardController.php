@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\CompanyAddonService;
 use App\Models\Favorite;
 use App\Models\Job;
+use App\Models\InsamtechsUsbOrder;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
@@ -52,6 +53,13 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $pendingUsbOrders = auth()->user()?->isSuperAdmin()
+            ? InsamtechsUsbOrder::where('status', 'pending')->count()
+            : 0;
+        $recentUsbOrders = auth()->user()?->isSuperAdmin()
+            ? InsamtechsUsbOrder::with('user')->latest()->limit(5)->get()
+            : collect();
+
         // Get pending diploma verification requests from notifications
         $pendingDiplomaNotifications = DatabaseNotification::whereNull('read_at')
             ->where('type', 'diploma_verification_request')
@@ -86,7 +94,9 @@ class DashboardController extends Controller
             'recentJobs',
             'recentApplications',
             'pendingCompanies',
-            'pendingDiplomaApplications'
+            'pendingDiplomaApplications',
+            'pendingUsbOrders',
+            'recentUsbOrders'
         ));
     }
 }

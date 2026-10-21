@@ -20,6 +20,35 @@
 @endpush
 
 @section('content')
+    @if(auth()->user()?->isSuperAdmin())
+        <div class="bg-white rounded-2xl shadow-md border-2 border-orange-300 p-6 mb-8">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">Commandes de formations sur clé USB</h2>
+                    <p class="text-sm text-gray-600">{{ $pendingUsbOrders }} commande(s) en attente de traitement</p>
+                </div>
+                <a href="{{ route('admin.insamtechs-usb.index') }}" class="btn btn-primary">Voir toutes les commandes</a>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @forelse($recentUsbOrders as $order)
+                    <div class="py-3 flex flex-wrap justify-between gap-3">
+                        <div>
+                            <strong>#{{ $order->id }} — {{ $order->customer_name }}</strong>
+                            <p class="text-sm text-gray-600">Compte #{{ $order->user_id }} · {{ $order->user?->name ?? 'Compte supprimé' }} · {{ $order->user?->email ?? '—' }} · {{ $order->user?->phone ?? '—' }}</p>
+                            <p class="text-sm text-gray-600">Livraison : {{ $order->phone }} · {{ $order->address }}, {{ $order->city }}</p>
+                            <p class="text-sm text-gray-600">Formations : {{ collect($order->formations)->pluck('title')->join(', ') }}</p>
+                            @if($order->user)
+                                <a href="{{ route('admin.users.show', $order->user) }}" class="text-sm text-primary">Voir le compte complet</a>
+                            @endif
+                        </div>
+                        <div class="text-sm">{{ count($order->formations) }} formation(s) · {{ number_format($order->total_price_xaf, 0, ',', ' ') }} XAF · {{ $order->status }}</div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-500">Aucune commande USB reçue.</p>
+                @endforelse
+            </div>
+        </div>
+    @endif
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Card: Total Companies -->

@@ -22,6 +22,8 @@ class Company extends Model
         'domain',
         'sector',
         'website',
+        'facebook',
+        'tiktok',
         'address',
         'city',
         'country',

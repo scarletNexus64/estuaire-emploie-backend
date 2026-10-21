@@ -167,7 +167,9 @@ class CompanyController extends Controller
      *                 @OA\Property(property="sector", type="string", example="Technologie & IT"),
      *                 @OA\Property(property="address", type="string", example="Bonanjo, Rue des Cocotiers"),
      *                 @OA\Property(property="city", type="string", example="Douala"),
-     *                 @OA\Property(property="website", type="string", example="https://techsolutions.cm")
+     *                 @OA\Property(property="website", type="string", example="https://techsolutions.cm"),
+     *                 @OA\Property(property="facebook", type="string", nullable=true),
+     *                 @OA\Property(property="tiktok", type="string", nullable=true)
      *             )
      *         )
      *     ),
@@ -223,6 +225,8 @@ class CompanyController extends Controller
                 'address' => 'nullable|string',
                 'city' => 'nullable|string',
                 'website' => 'nullable|url|max:255',
+                'facebook' => 'nullable|url|max:255',
+                'tiktok' => 'nullable|url|max:255',
                 'latitude' => 'required|numeric|between:-90,90', // Required now
                 'longitude' => 'required|numeric|between:-180,180', // Required now
             ]);
@@ -364,6 +368,8 @@ class CompanyController extends Controller
      *                 @OA\Property(property="description", type="string"),
      *                 @OA\Property(property="sector", type="string"),
      *                 @OA\Property(property="website", type="string", nullable=true),
+     *                 @OA\Property(property="facebook", type="string", nullable=true),
+     *                 @OA\Property(property="tiktok", type="string", nullable=true),
      *                 @OA\Property(property="address", type="string"),
      *                 @OA\Property(property="city", type="string"),
      *                 @OA\Property(property="status", type="string", enum={"pending", "verified", "suspended"})
@@ -541,7 +547,9 @@ class CompanyController extends Controller
      *                 @OA\Property(property="sector", type="string", example="Technologie & IT"),
      *                 @OA\Property(property="address", type="string"),
      *                 @OA\Property(property="city", type="string", example="Douala"),
-     *                 @OA\Property(property="website", type="string", example="https://techsolutions.cm")
+     *                 @OA\Property(property="website", type="string", example="https://techsolutions.cm"),
+     *                 @OA\Property(property="facebook", type="string", nullable=true),
+     *                 @OA\Property(property="tiktok", type="string", nullable=true)
      *             )
      *         )
      *     ),
@@ -607,6 +615,8 @@ class CompanyController extends Controller
                 'address' => 'nullable|string',
                 'city' => 'nullable|string',
                 'website' => 'nullable|url|max:255',
+                'facebook' => 'nullable|url|max:255',
+                'tiktok' => 'nullable|url|max:255',
                 'latitude' => 'nullable|numeric|between:-90,90',
                 'longitude' => 'nullable|numeric|between:-180,180',
             ]);
@@ -777,6 +787,8 @@ class CompanyController extends Controller
                     'sector' => $company->sector,
                     'domain' => $company->domain,
                     'website' => $company->website,
+                    'facebook' => $company->facebook,
+                    'tiktok' => $company->tiktok,
                     'address' => $company->address,
                     'city' => $company->city,
                     'country' => $company->country,

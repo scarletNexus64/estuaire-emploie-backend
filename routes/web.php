@@ -456,6 +456,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     });
 
     // TARIFICATION DES FORMATIONS INSAMTECHS
+    Route::middleware('permission:manage_premium_services')->prefix('insamtechs-usb')->name('insamtechs-usb.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\InsamtechsUsbOrderController::class, 'index'])->name('index');
+        Route::put('/pricing', [\App\Http\Controllers\Admin\InsamtechsUsbOrderController::class, 'updatePricing'])->name('pricing');
+        Route::patch('/orders/{order}/status', [\App\Http\Controllers\Admin\InsamtechsUsbOrderController::class, 'updateStatus'])->name('status');
+    });
+
     Route::middleware('permission:manage_premium_services')->prefix('insamtechs-pricing')->name('insamtechs-pricing.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\InsamtechsFormationPricingController::class, 'create'])->name('create');

@@ -164,6 +164,12 @@ class NavigationService
                     //     'icon' => 'fas fa-tags',
                     //     'permission' => 'manage_premium_services',
                     // ],
+                    [
+                        'name' => 'Commandes USB InsamTechs',
+                        'route' => 'admin.insamtechs-usb.index',
+                        'icon' => 'fas fa-usb',
+                        'permission' => 'manage_premium_services',
+                    ],
                 ],
             ],
             [
@@ -411,6 +417,7 @@ class NavigationService
                 'admin.training-packs.index',
                 'admin.training-videos.index',
                 'admin.insamtechs-pricing.index',
+                'admin.insamtechs-usb.index',
                 'admin.settings.index',
             ],
 
