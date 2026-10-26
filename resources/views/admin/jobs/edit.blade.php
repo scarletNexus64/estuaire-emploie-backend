@@ -146,8 +146,7 @@
                 <label class="form-label">Statut *</label>
                 <select name="status" class="form-control" required>
                     <option value="draft" {{ old('status', $job->status) === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                    <option value="pending" {{ old('status', $job->status) === 'pending' ? 'selected' : '' }}>En attente</option>
-                    <option value="published" {{ old('status', $job->status) === 'published' ? 'selected' : '' }}>Publiée</option>
+                    <option value="published" {{ in_array(old('status', $job->status), ['pending', 'published']) ? 'selected' : '' }}>Publiée</option>
                     <option value="closed" {{ old('status', $job->status) === 'closed' ? 'selected' : '' }}>Fermée</option>
                     <option value="expired" {{ old('status', $job->status) === 'expired' ? 'selected' : '' }}>Expirée</option>
                 </select>

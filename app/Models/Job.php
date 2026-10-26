@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\SendJobPublishedNotification;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,36 @@ class Job extends Model
     use HasFactory, HasTranslations, SoftDeletes;
 
     protected array $translatable = ['title', 'description', 'requirements', 'benefits'];
+
+    protected $attributes = [
+        'status' => 'published',
+    ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Job $job) {
+            // Accepter aussi les anciens clients/imports qui envoient "pending".
+            if ($job->status === 'pending') {
+                $job->status = 'published';
+            }
+
+            if ($job->isPublished() && !$job->published_at) {
+                $job->published_at = now();
+            }
+        });
+
+        static::created(function (Job $job) {
+            if ($job->isPublished()) {
+                SendJobPublishedNotification::dispatch($job)->afterCommit();
+            }
+        });
+
+        static::updated(function (Job $job) {
+            if ($job->isPublished() && $job->wasChanged('status')) {
+                SendJobPublishedNotification::dispatch($job)->afterCommit();
+            }
+        });
+    }
 
     /**
      * Attributs calculés exposés automatiquement dans les réponses JSON

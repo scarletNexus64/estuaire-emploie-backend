@@ -14,14 +14,14 @@ return [
             'driver' => 'database',
             'table' => 'job_queue',
             'queue' => 'default',
-            'retry_after' => 90,
+            'retry_after' => (int) env('QUEUE_RETRY_AFTER', 900),
         ],
 
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 300,
+            'retry_after' => (int) env('QUEUE_RETRY_AFTER', 900),
             'block_for' => 3,
             'after_commit' => false,
         ],

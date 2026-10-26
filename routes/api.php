@@ -53,7 +53,7 @@ Route::post('/check-availability', [AuthController::class, 'checkAvailability'])
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
-Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+Route::post('/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 Route::post('/password/force-change', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
 
 // Vérification email (OTP legacy)
@@ -65,8 +65,8 @@ Route::post('/otp/send', [OtpController::class, 'sendOtp']);
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
 
 // OTP pour réinitialisation mot de passe (SMS ou Email)
-Route::post('/otp/password-reset/send', [OtpController::class, 'sendPasswordResetOtp']);
-Route::post('/otp/password-reset/verify', [OtpController::class, 'verifyPasswordResetOtp']);
+Route::post('/otp/password-reset/send', [OtpController::class, 'sendPasswordResetOtp'])->middleware('throttle:10,1');
+Route::post('/otp/password-reset/verify', [OtpController::class, 'verifyPasswordResetOtp'])->middleware('throttle:10,1');
 
 // Demandes de changement d'appareil (publiques)
 Route::post('/device-change-requests', [DeviceChangeRequestController::class, 'store']);
@@ -83,6 +83,19 @@ Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/featured', [JobController::class, 'featured']);
 Route::get('/jobs/{job}', [JobController::class, 'show']);
 
+// Récupération : catalogue public, preuve email dédiée, demandes privées.
+Route::prefix('company-recovery')->group(function () {
+    Route::get('/companies', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'companies'])->middleware('throttle:60,1');
+    Route::get('/companies/{company}', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'show'])->whereNumber('company')->middleware('throttle:60,1');
+    Route::get('/filters', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'filters'])->middleware('throttle:60,1');
+    Route::post('/email-code', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'sendCode'])->middleware('throttle:5,1');
+    Route::post('/account-requests', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'account'])->middleware('throttle:10,1');
+    Route::middleware(['auth:sanctum', 'must.change.password'])->group(function () {
+        Route::post('/requests', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'attach'])->middleware('throttle:5,1');
+        Route::get('/requests', [\App\Http\Controllers\Api\CompanyRecoveryController::class, 'mine']);
+    });
+});
+
 // Entreprises publiques
 Route::get('/companies', [CompanyController::class, 'index']);
 Route::get('/companies/nearby', [CompanyController::class, 'getNearbyCompanies']); // Récupérer les entreprises à proximité par GPS
@@ -93,6 +106,31 @@ Route::get('/companies/{company}/reviews', [CompanyReviewController::class, 'ind
 // Produits/Services d'entreprises (publics)
 Route::get('/companies/{companyId}/products', [CompanyProductController::class, 'index']); // Liste des produits d'une entreprise
 Route::get('/company-products/{id}', [CompanyProductController::class, 'show']); // Détail d'un produit
+
+// Communauté : catalogue et publications consultables sans abonnement.
+Route::prefix('community')->controller(\App\Http\Controllers\Api\CommunityController::class)->group(function () {
+    Route::get('/catalog', 'catalog');
+    Route::get('/specialties/{specialty}/discussions', 'discussions');
+    Route::get('/specialties/{specialty}/mentors', 'mentors');
+    Route::get('/discussions/{discussion}', 'discussion');
+    Route::get('/discussions/{discussion}/replies', 'replies');
+    Route::middleware(['auth:sanctum', 'must.change.password'])->group(function () {
+        Route::get('/account', 'account');
+        Route::post('/specialties/{specialty}/discussions', 'storeDiscussion')->middleware('throttle:15,1');
+        Route::post('/discussions/{discussion}/replies', 'reply')->middleware('throttle:30,1');
+        Route::patch('/discussions/{discussion}/resolution', 'resolution');
+        Route::delete('/discussions/{discussion}', 'deleteDiscussion');
+        Route::delete('/replies/{reply}', 'deleteReply');
+        Route::post('/mentor-application', 'apply')->middleware('throttle:5,1');
+        Route::patch('/mentor-application/availability', 'availability');
+        Route::get('/assistance', 'assistanceList');
+        Route::post('/assistance', 'requestAssistance')->middleware('throttle:10,1');
+        Route::get('/assistance/{assistance}', 'assistance');
+        Route::post('/assistance/{assistance}/transition', 'transition');
+        Route::post('/assistance/{assistance}/messages', 'message')->middleware('throttle:30,1');
+        Route::get('/assistance/{assistance}/messages/{message}/attachment', 'attachment');
+    });
+});
 
 // Catégories et filtres (données de référence)
 Route::get('/categories', [CategoryController::class, 'categories']);
@@ -445,6 +483,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/insamtechs-formations/pricing', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'pricing']);
     Route::get('/insamtechs-usb/pricing', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'pricing']);
     Route::get('/insamtechs-usb/orders', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'index']);
+    Route::get('/insamtechs-usb/orders/{order}', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'show'])->whereNumber('order');
     Route::post('/insamtechs-usb/orders', [\App\Http\Controllers\Api\InsamtechsUsbOrderController::class, 'store']);
     // Mes achats de formations InsamTechs
     Route::get('/my-insamtechs-formations', [\App\Http\Controllers\Api\InsamtechsFormationController::class, 'myPurchases']);

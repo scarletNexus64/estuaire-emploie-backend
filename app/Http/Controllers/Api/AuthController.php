@@ -236,7 +236,7 @@ public function login(Request $request)
     }
 
     // 3. Vérifier si l'utilisateur existe et le mot de passe est correct
-    if (!$user || !Hash::check($credentials['password'], $user->password)) {
+    if (!$user || !$user->is_active || !Hash::check($credentials['password'], $user->password)) {
         Log::warning('❌ [LOGIN] Échec de connexion', ['identifier' => $identifier]);
         return response()->json(['message' => __('auth.login_failed')], 401);
     }
@@ -247,6 +247,10 @@ public function login(Request $request)
         'current_device_id' => $user->device_id,
         'login_device_id' => $deviceId,
     ]);
+
+    if ($user->must_change_password && $user->temporary_password_expires_at?->isPast()) {
+        return response()->json(['message' => 'Votre mot de passe temporaire a expiré. Utilisez Mot de passe oublié avec votre email ou contactez l’administration.'], 403);
+    }
 
     // 4. VÉRIFICATION DU DEVICE_ID
     // Bypass device check pour les comptes de review/test (Apple, testeurs pawapay…).
@@ -305,6 +309,8 @@ public function login(Request $request)
     } else {
         Log::warning('⚠️ [LOGIN] Aucun FCM token fourni', ['user_id' => $user->id]);
     }
+
+    $user->forceFill(['last_login_at' => now()])->save();
 
     // 6. Charger les relations nécessaires
     if ($user->isRecruiter()) {
@@ -816,87 +822,28 @@ public function login(Request $request)
      */
     public function resetPassword(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'identifier' => 'required|string', // Email ou phone
-            'password' => 'required|min:6|confirmed',
+        $data = $request->validate([
+            'identifier' => 'required|string', 'token' => 'required|string|size:64',
+            'password' => 'required|string|min:8|confirmed',
         ]);
-
-        $identifier = $validated['identifier'];
-
-        // Déterminer si c'est un email ou un téléphone
-        $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
-        $user = null;
-
-        if ($isEmail) {
-            // Vérifier que l'OTP email a été vérifié
-            $otpRecord = \App\Models\EmailVerification::where('email', $identifier)
-                ->where('verified', true)
-                ->where('expires_at', '>', now())
-                ->first();
-
-            if (!$otpRecord) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('auth.verify_email_otp_first')
-                ], 422);
+        return \DB::transaction(function () use ($data) {
+            $identifier = trim($data['identifier']);
+            $field = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+            $identifier = $field === 'email' ? strtolower($identifier) : preg_replace('/\s+/', '', $identifier);
+            $user = User::where($field, $identifier)->lockForUpdate()->first();
+            $grant = \DB::table('api_password_reset_grants')->where('token_hash', hash('sha256', $data['token']))->lockForUpdate()->first();
+            if (!$user || !$user->is_active || !$grant || (int) $grant->user_id !== $user->id || now()->gte($grant->expires_at)) {
+                return response()->json(['success' => false, 'message' => 'Autorisation de réinitialisation invalide ou expirée. Vérifiez à nouveau votre code.'], 422);
             }
-
-            $user = User::where('email', $identifier)->first();
-        } else {
-            // C'est un téléphone
-            $cleanPhone = preg_replace('/\s+/', '', $identifier);
-
-            // Vérifier que l'OTP téléphone a été vérifié
-            $otpRecord = \App\Models\PhoneOtp::where('phone', $cleanPhone)
-                ->where('verified', true)
-                ->where('expires_at', '>', now())
-                ->first();
-
-            if (!$otpRecord) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('auth.verify_phone_otp_first')
-                ], 422);
+            if (\App\Models\Company::where('recovery_user_id', $user->id)->whereNull('recovery_claimed_at')->exists()) {
+                return response()->json(['success' => false, 'message' => 'Ce compte précréé doit être récupéré auprès de l’administration.'], 422);
             }
-
-            $user = User::where('phone', $cleanPhone)
-                ->orWhere('phone', $identifier)
-                ->first();
-        }
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => __('auth.no_account_with_identifier')
-            ], 404);
-        }
-
-        // Mettre à jour le mot de passe
-        $user->forceFill([
-            'password' => Hash::make($validated['password']),
-        ])->setRememberToken(Str::random(60));
-
-        $user->save();
-
-        // Supprimer l'enregistrement OTP après utilisation pour des raisons de sécurité
-        if ($isEmail) {
-            \App\Models\EmailVerification::where('email', $identifier)->delete();
-        } else {
-            \App\Models\PhoneOtp::where('phone', preg_replace('/\s+/', '', $identifier))->delete();
-        }
-
-        event(new PasswordReset($user));
-
-        Log::info('[PASSWORD RESET] Mot de passe réinitialisé avec succès', [
-            'user_id' => $user->id,
-            'identifier' => $identifier,
-            'channel' => $isEmail ? 'email' : 'phone',
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => __('auth.password_reset_success')
-        ], 200);
+            app(\App\Services\CompanyRecoveryService::class)->invalidateAccess($user);
+            $user->forceFill(['password' => Hash::make($data['password']), 'must_change_password' => false,
+                'temporary_password_expires_at' => null])->save();
+            event(new PasswordReset($user));
+            return response()->json(['success' => true, 'message' => __('auth.password_reset_success')]);
+        });
     }
 
     /**
@@ -1326,6 +1273,11 @@ public function login(Request $request)
         // Mettre à jour le mot de passe
         $user->password = Hash::make($validated['new_password']);
         $user->must_change_password = false; // Lever le flag
+        $user->temporary_password_expires_at = null;
+        $currentToken = $user->currentAccessToken();
+        if (!$currentToken instanceof \Laravel\Sanctum\PersonalAccessToken) $currentToken = null;
+        $user->tokens()->when($currentToken, fn ($q) => $q->where('id', '!=', $currentToken->id))->delete();
+        \DB::table('api_password_reset_grants')->where('user_id', $user->id)->delete();
         $user->save();
 
         Log::info("User changed password after forced change", ['user_id' => $user->id]);

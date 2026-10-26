@@ -101,10 +101,12 @@ class DigitalizationRequestController extends Controller
             'status' => 'pending',
         ]);
 
-        // Diffusion progressive via la queue : la réponse HTTP ne dépend jamais
+        // Diffusion immédiate via la queue : la réponse HTTP ne dépend jamais
         // de FCM. Même si la mise en file échoue, la demande est enregistrée.
+        $notificationQueued = false;
         try {
             SendServiceRequestNotification::dispatch($serviceRequest->id);
+            $notificationQueued = true;
         } catch (\Throwable $e) {
             Log::error('[ServiceRequest] Mise en file de la notification impossible', [
                 'request_id' => $serviceRequest->id,
@@ -114,7 +116,10 @@ class DigitalizationRequestController extends Controller
 
         return response()->json([
             'data' => $serviceRequest,
-            'message' => 'Votre demande a été publiée. Les prestataires vont être notifiés progressivement.',
+            'notification_queued' => $notificationQueued,
+            'message' => $notificationQueued
+                ? 'Votre demande a été publiée. La notification est en cours de traitement.'
+                : 'Votre demande a été publiée. La notification n’a pas pu être mise en file.',
         ], 201);
     }
 

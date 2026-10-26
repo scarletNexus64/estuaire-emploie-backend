@@ -45,6 +45,7 @@ class DatabaseSeeder extends Seeder
 
             // Configuration Académique (Spécialités et Catégories)
             SpecialtySeeder::class, // Spécialités pour épreuves et packs d'épreuves
+            CommunitySpecialtySeeder::class, // 8 filières et 47 spécialités INSAM IA pour la communauté
             TrainingCategorySeeder::class, // Catégories pour packs de formation
 
             // Contenu Étudiant - Packs de Formation et Épreuves

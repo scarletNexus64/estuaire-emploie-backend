@@ -150,8 +150,7 @@
                 <label class="form-label">Statut *</label>
                 <select name="status" class="form-control" required>
                     <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>Brouillon</option>
-                    <option value="pending" {{ old('status', 'pending') === 'pending' ? 'selected' : '' }}>En attente</option>
-                    <option value="published" {{ old('status') === 'published' ? 'selected' : '' }}>Publiée</option>
+                    <option value="published" {{ in_array(old('status', 'published'), ['pending', 'published']) ? 'selected' : '' }}>Publiée</option>
                     <option value="closed" {{ old('status') === 'closed' ? 'selected' : '' }}>Fermée</option>
                 </select>
                 @error('status')

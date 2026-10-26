@@ -34,6 +34,8 @@ class Company extends Model
         'verified_at',
     ];
 
+    protected $hidden = ['recovery_source', 'recovery_source_key', 'recovery_user_id', 'recovery_claimed_at', 'recovery_claimed_by'];
+
     protected $appends = ['logo_url', 'is_verified', 'photos_urls'];
 
     protected function casts(): array
@@ -103,6 +105,11 @@ class Company extends Model
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);
+    }
+
+    public function recoveryAccount(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recovery_user_id');
     }
 
     public function recruiters(): HasMany

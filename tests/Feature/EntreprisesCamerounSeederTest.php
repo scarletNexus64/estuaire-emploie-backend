@@ -168,4 +168,18 @@ class EntreprisesCamerounSeederTest extends TestCase
             $this->assertLessThanOrEqual(5, $company->distanceTo(4.0511, 9.7679));
         }
     }
+    public function test_reimport_preserves_recovered_company_after_contact_email_changes(): void
+    {
+        $this->seed(EntreprisesCamerounSeeder::class);
+        $company = Company::where('email', 'contact@theyard.cm')->firstOrFail();
+        $this->assertSame('entreprises_cameroun', $company->recovery_source);
+        $this->assertNotNull($company->recovery_user_id);
+        $company->forceFill(['email' => 'new-contact@example.test', 'recovery_claimed_at' => now(),
+            'recovery_claimed_by' => $company->recovery_user_id])->save();
+        $this->seed(EntreprisesCamerounSeeder::class);
+        $this->assertSame(self::EXPECTED_ROWS, Company::count());
+        $this->assertSame('new-contact@example.test', $company->fresh()->email);
+        $this->assertNotNull($company->fresh()->recovery_claimed_at);
+    }
+
 }

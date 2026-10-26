@@ -53,10 +53,10 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $pendingUsbOrders = auth()->user()?->isSuperAdmin()
+        $pendingUsbOrders = auth()->user()?->hasPermission('manage_premium_services')
             ? InsamtechsUsbOrder::where('status', 'pending')->count()
             : 0;
-        $recentUsbOrders = auth()->user()?->isSuperAdmin()
+        $recentUsbOrders = auth()->user()?->hasPermission('manage_premium_services')
             ? InsamtechsUsbOrder::with('user')->latest()->limit(5)->get()
             : collect();
 

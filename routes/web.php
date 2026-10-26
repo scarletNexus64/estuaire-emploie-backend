@@ -117,6 +117,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
+    Route::middleware('permission:manage_companies')->prefix('company-recoveries')->name('company-recoveries.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CompanyRecoveryController::class, 'index'])->name('index');
+        Route::post('/{claim}/review', [\App\Http\Controllers\Admin\CompanyRecoveryController::class, 'review'])->name('review');
+        Route::post('/{claim}/resend', [\App\Http\Controllers\Admin\CompanyRecoveryController::class, 'resend'])->middleware('throttle:5,1')->name('resend');
+        Route::post('/{claim}/retry', [\App\Http\Controllers\Admin\CompanyRecoveryController::class, 'retry'])->middleware('throttle:5,1')->name('retry');
+    });
+
     // Companies Management
     Route::middleware('permission:manage_companies')->group(function () {
         Route::delete('companies/bulk-delete', [CompanyController::class, 'bulkDelete'])->name('companies.bulk-delete');
@@ -413,6 +420,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{examPaper}/toggle', [\App\Http\Controllers\Admin\ExamPaperController::class, 'toggle'])->name('toggle');
         Route::get('/{examPaper}/download', [\App\Http\Controllers\Admin\ExamPaperController::class, 'download'])->name('download');
         Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
+    });
+
+    Route::middleware('permission:manage_premium_services')->prefix('community')->name('community.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CommunityController::class, 'index'])->name('index');
+        Route::patch('/mentors/{application}', [\App\Http\Controllers\Admin\CommunityController::class, 'review'])->name('review');
+        Route::delete('/discussions/{discussion}', [\App\Http\Controllers\Admin\CommunityController::class, 'destroy'])->name('destroy');
     });
 
     // CONTENU ÉTUDIANT - Forum de Discussion

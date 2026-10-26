@@ -82,6 +82,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'is_super_admin' => 'boolean',
             'must_change_password' => 'boolean',
+            'temporary_password_expires_at' => 'datetime',
             'admin_role' => AdminRole::class,
             'permissions' => 'array',
             'available_roles' => 'array',

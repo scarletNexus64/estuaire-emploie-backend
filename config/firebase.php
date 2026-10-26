@@ -1,12 +1,19 @@
 <?php
 
+// Garder le chemin historique des serveurs déjà configurés, puis chercher
+// le compte de service livré dans storage/firebase sur cette installation.
+$credentialPaths = [
+    base_path('firebase/estuaire-emplois-firebase-adminsdk-fbsvc-6c0d8105ad.json'),
+    storage_path('firebase/estuaire-emplois-firebase-adminsdk-fbsvc-f136a4ae4a.json'),
+];
+$defaultCredentials = $credentialPaths[1];
+foreach ($credentialPaths as $credentialPath) {
+    if (is_file($credentialPath)) {
+        $defaultCredentials = $credentialPath;
+        break;
+    }
+}
+
 return [
-    // Chemin du fichier de compte de service Firebase. Ce fichier est un secret
-    // (gitignored) : il est absent en CI et sur une machine fraîche, d'où le
-    // chemin configurable et la dégradation propre dans
-    // App\Services\FirebaseNotificationService.
-    'credentials' => env(
-        'FIREBASE_CREDENTIALS',
-        base_path('firebase/estuaire-emplois-firebase-adminsdk-fbsvc-6c0d8105ad.json')
-    ),
+    'credentials' => env('FIREBASE_CREDENTIALS') ?: $defaultCredentials,
 ];

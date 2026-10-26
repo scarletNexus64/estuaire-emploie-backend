@@ -34,7 +34,7 @@ class StoreBroadcastNotifications implements ShouldQueue
 
     /**
      * @param  string  $type  Type de notification (ex: cv_profile_request)
-     * @param  array<string>  $roles  Rôles destinataires (users.role)
+     * @param  array<string>  $roles  Rôles destinataires (users.role), vide pour tous
      * @param  array  $data  Payload additionnel (request_id, …) fusionné dans data
      * @param  string  $dedupeKey  Clé unique de la diffusion (ex: "cv_profile_request:12")
      * @param  int|null  $excludeUserId  Auteur de la diffusion, jamais notifié
@@ -55,7 +55,7 @@ class StoreBroadcastNotifications implements ShouldQueue
     public function handle(): void
     {
         $userIds = User::query()
-            ->whereIn('role', $this->roles)
+            ->when($this->roles !== [], fn ($query) => $query->whereIn('role', $this->roles))
             ->where('is_active', true)
             ->when($this->excludeUserId, fn ($q) => $q->where('id', '!=', $this->excludeUserId))
             ->where('id', '>', $this->afterId)

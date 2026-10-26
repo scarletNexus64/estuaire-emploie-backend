@@ -1695,6 +1695,11 @@
                             <span class="flex-1 font-medium text-sm">{{ $item['name'] }}</span>
 
                             {{-- Badges --}}
+                            @if(($item['route'] ?? '') === 'admin.company-recoveries.index')
+                                @php $pendingRecoveries = \App\Models\CompanyRecoveryRequest::where('status', 'pending')->count(); @endphp
+                                @if($pendingRecoveries > 0)<span class="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingRecoveries }}</span>@endif
+                            @endif
+
                             @if(isset($item['route']) && $item['route'] === 'admin.applications.index' && isset($pendingApplications) && $pendingApplications > 0)
                                 <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingApplications }}</span>
                             @endif

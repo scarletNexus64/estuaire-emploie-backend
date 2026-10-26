@@ -9,7 +9,7 @@ return [
     'jobs_limit_reached' => 'You have reached the limit of :limit offers. Upgrade to a higher plan to publish more offers.',
     'company_no_city' => 'Your company does not have a city set. Set the company location or choose national visibility.',
     'company_city_missing_for_local' => 'Company city missing for a local offer.',
-    'created' => 'Offer created successfully. Pending validation.',
+    'created' => 'Offer published successfully.',
     'not_found' => 'Offer not found',
     'not_authorized_view' => 'You are not authorized to view this offer',
     'subscription_required_dashboard' => 'You must have an active subscription to access the dashboard',

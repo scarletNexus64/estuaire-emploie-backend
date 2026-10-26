@@ -129,7 +129,8 @@ class EntreprisesCamerounSeeder extends Seeder
 
             // Clé d'idempotence : l'email dérivé du nom. `withTrashed` évite de
             // buter sur l'index unique si une ligne a été soft-deleted.
-            $existing = Company::withTrashed()->where('email', $email)->first();
+            $sourceKey = hash('sha256', 'entreprises_cameroun:'.$email);
+            $existing = Company::withTrashed()->where('recovery_source_key', $sourceKey)->orWhere('email', $email)->first();
 
             if ($existing !== null) {
                 $skipped++;
@@ -138,7 +139,7 @@ class EntreprisesCamerounSeeder extends Seeder
             }
 
             DB::transaction(function () use (
-                $row, $name, $email, $categoryByLevel1,
+                $row, $name, $email, $sourceKey, $categoryByLevel1,
                 &$created, &$withGps, &$accounts
             ) {
                 $company = Company::create([
@@ -194,6 +195,7 @@ class EntreprisesCamerounSeeder extends Seeder
                     $accounts++;
                 }
 
+                $newAccount = $user->wasRecentlyCreated;
                 Recruiter::firstOrCreate(
                     ['user_id' => $user->id, 'company_id' => $company->id],
                     [
@@ -203,6 +205,9 @@ class EntreprisesCamerounSeeder extends Seeder
                         'can_modify_company' => true,
                     ]
                 );
+                if ($newAccount) {
+                    $company->forceFill(['recovery_source' => 'entreprises_cameroun', 'recovery_source_key' => $sourceKey, 'recovery_user_id' => $user->id])->save();
+                }
             });
         }
 
@@ -222,6 +227,23 @@ class EntreprisesCamerounSeeder extends Seeder
      *
      * @return array<int, array<string, mixed>>
      */
+    public function recoveryCandidates(): array
+    {
+        $path = $this->resolveSource();
+        if (!$path) return [];
+        $used = [];
+        $candidates = [];
+        foreach ($this->readRows($path) as $row) {
+            $name = trim((string) ($row['nom'] ?? ''));
+            if ($name === '') continue;
+            $email = $this->buildEmail($name, $row['ville'], $used);
+            $used[$email] = true;
+            $candidates[] = ['name' => $name, 'city' => $row['ville'], 'email' => $email,
+                'key' => hash('sha256', 'entreprises_cameroun:'.$email)];
+        }
+        return $candidates;
+    }
+
     private function readRows(string $path): array
     {
         $links = $this->extractHyperlinks($path);

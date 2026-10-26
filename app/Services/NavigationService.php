@@ -42,6 +42,12 @@ class NavigationService
                         'permission' => 'manage_premium_services',
                     ],
                     [
+                        'name' => 'Récupérations d’entreprise',
+                        'route' => 'admin.company-recoveries.index',
+                        'icon' => 'fas fa-building',
+                        'permission' => 'manage_companies',
+                    ],
+                    [
                         'name' => 'Entreprises',
                         'route' => 'admin.companies.index',
                         'icon' => 'fas fa-building',
@@ -138,6 +144,12 @@ class NavigationService
                         'name' => 'Épreuves (gestion)',
                         'route' => 'admin.exam-papers.index',
                         'icon' => 'fas fa-file-pdf',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
+                        'name' => 'Communauté et mentors',
+                        'route' => 'admin.community.index',
+                        'icon' => 'fas fa-users',
                         'permission' => 'manage_premium_services',
                     ],
                     [
@@ -392,6 +404,7 @@ class NavigationService
             AdminRole::CANDIDATE_RECRUITER_MANAGER->value => [
                 'admin.users.index',
                 'admin.companies.index',
+                'admin.company-recoveries.index',
                 'admin.jobs.index',
                 'admin.quick-services.index',
                 'admin.applications.index',

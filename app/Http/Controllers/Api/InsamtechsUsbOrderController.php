@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InsamtechsUsbOrder;
 use App\Models\Setting;
 use App\Services\InsamtechsCatalogService;
+use App\Services\UsbOrderNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -62,7 +63,7 @@ class InsamtechsUsbOrderController extends Controller
                 throw ValidationException::withMessages(['formation_ids' => 'La commande USB est indisponible actuellement.']);
             }
 
-            return InsamtechsUsbOrder::create([
+            $order = InsamtechsUsbOrder::create([
                 'user_id' => $request->user()->id,
                 'formations' => $formations,
                 'customer_name' => $data['customer_name'],
@@ -75,13 +76,27 @@ class InsamtechsUsbOrderController extends Controller
                 'total_price_xaf' => $unit * count($formations) + $delivery,
                 'status' => 'pending',
             ]);
+            app(UsbOrderNotificationService::class)->record(
+                $order, 'usb_order_created', 'Commande USB enregistrée',
+                "Votre commande USB n°{$order->id} a été reçue. Vous serez informé de son traitement.",
+            );
+
+            return $order;
         });
 
         return response()->json(['success' => true, 'message' => 'Commande USB enregistrée.', 'data' => $order], 201);
     }
 
+    public function show(Request $request, int $order)
+    {
+        // Une commande ne peut être consultée que par son propriétaire.
+        $order = InsamtechsUsbOrder::where('user_id', $request->user()->id)->findOrFail($order);
+
+        return response()->json(['success' => true, 'data' => $order]);
+    }
+
     public function index(Request $request)
     {
-        return response()->json(['success' => true, 'data' => InsamtechsUsbOrder::where('user_id', $request->user()->id)->latest()->paginate(20)]);
+        return response()->json(['success' => true, 'data' => InsamtechsUsbOrder::where('user_id', $request->user()->id)->latest('id')->paginate(20)]);
     }
 }

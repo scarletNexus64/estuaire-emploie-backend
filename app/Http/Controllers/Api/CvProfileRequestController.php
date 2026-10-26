@@ -18,7 +18,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Demandes de profil de la CVThèque : une entreprise publie le profil qu'elle
- * recherche, tous les utilisateurs sont notifiés progressivement et peuvent y
+ * recherche, tous les abonnés au topic all_users sont notifiés et peuvent y
  * répondre par la messagerie (la demande est épinglée dans la conversation).
  */
 class CvProfileRequestController extends Controller
@@ -88,11 +88,13 @@ class CvProfileRequestController extends Controller
             'status' => 'open',
         ]);
 
-        // Diffusion progressive via la queue : la réponse HTTP ne dépend jamais
+        // Diffusion au topic all_users via la queue : la réponse HTTP ne dépend jamais
         // de FCM. Même si la mise en file échoue, la demande est enregistrée.
+        $notificationQueued = true;
         try {
-            SendCvProfileRequestNotification::dispatch($profileRequest->id);
+            SendCvProfileRequestNotification::dispatch($profileRequest->id)->afterCommit();
         } catch (\Throwable $e) {
+            $notificationQueued = false;
             Log::error('[CvProfileRequest] Mise en file de la notification impossible', [
                 'request_id' => $profileRequest->id,
                 'error' => $e->getMessage(),
@@ -103,7 +105,10 @@ class CvProfileRequestController extends Controller
 
         return response()->json([
             'data' => $this->present($profileRequest, $user->id),
-            'message' => 'Votre demande a été publiée. Les profils correspondants vont être notifiés progressivement.',
+            'notification_queued' => $notificationQueued,
+            'message' => $notificationQueued
+                ? 'Votre demande a été publiée. La notification à tous les utilisateurs est en cours de traitement.'
+                : 'Votre demande a été publiée, mais l’envoi de la notification n’a pas pu démarrer.',
         ], 201);
     }
 

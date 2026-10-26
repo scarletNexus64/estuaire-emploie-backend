@@ -1,0 +1,382 @@
+{
+  "source_url": "https://insam-ia.com/api/public/categories",
+  "retrieved_at": "2026-10-26",
+  "categories": [
+    {
+      "id": 26,
+      "name": "PRODUCTION ANIMALE",
+      "filiere_name": "Agriculture et Elevage",
+      "description": "Cette spécialité forme des spécialistes de l'élevage et de la filière animale, disposant de solides connaissances dans l'ensemble des techniques de production animale mais également en biologie et en chimie. L'étudiant apprend la conduite d'élevage sous tous ses aspects : qualité de l'alimentation, croissance des animaux, reproduction, manipulations et interventions sur les animaux, surveillance sanitaire, bien-être animal, conservation, transformation et commercialisation des produits, conception des bâtiments...",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 1001
+    },
+    {
+      "id": 29,
+      "name": "PRODUCTION VÉGÉTALE",
+      "filiere_name": "Agriculture et Elevage",
+      "description": "Ce programme forme des spécialistes dans le domaine de la production végétale, capable de s’exercer dans tous les maillons de la chaine de production notamment :\n•\tLa conduite de la production (maraîchères, pérennes, légumineuses, fourragères, de céréales  ou d'oléagineux)\n•\tLa transformation, le conditionnement et la conservation des produits végétaux ;\n•\tLa commercialisation des produits végétaux.\nL’enseignement accorde une place importante aux potentialités agronomiques du sol, des apports d’engrais et d’amendement, la biologie végétale, la physiologie de la reproduction, le fonctionnement et les processus de reproduction et de multiplication des végétaux et des semences.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 1002
+    },
+    {
+      "id": 39,
+      "name": "ENTREPRENEURIAT AGROPASTORAL",
+      "filiere_name": "Agriculture et Elevage",
+      "description": "Cette spécialité forme des entrepreneurs disposant des compétences à la fois techniques, économiques et managériales, ayant une bonne maîtrise des activités de production, de commercialisation, de transformation des produits agricoles et de management des exploitations\nagropastorales. Il s’agit notamment de la gestion d’entreprise agropastorale, la conduite des systèmes de culture et d’élevage, la gestion du personnel et l’organisation du travail.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 1003
+    },
+    {
+      "id": 21,
+      "name": "TÉLÉCOMMUNICATIONS",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité forme les techniciens supérieurs à même d’assurer la mise en œuvre, l’administration et la maintenance de tout équipement de réseau ou de télécommunication. Leurs compétences dans les différentes technologies de transmission de l’information ainsi que leurs\nconnaissances approfondies des protocoles des différents réseaux de communication leur permettent de concevoir, dans une équipe, des architectures réseau ou des installations de télécommunications complexes et de les optimiser.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2001
+    },
+    {
+      "id": 20,
+      "name": "RÉSEAUX ET SÉCURITÉ",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité conduit à la formation des techniciens supérieurs, capables de mettre en place un réseau interne à l'entreprise qui est confronté à une évolution majeure des technologies de la communication entrainant une mutation des méthodes de travail dans l'entreprise. Les contraintes technologiques liées à ces bouleversements sont multiples, à l’instar des problèmes cruciaux de la sauvegarde sécurisée et du stockage des données, de l’aspect fondamental de la sécurité vis-à-vis du monde Internet du fait de la banalisation de la mobilité et du télétravail, de la sécurisation des flux (cryptage) mais aussi de la nécessité d'authentification renforcée des accès aux données de l'entreprise.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2002
+    },
+    {
+      "id": 24,
+      "name": "GÉNIE LOGICIEL",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité vise à former des spécialistes capables de développer des applications informatiques dans divers domaines, en faisant appel à leurs capacités d'étude du besoin, d'analyse (Merise, UML...) et de codage.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2003
+    },
+    {
+      "id": 49,
+      "name": "INFOGRAPHIE ET WEB DESIGN",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité forme des techniciens supérieurs maîtrisant les divers aspects de la conception web et pouvant développer une créativité en web design en utilisant les CMS et les Framework les plus demandés dans les entreprises pour la création des sites dynamiques et\nresponsifs (adaptatif tablette/Smartphone). Ils sont aussi à même de manipuler les scripts et modules permettant d’ajouter de l’interactivité dans les réalisations (diaporamas, slides…) et maîtriser les techniques de renforcement naturel.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2004
+    },
+    {
+      "id": 14,
+      "name": "GESTION DES SYSTÈMES D'INFORMATION",
+      "filiere_name": "Genie Informatique",
+      "description": "La spécialité Gestion des systèmes d’information conduit à la formation des experts en informatique participant à la production et à la fourniture de service, en réalisant ou en adoptant des solutions d’infrastructures et en assurant le fonctionnement optimal des équipements.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2005
+    },
+    {
+      "id": 19,
+      "name": "MAINTENANCE DES SYSTÈMES INFORMATIQUES",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité forme des techniciens supérieurs capables d’assurer l’entretien et la réparation des matériels informatiques. Ils peuvent également réaliser l’installation de nouveaux équipements ou assurer la formation des utilisateurs.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2006
+    },
+    {
+      "id": 7,
+      "name": "INFORMATIQUE INDUSTRIELLE ET AUTOMATISME",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité forme des techniciens supérieurs qui, sous la conduite d’un chef de projet, étudie, développe et met en service tout ou partie d’une application d’automatisation portant sur la création, l’amélioration ou la rénovation d’installations ou d’équipements industriels qui sont de type supervision ou contrôle-commande.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2007
+    },
+    {
+      "id": 33,
+      "name": "E-COMMERCE ET MARKETING NUMÉRIQUE",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité a pour objectif de former des techniciens supérieurs capables d’entrer en contact indirect avec la clientèle. Ils pourront mener des actions pour capter la clientèle, la fidéliser et lui vendre des produits et/ou des services répondant à ses attentes. Ils auront une\ncompréhension approfondie de la manière de concevoir et de mettre en œuvre efficacement des campagnes de marketing numérique puissantes qui convertissent, du marketing des médias sociaux au marketing de recherche et seront à même de définir une stratégie en utilisant des compétences comme le Web-marketing, le référencement, la rédaction web, la conception des sites internet ou encore des réseaux sociaux.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2008
+    },
+    {
+      "id": 34,
+      "name": "MAINTENANCE DES SYSTÈMES ÉLECTRONIQUES",
+      "filiere_name": "Genie Informatique",
+      "description": "Cette spécialité conduit à la formation des spécialistes en charge des activités de maintenance des systèmes de production, des systèmes énergétiques et fluidiques et des systèmes éoliens. Ils assurent les interventions de maintenance corrective et préventive, l’amélioration de la sûreté de fonctionnement, la gestion des pannes et des dysfonctionnements et l’intégration des niveaux.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 2009
+    },
+    {
+      "id": 23,
+      "name": "ÉLECTROTECHNIQUE",
+      "filiere_name": "Genie Electrique",
+      "description": "Cette spécialité vise à former des spécialistes de l'étude, de la mise en œuvre, de l'utilisation et de la maintenance des équipements électriques. Ces équipements, de plus en plus sophistiqués en raison de l'évolution des technologies de l'informatique et de l'électronique,\npeuvent faire intervenir des procédés d'hydraulique, de pneumatique, d'optique… Elle vise à apporter aux étudiants les connaissances techniques et le savoir-faire qui leur permettront d’intervenir dans la conception, la réalisation et la gestion de systèmes électrotechniques\nprincipalement utilisés dans les chaînes de montage ou les systèmes complexes.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 3001
+    },
+    {
+      "id": 12,
+      "name": "ÉNERGIE RENOUVELABLE",
+      "filiere_name": "Genie Electrique",
+      "description": "La formation des techniciens supérieurs en Energies Renouvelables conduit à la connaissance des multiples sources d’énergies renouvelables depuis leur états primaire (solaire, vent, marées, biomasse, …) jusqu’aux processus de conversion et d’obtention de l’énergie\n(photovoltaïque, éolienne, biogaz, marémotrice, biocombustible). Le Technicien supérieur participe à la mise en œuvre des solutions techniques prenant en compte l’environnement et l’importance des économies d’énergie.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 3002
+    },
+    {
+      "id": 32,
+      "name": "MAINTENANCE DES ÉQUIPEMENTS INDUSTRIELS",
+      "filiere_name": "Genie Electrique",
+      "description": "Cette spécialité conduit à la formation des techniciens supérieurs en charge de la maintenance des équipements de production et de service, ayant une parfaite maîtrise des systèmes automatisés ainsi que des équipements électriques et mécaniques pour détecter les\npannes susceptibles de se produire sur les machines, diagnostiquer l’origine des défaillances et intervenir sur des installations pluri-technologiques.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 3003
+    },
+    {
+      "id": 37,
+      "name": "MAINTENANCE DES APPAREILS BIOMÉDICAUX",
+      "filiere_name": "Genie Electrique",
+      "description": "L’objectif de cette formation est de former les techniciens d’installation et de maintenance des équipements biomédicaux afin d’intégrer les innovations technologiques permanentes et de répondre à la forte demande de techniciens spécialisés en maintenance des appareils biomédicaux dans les établissements hospitaliers et dans l’industrie biomédicale.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 3004
+    },
+    {
+      "id": 9,
+      "name": "BÂTIMENT",
+      "filiere_name": "Genie Civil et Genie Thermique",
+      "description": "Cette spécialité conduit à la formation des spécialistes du bâtiment, disposant de solides connaissances dans l’ensemble des techniques d’une construction neuve ou d’une réhabilitation, ainsi que dans le processus de réalisation d’un ouvrage. L’étudiant apprend à piloter un chantier en garantissant l’avancement, la qualité et la sécurité.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 4001
+    },
+    {
+      "id": 45,
+      "name": "TRAVAUX PUBLICS",
+      "filiere_name": "Genie Civil et Genie Thermique",
+      "description": "Cette spécialité conduit à la formation des professionnels maitrisant l’ensemble des étapes du chantier, l’étude technique d’un ouvrage à partir du cahier de charges, l’évaluation du budget ainsi que la préparation, la coordination et le suivi de l’exécution du chantier jusqu’à sa réception. Ces derniers interviennent dans tous types de travaux publics et privés tels que les travaux routiers, les travaux de canalisation, les terrassements généraux, la réalisation des infrastructures et des grands équipements.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 4002
+    },
+    {
+      "id": 15,
+      "name": "GÉOMÈTRE TOPOGRAPHE",
+      "filiere_name": "Genie Civil et Genie Thermique",
+      "description": "Cette spécialité a pour objectif de former des experts en relevés métriques sur le terrain dans le but d'élaborer des plans et des cartes. Le technicien supérieur met en œuvre différents matériels de mesure, de positionnement, de saisie des données et d'implantation. Il traite les\ndonnées recueillies en utilisant des moyens techniques appropriés. Son souci permanent de produire un travail de qualité exige un contrôle rigoureux dans le respect des règles de sécurité.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 4003
+    },
+    {
+      "id": 46,
+      "name": "INSTALLATION SANITAIRE",
+      "filiere_name": "Genie Civil et Genie Thermique",
+      "description": "Cette spécialité a pour objectif de former des techniciens supérieurs opérant dans deux domaines précis : l’assainissement et la gestion de la chaîne de l’eau (captage, canalisations, stockage, désinfection,… construction de latrines).",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 4004
+    },
+    {
+      "id": 16,
+      "name": "MENUISERIE ET ÉBÉNISTERIE",
+      "filiere_name": "Genie Civil et Genie Thermique",
+      "description": "Cette spécialité a pour objectif de former des techniciens supérieurs capables de développer, d’industrialiser des produits à base de bois et de résoudre les problèmes techniques liés à leur mise en œuvre. Ils exercent leur métier en atelier ou sur chantier, aussi bien en\nconstruction neuve qu'en réhabilitation ou en agencement. Ils travaillent le bois, ses dérivés et les matériaux associés (aluminium, produits verriers, matières plastiques…).",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 4005
+    },
+    {
+      "id": 53,
+      "name": "HYGIÈNE, SÉCURITÉ ET ENVIRONNEMENT",
+      "filiere_name": "Genie Civil et Genie Thermique",
+      "description": "Cette spécialité a pour objectif de fournir aux techniciens supérieurs des connaissances techniques, scientifiques, juridiques et humaines permettant une approche pluridisciplinaire des différents aspects de la sécurité et de la santé au travail et de l'impact de l'entreprise sur\nl'environnement.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 4006
+    },
+    {
+      "id": 10,
+      "name": "CHAUDRONNERIE ET SOUDURE",
+      "filiere_name": "Genie Mecanique et Productique",
+      "description": "La spécialité en Chaudronnerie et Soudure vise à former des techniciens supérieurs maitrisant\nla conception, la préparation, la fabrication, le contrôle, la pose et la maintenance d’ensemble\nchaudronnées industrielles : cuve d'une usine de chimie, wagon, chaudière d'une centrale thermique,\nconstruction navale, avionique, infrastructures routières, ferroviaires.\nLa spécialité en Chaudronnerie et Soudure vise à former des techniciens supérieurs capables\nde transformer des métaux et alliages limés en feuilles ou en profilés en produits utilitaires. Ils\ninterviennent de la conception à l’obtention en passant par l’organisation de la fabrication, la\nréalisation, l’assemblage et le contrôle des produits et ouvrages chaudronnées, des ouvrages de\ntôlerie et tuyauterie industrielle.\n",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 5001
+    },
+    {
+      "id": 18,
+      "name": "MAINTENANCE APRÈS-VENTE AUTOMOBILE",
+      "filiere_name": "Genie Mecanique et Productique",
+      "description": "Cette spécialité a pour objectif de former les techniciens supérieurs aux activités techniques, administratives et de communication qui interviennent après la vente d’une automobile. Ces activités peuvent porter sur le suivi et l’entretien régulier de l’automobile, ou sur sa prise en charge à la suite d’un sinistre.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 5002
+    },
+    {
+      "id": 17,
+      "name": "MÉCATRONIQUE",
+      "filiere_name": "Genie Mecanique et Productique",
+      "description": "Cette spécialité a pour objectif de rendre les étudiants aptes à assurer les activités de maintenance préventive et corrective des véhicules dans lesquels l’électronique intervient de plus en plus par le fonctionnement des équipements liés à la sécurité, au contrôle des trajectoires, aux dispositifs anticollision et autres systèmes de navigation.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 5003
+    },
+    {
+      "id": 40,
+      "name": "MAINTENANCE INDUSTRIELLE ET PRODUCTIQUE",
+      "filiere_name": "Genie Mecanique et Productique",
+      "description": "Cette spécialité a pour objectif de former des techniciens supérieurs à même d’assurer la maintenance et de garantir un bon niveau de productivité des machines de plus en plus complexes qui interviennent dans le processus de production industrielle. Elle renvoie donc à la gestion des procédés de production qui, en plus des technologies de pointes comme la conception assistée par ordinateur, la robotique industrielle et la fabrication assistée par ordinateur, exige une nouvelle approche de la formation tournée vers la productique.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 5004
+    },
+    {
+      "id": 22,
+      "name": "COMMERCE INTERNATIONAL",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Cette spécialité a pour objectif de former les cadres intermédiaires des services export des entreprises maitrisant tous les aspects de la négociation commerciale, avec une bonne connaissance des marchés étrangers (culture, fonctionnement, particularités) mais aussi des connaissances générales en économie et en droit. Ils maitriseront également la logistique internationale et le fonctionnement des douanes.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6001
+    },
+    {
+      "id": 28,
+      "name": "BTS MARKETING-COMMERCE-VENTE",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Cette spécialité vise à répondre à un besoin exprimé par les entreprises : s’entourer des commerciaux outillés, parfaitement imprégnés de la logique marketing, sensibilisés sur les besoins changeants du consommateur et orientés vers le développement des ventes dans un environnement caractérisé par la concurrence.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6002
+    },
+    {
+      "id": 13,
+      "name": "GESTION LOGISTIQUE ET TRANSPORT",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "La spécialité Gestion logistique et transport vise à former des experts dans l’organisation et le management des opérations de transport et des prestations logistiques sur les marchés locaux, régionaux, nationaux et internationaux en tenant compte de la complémentarité des modes de transport et du développement durable. Ils maîtrisent à cet effet les langues étrangères, la communication et les techniques de négociation, les techniques de gestion et d’optimisation des flux de marchandise, la gestion des entrepôts ou des plates-formes ainsi que l’exploitation des réseaux de transports urbains.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6003
+    },
+    {
+      "id": 43,
+      "name": "GESTION DES PROJETS",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "La spécialité Gestion des projets vise à former des techniciens capables de conduire des projets d’entreprises de tout secteur (industriel, service, commercial, technologique, culturel), à travers le développement de la compréhension de l’entreprise et l’acquisition des connaissances théoriques et compétences pratiques du management de projet.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6004
+    },
+    {
+      "id": 8,
+      "name": "ASSISTANT MANAGER",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Cette spécialité qui remplace le BTS ’’Secrétariat de direction’’ forme les collaborateurs des directeurs généraux, des directeurs d’unités ou des chefs de service. Organisés, rigoureux, dynamiques, discrets, ils soutiennent, facilitent et suivent le travail du responsable afin de le rendre plus efficace. L’Assistant manager assure principalement le rôle d’interface et de médiation entre l’entreprise et son environnement. Il s’occupe de l’administration, de la communication, de l’organisation du travail, de l’aide à la décision et peut même prendre en charge un dossier spécialisé ou organiser un évènement.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6005
+    },
+    {
+      "id": 44,
+      "name": "GESTION DES RESSOURCES HUMAINES",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Le BTS Gestion des ressources humaines vise à former des étudiants à même de réaliser le suivi administratif de la gestion du personnel (contrats, absences, congés, visites médicales, déclarations aux organismes sociaux) ainsi que la formation continue selon la législation sociale, la règlementation du travail et la politique des ressources humaines de la structure.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6006
+    },
+    {
+      "id": 36,
+      "name": "BANQUE ET FINANCE",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Cette spécialité vise à combler le déficit en nombre et en qualité en matière de ressources humaines dont les établissements de crédit ont besoin pour la conduite de leurs activités. En outre, elle fournit aux entreprises, quel que soit leur domaine d’activité, des collaborateurs pouvant leur permettre de tirer le maximum des opportunités que leur offre le système financier dans son évolution, son expansion et son arrimage à la finance mondiale.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6007
+    },
+    {
+      "id": 38,
+      "name": "COMPTABILITÉ ET GESTION DES ENTREPRISES",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "La spécialité Comptabilité et gestion des entreprises a pour but de munir les étudiants des connaissances et savoir-faire leur permettant de traduire de manière comptable, toutes les opérations commerciales ou financières et d’établir les documents correspondants, d’analyser les\ninformations dont ils disposent pour préparer les décisions de gestion.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6008
+    },
+    {
+      "id": 11,
+      "name": "DOUANE ET TRANSIT",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Cette spécialité a pour objectif de former des techniciens supérieurs capables d’accompagner les opérateurs du commerce extérieur dans la préparation et l’accomplissement des opérations d’importation et d’exportation. Ils pourront également accomplir les formalités de dédouanement des marchandises et obtenir auprès de l’Administration des Douanes, pour le compte des opérateurs économiques, des avantages et des privilèges prévus par la législation et la réglementation douanière.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6009
+    },
+    {
+      "id": 51,
+      "name": "JOURNALISME",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "La formation en BTS spécialité journalisme vise à former des étudiants capables de collecter, hiérarchiser, rédiger sur toutes ses formes et dans toutes les positions et de publier pour un public pluriel des informations par voie : de presse écrite, de radio, de télévision, agence et internet sur des événements nationaux, africains et internationaux. Ils rendent compte de l’actualité en apportant leurs propres analyses et leur éclairage.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6010
+    },
+    {
+      "id": 52,
+      "name": "COMMUNICATION DES ORGANISATIONS",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Le BTS en communication des organisations obéit à une démarche trilogique : la logique de la formation universitaire qui vise l’acquisition des connaissances, de méthodes, d’aptitudes et de la réflexion critique ; la logique de l’organisation (institution) qui met en exergue le caractère contingenté de la communication ; la logique de recherche qui s’ancre dans une fonction communication en perpétuelle mouvement.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6011
+    },
+    {
+      "id": 47,
+      "name": "DROIT DES AFFAIRES ET DE L'ENTREPRISE",
+      "filiere_name": "Commerce, Vente et Gestion",
+      "description": "Cette spécialité a pour objectif de former des spécialistes à même de maîtriser le droit des affaires et son application au sein de l’entreprise, dans ses relations d’affaires nationales (droit des sûreté, droit fiscal, droit patrimonial) ainsi que dans ses activités internationales (droit du commerce international, des transports internationaux, des opérations douanières).",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 6012
+    },
+    {
+      "id": 25,
+      "name": "GESTION ET MANAGEMENT HOTELIER",
+      "filiere_name": "Art, Tourisme et Hotellerie",
+      "description": "Ce programme appelé (Mise à niveau) commun à la spécialité Hotellerie et à celle de Restauration permet aux candidats qui n’ont pas suivi un second cycle du domaine de l’hôtellerie restauration sanctionné soit par le baccalauréat technologique Sciences et Technologies de\nl’Hôtellerie et de la Restauration (STHR), soit par le baccalauréat professionnel « Commercialisation et services en restauration », soit par le baccalauréat professionnel « Cuisine », d’accéder au cycle d’enseignement préparant au brevet de technicien supérieur en hôtellerie et en\nrestauration. Ces études ont pour but :\n•\td’apporter les connaissances spécifiques à l’hôtellerie et restauration telles qu’elles sont développées en série STHR ;\n•\tde permettre la validation d’un projet professionnel à travers la découverte des démarches et techniques nécessaires à la réalisation d’un projet d’études en BTS H et R;\n•\tde développer chez l’étudiant une culture professionnelle et une ouverture sur le monde de l’hôtellerie restauration ;\n•\td’initier aux concepts et aux techniques relatifs aux domaines de l’hôtellerie et la restauration ;\n•\tde donner les bases indispensables à l’acquisition des compétences qui seront développées en section de technicien supérieur ;\n•\tde développer chez l’étudiant sa capacité d’adaptation en développant son autonomie.\nEn fonction des objectifs généraux indiqués ci-dessus, l’enseignement en classe de mise à niveau (MAN) hôtellerie restauration doit développer chez l’étudiant les capacités lui permettant de suivre avec profit les enseignements dispensés en section de BTS H et BTS R.\nNB : Les titulaires des diplomes de fin de second cycle du domaine de l’hotellerie et de la restauration sont exempts de cette année de mise à niveau.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 7001
+    },
+    {
+      "id": 35,
+      "name": "GÉNIE CULINAIRE",
+      "filiere_name": "Art, Tourisme et Hotellerie",
+      "description": "est un diplôme supérieur qui forme des experts en techniques culinaires, en gestion d'équipe et en sécurité alimentaire. Il prépare à des postes de direction dans la restauration gastronomique, traditionnelle ou collective. ",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 7002
+    },
+    {
+      "id": 48,
+      "name": "INDUSTRIE DE L'HABILLEMENT",
+      "filiere_name": "Art, Tourisme et Hotellerie",
+      "description": "La formation vise à donner à l’étudiant des notions générales et techniques spécifiques à la conception et réalisation des produits en matériaux souples (vêtements, tissus d’ameublement…).",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 7003
+    },
+    {
+      "id": 27,
+      "name": "BTS SAGE-FEMME",
+      "filiere_name": "Sante",
+      "description": "Le BTS spécialité Sage-femme vise à former des professionnelles de santé ayant pour mission d’accompagner les femmes enceintes tout au long de leur grossesse, de l’établissement du diagnostic jusqu’au jour de l’accouchement, d’animer les séances de préparation à l’accouchement et assurer seule l’accouchement, de s’occuper du nouveau-né et si nécessaire d’accomplir les gestes de réanimation et surveiller le rétablissement de la mère. La Sage-femme assure le suivi gynécologique de la femme (prescription et pose contraceptifs, réduction périnéale et IVG médicamenteuse).",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 8001
+    },
+    {
+      "id": 30,
+      "name": "SCIENCES INFIRMIÈRES",
+      "filiere_name": "Sante",
+      "description": "Cette formation vise à mettre sur le marché de l’emploi des professionnels capables d’analyser une\nsituation de santé, de prendre des décisions dans les limites de leur compétence et de mener des\ninterventions seuls ou équipe multidisciplinaire.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 8002
+    },
+    {
+      "id": 31,
+      "name": "KINÉSITHÉRAPIE",
+      "filiere_name": "Sante",
+      "description": "L’objectif de la formation est de donner à l’étudiant des connaissances afin d’assurer la rééducation des personnes souffrant de problèmes de paralysie physique, d’affection respiratoire ou encore de rhumatisme.\n",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 8003
+    },
+    {
+      "id": 41,
+      "name": "TECHNIQUES DE LABORATOIRE ET D'ANALYSE MÉDICALE",
+      "filiere_name": "Sante",
+      "description": "Cette formation vise à former des cadres à même de détecter par des examens en laboratoire, les différentes pathologies pouvant affecter le corps humains.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 8004
+    },
+    {
+      "id": 42,
+      "name": "RADIOLOGIE ET IMAGERIE MÉDICALE",
+      "filiere_name": "Sante",
+      "description": "Devant la complexité présente des techniques en radiothérapie (informatique, assurance de qualité,…), d’une part, et les exigences en matière de radioprotection et de sécurité sanitaire (détermination des doses efficaces en radiologie par exemple) d’autre part, il apparait nécessaire de mettre en place une formation universitaire de niveau (bac +3), répondant aux besoins actuels des hôpitaux en professionnels qualifiés. Il est judicieux de prendre en compte également d’une part le phénomène de renouvellement des effectifs dus aux départs en retraite et d’autre part d’apporter aux cadres techniques la possibilité de poursuite d’études dans un domaine en pleine\nexpansion. Tel est l’objectif du BTS spécialité Radiologie et imagerie médicale.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 8005
+    },
+    {
+      "id": 50,
+      "name": "PUÉRICULTURE, GÉRONTOLOGIE ET AUXILIAIRE DE VIE",
+      "filiere_name": "Sante",
+      "description": "Le titulaire de ce BTS a pour fonction de prendre soins des enfants, maintenir et restaurer leur santé, les accueillir dès leur arrivée et adapter le milieu à leurs besoins. Il conseille, rassure et informe les parents. De même, il favorise le bien être, le maintien et le développement de\nl’autonomie de la personne âgée dépendante, handicapée ou non, grâce à un accompagnement centré sur l’individu au sein d’une structure ou de son environnement jusqu’au dernier moment de la vie.",
+      "icon": "fas fa-laptop-code",
+      "sort_order": 8006
+    }
+  ]
+}

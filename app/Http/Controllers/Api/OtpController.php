@@ -379,24 +379,9 @@ class OtpController extends Controller
     private function verifyPasswordResetPhoneOtp(string $phone, string $code): JsonResponse
     {
         $phone = preg_replace('/\s+/', '', $phone);
-
-        $record = PhoneOtp::where('phone', $phone)
-            ->where('code', $code)
-            ->where('expires_at', '>', now())
-            ->where('verified', false)
-            ->first();
-
-        if (!$record) {
-            return response()->json([
-                'message' => __('otp.code_invalid_or_expired'),
-            ], 422);
-        }
-
-        $record->update(['verified' => true]);
-
-        return response()->json([
-            'message' => __('otp.code_verified'),
-        ], 200);
+        $token = app(\App\Services\ApiPasswordResetService::class)->issue(PhoneOtp::class, 'phone', $phone, $code);
+        if (!$token) return response()->json(['message' => __('otp.code_invalid_or_expired')], 422);
+        return response()->json(['message' => __('otp.code_verified'), 'reset_token' => $token]);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -454,22 +439,9 @@ class OtpController extends Controller
 
     private function verifyPasswordResetEmailOtp(string $email, string $code): JsonResponse
     {
-        $record = EmailVerification::where('email', $email)
-            ->where('code', $code)
-            ->where('expires_at', '>', now())
-            ->where('verified', false)
-            ->first();
-
-        if (!$record) {
-            return response()->json([
-                'message' => __('otp.code_invalid_or_expired'),
-            ], 422);
-        }
-
-        $record->update(['verified' => true]);
-
-        return response()->json([
-            'message' => __('otp.code_verified'),
-        ], 200);
+        $email = strtolower(trim($email));
+        $token = app(\App\Services\ApiPasswordResetService::class)->issue(EmailVerification::class, 'email', $email, $code);
+        if (!$token) return response()->json(['message' => __('otp.code_invalid_or_expired')], 422);
+        return response()->json(['message' => __('otp.code_verified'), 'reset_token' => $token]);
     }
 }

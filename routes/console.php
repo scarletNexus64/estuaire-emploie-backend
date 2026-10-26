@@ -55,3 +55,5 @@ Schedule::call(function () {
     ->timezone('Africa/Douala')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/storage-pack-expirations.log'));
+
+Schedule::command('company-recoveries:deliver')->everyFiveMinutes()->withoutOverlapping();

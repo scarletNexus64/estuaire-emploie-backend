@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Events\JobPublished;
 use App\Http\Controllers\Controller;
-use App\Jobs\SendJobPublishedNotification;
 use App\Models\Job;
 use App\Models\Company;
 use App\Models\CompanyCategory;
@@ -161,11 +159,6 @@ class JobController extends Controller
         // Créer l'offre
         $job = Job::create($validated);
 
-        // Dispatcher l'événement si le job est publié
-        if ($job->status === 'published') {
-            JobPublished::dispatch($job);
-        }
-
         // Rediriger vers la page de proposition de test de compétences
         // (équivalent du dialog "Configurer un test ?" côté Flutter)
         return redirect()
@@ -237,19 +230,11 @@ class JobController extends Controller
         $validated['salary_negotiable'] = $request->boolean('salary_negotiable');
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        // Vérifier si le job passe à "published" pour la première fois
-        $wasNotPublished = $job->status !== 'published';
-
         if ($validated['status'] === 'published' && !$job->published_at) {
             $validated['published_at'] = now();
         }
 
         $job->update($validated);
-
-        // Dispatcher l'événement si le job vient d'être publié
-        if ($wasNotPublished && $job->status === 'published') {
-            JobPublished::dispatch($job);
-        }
 
         return redirect()
             ->route('admin.jobs.index')
@@ -274,10 +259,8 @@ class JobController extends Controller
             'published_at' => now(),
         ]);
 
-        // Dispatcher le job asynchrone pour envoyer les notifications en arrière-plan
+        // Le modèle déclenche automatiquement les notifications à la publication.
         if ($wasNotPublished) {
-            SendJobPublishedNotification::dispatch($job);
-
             return redirect()->route('admin.jobs.index')
                 ->with('success', 'Offre publiée avec succès ! Les notifications sont en cours d\'envoi en arrière-plan.');
         }

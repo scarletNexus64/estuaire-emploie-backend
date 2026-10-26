@@ -3,8 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Job;
-use App\Models\User;
-use App\Services\NotificationService;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,8 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Job pour envoyer des notifications lors de la publication d'une offre d'emploi
- * Utilise Firebase Multicast pour envoyer en masse (500 tokens/requête)
- * BULK: FCM uniquement (pas d'email)
+ * Un seul appel au topic FCM all_users ; historique en base traité séparément.
  */
 class SendJobPublishedNotification implements ShouldQueue
 {
@@ -24,7 +22,8 @@ class SendJobPublishedNotification implements ShouldQueue
     protected $jobOffer;
 
     public $tries = 3;
-    public $timeout = 600; // 10 minutes
+    public $timeout = 60;
+    public $backoff = [30, 120];
 
     public function __construct(Job $jobOffer)
     {
@@ -32,10 +31,15 @@ class SendJobPublishedNotification implements ShouldQueue
         $this->onQueue('notifications');
     }
 
-    public function handle(NotificationService $notificationService): void
+    public function handle(FirebaseNotificationService $firebaseService): void
     {
         try {
-            $jobOffer = $this->jobOffer->load(['company', 'category']);
+            $jobOffer = $this->jobOffer->fresh(['company', 'category']);
+
+            // L'offre peut avoir été retirée pendant l'attente dans la queue.
+            if (!$jobOffer || $jobOffer->trashed() || !$jobOffer->isPublished()) {
+                return;
+            }
 
             $title = "Nouvelle offre : {$jobOffer->title}";
             $message = "{$jobOffer->company->name} recrute à {$jobOffer->company?->city}";
@@ -48,29 +52,29 @@ class SendJobPublishedNotification implements ShouldQueue
                 'category' => $jobOffer->category->name ?? null,
             ];
 
-            // Récupérer tous les candidats avec token FCM
-            $candidates = User::where('role', 'candidate')
-                ->whereNotNull('fcm_token')
-                ->get();
-
-            Log::info('Job published notification', [
-                'job_id' => $jobOffer->id,
-                'candidates' => $candidates->count(),
+            $sent = $firebaseService->sendToTopic('all_users', $title, $message, [
+                'type' => 'job_published',
+                'sent_at' => now()->toISOString(),
+                ...array_map(fn ($value) => (string) ($value ?? ''), $additionalData),
             ]);
 
-            // Envoyer via multicast (500 tokens par requête Firebase - FCM uniquement)
-            $result = $notificationService->sendToMultipleUsers(
-                $candidates,
+            if (!$sent) {
+                throw new \RuntimeException('Firebase a refusé la diffusion de l’offre au topic all_users.');
+            }
+
+            StoreBroadcastNotifications::dispatch(
+                'job_published',
+                [],
                 $title,
                 $message,
-                'job_published',
-                $additionalData
+                $additionalData,
+                "job_published:{$jobOffer->id}",
             );
 
             Log::info('Job published notification sent', [
                 'job_id' => $jobOffer->id,
-                'sent' => $result['sent'],
-                'failed' => $result['failed'],
+                'topic' => 'all_users',
+                'accepted_by_fcm' => true,
             ]);
 
         } catch (\Exception $e) {

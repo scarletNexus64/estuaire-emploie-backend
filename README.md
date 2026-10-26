@@ -391,3 +391,84 @@ Pour toute question ou problème, consultez la documentation Laravel : https://l
 ## License
 
 MIT License
+
+
+## Récupération des entreprises précréées
+
+L’application propose un rattachement au compte connecté depuis l’onglet entreprise,
+et une récupération du compte précréé depuis la connexion. Nom, téléphone, fonction
+et explication libre suffisent ; aucun justificatif d’immatriculation obligatoire.
+Le parcours sans connexion vérifie l’email de réponse par code avant dépôt.
+
+L’administration traite les demandes dans `/admin/company-recoveries` avec la
+permission `manage_companies` (et `manage_users` pour le compte complet). Elle
+examine les demandes concurrentes et confirme sa vérification avant d’approuver.
+L’approbation verrouille l’entreprise en base, clôture les demandes concurrentes et
+révoque les anciens accès concernés. Seuls les comptes précréés encore inutilisés
+et liés à une seule entreprise peuvent être récupérés par ce parcours.
+
+Activation sur un environnement :
+
+```sh
+php artisan migrate
+php artisan companies:prepare-recovery
+php artisan companies:prepare-recovery --apply
+```
+
+La préparation utilise `entreprises_douala_yaounde_bafoussam.xlsx` pour identifier
+les données importées. Sans `--apply`, elle ne modifie rien. Les prochains imports
+conservent une clé source stable, même après changement de l’email de contact.
+
+Le mailer est `brevo` par défaut (`COMPANY_RECOVERY_MAILER` pour le modifier), avec
+l’expéditeur `SUPPORT_MAIL_FROM`. Maintenir un worker dédié avec
+`php artisan queue:work --queue=company-recovery --tries=4 --sleep=3` et le scheduler Laravel. `company-recoveries:deliver` relance les envois non livrés toutes
+les cinq minutes ; l’administration peut aussi les relancer depuis la demande.
+Les notifications en application sont persistées immédiatement. Les mots de passe
+temporaires sont chiffrés en attente d’envoi, effacés après livraison et valables
+48 heures. Ils doivent être changés à la première connexion. La régénération admin
+est bloquée après personnalisation du mot de passe.
+
+Déployer le frontend et le backend ensemble : la vérification OTP du mot de passe
+oublié retourne désormais `reset_token`, à transmettre comme `token` à
+`POST /api/password/reset`. Un simple état OTP « vérifié » ne suffit plus.
+Les anciens clients doivent être mis à jour pour réinitialiser leur mot de passe.
+
+Tests ciblés : `php artisan test --filter='CompanyRecoveryTest|EntreprisesCamerounSeederTest'`.
+
+### Notifications push : exploitation
+
+Deux workers distincts doivent rester actifs sous Supervisor ou systemd. Un worker
+qui ne surveille que `company-recovery` ne traite pas les publications.
+
+```sh
+php artisan queue:work --queue=notifications --tries=3 --sleep=3 --timeout=660
+php artisan queue:work --queue=company-recovery --tries=4 --sleep=3 --timeout=60
+```
+
+Les autres tâches applicatives continuent d'utiliser leur worker habituel.
+`QUEUE_RETRY_AFTER=900` (valeur par défaut des connexions database et redis) doit
+rester supérieur au timeout des jobs ; certains anciens jobs durent 600 secondes.
+Après déploiement ou changement de configuration, recharger le cache de configuration
+selon le déploiement et exécuter `php artisan queue:restart`. Le gestionnaire de
+processus doit redémarrer les workers. Maintenir aussi le scheduler Laravel actif.
+
+`FIREBASE_CREDENTIALS` doit désigner un fichier JSON de compte de service valide du
+projet Firebase utilisé par les applications. Ne jamais committer ce fichier.
+`invalid_grant / Invalid JWT Signature` indique une clé refusée par Google : remplacer
+la clé dans la configuration, puis redémarrer les workers. Un fichier présent sur
+disque ne garantit pas que sa clé est encore valide. Sur iOS, la clé APNs doit aussi
+être configurée dans Firebase, avec les capacités Push Notifications et Background
+Modes / Remote notifications de l'application signée.
+
+Les demandes de services utilisent maintenant le topic `all_users`, sans vagues
+différées, auteur inclus. `notified_at` est renseigné uniquement après acceptation
+par FCM. Les demandes rejetées, supprimées ou sorties du fil de 30 jours sont ignorées.
+La récupération conserve son envoi en attente si aucun appareil n'est enregistré ou
+si Firebase refuse le push. `sent_at` signifie accepté par le transport, pas affiché
+sur le téléphone. Après réparation de la configuration, l'administration peut
+relancer la livraison depuis la demande, ou le scheduler peut la reprendre.
+
+Avant de relancer une ancienne file, examiner les tâches accumulées : ne pas rejouer
+en masse des annonces historiques. Pour vérifier le transport sans diffuser de
+message, utiliser le mode `validate_only` de Firebase. Les tests applicatifs utilisent
+un transport simulé : `php artisan test --filter=PushDeliveryTest`.

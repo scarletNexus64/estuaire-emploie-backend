@@ -31,7 +31,7 @@ class MustChangePassword
             // Vérifier si la route est autorisée
             $isAllowed = false;
             foreach ($allowedRoutes as $route) {
-                if (str_contains($currentPath, $route)) {
+                if ($currentPath === $route) {
                     $isAllowed = true;
                     break;
                 }

@@ -391,7 +391,7 @@ class JobController extends Controller
      * @OA\Post(
      *     path="/api/jobs",
      *     summary="Créer une nouvelle offre d'emploi",
-     *     description="Permet à un recruteur de créer une nouvelle offre d'emploi pour son entreprise. L'offre sera en attente de validation par l'administrateur.",
+     *     description="Permet à un recruteur de créer une offre immédiatement publiée pour son entreprise. Une notification push est automatiquement envoyée à tous les utilisateurs disposant d'un token push.",
      *     operationId="createJob",
      *     tags={"Jobs"},
      *     security={{"sanctum": {}}},
@@ -416,7 +416,7 @@ class JobController extends Controller
      *         response=201,
      *         description="Offre créée avec succès",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Offre créée avec succès. En attente de validation."),
+     *             @OA\Property(property="message", type="string", example="Offre publiée avec succès."),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
@@ -514,7 +514,7 @@ class JobController extends Controller
         $job = Job::create(array_merge($validated, [
             'company_id' => $companyId,
             'posted_by' => Auth::id(),
-            'status' => 'pending', // Admin doit approuver
+            'status' => 'published',
         ]));
 
         // Incrémenter le compteur de jobs utilisés dans l'abonnement.

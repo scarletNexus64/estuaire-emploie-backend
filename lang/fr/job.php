@@ -9,7 +9,7 @@ return [
     'jobs_limit_reached' => 'Vous avez atteint la limite de :limit offres. Passez à un plan supérieur pour publier plus d\'offres.',
     'company_no_city' => 'Votre entreprise n\'a pas de ville renseignée. Renseignez la localisation de l\'entreprise ou choisissez une visibilité nationale.',
     'company_city_missing_for_local' => 'Ville de l\'entreprise manquante pour une offre locale.',
-    'created' => 'Offre créée avec succès. En attente de validation.',
+    'created' => 'Offre publiée avec succès.',
     'not_found' => 'Offre non trouvée',
     'not_authorized_view' => 'Vous n\'êtes pas autorisé à voir cette offre',
     'subscription_required_dashboard' => 'Vous devez avoir un abonnement actif pour accéder au dashboard',
