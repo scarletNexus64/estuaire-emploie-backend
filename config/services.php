@@ -61,4 +61,18 @@ return [
         'max_age_hours' => env('EXCHANGERATE_MAX_AGE_HOURS', 48),
     ],
 
+    /*
+    | Connexion « Continuer avec Google / Apple » (POST /api/auth/social).
+    | Identifiants acceptés comme audience du jeton, séparés par des virgules.
+    | Google : client OAuth iOS, Android et Web de la console Google Cloud.
+    | Apple  : bundle ID de l'app iOS (et Service ID si connexion web un jour).
+    */
+    'google' => [
+        'client_ids' => array_filter(array_map('trim', explode(',', (string) env('GOOGLE_CLIENT_IDS', '')))),
+    ],
+
+    'apple' => [
+        'client_ids' => array_filter(array_map('trim', explode(',', (string) env('APPLE_CLIENT_IDS', '')))),
+    ],
+
 ];

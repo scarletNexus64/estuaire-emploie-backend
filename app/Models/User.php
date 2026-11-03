@@ -72,6 +72,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        // Identifiants Google / Apple : inutiles côté client.
+        'google_id',
+        'apple_id',
     ];
 
     protected function casts(): array

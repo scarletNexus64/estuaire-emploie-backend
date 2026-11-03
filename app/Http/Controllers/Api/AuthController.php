@@ -8,6 +8,7 @@ use App\Models\Favorite;
 use App\Models\Job;
 use App\Models\User;
 use App\Notifications\RegistedNotification;
+use App\Services\Auth\SocialTokenVerifier;
 use App\Services\StoragePackService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -333,6 +334,160 @@ public function login(Request $request)
     ]);
 }
 
+
+    /**
+     * Connexion / inscription « Continuer avec Google » ou « Continuer avec Apple ».
+     *
+     * L'app envoie le jeton d'identité (id_token) obtenu auprès du fournisseur.
+     * On le vérifie (signature, audience, expiration), puis :
+     *  1. compte déjà lié à ce fournisseur → connexion ;
+     *  2. sinon, compte existant avec le même email vérifié → on lie et on connecte ;
+     *  3. sinon → création d'un compte candidat (mêmes valeurs par défaut que /register).
+     * Ensuite, mêmes règles que /login : compte actif, verrou d'appareil, FCM, token Sanctum.
+     */
+    public function socialLogin(Request $request, SocialTokenVerifier $verifier): JsonResponse
+    {
+        $validated = $request->validate([
+            'provider' => ['required', Rule::in(['google', 'apple'])],
+            'id_token' => 'required|string',
+            'device_id' => 'required|string',
+            'fcm_token' => 'nullable|string',
+            // Apple ne donne le nom qu'à la toute première connexion, côté app.
+            'name' => 'nullable|string|max:255',
+            'country' => 'nullable|string|size:2|exists:countries,code',
+            'preferred_currency' => 'nullable|string|size:3',
+            'referral_code' => 'nullable|string|exists:users,referral_code',
+        ]);
+
+        $provider = $validated['provider'];
+        $column = $provider . '_id';
+
+        try {
+            $identity = $verifier->verify($provider, $validated['id_token']);
+        } catch (\Throwable $e) {
+            Log::warning('❌ [SOCIAL_LOGIN] Jeton refusé', ['provider' => $provider, 'error' => $e->getMessage()]);
+
+            return response()->json(['message' => __('auth.social_invalid_token')], 401);
+        }
+
+        $isNewUser = false;
+
+        // 1. Compte déjà lié à ce fournisseur
+        $user = User::where($column, $identity['sub'])->first();
+
+        // 2. Compte existant avec le même email, vérifié par le fournisseur
+        if (!$user && $identity['email'] && $identity['email_verified']) {
+            $user = User::where('email', $identity['email'])->first();
+            if ($user) {
+                if (!empty($user->{$column}) && $user->{$column} !== $identity['sub']) {
+                    // L'email est déjà lié à un autre compte de ce fournisseur.
+                    return response()->json(['message' => __('auth.social_email_conflict')], 409);
+                }
+                $user->forceFill([
+                    $column => $identity['sub'],
+                    'email_verified_at' => $user->email_verified_at ?? now(),
+                ])->save();
+                Log::info('🔗 [SOCIAL_LOGIN] Fournisseur lié à un compte existant', [
+                    'user_id' => $user->id,
+                    'provider' => $provider,
+                ]);
+            }
+        }
+
+        // 3. Nouveau compte candidat
+        if (!$user) {
+            if (empty($identity['email'])) {
+                // Sans email ni compte lié, on ne peut pas créer un compte joignable.
+                return response()->json(['message' => __('auth.social_email_required')], 422);
+            }
+
+            $referrerId = null;
+            if (!empty($validated['referral_code'])) {
+                $referrerId = User::where('referral_code', $validated['referral_code'])->value('id');
+            }
+
+            $name = trim((string) ($validated['name'] ?? $identity['name'] ?? ''));
+            if ($name === '') {
+                $name = Str::of($identity['email'])->before('@')->replace(['.', '_', '-'], ' ')->title()->toString();
+            }
+
+            $user = User::create([
+                'name' => $name,
+                'email' => $identity['email'],
+                // Pas de mot de passe choisi : valeur aléatoire inutilisable.
+                // L'utilisateur peut en définir un via « Mot de passe oublié ».
+                'password' => Hash::make(Str::random(48)),
+                'fcm_token' => $validated['fcm_token'] ?? null,
+                'device_id' => $validated['device_id'],
+                'country' => $validated['country'] ?? 'CM',
+                'preferred_currency' => isset($validated['preferred_currency'])
+                    ? strtoupper($validated['preferred_currency'])
+                    : 'XAF',
+                'role' => 'candidate',
+                'available_roles' => ['candidate'],
+                'referred_by_id' => $referrerId,
+            ]);
+            $user->forceFill([
+                $column => $identity['sub'],
+                'email_verified_at' => $identity['email_verified'] ? now() : null,
+            ])->save();
+
+            $this->storagePackService->assignFreePackToUser($user);
+            $isNewUser = true;
+
+            Log::info('✅ [SOCIAL_LOGIN] Compte créé', ['user_id' => $user->id, 'provider' => $provider]);
+        }
+
+        if (!$user->is_active) {
+            return response()->json(['message' => __('auth.login_failed')], 401);
+        }
+
+        // Verrou d'appareil : mêmes règles que /login.
+        $deviceId = $validated['device_id'];
+        $bypassEmails = config('app.device_bypass_emails', []);
+        if (in_array(strtolower($user->email ?? ''), $bypassEmails, true)) {
+            // Compte de review/test : pas de verrou.
+        } elseif (empty($user->device_id)) {
+            $user->update(['device_id' => $deviceId]);
+        } elseif ($user->device_id !== $deviceId) {
+            Log::warning('⚠️ [SOCIAL_LOGIN] Appareil différent', ['user_id' => $user->id]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $user->hasPendingDeviceChangeRequest()
+                    ? __('auth.device_locked_pending')
+                    : __('auth.device_locked'),
+                'requires_device_change' => true,
+                'has_pending_request' => $user->hasPendingDeviceChangeRequest(),
+                // L'app s'en sert pour la demande de changement d'appareil
+                // (le compte n'a pas forcément de mot de passe connu).
+                'identifier' => $user->email ?? $user->phone,
+            ], 403);
+        }
+
+        if ($request->filled('fcm_token')) {
+            $user->update(['fcm_token' => $request->fcm_token]);
+        }
+
+        $user->forceFill(['last_login_at' => now()])->save();
+
+        if ($user->isRecruiter()) {
+            $user->load(['recruiter.company', 'companies', 'currentCompany']);
+        }
+        $user->load(['unreadNotifications']);
+        $user->applications_count = $user->applications()->count();
+        $user->favorites_count = $user->favorites()->count();
+
+        $token = $user->createToken('auth-token-mobile')->plainTextToken;
+
+        return response()->json([
+            'message' => $isNewUser ? __('auth.registration_success') : __('auth.login_success'),
+            'token' => $token,
+            'user' => $user,
+            'is_new_user' => $isNewUser,
+            'must_change_password' => false,
+        ], $isNewUser ? 201 : 200);
+    }
 
     /**
      * @OA\Post(

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceChangeRequest;
 use App\Models\User;
+use App\Services\Auth\SocialTokenVerifier;
 use App\Services\Notifications\NexahService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,11 +16,15 @@ class DeviceChangeRequestController extends Controller
     /**
      * Créer une demande de changement d'appareil
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, SocialTokenVerifier $verifier): JsonResponse
     {
         $validated = $request->validate([
             'identifier' => 'required|string', // Email ou téléphone
-            'password' => 'required|string',
+            // Mot de passe, OU jeton Google/Apple pour les comptes créés via
+            // « Continuer avec Google / Apple » (sans mot de passe connu).
+            'password' => 'required_without:social_token|nullable|string',
+            'social_provider' => 'required_with:social_token|nullable|in:google,apple',
+            'social_token' => 'nullable|string',
             'new_device_id' => 'required|string',
             'device_name' => 'nullable|string',
             'device_model' => 'nullable|string',
@@ -47,8 +52,21 @@ class DeviceChangeRequestController extends Controller
             ], 404);
         }
 
-        // Vérifier le mot de passe
-        if (!\Hash::check($validated['password'], $user->password)) {
+        // Vérifier l'identité : jeton du fournisseur lié au compte, sinon mot de passe.
+        if (!empty($validated['social_token'])) {
+            $column = $validated['social_provider'] . '_id';
+            try {
+                $identity = $verifier->verify($validated['social_provider'], $validated['social_token']);
+            } catch (\Throwable $e) {
+                $identity = null;
+            }
+            if (!$identity || empty($user->{$column}) || $user->{$column} !== $identity['sub']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('auth.social_invalid_token'),
+                ], 401);
+            }
+        } elseif (!\Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => __('device_change.incorrect_password'),

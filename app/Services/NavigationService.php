@@ -147,6 +147,12 @@ class NavigationService
                         'permission' => 'manage_premium_services',
                     ],
                     [
+                        'name' => 'Fascicules',
+                        'route' => 'admin.fascicules.index',
+                        'icon' => 'fas fa-book',
+                        'permission' => 'manage_premium_services',
+                    ],
+                    [
                         'name' => 'Communauté et mentors',
                         'route' => 'admin.community.index',
                         'icon' => 'fas fa-users',
@@ -427,6 +433,7 @@ class NavigationService
                 'admin.students.index',
                 'admin.exam-packs.index',
                 'admin.exam-papers.index',
+                'admin.fascicules.index',
                 'admin.training-packs.index',
                 'admin.training-videos.index',
                 'admin.insamtechs-pricing.index',

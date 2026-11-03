@@ -52,6 +52,10 @@ use App\Services\FirebaseNotificationService;
 Route::post('/check-availability', [AuthController::class, 'checkAvailability']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+// Fascicules : PDF via lien temporaire signé (le lecteur PDF n'envoie pas de jeton)
+Route::get('/fascicules/{id}/stream', [\App\Http\Controllers\Api\FasciculeApiController::class, 'stream'])
+    ->whereNumber('id')->middleware('throttle:60,1')->name('fascicules.stream');
+Route::post('/auth/social', [AuthController::class, 'socialLogin'])->middleware('throttle:20,1');
 Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 Route::post('/password/force-change', [AuthController::class, 'forceChangePassword'])->middleware('auth:sanctum');
@@ -439,6 +443,15 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/exam-papers/{id}/download', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'download']);
     // Obtenir l'URL pour visualiser le PDF
     Route::get('/exam-papers/{id}/view', [\App\Http\Controllers\Api\ExamPaperApiController::class, 'viewPdf']);
+
+    // ------------------
+    // MODE ÉTUDIANT - FASCICULES (supports de cours PDF)
+    // ------------------
+    // Catalogue consultable par tout utilisateur connecté (paywall côté app),
+    // fichier PDF réservé au Pack Étudiant (student_mode).
+    Route::get('/fascicules', [\App\Http\Controllers\Api\FasciculeApiController::class, 'index']);
+    Route::get('/fascicules/{id}', [\App\Http\Controllers\Api\FasciculeApiController::class, 'show'])->whereNumber('id');
+    Route::get('/fascicules/{id}/file', [\App\Http\Controllers\Api\FasciculeApiController::class, 'file'])->whereNumber('id');
 
     // ------------------
     // MODE ÉTUDIANT - PACKS D'ÉPREUVES (Payants)

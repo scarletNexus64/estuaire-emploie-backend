@@ -422,6 +422,18 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::get('/{examPaper}', [\App\Http\Controllers\Admin\ExamPaperController::class, 'show'])->name('show');
     });
 
+    // CONTENU ÉTUDIANT - Fascicules (supports de cours PDF)
+    Route::middleware('permission:manage_premium_services')->prefix('fascicules')->name('fascicules.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FasciculeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\FasciculeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\FasciculeController::class, 'store'])->name('store');
+        Route::get('/{fascicule}/edit', [\App\Http\Controllers\Admin\FasciculeController::class, 'edit'])->name('edit');
+        Route::put('/{fascicule}', [\App\Http\Controllers\Admin\FasciculeController::class, 'update'])->name('update');
+        Route::delete('/{fascicule}', [\App\Http\Controllers\Admin\FasciculeController::class, 'destroy'])->name('destroy');
+        Route::patch('/{fascicule}/toggle', [\App\Http\Controllers\Admin\FasciculeController::class, 'toggle'])->name('toggle');
+        Route::get('/{fascicule}/download', [\App\Http\Controllers\Admin\FasciculeController::class, 'download'])->name('download');
+    });
+
     Route::middleware('permission:manage_premium_services')->prefix('community')->name('community.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CommunityController::class, 'index'])->name('index');
         Route::patch('/mentors/{application}', [\App\Http\Controllers\Admin\CommunityController::class, 'review'])->name('review');

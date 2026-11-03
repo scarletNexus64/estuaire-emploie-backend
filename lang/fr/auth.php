@@ -59,4 +59,9 @@ return [
     'email_already_used' => 'Cette adresse email est déjà utilisée',
     'phone_already_used' => 'Ce numéro de téléphone est déjà utilisé',
     'available' => 'Disponible',
+
+    // Connexion Google / Apple
+    'social_invalid_token' => 'La connexion avec ce compte a échoué. Réessayez.',
+    'social_email_conflict' => 'Cet email est déjà lié à un autre compte. Connectez-vous avec votre email et votre mot de passe.',
+    'social_email_required' => 'Votre compte ne partage pas d\'adresse email. Autorisez le partage de l\'email ou inscrivez-vous avec votre email.',
 ];

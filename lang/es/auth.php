@@ -47,4 +47,9 @@ return [
     'email_already_used' => 'Esta dirección de correo electrónico ya está en uso',
     'phone_already_used' => 'Este número de teléfono ya está en uso',
     'available' => 'Disponible',
+
+    // Connexion Google / Apple
+    'social_invalid_token' => 'El inicio de sesión con esta cuenta falló. Inténtalo de nuevo.',
+    'social_email_conflict' => 'Este correo ya está vinculado a otra cuenta. Inicia sesión con tu correo y contraseña.',
+    'social_email_required' => 'Tu cuenta no comparte una dirección de correo. Permite compartir el correo o regístrate con tu correo.',
 ];

@@ -54,4 +54,9 @@ return [
     'email_already_used' => 'This email address is already in use',
     'phone_already_used' => 'This phone number is already in use',
     'available' => 'Available',
+
+    // Connexion Google / Apple
+    'social_invalid_token' => 'Sign-in with this account failed. Please try again.',
+    'social_email_conflict' => 'This email is already linked to another account. Please sign in with your email and password.',
+    'social_email_required' => 'Your account does not share an email address. Allow email sharing or sign up with your email.',
 ];
