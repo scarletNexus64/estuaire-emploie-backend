@@ -65,7 +65,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger">
-                                                    🗑️ Retirer
+                                                    Retirer
                                                 </button>
                                             </form>
                                         </td>
@@ -106,7 +106,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary" style="width: 100%;">
-                            ➕ Ajouter au Pack
+                            Ajouter au Pack
                         </button>
                     </form>
                 @else
@@ -119,7 +119,7 @@
 
                 <div style="margin-top: 1rem;">
                     <a href="{{ route('admin.exam-papers.create') }}" class="btn btn-secondary" style="width: 100%;">
-                        📄 Créer Nouvelle Épreuve
+                        Créer Nouvelle Épreuve
                     </a>
                 </div>
 

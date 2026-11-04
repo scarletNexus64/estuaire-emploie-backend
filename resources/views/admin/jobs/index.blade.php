@@ -9,12 +9,7 @@
 @endsection
 
 @section('header-actions')
-    <a href="{{ route('admin.jobs.create') }}" class="btn btn-primary">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nouvelle Offre
-    </a>
+    <x-admin.button href="{{ route('admin.jobs.create') }}" icon="mdi-plus">Nouvelle offre</x-admin.button>
 @endsection
 
 @section('content')
@@ -25,46 +20,11 @@
 </form>
 
 <!-- Stats Overview -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-    <div class="stat-card">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Total</div>
-                <div class="stat-value">{{ $jobs->total() }}</div>
-            </div>
-            <div class="stat-icon">💼</div>
-        </div>
-    </div>
-
-    <div class="stat-card success">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Publiées</div>
-                <div class="stat-value">{{ $jobs->where('status', 'published')->count() }}</div>
-            </div>
-            <div class="stat-icon">✓</div>
-        </div>
-    </div>
-
-    <div class="stat-card warning">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">En attente</div>
-                <div class="stat-value">{{ $jobs->where('status', 'pending')->count() }}</div>
-            </div>
-            <div class="stat-icon">⏳</div>
-        </div>
-    </div>
-
-    <div class="stat-card danger">
-        <div class="stat-header">
-            <div>
-                <div class="stat-label">Fermées</div>
-                <div class="stat-value">{{ $jobs->where('status', 'closed')->count() }}</div>
-            </div>
-            <div class="stat-icon">🔒</div>
-        </div>
-    </div>
+<div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <x-admin.stat label="Total" :value="\App\Models\Job::count()" icon="mdi-briefcase-outline" />
+    <x-admin.stat label="Publiées" :value="\App\Models\Job::where('status', 'published')->count()" icon="mdi-check-circle-outline" tone="success" />
+    <x-admin.stat label="En attente" :value="\App\Models\Job::where('status', 'pending')->count()" icon="mdi-clock-outline" tone="warning" />
+    <x-admin.stat label="Fermées" :value="\App\Models\Job::where('status', 'closed')->count()" icon="mdi-lock-outline" tone="danger" />
 </div>
 
 <!-- Filters & Search -->
@@ -148,7 +108,7 @@
                             <strong style="display: block;">{{ $job->title }}</strong>
                             <small style="color: var(--secondary); display: block;">{{ $job->category?->name ?? 'N/A' }}</small>
                             @if($job->is_featured)
-                                <span class="badge badge-warning" style="margin-top: 0.25rem;">⭐ Featured</span>
+                                <span class="badge badge-warning" style="margin-top: 0.25rem;">Mise en avant</span>
                             @endif
                         </div>
                     </td>
@@ -189,13 +149,13 @@
                             <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                                 <span style="font-weight: 500;">{{ $deadline->format('d/m/Y') }}</span>
                                 @if($daysRemaining < 0)
-                                    <small style="color: var(--danger);">⚠️ Expirée</small>
+                                    <small style="color: var(--danger);">Expirée</small>
                                 @elseif($daysRemaining <= 3)
-                                    <small style="color: var(--danger);">🔥 {{ abs($daysRemaining) }} jour(s)</small>
+                                    <small style="color: var(--danger);">{{ abs($daysRemaining) }} jour(s)</small>
                                 @elseif($daysRemaining <= 7)
-                                    <small style="color: var(--warning);">⏰ {{ $daysRemaining }} jour(s)</small>
+                                    <small style="color: var(--warning);">{{ $daysRemaining }} jour(s)</small>
                                 @else
-                                    <small style="color: var(--success);">✓ {{ $daysRemaining }} jour(s)</small>
+                                    <small style="color: var(--success);">{{ $daysRemaining }} jour(s)</small>
                                 @endif
                             </div>
                         @else
@@ -234,7 +194,7 @@
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="btn btn-sm btn-warning" title="{{ $job->is_featured ? 'Retirer la mise en avant' : 'Mettre en avant' }}">
-                                    ⭐
+                                    <i class="mdi {{ $job->is_featured ? 'mdi-star' : 'mdi-star-outline' }}" style="font-size:16px"></i>
                                 </button>
                             </form>
 
@@ -252,16 +212,10 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" style="text-align: center; padding: 3rem; color: var(--secondary);">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
-                        <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Aucune offre trouvée</p>
-                        <p style="margin-bottom: 1.5rem;">Commencez par créer une nouvelle offre d'emploi</p>
-                        <a href="{{ route('admin.jobs.create') }}" class="btn btn-primary">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Nouvelle Offre
-                        </a>
+                    <td colspan="10">
+                        <x-admin.empty-state icon="mdi-briefcase-off-outline" title="Aucune offre trouvée" text="Commencez par créer une nouvelle offre d'emploi.">
+                            <x-admin.button href="{{ route('admin.jobs.create') }}" icon="mdi-plus">Nouvelle offre</x-admin.button>
+                        </x-admin.empty-state>
                     </td>
                 </tr>
                 @endforelse

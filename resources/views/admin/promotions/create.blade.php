@@ -136,7 +136,7 @@
                     </span>
                 </label>
                 <p class="text-xs text-gray-500 mt-1 ml-8">
-                    ✅ Si coché, une notification FCM sera envoyée à tous les utilisateurs
+                    Si coché, une notification FCM sera envoyée à tous les utilisateurs
                 </p>
             </div>
         </div>

@@ -73,11 +73,11 @@
                                 <p class="text-muted">
                                     <small>Type:
                                         @if($question['type'] === 'multiple_choice')
-                                            📝 Choix multiple
+                                            Choix multiple
                                         @elseif($question['type'] === 'text')
-                                            ✏️ Texte libre
+                                            Texte libre
                                         @elseif($question['type'] === 'code')
-                                            💻 Code
+                                            Code
                                         @endif
                                     </small>
                                 </p>

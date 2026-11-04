@@ -399,7 +399,7 @@
         <div class="row">
             <div class="col-md-4 mb-3 mb-md-0">
                 <input type="text" class="form-control" id="search" name="search"
-                       value="{{ request('search') }}" placeholder="🔍 Rechercher par nom, email, titre...">
+                       value="{{ request('search') }}" placeholder="Rechercher par nom, email, titre...">
             </div>
 
             <div class="col-md-3 mb-3 mb-md-0">
@@ -460,7 +460,7 @@
                     {{ ucfirst($portfolio->template_id) }}
                 </span>
                 <span class="portfolio-badge badge-visibility {{ $portfolio->is_public ? '' : 'private' }}">
-                    {{ $portfolio->is_public ? '👁️ Public' : '🔒 Privé' }}
+                    {{ $portfolio->is_public ? 'Public' : 'Privé' }}
                 </span>
             </div>
 

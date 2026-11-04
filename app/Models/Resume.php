@@ -226,8 +226,52 @@ class Resume extends Model
             'is_default' => $this->is_default,
             'is_public' => $this->is_public,
             'completeness' => $this->calculateCompleteness(),
+            'completeness_details' => $this->completenessDetails(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];
+    }
+
+    /**
+     * Sections prises en compte dans la complétude, avec leur poids (total 100).
+     */
+    public const COMPLETENESS_WEIGHTS = [
+        'personal_info' => 20,
+        'professional_summary' => 10,
+        'experiences' => 25,
+        'education' => 20,
+        'skills' => 15,
+        'certifications' => 5,
+        'projects' => 5,
+    ];
+
+    /**
+     * Détail de la complétude par section : clé, poids et état (rempli ou non).
+     * Permet à l'app d'afficher ce qu'il reste à compléter.
+     */
+    public function completenessDetails(): array
+    {
+        $details = [];
+
+        foreach (self::COMPLETENESS_WEIGHTS as $field => $weight) {
+            $value = $this->$field;
+
+            if ($field === 'personal_info') {
+                // Nom et email requis dans personal_info
+                $done = is_array($value) && !empty($value['name']) && !empty($value['email']);
+            } elseif ($field === 'professional_summary') {
+                $done = is_string($value) ? trim($value) !== '' : !empty($value);
+            } else {
+                $done = is_array($value) && !empty($value);
+            }
+
+            $details[] = [
+                'key' => $field,
+                'weight' => $weight,
+                'done' => $done,
+            ];
+        }
+
+        return $details;
     }
 
     /**
@@ -235,38 +279,9 @@ class Resume extends Model
      */
     public function calculateCompleteness(): int
     {
-        $fields = [
-            'personal_info' => 20,
-            'professional_summary' => 10,
-            'experiences' => 25,
-            'education' => 20,
-            'skills' => 15,
-            'certifications' => 5,
-            'projects' => 5,
-        ];
-
-        $totalScore = 0;
-
-        foreach ($fields as $field => $weight) {
-            $value = $this->$field;
-
-            if ($field === 'personal_info') {
-                // Vérifier les champs requis dans personal_info
-                if (is_array($value) && !empty($value['name']) && !empty($value['email'])) {
-                    $totalScore += $weight;
-                }
-            } elseif ($field === 'professional_summary') {
-                if (!empty($value)) {
-                    $totalScore += $weight;
-                }
-            } else {
-                // Pour les arrays
-                if (is_array($value) && !empty($value)) {
-                    $totalScore += $weight;
-                }
-            }
-        }
-
-        return $totalScore;
+        return array_sum(array_map(
+            fn ($section) => $section['done'] ? $section['weight'] : 0,
+            $this->completenessDetails()
+        ));
     }
 }

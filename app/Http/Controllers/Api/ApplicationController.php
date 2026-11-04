@@ -149,41 +149,18 @@ class ApplicationController extends Controller
 
             $application->load(['job.company', 'user', 'portfolio']);
 
-            // Envoi de notification à tous les recruteurs de l'entreprise
-            // Utilise le NotificationService pour envoyer ET enregistrer en BDD
-            $recruiters = $application->job->company->recruiters()->with('user')->get();
-            $notificationService = app(NotificationService::class);
-
-            foreach ($recruiters as $recruiter) {
-                $recruiterUser = $recruiter->user;
-                if ($recruiterUser) {
-                    // 1. Envoyer la notification push
-                    $notificationService->sendToUser(
-                        $recruiterUser,
-                        "Nouvelle candidature",
-                        "{$request->user()->name} a postulé à votre offre: {$application->job->title}",
-                        'application_received',
-                        [
-                            'job_id' => $application->job->id,
-                            'job_title' => $application->job->title,
-                            'applicant_id' => $request->user()->id,
-                            'applicant_name' => $request->user()->name,
-                            'application_id' => $application->id,
-                        ]
-                    );
-
-                    // 2. Envoyer l'email (synchrone)
-                    try {
-                        $recruiterUser->notify(new \App\Notifications\NewApplicationReceivedNotification($application));
-                    } catch (\Exception $e) {
-                        \Log::error('Erreur envoi email nouvelle candidature', [
-                            'application_id' => $application->id,
-                            'recruiter_id' => $recruiterUser->id,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
-            }
+            // Recruteurs prévenus (push + notification + email) après l'envoi de
+            // la réponse : le candidat n'attend pas les emails.
+            $applicant = $request->user();
+            $this->notifyRecruitersAfterResponse(
+                $application,
+                'Nouvelle candidature',
+                "{$applicant->name} a postulé à votre offre: {$application->job->title}",
+                [
+                    'applicant_id' => $applicant->id,
+                    'applicant_name' => $applicant->name,
+                ]
+            );
 
             return response()->json([
                 'data' => $application,
@@ -386,36 +363,19 @@ class ApplicationController extends Controller
 
             $application->load(['job.company', 'user', 'portfolio', 'testResults']);
 
-            // Envoi de notifications aux recruteurs
-            $recruiters = $application->job->company->recruiters()->with('user')->get();
-            $notificationService = app(\App\Services\NotificationService::class);
-
-            foreach ($recruiters as $recruiter) {
-                $recruiterUser = $recruiter->user;
-                if ($recruiterUser) {
-                    $notificationService->sendToUser(
-                        $recruiterUser,
-                        "Nouvelle candidature qualifiée",
-                        "{$request->user()->name} a postulé avec succès (test réussi: {$score}/{$test->passing_score}) à votre offre: {$application->job->title}",
-                        'application_received',
-                        [
-                            'job_id' => $application->job->id,
-                            'job_title' => $application->job->title,
-                            'applicant_id' => $request->user()->id,
-                            'applicant_name' => $request->user()->name,
-                            'application_id' => $application->id,
-                            'test_score' => $score,
-                            'test_passed' => true,
-                        ]
-                    );
-
-                    try {
-                        $recruiterUser->notify(new \App\Notifications\NewApplicationReceivedNotification($application));
-                    } catch (\Exception $e) {
-                        \Log::error('Erreur envoi email', ['error' => $e->getMessage()]);
-                    }
-                }
-            }
+            // Envoi de notifications aux recruteurs (après la réponse)
+            $applicant = $request->user();
+            $this->notifyRecruitersAfterResponse(
+                $application,
+                'Nouvelle candidature qualifiée',
+                "{$applicant->name} a postulé avec succès (test réussi: {$score}/{$test->passing_score}) à votre offre: {$application->job->title}",
+                [
+                    'applicant_id' => $applicant->id,
+                    'applicant_name' => $applicant->name,
+                    'test_score' => $score,
+                    'test_passed' => true,
+                ]
+            );
 
             \DB::commit();
 
@@ -791,60 +751,55 @@ class ApplicationController extends Controller
             $application->save();
         }
 
-        // Envoyer notification push + email au candidat
-        try {
-            $status = $validated['status'];
+        // Push + notification in-app + email au candidat, après la réponse :
+        // le recruteur n'attend pas l'envoi de l'email. La notification est
+        // enregistrée même si le candidat n'a pas de jeton FCM (il la verra
+        // dans l'app).
+        $status = $validated['status'];
+        dispatch(function () use ($application, $status) {
+            $candidate = $application->user;
+            if (! $candidate) {
+                return;
+            }
+            $jobTitle = $application->job?->title ?? '';
+            $companyName = $application->job?->company?->name ?? '';
 
-            if ($application->user) {
-                // 1. Envoyer la notification push
-                if ($application->user->fcm_token) {
-                    $notificationService = app(\App\Services\NotificationService::class);
-
-                    if ($status === 'accepted') {
-                        $title = "Candidature acceptée 🎉";
-                        $message = "Félicitations ! Votre candidature pour {$application->job->title} chez {$application->job->company->name} a été acceptée.";
-                        $type = 'application_accepted';
-                    } else {
-                        $title = "Candidature non retenue";
-                        $message = "Votre candidature pour {$application->job->title} chez {$application->job->company->name} n'a pas été retenue cette fois.";
-                        $type = 'application_rejected';
-                    }
-
-                    $notificationService->sendToUser(
-                        $application->user,
-                        $title,
-                        $message,
-                        $type,
-                        [
-                            'application_id' => $application->id,
-                            'job_id' => $application->job->id,
-                            'job_title' => $application->job->title,
-                            'company_name' => $application->job->company->name,
-                            'status' => $status,
-                        ]
-                    );
-                }
-
-                // 2. Envoyer l'email (synchrone)
+            try {
                 if ($status === 'accepted') {
-                    $application->user->notify(new \App\Notifications\ApplicationAcceptedNotification($application));
-                } else if ($status === 'rejected') {
-                    $application->user->notify(new \App\Notifications\ApplicationRejectedNotification($application));
+                    $title = 'Candidature acceptée 🎉';
+                    $message = "Félicitations ! Votre candidature pour {$jobTitle} chez {$companyName} a été acceptée.";
+                    $type = 'application_accepted';
+                } else {
+                    $title = 'Candidature non retenue';
+                    $message = "Votre candidature pour {$jobTitle} chez {$companyName} n'a pas été retenue cette fois.";
+                    $type = 'application_rejected';
                 }
 
-                Log::info('Notification + Email candidature envoyés', [
+                app(NotificationService::class)->sendToUser($candidate, $title, $message, $type, [
                     'application_id' => $application->id,
-                    'user_id' => $application->user->id,
+                    'job_id' => $application->job_id,
+                    'job_title' => $jobTitle,
+                    'company_name' => $companyName,
                     'status' => $status,
                 ]);
+            } catch (\Throwable $e) {
+                Log::error('Erreur notification statut candidature', [
+                    'application_id' => $application->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
-        } catch (\Exception $e) {
-            // Log l'erreur mais ne bloque pas le processus
-            Log::error('Erreur envoi notification candidature', [
-                'application_id' => $application->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+
+            try {
+                $candidate->notify($status === 'accepted'
+                    ? new \App\Notifications\ApplicationAcceptedNotification($application)
+                    : new \App\Notifications\ApplicationRejectedNotification($application));
+            } catch (\Throwable $e) {
+                Log::error('Erreur email statut candidature', [
+                    'application_id' => $application->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        })->afterResponse();
 
         return response()->json([
             'message' => __('application.status_updated'),
@@ -1128,5 +1083,43 @@ class ApplicationController extends Controller
                 'message' => __('application.delete_error'),
             ], 500);
         }
+    }
+
+    /**
+     * Prévient les recruteurs de l'entreprise d'une nouvelle candidature :
+     * push + notification in-app (`application_received`) + email.
+     * Exécuté après l'envoi de la réponse au candidat.
+     */
+    private function notifyRecruitersAfterResponse(Application $application, string $title, string $message, array $extra = []): void
+    {
+        dispatch(function () use ($application, $title, $message, $extra) {
+            $job = $application->job;
+            $recruiters = $job?->company?->recruiters()->with('user')->get() ?? collect();
+            $notificationService = app(NotificationService::class);
+
+            foreach ($recruiters as $recruiter) {
+                $recruiterUser = $recruiter->user;
+                if (! $recruiterUser) {
+                    continue;
+                }
+
+                $notificationService->sendToUser($recruiterUser, $title, $message, 'application_received', [
+                    'job_id' => $job->id,
+                    'job_title' => $job->title,
+                    'application_id' => $application->id,
+                    ...$extra,
+                ]);
+
+                try {
+                    $recruiterUser->notify(new \App\Notifications\NewApplicationReceivedNotification($application));
+                } catch (\Throwable $e) {
+                    Log::error('Erreur envoi email nouvelle candidature', [
+                        'application_id' => $application->id,
+                        'recruiter_id' => $recruiterUser->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        })->afterResponse();
     }
 }

@@ -57,13 +57,13 @@
                     <p><strong>Coordonnées GPS:</strong>
                         @if($company->latitude && $company->longitude)
                             <span style="color: #28a745;">
-                                📍 {{ number_format($company->latitude, 6) }}, {{ number_format($company->longitude, 6) }}
+                                {{ number_format($company->latitude, 6) }}, {{ number_format($company->longitude, 6) }}
                             </span>
                             <a href="https://www.google.com/maps?q={{ $company->latitude }},{{ $company->longitude }}"
                                target="_blank"
                                class="btn btn-sm btn-info"
                                style="margin-left: 10px;">
-                                🗺️ Voir sur Google Maps
+                                Voir sur Google Maps
                             </a>
                         @else
                             <span style="color: #dc3545;">Non renseignées</span>
@@ -96,7 +96,7 @@
             <!-- Google Maps Preview Section -->
             @if($company->latitude && $company->longitude)
             <div style="margin-top: 2rem;">
-                <h4 style="margin-bottom: 1rem; font-weight: 600;">🗺️ Localisation sur la Carte</h4>
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">Localisation sur la Carte</h4>
                 <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <iframe
                         width="100%"
@@ -109,12 +109,12 @@
                     </iframe>
                 </div>
                 <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
-                    📍 Coordonnées: {{ number_format($company->latitude, 6) }}, {{ number_format($company->longitude, 6) }}
+                    Coordonnées: {{ number_format($company->latitude, 6) }}, {{ number_format($company->longitude, 6) }}
                 </p>
             </div>
             @elseif($company->address || $company->city)
             <div style="margin-top: 2rem; padding: 1.5rem; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
-                <h4 style="margin-bottom: 0.5rem; color: #856404;">⚠️ Coordonnées GPS manquantes</h4>
+                <h4 style="margin-bottom: 0.5rem; color: #856404;">Coordonnées GPS manquantes</h4>
                 <p style="margin: 0; color: #856404;">
                     Cette entreprise a une adresse mais pas de coordonnées GPS.
                     <a href="{{ route('admin.companies.edit', $company) }}" style="color: #004085; text-decoration: underline;">
@@ -127,7 +127,7 @@
             <!-- Company Photos Gallery Section -->
             @if($company->photos && count($company->photos) > 0)
             <div style="margin-top: 2rem;">
-                <h4 style="margin-bottom: 1rem; font-weight: 600;">📸 Photos de l'Entreprise ({{ count($company->photos) }})</h4>
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">Photos de l'Entreprise ({{ count($company->photos) }})</h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
                     @foreach($company->photos_urls as $index => $photoUrl)
                         <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; background: #f8f9fa;">
@@ -135,7 +135,7 @@
                                  alt="Photo {{ $index + 1 }} - {{ $company->name }}"
                                  style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;"
                                  onclick="window.open('{{ $photoUrl }}', '_blank')"
-                                 onerror="this.parentElement.innerHTML='<div style=\'display: flex; align-items: center; justify-content: center; height: 200px; color: #dc3545;\'>❌ Erreur de chargement</div>'">
+                                 onerror="this.parentElement.innerHTML='<div style=\'display: flex; align-items: center; justify-content: center; height: 200px; color: #dc3545;\'>Erreur de chargement</div>'">
                             <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
                                 Photo {{ $index + 1 }}
                             </div>
@@ -143,12 +143,12 @@
                     @endforeach
                 </div>
                 <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6c757d;">
-                    💡 Cliquez sur une photo pour l'agrandir dans un nouvel onglet
+                    Cliquez sur une photo pour l'agrandir dans un nouvel onglet
                 </p>
             </div>
             @else
             <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f8f9fa; border-left: 4px solid #6c757d; border-radius: 8px;">
-                <h4 style="margin-bottom: 0.5rem; color: #495057;">📸 Aucune photo disponible</h4>
+                <h4 style="margin-bottom: 0.5rem; color: #495057;">Aucune photo disponible</h4>
                 <p style="margin: 0; color: #6c757d;">
                     Cette entreprise n'a pas encore ajouté de photos de présentation.
                 </p>
@@ -244,7 +244,7 @@
     {{-- ============================================================= --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">🏷️ Secteurs d'Activité ({{ $company->categories->count() }})</h3>
+            <h3 class="card-title">Secteurs d'Activité ({{ $company->categories->count() }})</h3>
         </div>
         <div style="padding: 1.5rem;">
             @forelse($company->categories as $category)
@@ -262,7 +262,7 @@
     {{-- ============================================================= --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">🛍️ Vitrine — Produits & Services ({{ $showcaseStats['total'] }})</h3>
+            <h3 class="card-title">Vitrine — Produits & Services ({{ $showcaseStats['total'] }})</h3>
         </div>
 
         {{-- Bandeau de statistiques vitrine --}}
@@ -317,9 +317,9 @@
                                      alt="{{ $product->name }}"
                                      style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
                                      onclick="window.open('{{ $product->first_image_url }}', '_blank')"
-                                     onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:#adb5bd;\'>🖼️ Image indisponible</div>'">
+                                     onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:#adb5bd;\'>Image indisponible</div>'">
                             @else
-                                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#adb5bd;">🖼️ Aucune image</div>
+                                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#adb5bd;">Aucune image</div>
                             @endif
                             <span class="badge {{ $product->type === 'product' ? 'badge-primary' : 'badge-warning' }}"
                                   style="position:absolute;top:8px;left:8px;">
@@ -330,7 +330,7 @@
                             @endif
                             @if(count($product->image_urls) > 1)
                                 <span style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">
-                                    📷 {{ count($product->image_urls) }}
+                                    {{ count($product->image_urls) }}
                                 </span>
                             @endif
                         </div>
@@ -353,12 +353,12 @@
 
                             @if($product->category)
                                 <div style="font-size: 0.75rem; color: #6c757d; margin-bottom: 0.25rem;">
-                                    🏷️ {{ $product->category->full_name }}
+                                    {{ $product->category->full_name }}
                                 </div>
                             @endif
                             @if($product->type === 'product' && $product->stock !== null)
                                 <div style="font-size: 0.75rem; color: #6c757d;">
-                                    📦 Stock : {{ $product->stock }}
+                                    Stock : {{ $product->stock }}
                                 </div>
                             @endif
                             <div style="font-size: 0.7rem; color: #adb5bd; margin-top: 0.5rem;">
@@ -382,7 +382,7 @@
     {{-- ============================================================= --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">💰 Ventes de la Vitrine ({{ $company->productPurchases->count() }})</h3>
+            <h3 class="card-title">Ventes de la Vitrine ({{ $company->productPurchases->count() }})</h3>
         </div>
         <div class="table-responsive">
             <table>

@@ -11,17 +11,17 @@
                 <i class="mdi mdi-arrow-left text-2xl"></i>
             </a>
             <h1 class="text-3xl font-bold text-gray-900">
-                {{ isset($fascicule) ? '✏️ Modifier' : '➕ Ajouter' }} un fascicule
+                {{ isset($fascicule) ? 'Modifier' : 'Ajouter' }} un fascicule
             </h1>
         </div>
         <p class="text-gray-600 ml-12">
-            Uploader un support de cours PDF pour les étudiants (Pack Étudiant)
+            Uploader un support de cours (PDF ou Word) pour les étudiants (Pack Étudiant)
         </p>
     </div>
 
     @if ($errors->any())
         <div class="mb-6 rounded-lg bg-red-100 border border-red-400 text-red-700 px-4 py-3">
-            <p class="font-bold mb-2">❌ Erreurs de validation :</p>
+            <p class="font-bold mb-2">Erreurs de validation :</p>
             <ul class="list-disc list-inside">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -42,7 +42,7 @@
         <!-- Informations générales -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">📝 Informations générales</h3>
+                <h3 class="card-title">Informations générales</h3>
             </div>
             <div class="card-body">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -53,6 +53,35 @@
                         <input type="text" name="title" class="form-control" required
                                value="{{ old('title', $fascicule->title ?? '') }}"
                                placeholder="Ex: Comptabilité générale - Cours complet">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        @php($kind = old('kind', $fascicule->kind ?? 'autre'))
+                        <select name="kind" class="form-control">
+                            <option value="support_cours" @selected($kind === 'support_cours')>Support de cours</option>
+                            <option value="banque_epreuves" @selected($kind === 'banque_epreuves')>Banque d'épreuves corrigées</option>
+                            <option value="autre" @selected($kind === 'autre')>Autre fascicule</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Dossier (filière) dans l'app</label>
+                        @php($code = old('filiere_code', $fascicule->filiere_code ?? ''))
+                        <select name="filiere_code" class="form-control">
+                            <option value="">— Aucun (dossier « Autres fascicules ») —</option>
+                            @foreach(\App\Support\FasciculeCatalog::DOMAINS as $domainKey => $domainInfo)
+                                @php($domainCodes = \App\Support\FasciculeCatalog::filieresOf($domainKey))
+                                @if(count($domainCodes))
+                                    <optgroup label="{{ $domainInfo['label'] }}">
+                                        @foreach(collect($domainCodes)->sortBy(fn ($c) => \App\Support\FasciculeCatalog::filiereName($c)) as $c)
+                                            <option value="{{ $c }}" @selected($code === $c)>{{ \App\Support\FasciculeCatalog::filiereLabel($c) }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Le domaine est déduit de la filière.</p>
                     </div>
 
                     <div>
@@ -116,7 +145,7 @@
         <!-- Fichier PDF -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">📄 Fichier PDF</h3>
+                <h3 class="card-title">Fichier (PDF ou Word)</h3>
             </div>
             <div class="card-body">
                 @if(isset($fascicule) && $fascicule->file_path)
@@ -138,13 +167,13 @@
                 @endif
 
                 <div class="file-upload" onclick="document.getElementById('pdf-file').click()">
-                    <input type="file" id="pdf-file" name="file" accept=".pdf,application/pdf"
+                    <input type="file" id="pdf-file" name="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                            {{ isset($fascicule) ? '' : 'required' }}
                            onchange="displayFileName(this, 'file-name')">
                     <div class="text-center">
                         <i class="mdi mdi-cloud-upload text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-gray-700 font-medium mb-1">Cliquez pour uploader un fichier PDF</p>
-                        <p class="text-sm text-gray-500">Maximum 50 MB - Format PDF uniquement</p>
+                        <p class="text-gray-700 font-medium mb-1">Cliquez pour uploader un fichier PDF ou Word</p>
+                        <p class="text-sm text-gray-500">Maximum 50 MB - PDF ou Word (.docx)</p>
                     </div>
                 </div>
                 <p id="file-name" class="mt-2 text-sm text-gray-600 hidden"></p>
@@ -154,7 +183,7 @@
         <!-- Couverture -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">🖼️ Couverture (optionnelle)</h3>
+                <h3 class="card-title">Couverture (optionnelle)</h3>
             </div>
             <div class="card-body">
                 @if(isset($fascicule) && $fascicule->cover_url)
@@ -183,7 +212,7 @@
         <!-- Options -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">⚙️ Options</h3>
+                <h3 class="card-title">Options</h3>
             </div>
             <div class="card-body">
                 <label class="flex items-center gap-3 cursor-pointer">
@@ -217,7 +246,7 @@ function displayFileName(input, targetId) {
     const el = document.getElementById(targetId);
 
     if (fileName) {
-        el.textContent = '📄 Fichier sélectionné : ' + fileName;
+        el.textContent = 'Fichier sélectionné : ' + fileName;
         el.classList.remove('hidden');
     } else {
         el.classList.add('hidden');

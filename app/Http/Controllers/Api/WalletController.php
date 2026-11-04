@@ -146,6 +146,51 @@ class WalletController extends Controller
                 'phone_number' => $phoneNumber ? substr($phoneNumber, 0, 3) . '****' . substr($phoneNumber, -2) : null,
             ]);
 
+            // Carte bancaire (Visa/Mastercard) via KPay Lite (compte cartes
+            // dédié) quand il est activé et configuré. Sinon, ancien parcours
+            // carte KPay ci-dessous, inchangé.
+            if ($paymentMethod === 'card' && \App\Services\Payment\KPayLiteService::isActive()) {
+                \Log::info("[WalletController] 💳 Using KPay Lite CARD (hosted gateway)");
+
+                $liteService = app(\App\Services\Payment\KPayLiteService::class);
+
+                $result = $liteService->initCardDeposit(
+                    $user,
+                    (float) $amount,
+                    'Recharge wallet',
+                    null,
+                    'wallet_recharge',
+                    $user->email,
+                    'XAF'
+                );
+
+                $payment = $result['payment'];
+
+                \Log::info("[WalletController] ✅ KPay Lite card payment initiated", [
+                    'payment_id' => $payment->id,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('wallet.card_finish_on_gateway'),
+                    'data' => [
+                        'payment_id' => $payment->id,
+                        'payment_url' => $result['gateway_url'],
+                        'gateway_url' => $result['gateway_url'],
+                        // URL réellement transmise à KPay Lite : la WebView
+                        // détecte ce chemin pour se refermer.
+                        'return_url' => $result['return_url'],
+                        'expires_at' => $result['expires_at'],
+                        'amount' => $amount,
+                        'payment_method' => 'card',
+                        'status' => $payment->status,
+                        'poll_url' => "/api/wallet/payment-status/{$payment->id}",
+                        'ussd_hint' => false,
+                        'is_test' => $result['is_test'],
+                    ],
+                ]);
+            }
+
             // Carte bancaire (Visa/Mastercard) : passerelle hébergée KPay.
             if ($paymentMethod === 'card') {
                 \Log::info("[WalletController] 💳 Using KPay CARD (hosted gateway)");
@@ -283,8 +328,30 @@ class WalletController extends Controller
         } catch (\App\Services\Payment\KPayException $e) {
             // Saisie utilisateur invalide (numéro, opérateur, pays) : l'app doit
             // pouvoir corriger l'écran plutôt qu'afficher une panne serveur.
-            $userInputCodes = ['PHONE_REQUIRED', 'INVALID_PHONE', 'UNSUPPORTED_COUNTRY', 'PROVIDER_REQUIRED'];
+            $userInputCodes = ['PHONE_REQUIRED', 'INVALID_PHONE', 'UNSUPPORTED_COUNTRY', 'PROVIDER_REQUIRED', 'AMOUNT_TOO_LOW'];
             $isUserInput = in_array($e->kpayCode, $userInputCodes, true);
+
+            // Cartes KPay Lite : codes explicites pour que l'app affiche un
+            // message clair et, si pertinent, « Réessayer » (nouvelle tentative).
+            $cardHttpStatus = match ($e->kpayCode) {
+                'CARD_AMOUNT_TOO_LOW', 'CARD_NOT_ENABLED', 'CARD_NOT_CONFIGURED' => 422,
+                'CARD_DUPLICATE' => 409,
+                'CARD_GATEWAY_ERROR', 'CARD_INIT_FAILED', 'NO_GATEWAY_URL' => 502,
+                default => null,
+            };
+            if ($cardHttpStatus !== null) {
+                \Log::warning("[WalletController] ⚠️ KPay Lite carte refusée", [
+                    'kpay_code' => $e->kpayCode,
+                    'http_status' => $e->statusCode,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'code' => $e->kpayCode,
+                    'retryable' => $e->isRetryable(),
+                ], $cardHttpStatus);
+            }
 
             \Log::warning("[WalletController] ⚠️ KPay recharge refusée", [
                 'kpay_code' => $e->kpayCode,
@@ -474,7 +541,11 @@ class WalletController extends Controller
                 \Log::info("[WalletController] ⏳ Payment is pending, checking with provider...");
 
                 try {
-                    if ($payment->provider === 'kpay') {
+                    if (\App\Services\Payment\KPayLiteService::isLitePayment($payment)) {
+                        // Carte KPay Lite : statut lu sur le compte Lite, verdict
+                        // définitif (pas de fenêtre USSD), expiration si abandon.
+                        app(\App\Services\Payment\KPayLiteService::class)->refreshPayment($payment, 'status-check');
+                    } elseif ($payment->provider === 'kpay') {
                         // Vérifier avec KPay (GET /payments/:id) — finalisation idempotente
                         $kpayService = app(\App\Services\Payment\KPayService::class);
                         $statusResponse = $kpayService->checkPaymentStatus($payment->provider_reference);
@@ -576,7 +647,10 @@ class WalletController extends Controller
                     'provider' => $payment->provider,
                     'status' => $payment->status,
                     'paid_at' => $payment->paid_at?->toIso8601String(),
-                    'failure_reason' => $payment->failure_reason,
+                    'failure_reason' => $this->displayFailureReason($payment->failure_reason),
+                    'failure_code' => in_array($payment->failure_reason, ['expired', 'cancelled', 'declined'], true)
+                        ? $payment->failure_reason
+                        : null,
                     'metadata' => $payment->metadata,
                 ],
             ]);
@@ -1226,17 +1300,57 @@ class WalletController extends Controller
             $availabilityMap = null;
         }
 
+        $liteConfig = \App\Services\Payment\KPayLiteConfig::make();
+        $liteActive = $liteConfig->isActive();
+        $cardMinAmount = $liteActive
+            ? app(\App\Services\Payment\KPayLiteService::class)->minAmountXaf()
+            : \App\Models\ServiceConfiguration::getKPayMinDeposit();
+
+        // Taux FCFA → devise locale : l'app affiche « vous serez débité de
+        // ≈ 1 110 KES » avant de payer (KPay débite en devise locale).
+        $countries = \App\Services\Payment\KPayCatalog::toArray($availabilityMap, $operationType);
+        $kpayForRates = app(\App\Services\Payment\KPayService::class);
+        $ratesByCurrency = [];
+        foreach ($countries as &$country) {
+            $currency = $country['currency'];
+            if (!array_key_exists($currency, $ratesByCurrency)) {
+                $ratesByCurrency[$currency] = $kpayForRates->displayRateFromWallet($currency);
+            }
+            $country['xaf_rate'] = $ratesByCurrency[$currency];
+        }
+        unset($country);
+
         return response()->json([
             'success' => true,
             'data' => [
-                'countries' => \App\Services\Payment\KPayCatalog::toArray($availabilityMap, $operationType),
+                'countries' => $countries,
                 // La carte n'est proposée que si le moyen `CARD` est activé
                 // côté KPay : sinon l'initialisation échoue à coup sûr.
-                'card_enabled' => \App\Models\ServiceConfiguration::isKPayCardEnabled(),
+                // KPay Lite activé et configuré → cartes disponibles ; sinon
+                // repli sur l'ancien interrupteur carte KPay.
+                'card_enabled' => $liteActive || \App\Models\ServiceConfiguration::isKPayCardEnabled(),
+                'card_brands' => ['visa', 'mastercard'],
+                'card_min_amount_xaf' => $cardMinAmount,
+                'card_is_test' => $liteActive && $liteConfig->isTest(),
                 'min_deposit' => \App\Models\ServiceConfiguration::getKPayMinDeposit(),
                 'min_withdrawal' => \App\Models\ServiceConfiguration::getKPayMinWithdrawal(),
             ],
         ]);
+    }
+
+    /**
+     * Motif d'échec affichable : les codes internes (expiration, annulation,
+     * refus) sont traduits ; un motif KPay (déjà rédigé pour le client) est
+     * renvoyé tel quel.
+     */
+    protected function displayFailureReason(?string $reason): ?string
+    {
+        return match ($reason) {
+            'expired' => __('wallet.card_payment_expired'),
+            'cancelled' => __('wallet.card_payment_cancelled'),
+            'declined' => __('wallet.card_payment_declined'),
+            default => $reason,
+        };
     }
 
     /**
@@ -1421,7 +1535,7 @@ class WalletController extends Controller
             DB::rollBack();
 
             // Saisie corrigeable par l'utilisateur → 422, panne opérateur → 502.
-            $userInputCodes = ['PHONE_REQUIRED', 'INVALID_PHONE', 'UNSUPPORTED_COUNTRY', 'PROVIDER_REQUIRED'];
+            $userInputCodes = ['PHONE_REQUIRED', 'INVALID_PHONE', 'UNSUPPORTED_COUNTRY', 'PROVIDER_REQUIRED', 'AMOUNT_TOO_LOW'];
             $isUserInput = in_array($e->kpayCode, $userInputCodes, true);
 
             \Log::warning("[WalletController] ⚠️ KPay withdrawal refusé", [

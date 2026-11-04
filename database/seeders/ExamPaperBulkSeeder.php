@@ -200,6 +200,7 @@ class ExamPaperBulkSeeder extends Seeder
             ExamPaper::create([
                 'title' => $title,
                 'specialty' => $specialty,
+                'filiere' => \App\Support\FasciculeCatalog::codeFromExamFiliere($filiere),
                 'subject' => $this->cleanSubject($subject),
                 'level' => $level,
                 'year' => $year,

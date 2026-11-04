@@ -14,6 +14,7 @@ class ExamPaper extends Model
     protected $fillable = [
         'title',
         'specialty',
+        'filiere',
         'subject',
         'level',
         'year',

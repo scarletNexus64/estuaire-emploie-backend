@@ -39,7 +39,7 @@
             <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">{{ $user->name }}</h2>
             <p style="color: var(--secondary); margin-bottom: 1rem;">
                 @if($user->isSuperAdmin())
-                    ⭐ Super Administrateur
+                    Super Administrateur
                 @else
                     {{ ucfirst($user->role) }}
                 @endif

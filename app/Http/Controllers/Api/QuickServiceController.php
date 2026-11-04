@@ -57,7 +57,10 @@ class QuickServiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = QuickService::with(['user', 'category', 'responses'])
+        // Liste : seul le compteur de réponses est lu par l'app (responses_count),
+        // inutile de charger toutes les lignes ; auteur limité aux champs affichés.
+        $query = QuickService::with(['user:'.implode(',', QuickService::LIST_USER_COLUMNS), 'category'])
+            ->withCount('responses')
             ->active()
             ->approved() // Seulement les services approuvés par admin
             // Les programmes de la plateforme sont épinglés séparément en tête

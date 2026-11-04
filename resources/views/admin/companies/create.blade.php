@@ -100,7 +100,7 @@
             {{-- Barre de recherche --}}
             <div style="position: relative; margin-bottom: 0.75rem;">
                 <input type="text" id="catSearch" class="form-control"
-                       placeholder="🔍 Rechercher une catégorie (ex: web, finance, santé...)"
+                       placeholder="Rechercher une catégorie (ex: web, finance, santé...)"
                        style="padding-left: 2.25rem;">
                 <svg width="18" height="18" fill="none" stroke="#6b7280" viewBox="0 0 24 24" stroke-width="2"
                      style="position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); pointer-events: none;">
@@ -197,7 +197,7 @@
             <div style="margin-top: 1rem; margin-bottom: 1rem;">
                 <div id="map" style="width: 100%; height: 380px; border-radius: 8px; border: 1px solid #e5e7eb;"></div>
                 <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
-                    💡 Cliquez sur la carte ou déplacez le marqueur pour ajuster la position exacte.
+                    Cliquez sur la carte ou déplacez le marqueur pour ajuster la position exacte.
                 </small>
             </div>
 
@@ -277,7 +277,7 @@
                                    {{ (string) $oldPlan === (string) $plan->id ? 'checked' : '' }}
                                    style="position: absolute; top: 0.75rem; right: 0.75rem;">
                             @if($plan->is_popular)
-                                <span style="position: absolute; top: -10px; left: 12px; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">★ POPULAIRE</span>
+                                <span style="position: absolute; top: -10px; left: 12px; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">POPULAIRE</span>
                             @endif
                             <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.25rem; padding-right: 1.5rem;">
                                 {{ $plan->name }}
@@ -287,11 +287,11 @@
                                 <small style="color: #6b7280; font-weight: 400; font-size: 0.8rem;">/ {{ $plan->duration_days }}j</small>
                             </div>
                             <div style="color: #4b5563; font-size: 0.85rem; line-height: 1.4;">
-                                <div>💼 {{ $plan->jobs_limit ?? '∞' }} offres</div>
-                                <div>📇 {{ $plan->contacts_limit ?? '∞' }} contacts</div>
-                                @if($plan->can_access_cvtheque)<div>📚 CV-thèque</div>@endif
-                                @if($plan->can_boost_jobs)<div>🚀 Boost d'offres</div>@endif
-                                @if($plan->featured_company_badge)<div>⭐ Badge mis en avant</div>@endif
+                                <div>{{ $plan->jobs_limit ?? '∞' }} offres</div>
+                                <div>{{ $plan->contacts_limit ?? '∞' }} contacts</div>
+                                @if($plan->can_access_cvtheque)<div>CV-thèque</div>@endif
+                                @if($plan->can_boost_jobs)<div>Boost d'offres</div>@endif
+                                @if($plan->featured_company_badge)<div>Badge mis en avant</div>@endif
                             </div>
                         </label>
                     @endforeach

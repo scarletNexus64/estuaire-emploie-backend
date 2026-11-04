@@ -36,7 +36,7 @@
                             <span class="badge badge-secondary">Inactif</span>
                         @endif
                         @if($user->hasStudentMode())
-                            <span class="badge badge-warning">🎓 Étudiant</span>
+                            <span class="badge badge-warning">Étudiant</span>
                         @endif
                         @if($user->hasActiveSubscription())
                             <span class="badge badge-success">Abonné</span>
@@ -45,7 +45,7 @@
                 </div>
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">✏️ Modifier</a>
+                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">Modifier</a>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">← Retour</a>
             </div>
         </div>
@@ -54,33 +54,33 @@
     {{-- Tabs --}}
     <div class="card">
         <div class="tabs-nav">
-            <button type="button" class="tab-btn active" data-tab="info">👤 Informations</button>
+            <button type="button" class="tab-btn active" data-tab="info">Informations</button>
             <button type="button" class="tab-btn" data-tab="subscriptions">
-                💳 Abonnements
+                Abonnements
                 @if($subscriptionPlans->count() > 0)
                     <span class="tab-count">{{ $subscriptionPlans->count() }}</span>
                 @endif
             </button>
             <button type="button" class="tab-btn" data-tab="premium">
-                ⭐ Services Premium
+                Services Premium
                 @if($premiumServices->count() > 0)
                     <span class="tab-count">{{ $premiumServices->count() }}</span>
                 @endif
             </button>
             <button type="button" class="tab-btn" data-tab="addons">
-                🧩 Services Additionnels
+                Services Additionnels
                 @if($addonServices->count() > 0)
                     <span class="tab-count">{{ $addonServices->count() }}</span>
                 @endif
             </button>
             <button type="button" class="tab-btn" data-tab="packs">
-                📦 Packs
+                Packs
                 @if(($storagePacks->count() + $packPurchases->count()) > 0)
                     <span class="tab-count">{{ $storagePacks->count() + $packPurchases->count() }}</span>
                 @endif
             </button>
             <button type="button" class="tab-btn" data-tab="applications">
-                📝 Candidatures
+                Candidatures
                 @if($user->applications->count() > 0)
                     <span class="tab-count">{{ $user->applications->count() }}</span>
                 @endif
@@ -135,7 +135,7 @@
                         @endif
 
                         @if($user->level || $user->specialty || $user->interests)
-                            <h4 style="margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 600;">🎓 Infos Étudiant</h4>
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 600;">Infos Étudiant</h4>
                             @if($user->level)
                                 <div class="info-row"><strong>Niveau :</strong> <span class="badge badge-success">{{ $user->level }}</span></div>
                             @endif
@@ -150,7 +150,7 @@
                             @endif
                         @endif
 
-                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 600;">💰 Portefeuilles</h4>
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem; font-weight: 600;">Portefeuilles</h4>
                         <div class="info-row"><strong>Wallet (legacy) :</strong> <span>{{ number_format($user->wallet_balance ?? 0, 0, ',', ' ') }} FCFA</span></div>
                         <div class="info-row"><strong>Wallet Freemopay :</strong> <span>{{ number_format($user->freemopay_wallet_balance ?? 0, 0, ',', ' ') }} FCFA</span></div>
                         <div class="info-row"><strong>Wallet PayPal :</strong> <span>{{ number_format($user->paypal_wallet_balance ?? 0, 2, ',', ' ') }} USD</span></div>
@@ -254,7 +254,7 @@
                                                       onsubmit="return confirm('Retirer cet abonnement « {{ $sub->subscriptionPlan?->name }} » ? Il sera marqué comme expiré immédiatement.');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">🚫 Retirer</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
                                                 </form>
                                             @else
                                                 <span style="color: #9ca3af; font-size: 0.85rem;">Déjà inactif</span>
@@ -295,7 +295,7 @@
                                         <td>
                                             <strong>{{ $svc->config?->name ?? 'Service supprimé' }}</strong>
                                             @if($svc->config?->slug === 'student_mode')
-                                                <span class="badge badge-warning" style="margin-left: 0.25rem;">🎓 Pack Étudiant</span>
+                                                <span class="badge badge-warning" style="margin-left: 0.25rem;">Pack Étudiant</span>
                                             @endif
                                         </td>
                                         <td><code>{{ $svc->config?->slug ?? '—' }}</code></td>
@@ -326,7 +326,7 @@
                                                       onsubmit="return confirm('Retirer le service « {{ $svc->config?->name }} » ? Il sera désactivé immédiatement.');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">🚫 Retirer</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
                                                 </form>
                                             @else
                                                 <span style="color: #9ca3af; font-size: 0.85rem;">Déjà inactif</span>
@@ -400,7 +400,7 @@
                                                       onsubmit="return confirm('Retirer ce service additionnel ?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">🚫 Retirer</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
                                                 </form>
                                             @else
                                                 <span style="color: #9ca3af; font-size: 0.85rem;">Déjà inactif</span>
@@ -419,7 +419,7 @@
         <div class="tab-pane" id="tab-packs">
             <div class="card-body">
 
-                <h4 style="margin-bottom: 1rem; font-weight: 600;">💾 Packs de Stockage</h4>
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">Packs de Stockage</h4>
                 @if($storagePacks->isEmpty())
                     <div class="empty-state" style="margin-bottom: 2rem;">Aucun pack de stockage.</div>
                 @else
@@ -462,7 +462,7 @@
                                                       onsubmit="return confirm('Retirer ce pack de stockage ?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">🚫 Retirer</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
                                                 </form>
                                             @else
                                                 <span style="color: #9ca3af; font-size: 0.85rem;">Déjà inactif</span>
@@ -475,7 +475,7 @@
                     </div>
                 @endif
 
-                <h4 style="margin-bottom: 1rem; font-weight: 600;">📚 Packs Formation / Examen</h4>
+                <h4 style="margin-bottom: 1rem; font-weight: 600;">Packs Formation / Examen</h4>
                 @if($packPurchases->isEmpty())
                     <div class="empty-state">Aucun achat de pack de formation ou d'examen.</div>
                 @else
@@ -519,7 +519,7 @@
                                                       onsubmit="return confirm('Retirer ce pack ?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">🚫 Retirer</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
                                                 </form>
                                             @else
                                                 <span style="color: #9ca3af; font-size: 0.85rem;">Déjà inactif</span>

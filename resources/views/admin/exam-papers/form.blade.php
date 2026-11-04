@@ -11,7 +11,7 @@
                 <i class="mdi mdi-arrow-left text-2xl"></i>
             </a>
             <h1 class="text-3xl font-bold text-gray-900">
-                {{ isset($examPaper) ? '✏️ Modifier' : '➕ Ajouter' }} une épreuve
+                {{ isset($examPaper) ? 'Modifier' : 'Ajouter' }} une épreuve
             </h1>
         </div>
         <p class="text-gray-600 ml-12">
@@ -21,7 +21,7 @@
 
     @if ($errors->any())
         <div class="mb-6 rounded-lg bg-red-100 border border-red-400 text-red-700 px-4 py-3">
-            <p class="font-bold mb-2">❌ Erreurs de validation :</p>
+            <p class="font-bold mb-2">Erreurs de validation :</p>
             <ul class="list-disc list-inside">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -42,7 +42,7 @@
         <!-- Informations générales -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">📝 Informations générales</h3>
+                <h3 class="card-title">Informations générales</h3>
             </div>
             <div class="card-body">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -148,7 +148,7 @@
         <!-- Fichier PDF -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">📄 Fichier PDF</h3>
+                <h3 class="card-title">Fichier PDF</h3>
             </div>
             <div class="card-body">
                 @if(isset($examPaper) && $examPaper->file_path)
@@ -199,7 +199,7 @@
         <!-- Options -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">⚙️ Options</h3>
+                <h3 class="card-title">Options</h3>
             </div>
             <div class="card-body">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -260,7 +260,7 @@
         <div class="card" id="correction-link-section"
              style="{{ old('is_correction', $examPaper->is_correction ?? false) ? 'display:none;' : '' }}">
             <div class="card-header" style="background-color: #28a745; color: white;">
-                <h3 class="card-title" style="color: white;">✅ Correction disponible</h3>
+                <h3 class="card-title" style="color: white;">Correction disponible</h3>
             </div>
             <div class="card-body">
                 <div class="form-group">
@@ -313,7 +313,7 @@ function displayFileName(input) {
     const fileNameEl = document.getElementById('file-name');
 
     if (fileName) {
-        fileNameEl.textContent = '📄 Fichier sélectionné : ' + fileName;
+        fileNameEl.textContent = 'Fichier sélectionné : ' + fileName;
         fileNameEl.classList.remove('hidden');
     } else {
         fileNameEl.classList.add('hidden');

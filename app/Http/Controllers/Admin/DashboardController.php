@@ -38,7 +38,16 @@ class DashboardController extends Controller
             'pending_diploma_verifications' => $pendingDiplomaVerifications,
         ];
 
-        $recentJobs = Job::with(['company', 'category', 'applications'])
+        // Répartition réelle par statut (graphiques du dashboard)
+        $applicationsByStatus = Application::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+        $jobsByStatus = Job::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $recentJobs = Job::with(['company', 'category'])
+            ->withCount('applications')
             ->latest()
             ->limit(10)
             ->get();
@@ -96,7 +105,9 @@ class DashboardController extends Controller
             'pendingCompanies',
             'pendingDiplomaApplications',
             'pendingUsbOrders',
-            'recentUsbOrders'
+            'recentUsbOrders',
+            'applicationsByStatus',
+            'jobsByStatus'
         ));
     }
 }

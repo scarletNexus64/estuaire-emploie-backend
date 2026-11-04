@@ -57,3 +57,10 @@ Schedule::call(function () {
     ->appendOutputTo(storage_path('logs/storage-pack-expirations.log'));
 
 Schedule::command('company-recoveries:deliver')->everyFiveMinutes()->withoutOverlapping();
+
+// Paiements carte KPay Lite abandonnés sur la page hébergée : ils restent
+// PENDING sans webhook. Vérification finale puis passage en « expired ».
+Schedule::command('payments:expire-abandoned-cards')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/card-payment-expirations.log'));

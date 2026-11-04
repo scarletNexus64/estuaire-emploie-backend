@@ -1,9 +1,0 @@
-Secret Gateway : 6380b28032185551777ac3a29aa7d3347c157a98f9532c0fedb39657299a0b17
-
-
-
-Callback depots
-https://api.estuaireemploi.com/api/webhooks/kpay/deposits
-
-Callback retraits
-https://api.estuaireemploi.com/api/webhooks/kpay/withdrawals

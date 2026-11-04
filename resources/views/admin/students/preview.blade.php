@@ -16,13 +16,13 @@
 <div style="display: grid; gap: 1.5rem;">
     <!-- Alert Info -->
     <div class="alert alert-warning">
-        <strong>⚠️ Attention :</strong> Veuillez vérifier toutes les informations avant de confirmer la création de l'étudiant.
+        <strong>Attention :</strong> Veuillez vérifier toutes les informations avant de confirmer la création de l'étudiant.
     </div>
 
     <!-- Student Information -->
     <div class="card">
         <div class="card-header">
-            <h3 style="margin: 0;">👤 Informations de l'Étudiant</h3>
+            <h3 style="margin: 0;">Informations de l'Étudiant</h3>
         </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -67,7 +67,7 @@
     <!-- Generated Password -->
     <div class="card" style="border: 2px solid #28a745;">
         <div class="card-header" style="background: #28a745; color: white;">
-            <h3 style="margin: 0;">🔑 Mot de Passe Généré</h3>
+            <h3 style="margin: 0;">Mot de Passe Généré</h3>
         </div>
         <div class="card-body">
             <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; text-align: center;">
@@ -87,7 +87,7 @@
     <!-- SMS Preview -->
     <div class="card" style="border: 2px solid #007bff;">
         <div class="card-header" style="background: #007bff; color: white;">
-            <h3 style="margin: 0;">📱 Aperçu du SMS (via Nexah)</h3>
+            <h3 style="margin: 0;">Aperçu du SMS (via Nexah)</h3>
         </div>
         <div class="card-body">
             <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
@@ -102,7 +102,7 @@
     {{-- <!-- App Download Links -->
     <div class="card" style="border: 2px solid #6f42c1;">
         <div class="card-header" style="background: #6f42c1; color: white;">
-            <h3 style="margin: 0;">📲 Liens de Téléchargement de l'Application</h3>
+            <h3 style="margin: 0;">Liens de Téléchargement de l'Application</h3>
         </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -112,7 +112,7 @@
                        target="_blank"
                        class="btn btn-success"
                        style="margin-top: 0.5rem;">
-                        📥 Google Play
+                        Google Play
                     </a>
                 </div>
                 <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
@@ -121,7 +121,7 @@
                        target="_blank"
                        class="btn btn-primary"
                        style="margin-top: 0.5rem;">
-                        📥 App Store
+                        App Store
                     </a>
                 </div>
             </div>
@@ -134,12 +134,12 @@
     <!-- Benefits Info -->
     <div class="card" style="border: 2px solid #ffc107;">
         <div class="card-header" style="background: #ffc107; color: #000;">
-            <h3 style="margin: 0;">🎁 Avantages qui seront Activés Automatiquement</h3>
+            <h3 style="margin: 0;">Avantages qui seront Activés Automatiquement</h3>
         </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #c0c0c0;">
-                    <h4>🥈 Pack SILVER (C1)</h4>
+                    <h4>Pack SILVER (C1)</h4>
                     <p><strong>Durée :</strong> 1 mois (30 jours)</p>
                     <p><strong>Coût :</strong> GRATUIT</p>
                     <ul style="margin: 0; padding-left: 1.5rem;">
@@ -149,7 +149,7 @@
                     </ul>
                 </div>
                 <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #6f42c1;">
-                    <h4>🎓 Mode Étudiant</h4>
+                    <h4>Mode Étudiant</h4>
                     <p><strong>Durée :</strong> 1 an (365 jours)</p>
                     <p><strong>Coût :</strong> GRATUIT</p>
                     <ul style="margin: 0; padding-left: 1.5rem;">
@@ -172,7 +172,7 @@
                 <form action="{{ route('admin.students.confirm') }}" method="POST" id="confirmForm">
                     @csrf
                     <button type="submit" class="btn btn-success" id="confirmBtn" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
-                        ✅ Confirmer et Créer l'Étudiant
+                        Confirmer et Créer l'Étudiant
                     </button>
                 </form>
             </div>

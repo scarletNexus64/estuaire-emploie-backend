@@ -62,10 +62,10 @@
                     <label>Type de Vidéo</label>
                     <select name="video_type" class="form-control">
                         <option value="">Tous les types</option>
-                        <option value="upload" {{ request('video_type') == 'upload' ? 'selected' : '' }}>📹 Upload MP4</option>
+                        <option value="upload" {{ request('video_type') == 'upload' ? 'selected' : '' }}>Upload MP4</option>
                         <option value="youtube" {{ request('video_type') == 'youtube' ? 'selected' : '' }}>▶️ YouTube</option>
                         <option value="vimeo" {{ request('video_type') == 'vimeo' ? 'selected' : '' }}>▶️ Vimeo</option>
-                        <option value="mega" {{ request('video_type') == 'mega' ? 'selected' : '' }}>☁️ MEGA.nz</option>
+                        <option value="mega" {{ request('video_type') == 'mega' ? 'selected' : '' }}>MEGA.nz</option>
                     </select>
                 </div>
 
@@ -132,20 +132,20 @@
                                 <td>
                                     <strong>{{ $video->title }}</strong>
                                     @if($video->is_preview)
-                                        <span class="badge bg-info">👁️ Aperçu</span>
+                                        <span class="badge bg-info">Aperçu</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($video->video_type === 'upload')
-                                        <span style="color: #6c757d;">📹 Upload</span>
+                                        <span style="color: #6c757d;">Upload</span>
                                     @elseif($video->video_type === 'youtube')
                                         <span style="color: #FF0000;">▶️ YouTube</span>
                                     @elseif($video->video_type === 'vimeo')
                                         <span style="color: #1ab7ea;">▶️ Vimeo</span>
                                     @elseif($video->video_type === 'mega')
-                                        <span style="color: #D9272E;">☁️ MEGA.nz</span>
+                                        <span style="color: #D9272E;">MEGA.nz</span>
                                     @else
-                                        <span style="color: #6c757d;">❓ {{ ucfirst($video->video_type) }}</span>
+                                        <span style="color: #6c757d;">{{ ucfirst($video->video_type) }}</span>
                                     @endif
                                 </td>
                                 <td>{{ $video->duration_formatted ?? '-' }}</td>

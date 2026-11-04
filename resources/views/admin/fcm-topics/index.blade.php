@@ -11,7 +11,7 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">📢 Envoi de notification FCM par topic</h3>
+        <h3 class="card-title">Envoi de notification FCM par topic</h3>
     </div>
 
     <div class="card-body">

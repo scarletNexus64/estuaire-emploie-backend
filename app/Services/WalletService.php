@@ -123,8 +123,14 @@ class WalletService
                 // L'utilisateur n'a pas à connaître l'agrégateur (KPay,
                 // FreeMoPay…) : on nomme le moyen de paiement, pas le
                 // prestataire technique.
-                $this->rechargeLabel($provider),
-                ['payment_id' => $fresh->id],
+                // Le libellé suit le moyen de paiement (`payment_method`), pas
+                // la clé de wallet : une carte KPay a le provider `kpay`, ce
+                // qui la faisait passer pour du Mobile Money.
+                $this->rechargeLabel($fresh->payment_method ?: $provider),
+                [
+                    'payment_id' => $fresh->id,
+                    'payment_method' => $fresh->payment_method,
+                ],
                 $provider
             );
 
@@ -159,10 +165,10 @@ class WalletService
      * l'agrégateur technique : « Recharge wallet via KPAY » n'a aucun sens
      * pour un client qui a payé avec Orange Money.
      */
-    protected function rechargeLabel(string $provider): string
+    protected function rechargeLabel(string $method): string
     {
-        return match ($provider) {
-            'paypal' => 'Recharge par PayPal',
+        return match (strtolower($method)) {
+            'paypal', 'paypal_native' => 'Recharge par PayPal',
             'card' => 'Recharge par carte bancaire',
             default => 'Recharge par Mobile Money',
         };

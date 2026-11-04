@@ -48,7 +48,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <div>
         <a href="{{ route('admin.students.create') }}" class="btn btn-primary">
-            ➕ Créer un Étudiant
+            Créer un Étudiant
         </a>
     </div>
 </div>
@@ -93,9 +93,9 @@
                     </td>
                     <td>
                         @if($student->hasPremiumService('student_mode'))
-                            <span class="badge badge-success">✅ Actif</span>
+                            <span class="badge badge-success">Actif</span>
                         @else
-                            <span class="badge badge-danger">❌ Inactif</span>
+                            <span class="badge badge-danger">Inactif</span>
                         @endif
                     </td>
                     <td>
@@ -103,24 +103,24 @@
                             $subscription = $student->activeSubscription('candidate');
                         @endphp
                         @if($subscription && $subscription->isValid())
-                            <span class="badge badge-success">✅ Actif</span>
+                            <span class="badge badge-success">Actif</span>
                         @else
-                            <span class="badge badge-danger">❌ Expiré</span>
+                            <span class="badge badge-danger">Expiré</span>
                         @endif
                     </td>
                     <td>
                         <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-                            <a href="{{ route('admin.students.show', $student->id) }}" class="btn btn-sm btn-primary">👁️ Voir</a>
-                            <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-sm btn-warning">✏️ Modifier</a>
+                            <a href="{{ route('admin.students.show', $student->id) }}" class="btn btn-sm btn-primary">Voir</a>
+                            <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-sm btn-warning">Modifier</a>
 
                             @php
                                 $studentResume = $student->resumes->first();
                             @endphp
 
                             @if($studentResume)
-                                {{-- <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-info" title="Modifier le CV">📝 CV</a> --}}
+                                {{-- <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-info" title="Modifier le CV">CV</a> --}}
                             @else
-                                <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-success" title="Créer un CV">➕ CV</a>
+                                <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-sm btn-success" title="Créer un CV">CV</a>
                             @endif
                         </div>
                     </td>

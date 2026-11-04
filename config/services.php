@@ -67,6 +67,28 @@ return [
     | Google : client OAuth iOS, Android et Web de la console Google Cloud.
     | Apple  : bundle ID de l'app iOS (et Service ID si connexion web un jour).
     */
+    /*
+    | KPay Lite — paiement par carte bancaire (Visa / Mastercard), compte et
+    | clés distincts de KPay Mobile Money. Ces valeurs ne servent que de repli :
+    | la configuration saisie dans l'admin (service_type `kpay_lite`) prime.
+    | Le préfixe de la clé API choisit l'environnement (kpay_lite_test_ /
+    | kpay_lite_live_), l'URL de base est la même pour les deux.
+    */
+    'kpay_lite' => [
+        'enabled' => (bool) env('KPAY_LITE_ENABLED', false),
+        'base_url' => env('KPAY_LITE_BASE_URL', 'https://lite.kpay.site'),
+        'api_key' => env('KPAY_LITE_API_KEY'),
+        'secret_key' => env('KPAY_LITE_SECRET_KEY'),
+        'webhook_secret' => env('KPAY_LITE_WEBHOOK_SECRET'),
+        'gateway_secret' => env('KPAY_LITE_GATEWAY_SECRET'),
+        // KPay Lite refuse un montant converti inférieur à 1 USD.
+        'min_amount_xaf' => (int) env('KPAY_LITE_MIN_AMOUNT_XAF', 1000),
+        // Un paiement abandonné sur la page hébergée reste PENDING sans
+        // webhook : passé ce délai, on le clôt nous-mêmes (« expired »).
+        'expiry_minutes' => (int) env('KPAY_LITE_EXPIRY_MINUTES', 45),
+        'timeout' => (int) env('KPAY_LITE_TIMEOUT', 30),
+    ],
+
     'google' => [
         'client_ids' => array_filter(array_map('trim', explode(',', (string) env('GOOGLE_CLIENT_IDS', '')))),
     ],

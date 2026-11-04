@@ -582,6 +582,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::put('/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNexah'])->name('update-nexah');
         Route::put('/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateFreeMoPay'])->name('update-freemopay');
         Route::put('/kpay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateKPay'])->name('update-kpay');
+        Route::put('/kpay-lite', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateKPayLite'])->name('update-kpay-lite');
         Route::put('/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updatePayPal'])->name('update-paypal');
         Route::put('/preferences', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'updateNotificationPreferences'])->name('update-preferences');
 
@@ -590,6 +591,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::post('/test/nexah', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testNexah'])->name('test-nexah');
         Route::post('/test/freemopay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testFreeMoPay'])->name('test-freemopay');
         Route::post('/test/kpay', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testKPay'])->name('test-kpay');
+        Route::post('/test/kpay-lite', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testKPayLite'])->name('test-kpay-lite');
         Route::post('/test/paypal', [\App\Http\Controllers\Admin\ServiceConfigController::class, 'testPayPal'])->name('test-paypal');
 
         // Send actual test messages

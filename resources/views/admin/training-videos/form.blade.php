@@ -45,10 +45,10 @@
                     <div class="form-group">
                         <label for="video_type">Type de Vidéo <span class="text-danger">*</span></label>
                         <select name="video_type" id="video_type" class="form-control @error('video_type') is-invalid @enderror" required onchange="toggleVideoInput()">
-                            <option value="upload" {{ old('video_type', $trainingVideo->video_type ?? 'upload') == 'upload' ? 'selected' : '' }}>📹 Upload MP4</option>
+                            <option value="upload" {{ old('video_type', $trainingVideo->video_type ?? 'upload') == 'upload' ? 'selected' : '' }}>Upload MP4</option>
                             <option value="youtube" {{ old('video_type', $trainingVideo->video_type ?? '') == 'youtube' ? 'selected' : '' }}>▶️ YouTube</option>
                             <option value="vimeo" {{ old('video_type', $trainingVideo->video_type ?? '') == 'vimeo' ? 'selected' : '' }}>▶️ Vimeo</option>
-                            <option value="mega" {{ old('video_type', $trainingVideo->video_type ?? '') == 'mega' ? 'selected' : '' }}>☁️ MEGA.nz</option>
+                            <option value="mega" {{ old('video_type', $trainingVideo->video_type ?? '') == 'mega' ? 'selected' : '' }}>MEGA.nz</option>
                         </select>
                         @error('video_type')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -65,10 +65,10 @@
                         <small class="form-text text-muted">Formats acceptés: MP4, MOV, AVI, WMV (Max 500MB)</small>
                         @if(isset($trainingVideo) && $trainingVideo->video_type === 'upload' && $trainingVideo->video_path)
                             <div style="margin-top: 1rem;">
-                                <small class="text-success">✅ Fichier actuel: {{ $trainingVideo->video_filename }} ({{ $trainingVideo->formatted_video_size }})</small>
+                                <small class="text-success">Fichier actuel: {{ $trainingVideo->video_filename }} ({{ $trainingVideo->formatted_video_size }})</small>
                                 @if($trainingVideo->videoExists())
                                     <div style="margin-top: 0.75rem; padding: 1rem; background-color: #f8f9fa; border-radius: 8px;">
-                                        <strong style="display: block; margin-bottom: 0.5rem;">📹 Aperçu de la vidéo :</strong>
+                                        <strong style="display: block; margin-bottom: 0.5rem;">Aperçu de la vidéo :</strong>
                                         <video controls style="width: 100%; max-width: 640px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                             <source src="{{ asset('storage/' . $trainingVideo->video_path) }}" type="video/mp4">
                                             Votre navigateur ne supporte pas la lecture de vidéos.
@@ -76,7 +76,7 @@
                                     </div>
                                 @else
                                     <div style="margin-top: 0.5rem;">
-                                        <small class="text-danger">⚠️ Le fichier vidéo n'existe plus sur le serveur</small>
+                                        <small class="text-danger">Le fichier vidéo n'existe plus sur le serveur</small>
                                     </div>
                                 @endif
                             </div>
@@ -162,7 +162,7 @@
                         <input type="checkbox" name="is_preview" id="is_preview" class="form-check-input" value="1"
                                {{ old('is_preview', $trainingVideo->is_preview ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_preview">
-                            <strong>👁️ Aperçu Gratuit</strong>
+                            <strong>Aperçu Gratuit</strong>
                             <small class="d-block text-muted">Visible sans acheter le pack</small>
                         </label>
                     </div>

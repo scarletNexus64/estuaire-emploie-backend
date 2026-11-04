@@ -14,15 +14,15 @@
 <div style="display: grid; gap: 1.5rem;">
     <!-- Actions -->
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-warning">✏️ Modifier</a>
+        <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-warning">Modifier</a>
 
         @if(isset($resume) && $resume)
-            {{-- <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-info">✏️ Modifier le CV</a> --}}
+            {{-- <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-info">Modifier le CV</a> --}}
             @if($resume->pdf_path)
-                <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success">👁️ Voir le CV (PDF)</a>
+                <a href="{{ asset('storage/' . $resume->pdf_path) }}" target="_blank" class="btn btn-success">Voir le CV (PDF)</a>
             @endif
         @else
-            <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-primary">➕ Créer un CV</a>
+            <a href="{{ route('admin.students.create-cv', $student->id) }}" class="btn btn-primary">Créer un CV</a>
         @endif
 
         <a href="{{ route('admin.students.index') }}" class="btn btn-secondary">← Retour à la liste</a>
@@ -30,7 +30,7 @@
               onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?');">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
+            <button type="submit" class="btn btn-danger">Supprimer</button>
         </form>
     </div>
 
@@ -38,7 +38,7 @@
     @if(isset($resume) && $resume)
     <div class="card">
         <div class="card-header">
-            <h3 style="margin: 0;">📄 Curriculum Vitae</h3>
+            <h3 style="margin: 0;">Curriculum Vitae</h3>
         </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -83,7 +83,7 @@
     <!-- Student Info -->
     <div class="card">
         <div class="card-header">
-            <h3 style="margin: 0;">👤 Informations Personnelles</h3>
+            <h3 style="margin: 0;">Informations Personnelles</h3>
         </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -138,12 +138,12 @@
     @if(count($benefits) > 0)
     <div class="card">
         <div class="card-header">
-            <h3 style="margin: 0;">🎁 Avantages Activés</h3>
+            <h3 style="margin: 0;">Avantages Activés</h3>
         </div>
         <div class="card-body">
             @if(isset($benefits['subscription']))
             <div style="margin-bottom: 1.5rem;">
-                <h4>🥈 {{ $benefits['subscription']['name'] ?? 'Pack SILVER (C1)' }}</h4>
+                <h4>{{ $benefits['subscription']['name'] ?? 'Pack SILVER (C1)' }}</h4>
                 <p><strong>Expire le :</strong> {{ $benefits['subscription']['expires_at'] }}</p>
                 @if(isset($benefits['subscription']['features']))
                 <ul>
@@ -159,7 +159,7 @@
 
             @if(isset($benefits['student_mode']))
             <div>
-                <h4>🎓 {{ $benefits['student_mode']['name'] ?? 'Mode Étudiant' }}</h4>
+                <h4>{{ $benefits['student_mode']['name'] ?? 'Mode Étudiant' }}</h4>
                 <p><strong>Expire le :</strong> {{ $benefits['student_mode']['expires_at'] }}</p>
                 @if(isset($benefits['student_mode']['features']))
                 <ul>

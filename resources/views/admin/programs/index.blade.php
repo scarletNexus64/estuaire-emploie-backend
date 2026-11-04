@@ -66,7 +66,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">🌟 Immersion Professionnelle</h5>
+                <h5 class="card-title mb-0">Immersion Professionnelle</h5>
             </div>
             <div style="padding: 1rem;">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">
@@ -80,7 +80,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">💼 Entreprenariat</h5>
+                <h5 class="card-title mb-0">Entreprenariat</h5>
             </div>
             <div style="padding: 1rem;">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--success);">
@@ -94,7 +94,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">🚀 Transformation Pro & Perso</h5>
+                <h5 class="card-title mb-0">Transformation Pro & Perso</h5>
             </div>
             <div style="padding: 1rem;">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--info);">

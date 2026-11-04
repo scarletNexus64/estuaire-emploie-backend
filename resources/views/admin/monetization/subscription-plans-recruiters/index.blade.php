@@ -38,7 +38,7 @@
             @foreach($plans as $plan)
                 <div class="subscription-plan-card {{ $plan->is_popular ? 'popular' : '' }}" data-plan-id="{{ $plan->id }}">
                     @if($plan->is_popular)
-                        <div class="popular-badge">⭐ POPULAIRE</div>
+                        <div class="popular-badge">POPULAIRE</div>
                     @endif
 
                     <div class="plan-header" style="background: {{ $plan->color ?? '#667eea' }}">

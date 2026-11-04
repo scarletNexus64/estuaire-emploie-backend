@@ -39,12 +39,12 @@
                                         <td>
                                             <strong>{{ $video->title }}</strong>
                                             @if($video->is_preview)
-                                                <span class="badge bg-info">👁️ Aperçu</span>
+                                                <span class="badge bg-info">Aperçu</span>
                                             @endif
                                         </td>
                                         <td>
                                             @if($video->video_type === 'upload')
-                                                📹 Upload
+                                                Upload
                                             @elseif($video->video_type === 'youtube')
                                                 <span style="color: #FF0000;">▶️ YouTube</span>
                                             @else
@@ -58,7 +58,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger">
-                                                    🗑️ Retirer
+                                                    Retirer
                                                 </button>
                                             </form>
                                         </td>
@@ -110,7 +110,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary" style="width: 100%;">
-                            ➕ Ajouter au Pack
+                            Ajouter au Pack
                         </button>
                     </form>
                 @else
@@ -123,7 +123,7 @@
 
                 <div style="margin-top: 1rem;">
                     <a href="{{ route('admin.training-videos.create') }}" class="btn btn-secondary" style="width: 100%;">
-                        🎥 Créer Nouvelle Vidéo
+                        Créer Nouvelle Vidéo
                     </a>
                 </div>
 

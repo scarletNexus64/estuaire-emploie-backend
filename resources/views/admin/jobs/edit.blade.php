@@ -162,7 +162,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox" name="is_featured" id="is_featured" {{ old('is_featured', $job->is_featured) ? 'checked' : '' }}>
-                    <label for="is_featured" style="margin: 0; cursor: pointer;">⭐ Mettre en avant</label>
+                    <label for="is_featured" style="margin: 0; cursor: pointer;">Mettre en avant</label>
                 </div>
             </div>
         </div>

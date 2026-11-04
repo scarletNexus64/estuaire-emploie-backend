@@ -33,6 +33,53 @@ class KPayWebhookController extends Controller
         return $this->handle($request);
     }
 
+    /**
+     * POST /api/webhooks/kpay-lite — compte cartes KPay Lite.
+     *
+     * Signature OBLIGATOIRE : HMAC-SHA256 hex du corps brut, clé = secret
+     * webhook Lite (header `X-KPAY-Signature`). Réponse immédiate, traitement
+     * en file (KPay Lite attend une réponse sous 3 s et retente 3 fois).
+     */
+    public function handleLite(Request $request)
+    {
+        $raw = $request->getContent();
+        $signature = (string) $request->header('X-KPAY-Signature', '');
+        $event = (string) $request->header('X-KPAY-Event', '');
+
+        $lite = app(\App\Services\Payment\KPayLiteService::class);
+
+        if (!$lite->config()->webhookSecret()) {
+            Log::error('🔔 [KPayLite] WEBHOOK refusé : secret webhook non configuré', ['event' => $event]);
+            return response('Webhook not configured', 503);
+        }
+
+        if (!$lite->verifyWebhookSignature($raw, $signature)) {
+            Log::warning('🔔 [KPayLite] WEBHOOK signature invalide', [
+                'event' => $event,
+                'has_signature' => $signature !== '',
+            ]);
+            return response('Invalid signature', 400);
+        }
+
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            Log::warning('[KPayLite Webhook] Payload JSON invalide');
+            return response('Invalid payload', 400);
+        }
+
+        $event = $event ?: (string) ($payload['event'] ?? '');
+
+        Log::info('🔔 [KPayLite] WEBHOOK signature valide', [
+            'event' => $event,
+            'externalId' => $payload['externalId'] ?? null,
+            'isTest' => $payload['isTest'] ?? null,
+        ]);
+
+        ProcessKPayWebhook::dispatch($payload, $event, false, \App\Services\Payment\KPayLiteService::ACCOUNT);
+
+        return response('OK', 200);
+    }
+
     protected function handle(Request $request)
     {
         $raw = $request->getContent();

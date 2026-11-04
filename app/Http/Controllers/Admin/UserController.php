@@ -304,8 +304,7 @@ class UserController extends Controller
         ]);
 
         try {
-            $user->fcm_token = $request->fcm_token;
-            $user->save();
+            $user->assignFcmToken($request->fcm_token);
 
             \Log::info('✅ [SEND-FCM-TOKEN] FCM token sauvegardé avec succès', [
                 'user_id' => $user->id
@@ -324,6 +323,21 @@ class UserController extends Controller
                 'message' => __('admin_user.fcm_save_error'),
             ], 500);
         }
+    }
+
+    /**
+     * Détache le jeton FCM de l'appareil qui se déconnecte : le compte ne
+     * doit plus recevoir de notifications sur ce téléphone.
+     */
+    public function detachFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'nullable|string',
+        ]);
+
+        $request->user()->detachFcmToken($request->input('fcm_token'));
+
+        return response()->json(['success' => true]);
     }
 
     public function bulkDelete(Request $request)

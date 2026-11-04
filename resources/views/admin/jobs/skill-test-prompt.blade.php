@@ -53,7 +53,7 @@
                 Oui, configurer un test
             </a>
             <a href="{{ route('admin.jobs.send-notifications', $job) }}" class="btn btn-secondary" style="min-width: 220px;">
-                📢 Non, notifier les candidats
+                Non, notifier les candidats
             </a>
             <a href="{{ route('admin.jobs.index') }}" style="align-self: center; color: #6b7280; text-decoration: underline;">
                 Plus tard

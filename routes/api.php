@@ -82,6 +82,9 @@ Route::get('/maintenance-status', [\App\Http\Controllers\Api\MaintenanceModeCont
 // Configuration publique de l'app (feature flags: OTP, PayPal)
 Route::get('/app-config', [\App\Http\Controllers\Api\AppConfigController::class, 'index']);
 
+// Paramètres de connexion temps réel (messagerie) : clé publique Reverb + hôte
+Route::get('/realtime/config', [ChatController::class, 'realtimeConfig']);
+
 // Jobs publics
 Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/featured', [JobController::class, 'featured']);
@@ -321,6 +324,68 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/jobs/{job}/has-applied', [JobController::class, 'hasApplied']);
 
     // ------------------
+    // SOCIAL (j'aime, commentaires, republications, fil, abonnements)
+    // ------------------
+    // {type} : `job` | `quick_service` (404 sinon), {id} numérique.
+    Route::prefix('social')->group(function () {
+        Route::get('/feed', [\App\Http\Controllers\Api\SocialFeedController::class, 'index'])
+            ->middleware('throttle:60,1');
+
+        Route::post('/{type}/{id}/like', [\App\Http\Controllers\Api\SocialInteractionController::class, 'toggleLike'])
+            ->where('type', 'job|quick_service')->whereNumber('id')->middleware('throttle:60,1');
+        Route::get('/{type}/{id}/likes', [\App\Http\Controllers\Api\SocialInteractionController::class, 'likes'])
+            ->where('type', 'job|quick_service')->whereNumber('id');
+
+        Route::post('/{type}/{id}/repost', [\App\Http\Controllers\Api\SocialInteractionController::class, 'repost'])
+            ->where('type', 'job|quick_service')->whereNumber('id')->middleware('throttle:20,1');
+        Route::delete('/{type}/{id}/repost', [\App\Http\Controllers\Api\SocialInteractionController::class, 'unrepost'])
+            ->where('type', 'job|quick_service')->whereNumber('id')->middleware('throttle:20,1');
+
+        Route::get('/{type}/{id}/comments', [\App\Http\Controllers\Api\SocialCommentController::class, 'index'])
+            ->where('type', 'job|quick_service')->whereNumber('id');
+        Route::post('/{type}/{id}/comments', [\App\Http\Controllers\Api\SocialCommentController::class, 'store'])
+            ->where('type', 'job|quick_service')->whereNumber('id')->middleware('throttle:30,1');
+        Route::get('/comments/{comment}/replies', [\App\Http\Controllers\Api\SocialCommentController::class, 'replies'])
+            ->whereNumber('comment');
+        Route::put('/comments/{comment}', [\App\Http\Controllers\Api\SocialCommentController::class, 'update'])
+            ->whereNumber('comment')->middleware('throttle:30,1');
+        Route::delete('/comments/{comment}', [\App\Http\Controllers\Api\SocialCommentController::class, 'destroy'])
+            ->whereNumber('comment')->middleware('throttle:30,1');
+        Route::post('/comments/{comment}/like', [\App\Http\Controllers\Api\SocialCommentController::class, 'toggleLike'])
+            ->whereNumber('comment')->middleware('throttle:60,1');
+    });
+
+    // Réseau (abonnements entre utilisateurs, suggestions, profils publics)
+    Route::prefix('network')->group(function () {
+        Route::get('/summary', [\App\Http\Controllers\Api\SocialNetworkController::class, 'summary']);
+        Route::get('/suggestions', [\App\Http\Controllers\Api\SocialNetworkController::class, 'suggestions'])
+            ->middleware('throttle:60,1');
+        Route::get('/search', [\App\Http\Controllers\Api\SocialNetworkController::class, 'search'])
+            ->middleware('throttle:60,1');
+        Route::get('/search/companies', [\App\Http\Controllers\Api\SocialNetworkController::class, 'searchCompanies'])
+            ->middleware('throttle:60,1');
+        Route::get('/users/{user}', [\App\Http\Controllers\Api\SocialNetworkController::class, 'show'])
+            ->whereNumber('user');
+        Route::get('/users/{user}/activity', [\App\Http\Controllers\Api\SocialNetworkController::class, 'activity'])
+            ->whereNumber('user');
+        Route::get('/users/{user}/comments', [\App\Http\Controllers\Api\SocialNetworkController::class, 'comments'])
+            ->whereNumber('user');
+        Route::get('/users/{user}/followers', [\App\Http\Controllers\Api\SocialNetworkController::class, 'followers'])
+            ->whereNumber('user');
+        Route::get('/users/{user}/following', [\App\Http\Controllers\Api\SocialNetworkController::class, 'following'])
+            ->whereNumber('user');
+        Route::post('/users/{user}/follow', [\App\Http\Controllers\Api\SocialNetworkController::class, 'toggleFollow'])
+            ->whereNumber('user')->middleware('throttle:30,1');
+    });
+
+    // Abonnements aux entreprises
+    Route::post('/companies/{company}/follow', [\App\Http\Controllers\Api\SocialFollowController::class, 'toggle'])
+        ->whereNumber('company')->middleware('throttle:30,1');
+    Route::get('/companies/{company}/followers', [\App\Http\Controllers\Api\SocialFollowController::class, 'followers'])
+        ->whereNumber('company');
+    Route::get('/user/followed-companies', [\App\Http\Controllers\Api\SocialFollowController::class, 'followed']);
+
+    // ------------------
     // NOTIFICATIONS
     // ------------------
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -333,6 +398,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // NoTIFICATION FCM
     //---------------------
     Route::post('/send-fcm-token', [UserController::class, 'saveFcmToken']);
+    Route::post('/fcm-token/detach', [UserController::class, 'detachFcmToken']);
     
 
 
@@ -357,6 +423,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::get('/recruiter/jobs', [JobController::class, 'myJobs']);
     Route::get('/recruiter/jobs/{id}', [JobController::class, 'showRecruiterJob']);
     Route::get('/recruiter/dashboard', [JobController::class, 'dashboard']);
+    // KPIs sociaux de l'entreprise courante (abonnés, j'aime, commentaires, republications)
+    Route::get('/recruiter/social-stats', [\App\Http\Controllers\Api\SocialStatsController::class, 'show']);
 
     // ------------------
     // RECRUTEUR - GESTION DES CANDIDATURES
@@ -450,6 +518,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     // Catalogue consultable par tout utilisateur connecté (paywall côté app),
     // fichier PDF réservé au Pack Étudiant (student_mode).
     Route::get('/fascicules', [\App\Http\Controllers\Api\FasciculeApiController::class, 'index']);
+    // Explorateur en dossiers : Domaine → Filière → (Fascicules | Annales → Matière → Année)
+    Route::get('/fascicules/browse', [\App\Http\Controllers\Api\FasciculeBrowseController::class, 'browse']);
     Route::get('/fascicules/{id}', [\App\Http\Controllers\Api\FasciculeApiController::class, 'show'])->whereNumber('id');
     Route::get('/fascicules/{id}/file', [\App\Http\Controllers\Api\FasciculeApiController::class, 'file'])->whereNumber('id');
 
@@ -755,6 +825,19 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
         ->middleware('subscription:can_contact');
     // Créer ou récupérer une conversation de service (sans limitation)
     Route::post('/conversations/service', [ConversationController::class, 'getOrCreateServiceConversation']);
+    // Annuaire de la messagerie + demandes de message (à accepter avant de converser)
+    Route::get('/contacts/people', [\App\Http\Controllers\Api\MessagingController::class, 'people'])
+        ->middleware('throttle:60,1');
+    Route::get('/contacts/companies', [\App\Http\Controllers\Api\MessagingController::class, 'companies'])
+        ->middleware('throttle:60,1');
+    Route::post('/conversations/request', [\App\Http\Controllers\Api\MessagingController::class, 'request'])
+        ->middleware('throttle:20,1');
+    Route::get('/conversations/{conversation}', [\App\Http\Controllers\Api\MessagingController::class, 'show'])
+        ->whereNumber('conversation');
+    Route::post('/conversations/{conversation}/accept', [\App\Http\Controllers\Api\MessagingController::class, 'accept'])
+        ->whereNumber('conversation');
+    Route::post('/conversations/{conversation}/decline', [\App\Http\Controllers\Api\MessagingController::class, 'decline'])
+        ->whereNumber('conversation');
     // Ouvrir la conversation de support avec le compte officiel Estuaire Emploi
     Route::post('/conversations/support', [ConversationController::class, 'openSupportConversation']);
     // Récupérer les messages d'une conversation
@@ -763,6 +846,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\UpdateLastSeen::class, '
     Route::post('/conversations/messages', [ChatController::class, 'send']);
     // Marquer les messages comme lus
     Route::put('/conversations/{conversation}/read', [ChatController::class, 'markRead']);
+    // Accusé de réception (messages distribués)
+    Route::post('/conversations/{conversation}/delivered', [ChatController::class, 'markDelivered']);
     // Indicateur de saisie
     Route::post('/conversations/typing', [ChatController::class, 'typing']);
     // Statut de présence
@@ -1012,3 +1097,11 @@ Route::post('/webhooks/kpay/withdrawals', [\App\Http\Controllers\Api\KPayWebhook
 // sa WebView puis poll le statut réel.
 Route::get('/payments/kpay/return', [\App\Http\Controllers\Api\KPayGatewayReturnController::class, 'handle'])
     ->name('api.payments.kpay.return');
+
+// KPay Lite — cartes Visa / Mastercard (compte distinct). Webhook signé avec
+// le secret webhook Lite (corps brut), retour de passerelle signé avec le
+// secret passerelle Lite. URLs à déclarer dans le dashboard KPay Lite.
+Route::post('/webhooks/kpay-lite', [\App\Http\Controllers\Api\KPayWebhookController::class, 'handleLite'])
+    ->name('api.webhooks.kpay-lite');
+Route::get('/payments/kpay-lite/return', [\App\Http\Controllers\Api\KPayGatewayReturnController::class, 'handleLite'])
+    ->name('api.payments.kpay-lite.return');

@@ -35,13 +35,13 @@
                         <select class="form-control @error('type') is-invalid @enderror" id="type" name="type" required>
                             <option value="">Sélectionnez un type</option>
                             <option value="immersion_professionnelle" {{ old('type') == 'immersion_professionnelle' ? 'selected' : '' }}>
-                                🌟 Programme d'immersion professionnelle
+                                Programme d'immersion professionnelle
                             </option>
                             <option value="entreprenariat" {{ old('type') == 'entreprenariat' ? 'selected' : '' }}>
-                                💼 Programme en entreprenariat
+                                Programme en entreprenariat
                             </option>
                             <option value="transformation_professionnelle" {{ old('type') == 'transformation_professionnelle' ? 'selected' : '' }}>
-                                🚀 Programme de transformation professionnelle et personnel
+                                Programme de transformation professionnelle et personnel
                             </option>
                         </select>
                         @error('type')
@@ -56,21 +56,21 @@
                                 <input class="form-check-input" type="checkbox" id="pack_c1" name="required_packs[]" value="C1"
                                        {{ is_array(old('required_packs')) && in_array('C1', old('required_packs')) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="pack_c1">
-                                    🥈 PACK C1 (ARGENT) - 1 000 FCFA/Mois
+                                    PACK C1 (ARGENT) - 1 000 FCFA/Mois
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="pack_c2" name="required_packs[]" value="C2"
                                        {{ is_array(old('required_packs')) && in_array('C2', old('required_packs')) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="pack_c2">
-                                    🥇 PACK C2 (OR) - 5 000 FCFA/Mois
+                                    PACK C2 (OR) - 5 000 FCFA/Mois
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="pack_c3" name="required_packs[]" value="C3"
                                        {{ is_array(old('required_packs')) && in_array('C3', old('required_packs')) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="pack_c3">
-                                    💎 PACK C3 (DIAMANT) - 10 000 FCFA/Mois
+                                    PACK C3 (DIAMANT) - 10 000 FCFA/Mois
                                 </label>
                             </div>
                         </div>
@@ -167,7 +167,7 @@
     <div class="col-lg-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">💡 Conseils</h5>
+                <h5 class="card-title mb-0">Conseils</h5>
             </div>
             <div style="padding: 1.5rem;">
                 <div class="alert alert-info">
@@ -180,7 +180,7 @@
                 </div>
 
                 <div class="alert alert-warning">
-                    <strong>📝 Prochaine étape :</strong>
+                    <strong>Prochaine étape :</strong>
                     <p class="mb-0">Après la création, vous pourrez ajouter les étapes (steps) détaillées du programme.</p>
                 </div>
             </div>

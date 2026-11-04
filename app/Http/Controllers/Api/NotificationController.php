@@ -96,8 +96,6 @@ class NotificationController extends Controller
         $notifications = $query->orderBy('created_at', 'desc')
             ->paginate(50);
 
-        Log::info('Test not', [$notifications]);
-
         return response()->json($notifications);
     }
 
@@ -124,7 +122,7 @@ class NotificationController extends Controller
      */
     public function unreadCount()
     {
-        $count = Auth::user()->unreadNotifications->count();
+        $count = Auth::user()->unreadNotifications()->count();
 
         return response()->json(['count' => $count]);
     }
@@ -207,7 +205,8 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        Auth::user()->unreadNotifications->each->markAsRead();
+        // Une seule requête UPDATE au lieu d'un save par notification
+        Auth::user()->unreadNotifications()->update(['read_at' => now()]);
 
         return response()->json([
             'message' => __('notification.all_marked_read'),

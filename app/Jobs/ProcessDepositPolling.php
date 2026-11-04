@@ -43,6 +43,14 @@ class ProcessDepositPolling implements ShouldQueue
             return;
         }
 
+        // Carte via KPay Lite : pas de fenêtre USSD ni de boucle bloquante. Une
+        // vérification par passage, puis replanification jusqu'au verdict ou à
+        // l'expiration (paiement abandonné sur la page hébergée).
+        if (\App\Services\Payment\KPayLiteService::isLitePayment($payment)) {
+            $this->pollLite($payment);
+            return;
+        }
+
         $startTime = time();
         $attempts = 0;
         $interval = 6;          // 6s (rate limit KPay ~10 req/min/paiement)
@@ -108,5 +116,33 @@ class ProcessDepositPolling implements ShouldQueue
                 sleep($interval);
             }
         }
+    }
+
+    /**
+     * Un passage de polling pour un paiement carte KPay Lite.
+     *
+     * Cadence : toutes les 30 s pendant les 10 premières minutes (le client
+     * saisit sa carte, 3-D Secure…), puis toutes les 2 min jusqu'à
+     * l'expiration. KPay Lite limite à 60 requêtes/min : on reste très en deçà.
+     */
+    protected function pollLite(Payment $payment): void
+    {
+        $lite = app(\App\Services\Payment\KPayLiteService::class);
+
+        if (!$payment->isPending()) {
+            return;
+        }
+
+        $lite->refreshPayment($payment, 'polling');
+
+        $fresh = $payment->fresh();
+        if (!$fresh || !$fresh->isPending()) {
+            return;
+        }
+
+        $ageMinutes = $fresh->created_at ? $fresh->created_at->diffInMinutes(now(), true) : 0;
+        $delay = $ageMinutes < 10 ? 30 : 120;
+
+        self::dispatch($fresh->id)->delay(now()->addSeconds($delay));
     }
 }

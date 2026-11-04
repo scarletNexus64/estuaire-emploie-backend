@@ -29,7 +29,7 @@
         <!-- Existing Levels -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">🎯 Niveaux Existants</h5>
+                <h5 class="card-title mb-0">Niveaux Existants</h5>
             </div>
             <div style="padding: 1.5rem;">
                 @forelse($roadmap->levels as $level)
@@ -99,7 +99,7 @@
         <!-- Add/Edit Level Form -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">➕ Ajouter un Niveau</h5>
+                <h5 class="card-title mb-0">Ajouter un Niveau</h5>
             </div>
             <div style="padding: 1.5rem;">
                 <form method="POST" action="{{ route('admin.roadmaps.store-level', $roadmap) }}" id="levelForm">
@@ -265,7 +265,7 @@ function resetForm() {
     form.action = "{{ route('admin.roadmaps.store-level', $roadmap) }}";
     document.getElementById('form_method').value = "POST";
     document.getElementById('submitBtnText').textContent = "Ajouter le Niveau";
-    document.querySelector('.col-lg-5 .card-header h5').textContent = "➕ Ajouter un Niveau";
+    document.querySelector('.col-lg-5 .card-header h5').textContent = "Ajouter un Niveau";
     document.getElementById('questions-container').innerHTML = '';
     document.getElementById('cancelEditBtn').style.display = 'none';
     questionIndex = 0;
@@ -305,7 +305,7 @@ async function editLevel(levelId) {
         (level.questions || []).forEach(q => addQuestion(q));
 
         document.getElementById('submitBtnText').textContent = "Modifier le Niveau";
-        document.querySelector('.col-lg-5 .card-header h5').textContent = "✏️ Modifier le Niveau";
+        document.querySelector('.col-lg-5 .card-header h5').textContent = "Modifier le Niveau";
         document.getElementById('cancelEditBtn').style.display = 'block';
         document.querySelector('.col-lg-5').scrollIntoView({ behavior: 'smooth' });
     } catch (e) {

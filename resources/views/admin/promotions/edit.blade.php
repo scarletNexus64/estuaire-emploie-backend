@@ -115,7 +115,7 @@
                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
                        required>
                 <p class="text-xs text-gray-500 mt-1">
-                    ⚠️ Attention: Cela n'affecte pas les activations existantes
+                    Attention: Cela n'affecte pas les activations existantes
                 </p>
             </div>
 
@@ -143,9 +143,9 @@
                 </label>
                 <p class="text-xs text-gray-500 mt-1 ml-8">
                     @if(!$promotion->is_active)
-                        ✅ Si vous activez, une notification FCM sera envoyée à tous les utilisateurs
+                        Si vous activez, une notification FCM sera envoyée à tous les utilisateurs
                     @else
-                        ⚠️ Si vous désactivez, le pack ne sera plus gratuit pour les nouveaux utilisateurs
+                        Si vous désactivez, le pack ne sera plus gratuit pour les nouveaux utilisateurs
                     @endif
                 </p>
             </div>

@@ -97,7 +97,7 @@
         <!-- Program Steps Card -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">📝 Étapes du Programme</h5>
+                <h5 class="card-title mb-0">Étapes du Programme</h5>
             </div>
             <div style="padding: 1.5rem;">
                 @forelse($program->steps as $step)
@@ -116,7 +116,7 @@
 
                                 @if($step->estimated_duration_days)
                                 <div class="small text-muted">
-                                    ⏱ Durée estimée : {{ $step->estimated_duration_days }} jour(s)
+                                    Durée estimée : {{ $step->estimated_duration_days }} jour(s)
                                 </div>
                                 @endif
 
@@ -162,7 +162,7 @@
         <!-- Quick Stats -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">📊 Statistiques</h5>
+                <h5 class="card-title mb-0">Statistiques</h5>
             </div>
             <div style="padding: 1.5rem;">
                 <div class="mb-3">
@@ -231,7 +231,7 @@
         <!-- Actions Card -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">⚡ Actions</h5>
+                <h5 class="card-title mb-0">Actions</h5>
             </div>
             <div style="padding: 1.5rem;">
                 <a href="{{ route('admin.programs.manage-steps', $program) }}" class="btn btn-primary mb-2" style="width: 100%;">

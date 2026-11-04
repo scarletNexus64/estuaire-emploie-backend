@@ -40,9 +40,14 @@ return [
                 'port' => env('REVERB_PORT', 443),
                 'scheme' => env('REVERB_SCHEME', 'https'),
                 'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                // Timeout par requête du SDK Pusher (sinon 30 s par défaut)
+                'timeout' => (int) env('BROADCAST_TIMEOUT', 2),
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Timeouts courts : un serveur WS injoignable ne doit pas bloquer la requête HTTP
+                'timeout' => (float) env('BROADCAST_TIMEOUT', 2),
+                'connect_timeout' => (float) env('BROADCAST_CONNECT_TIMEOUT', 1),
             ],
         ],
 
@@ -58,9 +63,13 @@ return [
                 'scheme' => env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                'timeout' => (int) env('BROADCAST_TIMEOUT', 2),
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Timeouts courts : un serveur WS injoignable ne doit pas bloquer la requête HTTP
+                'timeout' => (float) env('BROADCAST_TIMEOUT', 2),
+                'connect_timeout' => (float) env('BROADCAST_CONNECT_TIMEOUT', 1),
             ],
         ],
 

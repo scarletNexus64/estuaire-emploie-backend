@@ -81,7 +81,7 @@
                                     <span class="badge badge-secondary">Inactif</span>
                                 @endif
                                 @if($service->is_popular)
-                                    <span class="badge" style="background: #f59e0b;">⭐ Populaire</span>
+                                    <span class="badge" style="background: #f59e0b;">Populaire</span>
                                 @endif
                             </td>
                             <td>

@@ -15,6 +15,14 @@ return [
     'recharge_initiated' => 'Recarga iniciada con éxito',
     'recharge_init_error' => 'Error al iniciar la recarga',
     'card_unavailable' => 'El pago con tarjeta no está disponible por el momento.',
+    'card_min_amount' => 'El importe mínimo para un pago con tarjeta es de :amount FCFA.',
+    'card_gateway_unavailable' => 'La página de pago con tarjeta no está disponible por el momento. Inténtelo de nuevo en unos instantes.',
+    'card_duplicate_attempt' => 'Este intento de pago ya se registró. Inténtelo de nuevo: se creará un nuevo intento.',
+    'card_init_failed' => 'No se pudo iniciar el pago con tarjeta. Inténtelo de nuevo.',
+    'card_finish_on_gateway' => 'Complete el pago en la página segura.',
+    'card_payment_expired' => 'El pago no se completó a tiempo y ha caducado.',
+    'card_payment_cancelled' => 'El pago con tarjeta fue cancelado.',
+    'card_payment_declined' => 'El pago con tarjeta fue rechazado.',
     'verification_error' => 'Error de verificación',
 
     // Payments

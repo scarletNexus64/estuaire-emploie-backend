@@ -85,7 +85,7 @@
 
         <!-- Warning Box -->
         <div class="alert alert-warning" style="margin-top: 1.5rem;">
-            <strong>⚠️ Attention :</strong> Les ajustements manuels sont enregistrés et traçables. Assurez-vous de fournir une raison claire et valide.
+            <strong>Attention :</strong> Les ajustements manuels sont enregistrés et traçables. Assurez-vous de fournir une raison claire et valide.
         </div>
     </div>
 </div>

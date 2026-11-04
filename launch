@@ -1,7 +1,7 @@
 php artisan serve --host 0.0.0.0 --port 8001
 php artisan schedule:work
 php artisan reverb:start
-php artisan queue:work --queue=deposits,withdrawals,default
+php artisan queue:work --queue=deposits,withdrawals,notifications,default
 
 php artisan cache:clear
 php artisan optimize
@@ -14,11 +14,13 @@ endpoint : https://admin.kpay.site
 API Key KPay : kpay_ac91bacee18916a69f3b73ebcd33236d478893d52fc228c4
 Secret Key KPay : 4bc98871f0700dbd336d86173ef05faa76e1ef7bbf0627ae4c57fe52b5db3842
 
+
 -- Config Crypto (NOWPayments) :
 API Key : 65NMPEB-AZK4WC3-GM230BZ-DR2Z08R
 IPN Secret : 0zSD7zQ6du0BQ8LBXRSrWG6p+19wh0Xf
 callback url prod: https://admin.abbev.tv/api/webhooks/nowpayments
 callback url dev: https://nonhedonic-slung-aura.ngrok-free.dev ( ngrok http 8001 )
+
 
 -- Config Stripe (Carte) SANDBOX
 Clé publishable (pk_test_… / pk_live_…) :  pk_test_51TdwM9HCStNIJK5cIpXZ3uo76pktAQBTqgOb9P8Fbl1sqakz05uMmMgr3UfHNaaervoXNcLUetLcKgIk302bAIrj00OaleRUxE

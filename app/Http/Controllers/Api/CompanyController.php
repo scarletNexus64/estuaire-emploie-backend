@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\CompanyCategory;
 use App\Models\Recruiter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,14 +76,34 @@ class CompanyController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Company::where('status', 'verified')
-            ->with('categories')
+            // L'app ne lit que `level_1` des catégories : on ne sert que les
+            // colonnes utiles (les catégories et leurs traductions faisaient
+            // ~80 % du poids de l'annuaire).
+            ->with(['categories' => function ($q) {
+                $q->select(
+                    'company_categories.id',
+                    'company_categories.code',
+                    'company_categories.level_1',
+                    'company_categories.level_2',
+                    'company_categories.level_3',
+                    'company_categories.slug'
+                );
+            }])
             ->withCount('jobs');
 
-        // Filtre par domaine d'activité niveau 1 (CompanyCategory.level_1)
-        if ($request->filled('level_1')) {
-            $level1 = $request->input('level_1');
-            $query->whereHas('categories', function ($q) use ($level1) {
-                $q->where('level_1', $level1);
+        // Filtre par domaine d'activité niveau 1 : `level_1_code` (code
+        // stable, cf. /company-categories/level1) ou `level_1` (libellé brut
+        // ou traduit). Avant, l'app envoyait `level_1_code`, ignoré ici : le
+        // filtre ne filtrait rien et retéléchargeait tout l'annuaire.
+        if ($request->filled('level_1_code') || $request->filled('level_1')) {
+            // Les versions de l'app déjà publiées envoient un libellé traduit
+            // dans `level_1_code` : il est aussi essayé comme libellé.
+            $values = CompanyCategory::resolveLevel1Values(
+                $request->input('level_1_code'),
+                $request->input('level_1') ?? $request->input('level_1_code')
+            );
+            $query->whereHas('categories', function ($q) use ($values) {
+                $q->whereIn('level_1', $values);
             });
         }
 
@@ -97,6 +118,10 @@ class CompanyController extends Controller
             ->orderByRaw('(latitude IS NULL OR longitude IS NULL) ASC')
             ->latest()
             ->paginate($perPage);
+
+        $companies->getCollection()->each(function (Company $company) {
+            $company->categories->each->makeHidden(['translations', 'pivot']);
+        });
 
         return response()->json($companies);
     }

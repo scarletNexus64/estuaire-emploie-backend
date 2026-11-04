@@ -24,6 +24,7 @@ class ServiceConfigController extends Controller
         $nexahConfig = ServiceConfiguration::getNexahConfig();
         $freemopayConfig = ServiceConfiguration::getFreeMoPayConfig();
         $kpayConfig = ServiceConfiguration::getKPayConfig();
+        $kpayLite = \App\Services\Payment\KPayLiteConfig::make();
         $paypalConfig = ServiceConfiguration::getPayPalConfig();
         $preferencesConfig = ServiceConfiguration::getConfig('notification_preferences');
 
@@ -32,6 +33,7 @@ class ServiceConfigController extends Controller
             'nexahConfig',
             'freemopayConfig',
             'kpayConfig',
+            'kpayLite',
             'paypalConfig',
             'preferencesConfig'
         ));
@@ -276,6 +278,90 @@ class ServiceConfigController extends Controller
                 ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage())
                 ->withInput();
         }
+    }
+
+    /**
+     * Update KPay Lite configuration (cartes Visa / Mastercard).
+     *
+     * Stockée dans ServiceConfiguration `kpay_lite`, colonne JSON `config`.
+     * Les secrets ne sont jamais réaffichés : un champ laissé vide conserve la
+     * valeur actuelle. Une valeur absente de l'admin retombe sur KPAY_LITE_*.
+     */
+    public function updateKPayLite(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'base_url' => 'nullable|url|starts_with:https://',
+            'api_key' => ['nullable', 'string', 'min:12', 'regex:/^kpay_lite_(test|live)_/'],
+            'secret_key' => 'nullable|string|min:8',
+            'webhook_secret' => 'nullable|string|min:8',
+            'gateway_secret' => 'nullable|string|min:8',
+            'min_amount_xaf' => 'required|integer|min:100|max:1000000',
+            'expiry_minutes' => 'required|integer|min:15|max:1440',
+        ], [
+            'api_key.regex' => 'La clé API KPay Lite doit commencer par kpay_lite_test_ (sandbox) ou kpay_lite_live_ (live).',
+            'base_url.starts_with' => "L'URL de base doit être en HTTPS.",
+        ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput($request->except(\App\Services\Payment\KPayLiteConfig::SECRET_FIELDS))
+                ->with('error', 'Erreurs de validation: ' . implode(' | ', $errors));
+        }
+
+        try {
+            $existing = ServiceConfiguration::where('service_type', 'kpay_lite')->first();
+            $config = is_array($existing?->config) ? $existing->config : [];
+
+            $config['base_url'] = rtrim((string) ($request->input('base_url') ?: \App\Services\Payment\KPayLiteConfig::DEFAULT_BASE_URL), '/');
+            $config['min_amount_xaf'] = (int) $request->input('min_amount_xaf');
+            $config['expiry_minutes'] = (int) $request->input('expiry_minutes');
+
+            foreach (\App\Services\Payment\KPayLiteConfig::SECRET_FIELDS as $field) {
+                if ($request->boolean("clear_{$field}")) {
+                    unset($config[$field]); // retombe sur l'env
+                } elseif (filled($request->input($field))) {
+                    $config[$field] = trim((string) $request->input($field));
+                }
+            }
+
+            ServiceConfiguration::updateOrCreate(
+                ['service_type' => 'kpay_lite'],
+                [
+                    'config' => $config,
+                    'is_active' => $request->has('is_active'),
+                ]
+            );
+
+            ServiceConfiguration::clearCache('kpay_lite');
+
+            $lite = \App\Services\Payment\KPayLiteConfig::make();
+            if ($lite->enabled() && !$lite->isConfigured()) {
+                return redirect()->back()
+                    ->with('warning', 'KPay Lite activé mais API key / secret key manquantes : les cartes restent indisponibles.');
+            }
+            if ($lite->enabled() && (!$lite->webhookSecret() || !$lite->gatewaySecret())) {
+                return redirect()->back()
+                    ->with('warning', 'Configuration KPay Lite sauvegardée. Renseignez aussi le webhook secret et le gateway secret, sinon les webhooks et retours seront refusés.');
+            }
+
+            return redirect()->back()
+                ->with('success', 'Configuration KPay Lite mise à jour avec succès!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Erreur lors de la mise à jour: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Test de connexion KPay Lite : appel authentifié sans effet de bord.
+     */
+    public function testKPayLite()
+    {
+        $result = (new \App\Services\Payment\KPayLiteService())->testConnection();
+
+        return response()->json($result, $result['success'] ? 200 : 400);
     }
 
     /**

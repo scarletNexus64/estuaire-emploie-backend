@@ -85,8 +85,8 @@
                             </td>
                             <td>
                                 <div style="font-size: 0.875rem;">
-                                    <div>👁️ {{ number_format($ad->impressions_count) }}</div>
-                                    <div>🖱️ {{ number_format($ad->clicks_count) }}</div>
+                                    <div>{{ number_format($ad->impressions_count) }}</div>
+                                    <div>{{ number_format($ad->clicks_count) }}</div>
                                     @if($ad->impressions_count > 0)
                                         <div style="color: #10b981;">CTR: {{ number_format($ad->ctr, 2) }}%</div>
                                     @endif
@@ -148,7 +148,7 @@
 <!-- Section: Tarifs Standards -->
 <div class="card" style="margin-top: 1.5rem;">
     <div class="card-header">
-        <h3 class="card-title">💰 Tarifs Standards Recommandés</h3>
+        <h3 class="card-title">Tarifs Standards Recommandés</h3>
         <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">
             Ces tarifs sont modifiables lors de la création de chaque publicité
         </p>

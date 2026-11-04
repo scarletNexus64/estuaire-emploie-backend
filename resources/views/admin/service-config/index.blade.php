@@ -91,6 +91,16 @@
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="kpay-lite-tab" data-bs-toggle="tab" href="#kpay-lite" role="tab" aria-controls="kpay-lite" aria-selected="false">
+                                <i class="mdi mdi-credit-card-outline"></i> KPay Lite — Cartes VISA / MasterCard
+                                @if($kpayLite->isActive())
+                                    <span class="badge bg-success ms-1">{{ $kpayLite->isTest() ? 'Sandbox' : 'Actif' }}</span>
+                                @else
+                                    <span class="badge bg-warning ms-1">Non configuré</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <a class="nav-link" id="paypal-tab" data-bs-toggle="tab" href="#paypal" role="tab" aria-controls="paypal" aria-selected="false">
                                 <i class="mdi mdi-paypal"></i> PayPal
                                 @if($paypalConfig && $paypalConfig->isConfigured())
@@ -116,6 +126,9 @@
 
                         {{-- Payment Tab (KPay) --}}
                         @include('admin.service-config.kpay', ['config' => $kpayConfig])
+
+                        {{-- KPay Lite Tab (cartes Visa / Mastercard) --}}
+                        @include('admin.service-config.kpay-lite', ['lite' => $kpayLite])
 
                         {{-- PayPal Tab --}}
                         @include('admin.service-config.paypal', ['config' => $paypalConfig])
@@ -148,13 +161,13 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('✅ ' + data.message);
+                alert('' + data.message);
             } else {
-                alert('❌ ' + data.message);
+                alert('' + data.message);
             }
         })
         .catch(error => {
-            alert('❌ Erreur lors du test: ' + error.message);
+            alert('Erreur lors du test: ' + error.message);
         })
         .finally(() => {
             button.disabled = false;
@@ -220,16 +233,16 @@
         .then(data => {
             if (data.success) {
                 resultDiv.className = 'alert alert-success';
-                resultDiv.innerHTML = '✅ ' + data.message + '<br><small>OTP envoyé: ' + otp + '</small>';
+                resultDiv.innerHTML = '' + data.message + '<br><small>OTP envoyé: ' + otp + '</small>';
             } else {
                 resultDiv.className = 'alert alert-danger';
-                resultDiv.innerHTML = '❌ ' + data.message;
+                resultDiv.innerHTML = '' + data.message;
             }
             resultDiv.style.display = 'block';
         })
         .catch(error => {
             resultDiv.className = 'alert alert-danger';
-            resultDiv.innerHTML = '❌ Erreur: ' + error.message;
+            resultDiv.innerHTML = 'Erreur: ' + error.message;
             resultDiv.style.display = 'block';
         });
     }
@@ -276,16 +289,16 @@
         .then(data => {
             if (data.success) {
                 resultDiv.className = 'alert alert-success';
-                resultDiv.innerHTML = '✅ ' + data.message;
+                resultDiv.innerHTML = '' + data.message;
             } else {
                 resultDiv.className = 'alert alert-danger';
-                resultDiv.innerHTML = '❌ ' + data.message;
+                resultDiv.innerHTML = '' + data.message;
             }
             resultDiv.style.display = 'block';
         })
         .catch(error => {
             resultDiv.className = 'alert alert-danger';
-            resultDiv.innerHTML = '❌ Erreur: ' + error.message;
+            resultDiv.innerHTML = 'Erreur: ' + error.message;
             resultDiv.style.display = 'block';
         });
     }

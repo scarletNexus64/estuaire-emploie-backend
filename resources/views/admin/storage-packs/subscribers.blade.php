@@ -309,7 +309,7 @@ function confirmDelete(id, userName, packName, storageUsed) {
             ? storageUsed + ' Mo'
             : (storageUsed / 1024).toFixed(2) + ' Go';
 
-        message += `\n\n⚠️ ATTENTION : L'utilisateur a encore ${storageFormatted} de fichiers stockés qui seront également supprimés.`;
+        message += `\n\nATTENTION : L'utilisateur a encore ${storageFormatted} de fichiers stockés qui seront également supprimés.`;
     }
 
     message += '\n\nCette action est irréversible.';

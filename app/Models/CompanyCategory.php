@@ -90,6 +90,58 @@ class CompanyCategory extends Model
     }
 
     /**
+     * Code stable (non traduit) d'un domaine niveau 1, dérivé de la valeur
+     * brute en base. Sert de critère de filtre côté app : un libellé
+     * localisé ne correspond à rien en base hors français.
+     */
+    public static function level1Code(string $rawLevel1): string
+    {
+        return Str::slug($rawLevel1);
+    }
+
+    /**
+     * Valeurs brutes `level_1` correspondant à un code stable et/ou à un
+     * libellé (brut ou traduit dans n'importe quelle langue).
+     *
+     * `pluck()` ne passe pas par l'hydratation des modèles : on lit bien
+     * les valeurs brutes, jamais leur version localisée.
+     *
+     * @return array<int, string>
+     */
+    public static function resolveLevel1Values(?string $code, ?string $label): array
+    {
+        $values = [];
+
+        $code = $code !== null ? trim($code) : '';
+        if ($code !== '') {
+            foreach (self::query()->whereNotNull('level_1')->distinct()->pluck('level_1') as $raw) {
+                if (self::level1Code($raw) === $code) {
+                    $values[] = $raw;
+                }
+            }
+        }
+
+        $label = $label !== null ? trim($label) : '';
+        if ($label !== '') {
+            $values[] = $label;
+            $translatedIds = Translation::query()
+                ->where('translatable_type', self::class)
+                ->where('field', 'level_1')
+                ->where('value', $label)
+                ->pluck('translatable_id');
+            if ($translatedIds->isNotEmpty()) {
+                array_push($values, ...self::query()
+                    ->whereIn('id', $translatedIds)
+                    ->distinct()
+                    ->pluck('level_1')
+                    ->all());
+            }
+        }
+
+        return array_values(array_unique($values));
+    }
+
+    /**
      * Get all unique level 1 values
      */
     public static function getLevel1Options(): array

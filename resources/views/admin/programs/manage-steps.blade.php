@@ -29,7 +29,7 @@
         <!-- Existing Steps -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">📝 Étapes Existantes</h5>
+                <h5 class="card-title mb-0">Étapes Existantes</h5>
             </div>
             <div style="padding: 1.5rem;">
                 @forelse($program->steps as $index => $step)
@@ -65,7 +65,7 @@
 
                                 @if($step->estimated_duration_days)
                                 <div class="small text-muted mb-2">
-                                    ⏱ Durée estimée : {{ $step->estimated_duration_days }} jour(s)
+                                    Durée estimée : {{ $step->estimated_duration_days }} jour(s)
                                 </div>
                                 @endif
 
@@ -124,7 +124,7 @@
         <!-- Add New Step Form -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">➕ Ajouter une Étape</h5>
+                <h5 class="card-title mb-0">Ajouter une Étape</h5>
             </div>
             <div style="padding: 1.5rem;">
                 <form method="POST" action="{{ route('admin.programs.store-step', $program) }}" id="stepForm">
@@ -234,10 +234,10 @@ function addResource(title = '', url = '', type = 'link') {
                     <input type="text" class="form-control mb-2" name="resources[${resourceIndex}][title]" placeholder="Titre de la ressource" value="${title}" required>
                     <input type="url" class="form-control mb-2" name="resources[${resourceIndex}][url]" placeholder="https://..." value="${url}" required>
                     <select class="form-control" name="resources[${resourceIndex}][type]" required>
-                        <option value="link" ${type === 'link' ? 'selected' : ''}>🔗 Lien</option>
-                        <option value="document" ${type === 'document' ? 'selected' : ''}>📄 Document</option>
-                        <option value="video" ${type === 'video' ? 'selected' : ''}>🎥 Vidéo</option>
-                        <option value="article" ${type === 'article' ? 'selected' : ''}>📰 Article</option>
+                        <option value="link" ${type === 'link' ? 'selected' : ''}>Lien</option>
+                        <option value="document" ${type === 'document' ? 'selected' : ''}>Document</option>
+                        <option value="video" ${type === 'video' ? 'selected' : ''}>Vidéo</option>
+                        <option value="article" ${type === 'article' ? 'selected' : ''}>Article</option>
                     </select>
                 </div>
                 <button type="button" class="btn btn-sm btn-danger" onclick="removeResource(${resourceIndex})">
@@ -263,7 +263,7 @@ function resetForm() {
     document.getElementById('form_method').value = "POST";
     document.getElementById('step_id').value = "";
     document.getElementById('submitBtnText').textContent = "Ajouter l'Étape";
-    document.querySelector('.card-header h5').textContent = "➕ Ajouter une Étape";
+    document.querySelector('.card-header h5').textContent = "Ajouter une Étape";
     document.getElementById('resources-container').innerHTML = '';
     resourceIndex = 0;
 
@@ -330,7 +330,7 @@ async function editStep(stepId) {
 
         // Update button text and header
         document.getElementById('submitBtnText').textContent = "Modifier l'Étape";
-        document.querySelector('.card-header h5').textContent = "✏️ Modifier l'Étape";
+        document.querySelector('.card-header h5').textContent = "Modifier l'Étape";
 
         // Scroll to form
         document.querySelector('.col-lg-4').scrollIntoView({ behavior: 'smooth' });

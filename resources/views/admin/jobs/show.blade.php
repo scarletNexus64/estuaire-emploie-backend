@@ -76,7 +76,7 @@
                     </p>
 
                     @if($job->is_featured)
-                        <p><strong>Mise en avant:</strong> <span class="badge badge-warning">⭐ Oui</span></p>
+                        <p><strong>Mise en avant:</strong> <span class="badge badge-warning">Oui</span></p>
                     @endif
 
                     <p><strong>Vues:</strong> {{ $job->views_count }}</p>

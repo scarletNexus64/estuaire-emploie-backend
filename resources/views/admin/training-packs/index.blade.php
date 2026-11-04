@@ -133,7 +133,7 @@
                                 <td>
                                     <strong>{{ $pack->name }}</strong>
                                     @if($pack->is_featured)
-                                        <span class="badge bg-warning">⭐ Mis en avant</span>
+                                        <span class="badge bg-warning">Mis en avant</span>
                                     @endif
                                 </td>
                                 <td>{{ $pack->category ?? '-' }}</td>
@@ -145,7 +145,7 @@
                                 <td>{{ $pack->purchases_count }}</td>
                                 <td>
                                     @if($pack->reviews_count > 0)
-                                        ⭐ {{ number_format($pack->average_rating, 1) }} ({{ $pack->reviews_count }})
+                                        {{ number_format($pack->average_rating, 1) }} ({{ $pack->reviews_count }})
                                     @else
                                         -
                                     @endif

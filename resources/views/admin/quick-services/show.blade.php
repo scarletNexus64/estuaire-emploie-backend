@@ -50,10 +50,10 @@
                         @csrf
                         @method('PATCH')
                         <select name="status" class="form-control" style="background: white; border: 2px solid rgba(255,255,255,0.3); color: #1e293b; font-weight: 600; padding: 0.5rem 1rem;" onchange="this.form.submit()">
-                            <option value="open" {{ $service->status === 'open' ? 'selected' : '' }}>✅ Ouvert</option>
-                            <option value="in_progress" {{ $service->status === 'in_progress' ? 'selected' : '' }}>⏳ En cours</option>
-                            <option value="completed" {{ $service->status === 'completed' ? 'selected' : '' }}>🎉 Complété</option>
-                            <option value="cancelled" {{ $service->status === 'cancelled' ? 'selected' : '' }}>❌ Annulé</option>
+                            <option value="open" {{ $service->status === 'open' ? 'selected' : '' }}>Ouvert</option>
+                            <option value="in_progress" {{ $service->status === 'in_progress' ? 'selected' : '' }}>En cours</option>
+                            <option value="completed" {{ $service->status === 'completed' ? 'selected' : '' }}>Complété</option>
+                            <option value="cancelled" {{ $service->status === 'cancelled' ? 'selected' : '' }}>Annulé</option>
                         </select>
                     </form>
                 @endif
@@ -138,7 +138,7 @@
                                 <strong style="color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">Prix</strong>
                             </div>
                             @if($service->price_type === 'negotiable')
-                                <span class="badge badge-info" style="font-size: 0.875rem; padding: 0.5rem 1rem;">💬 À négocier</span>
+                                <span class="badge badge-info" style="font-size: 0.875rem; padding: 0.5rem 1rem;">À négocier</span>
                             @elseif($service->price_type === 'range')
                                 <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; color: #1e293b;">
                                     {{ number_format($service->price_min, 0, ',', ' ') }} - {{ number_format($service->price_max, 0, ',', ' ') }} FCFA
@@ -156,7 +156,7 @@
                                 <strong style="color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">Localisation</strong>
                             </div>
                             <div style="color: #1e293b; font-weight: 600;">{{ $service->location_name ?? 'Non spécifié' }}</div>
-                            <small style="color: #64748b;">📍 {{ $service->latitude }}, {{ $service->longitude }}</small>
+                            <small style="color: #64748b;">{{ $service->latitude }}, {{ $service->longitude }}</small>
                         </div>
 
                         <div style="margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0;">
@@ -165,13 +165,13 @@
                                 <strong style="color: #475569; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.5px;">Urgence</strong>
                             </div>
                             @if($service->urgency === 'urgent')
-                                <span class="badge badge-danger" style="font-size: 0.875rem; padding: 0.5rem 1rem;">🔥 Urgent</span>
+                                <span class="badge badge-danger" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Urgent</span>
                             @elseif($service->urgency === 'this_week')
-                                <span class="badge badge-warning" style="font-size: 0.875rem; padding: 0.5rem 1rem;">⏰ Cette semaine</span>
+                                <span class="badge badge-warning" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Cette semaine</span>
                             @elseif($service->urgency === 'this_month')
-                                <span class="badge badge-info" style="font-size: 0.875rem; padding: 0.5rem 1rem;">📅 Ce mois</span>
+                                <span class="badge badge-info" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Ce mois</span>
                             @else
-                                <span class="badge badge-secondary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">🕐 Flexible</span>
+                                <span class="badge badge-secondary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Flexible</span>
                             @endif
                         </div>
 

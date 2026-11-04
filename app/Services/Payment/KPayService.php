@@ -31,6 +31,15 @@ class KPayService
      */
     public const MERCHANT_LABEL = 'Estuaire Emploi';
 
+    /** Devise du wallet et des prix de l'app. */
+    public const WALLET_CURRENCY = 'XAF';
+
+    /**
+     * Devises à parité fixe avec le FCFA CEMAC : le franc CFA UEMOA (XOF) et
+     * le franc CFA CEMAC (XAF) sont tous deux arrimés à 655,957 par euro.
+     */
+    protected const FIXED_PARITY = ['XAF', 'XOF'];
+
     public function __construct()
     {
         $this->config = ServiceConfiguration::getKPayConfig();
@@ -89,14 +98,32 @@ class KPayService
             );
         }
 
+        // `$amount` est en FCFA (devise du wallet et des prix). KPay débite
+        // dans la devise de l'opérateur sans rien convertir : on convertit ici.
+        $quote = $this->quoteForProvider((float) $amount, $providerCode, true);
+
         Log::info('[KPay] Init dépôt', [
             'amount' => $amount,
+            'charged_amount' => $quote['amount'],
+            'charged_currency' => $quote['currency'],
             'provider' => $providerCode,
             'external_id' => $externalId,
         ]);
 
         // 1. Créer le Payment (pending) en base
-        $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId, $payable, $paymentType, $providerCode) {
+        $payment = DB::transaction(function () use ($payer, $amount, $normalizedPhone, $description, $externalId, $payable, $paymentType, $providerCode, $quote) {
+            $metadata = ['kpay_provider' => $providerCode];
+            if ($quote['converted']) {
+                $metadata['currency_conversion'] = [
+                    'original_amount' => (float) $amount,
+                    'original_currency' => self::WALLET_CURRENCY,
+                    'converted_amount' => $quote['amount'],
+                    'converted_currency' => $quote['currency'],
+                    'rate' => $quote['rate'],
+                    'rate_source' => $quote['source'],
+                ];
+            }
+
             $data = [
                 'amount' => $amount,
                 'fees' => 0,
@@ -108,8 +135,10 @@ class KPayService
                 'provider' => 'kpay',
                 'payment_method' => $this->localPaymentMethod($providerCode),
                 'payment_type' => $paymentType,
-                'currency' => $this->currencyForProvider($providerCode),
-                'metadata' => ['kpay_provider' => $providerCode],
+                // `amount` reste en FCFA (c'est ce qui est crédité) ; le montant
+                // réellement débité est dans metadata.currency_conversion.
+                'currency' => self::WALLET_CURRENCY,
+                'metadata' => $metadata,
             ];
 
             if ($payer instanceof Company) {
@@ -129,7 +158,7 @@ class KPayService
         // 2. Appeler KPay /payments/init
         try {
             $response = $this->client->post('payments/init', [
-                'amount' => $this->formatAmount($amount, $providerCode),
+                'amount' => $quote['amount'],
                 'provider' => $providerCode,
                 'phoneNumber' => $normalizedPhone,
                 'externalId' => $externalId,
@@ -351,8 +380,12 @@ class KPayService
 
         $normalizedPhone = $this->normalizePhoneNumber($phoneNumber);
 
+        // `$amount` est en FCFA : converti vers la devise de l'opérateur,
+        // arrondi vers le bas pour ne jamais verser plus que le montant dû.
+        $quote = $this->quoteForProvider((float) $amount, $providerCode, false);
+
         $payload = [
-            'amount' => (int) round($amount),
+            'amount' => $quote['amount'],
             'provider' => $providerCode,
             'phoneNumber' => $normalizedPhone,
         ];
@@ -362,7 +395,20 @@ class KPayService
         // Libellé marchand fixe envoyé à KPay (jamais le détail interne).
         $payload['description'] = $this->merchantDescription();
 
-        return $this->client->post('payments/withdraw', $payload);
+        $response = $this->client->post('payments/withdraw', $payload);
+
+        if ($quote['converted']) {
+            $response['currency_conversion'] = [
+                'original_amount' => (float) $amount,
+                'original_currency' => self::WALLET_CURRENCY,
+                'converted_amount' => $quote['amount'],
+                'converted_currency' => $quote['currency'],
+                'rate' => $quote['rate'],
+                'rate_source' => $quote['source'],
+            ];
+        }
+
+        return $response;
     }
 
     /**
@@ -533,6 +579,129 @@ class KPayService
      * XAF ne sert plus de défaut aveugle : un provider hors catalogue
      * enregistrait auparavant un paiement CDF/KES/UGX/ZMW en XAF.
      */
+    /**
+     * Montant à envoyer à KPay pour un montant en FCFA, dans la devise de
+     * l'opérateur (KPay ne convertit pas en mode USSD).
+     *
+     * Dépôt : arrondi vers le haut (on ne débite jamais moins que le crédit).
+     * Retrait : arrondi vers le bas (on ne verse jamais plus que le débit).
+     *
+     * @return array{amount: int|float, currency: string, rate: float, converted: bool, source: string}
+     * @throws KPayException si aucun taux fiable n'est disponible.
+     */
+    public function quoteForProvider(float $amountXaf, ?string $providerCode, bool $isDeposit = true): array
+    {
+        $currency = strtoupper($this->currencyForProvider($providerCode));
+
+        if (in_array($currency, self::FIXED_PARITY, true)) {
+            return [
+                'amount' => $this->formatAmount($amountXaf, $providerCode),
+                'currency' => $currency,
+                'rate' => 1.0,
+                'converted' => $currency !== self::WALLET_CURRENCY,
+                'source' => 'parity',
+            ];
+        }
+
+        [$rate, $source] = $this->exchangeRate(self::WALLET_CURRENCY, $currency);
+
+        $decimals = KPayCatalog::supportsDecimals($providerCode) ? 2 : 0;
+        $factor = 10 ** $decimals;
+        $raw = $amountXaf * $rate * $factor;
+        // Petite tolérance pour qu'un 1160.0000001 ne devienne pas 1161.
+        $units = $isDeposit ? ceil(round($raw, 6)) : floor(round($raw, 6));
+        $local = $decimals > 0 ? round($units / $factor, $decimals) : (int) $units;
+
+        if ($local <= 0) {
+            throw new KPayException('Montant trop faible pour cet opérateur.', 0, 'AMOUNT_TOO_LOW');
+        }
+
+        return [
+            'amount' => $local,
+            'currency' => $currency,
+            'rate' => $rate,
+            'converted' => true,
+            'source' => $source,
+        ];
+    }
+
+    /**
+     * Taux `from` → `to` : celui de KPay en priorité (temps réel, celui que
+     * KPay applique lui-même), mis en cache 30 min ; à défaut, nos taux
+     * locaux s'ils sont à jour. Jamais de taux périmé pour un paiement.
+     *
+     * @return array{0: float, 1: string}  [taux, source]
+     * @throws KPayException
+     */
+    protected function exchangeRate(string $from, string $to): array
+    {
+        $cacheKey = "kpay_fx_{$from}_{$to}";
+
+        $rate = Cache::get($cacheKey);
+        if (is_numeric($rate) && (float) $rate > 0) {
+            return [(float) $rate, 'kpay'];
+        }
+
+        try {
+            $response = $this->client->get('payments/exchange-rate?from=' . urlencode($from) . '&to=' . urlencode($to));
+            $rate = $response['rate'] ?? null;
+            if (is_numeric($rate) && (float) $rate > 0) {
+                Cache::put($cacheKey, (float) $rate, now()->addMinutes(30));
+                return [(float) $rate, 'kpay'];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('[KPay] Taux de change KPay indisponible', [
+                'from' => $from,
+                'to' => $to,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $currencyService = app(\App\Services\CurrencyService::class);
+        if (!$currencyService->ratesAreStale()) {
+            try {
+                $sample = 1000000.0;
+                $converted = $currencyService->convert($sample, $from, $to);
+                if ($converted > 0) {
+                    return [$converted / $sample, 'local'];
+                }
+            } catch (\Throwable $e) {
+                // Pas de paire locale : on refuse ci-dessous.
+            }
+        }
+
+        throw new KPayException(
+            __('wallet.exchange_rate_unavailable'),
+            0,
+            'EXCHANGE_RATE_UNAVAILABLE'
+        );
+    }
+
+    /**
+     * Taux FCFA → devise, pour l'estimation affichée dans l'app (`null` si
+     * indisponible). Un échec est mémorisé 5 min pour ne pas ralentir le
+     * catalogue à chaque appel quand KPay ne répond pas.
+     */
+    public function displayRateFromWallet(string $currency): ?float
+    {
+        $currency = strtoupper($currency);
+        if (in_array($currency, self::FIXED_PARITY, true)) {
+            return 1.0;
+        }
+
+        $failKey = "kpay_fx_fail_{$currency}";
+        if (Cache::has($failKey)) {
+            return null;
+        }
+
+        try {
+            return $this->exchangeRate(self::WALLET_CURRENCY, $currency)[0];
+        } catch (\Throwable $e) {
+            Cache::put($failKey, true, now()->addMinutes(5));
+            return null;
+        }
+    }
+
     protected function currencyForProvider(?string $providerCode): string
     {
         return KPayCatalog::currencyForProvider($providerCode) ?? 'XAF';

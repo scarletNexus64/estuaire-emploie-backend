@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">🛡️ Administrateurs du Forum</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Administrateurs du Forum</h1>
             <p class="text-gray-600 mt-1">Gérer les formateurs qui peuvent répondre aux questions</p>
         </div>
         <a href="{{ route('admin.forum.index') }}" class="btn btn-secondary">
@@ -114,10 +114,10 @@
                         <i class="mdi mdi-information"></i> Privilèges des Admins
                     </h4>
                     <ul class="text-sm text-blue-800 space-y-1">
-                        <li>✅ Répondre aux questions des étudiants</li>
-                        <li>✅ Badge "ADMIN" sur leurs messages</li>
-                        <li>✅ Notifications FCM pour nouveaux messages</li>
-                        <li>✅ Répondre depuis l'application mobile</li>
+                        <li>Répondre aux questions des étudiants</li>
+                        <li>Badge "ADMIN" sur leurs messages</li>
+                        <li>Notifications FCM pour nouveaux messages</li>
+                        <li>Répondre depuis l'application mobile</li>
                     </ul>
                 </div>
             </div>

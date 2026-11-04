@@ -74,12 +74,10 @@ class SettingsController extends Controller
         ));
     }
 
-    public function categories(): View
+    public function categories(Request $request): View
     {
-        $categories = Category::withCount('jobs')->get();
-        $contractTypes = ContractType::withCount('jobs')->get();
-
-        return view('admin.settings.index', compact('categories', 'contractTypes'));
+        // La vue Paramètres a besoin de toutes ses données (onglets) : on réutilise index()
+        return $this->index($request);
     }
 
     public function update(Request $request): RedirectResponse

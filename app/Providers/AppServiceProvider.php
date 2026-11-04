@@ -14,7 +14,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // État social du visiteur (likes/reposts/abonnements chargés par lot) :
+        // une instance par requête HTTP / job de queue.
+        $this->app->scoped(\App\Services\Social\SocialContext::class);
     }
 
     /**

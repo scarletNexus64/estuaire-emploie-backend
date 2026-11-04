@@ -33,9 +33,9 @@
             <form method="POST" action="{{ route('admin.messagerie.status', $thread) }}">
                 @csrf
                 <select name="status" onchange="this.form.submit()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600">
-                    <option value="open" @selected($thread->status === 'open')>🟢 Ouverte</option>
-                    <option value="pending" @selected($thread->status === 'pending')>🟡 En attente</option>
-                    <option value="closed" @selected($thread->status === 'closed')>⚪ Traitée</option>
+                    <option value="open" @selected($thread->status === 'open')>Ouverte</option>
+                    <option value="pending" @selected($thread->status === 'pending')>En attente</option>
+                    <option value="closed" @selected($thread->status === 'closed')>Traitée</option>
                 </select>
             </form>
             <form method="POST" action="{{ route('admin.messagerie.bulk') }}" onsubmit="return confirm('Mettre cette conversation à la corbeille ?')">

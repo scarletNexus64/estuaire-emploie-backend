@@ -15,6 +15,14 @@ return [
     'recharge_initiated' => 'تم بدء إعادة الشحن بنجاح',
     'recharge_init_error' => 'حدث خطأ أثناء بدء إعادة الشحن',
     'card_unavailable' => 'الدفع بالبطاقة المصرفية غير متاح حاليًا.',
+    'card_min_amount' => 'الحد الأدنى للدفع بالبطاقة هو :amount فرنك.',
+    'card_gateway_unavailable' => 'صفحة الدفع بالبطاقة غير متاحة مؤقتًا. أعد المحاولة بعد لحظات.',
+    'card_duplicate_attempt' => 'تم تسجيل محاولة الدفع هذه مسبقًا. أعد المحاولة: سيتم إنشاء محاولة جديدة.',
+    'card_init_failed' => 'تعذّر بدء الدفع بالبطاقة. أعد المحاولة.',
+    'card_finish_on_gateway' => 'أكمل الدفع على الصفحة الآمنة.',
+    'card_payment_expired' => 'لم يكتمل الدفع في الوقت المحدد وانتهت صلاحيته.',
+    'card_payment_cancelled' => 'تم إلغاء الدفع بالبطاقة.',
+    'card_payment_declined' => 'تم رفض الدفع بالبطاقة.',
     'verification_error' => 'حدث خطأ أثناء التحقق',
 
     // Payments

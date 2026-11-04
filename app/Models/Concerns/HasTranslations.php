@@ -3,6 +3,7 @@
 namespace App\Models\Concerns;
 
 use App\Models\Translation;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\App;
 
@@ -191,25 +192,73 @@ trait HasTranslations
             $model->translations()->delete();
         });
 
-        // 🌍 Auto-localise les modèles fraîchement chargés quand le flag
-        // 'translations.auto_localize' est actif (= requête API via le
-        // middleware SetLocale). En admin web, jobs CLI, ou tests sans
-        // requête HTTP, le flag est absent → comportement canonique préservé.
-        static::retrieved(function ($model) {
-            if (! App::bound('translations.auto_localize')) {
-                return;
-            }
-            if (! App::make('translations.auto_localize')) {
-                return;
-            }
+        // 🌍 L'auto-localisation (requêtes API) ne se fait plus ici, modèle
+        // par modèle : `retrieved` est déclenché avant tout eager-load, donc
+        // chaque modèle chargeait ses traductions avec SA requête (N+1 :
+        // 887 requêtes pour la liste des domaines, 1 par catégorie dans
+        // l'annuaire). Elle est faite par lot dans `newCollection()`.
+    }
 
-            // S'assurer que la relation translations est chargée. Eager-load
-            // si manquante pour éviter le N+1 si possible.
-            if (! $model->relationLoaded('translations')) {
-                $model->load('translations');
-            }
+    /** Le modèle a-t-il déjà été localisé pour la requête API courante ? */
+    protected bool $apiLocalized = false;
 
-            $model->localizeForApi();
-        });
+    protected static function shouldAutoLocalize(): bool
+    {
+        return App::bound('translations.auto_localize')
+            && App::make('translations.auto_localize');
+    }
+
+    /**
+     * Toute requête Eloquent (get, first, find, eager-load, relation lazy…)
+     * passe par ici après hydratation : on charge les traductions de TOUS
+     * les modèles du lot en une seule requête, puis on les localise.
+     */
+    public function newCollection(array $models = []): Collection
+    {
+        $collection = parent::newCollection($models);
+
+        if (static::shouldAutoLocalize()) {
+            $pending = $collection->filter(
+                fn ($model) => $model instanceof self && ! $model->apiLocalized
+            );
+
+            if ($pending->isNotEmpty()) {
+                $pending->loadMissing('translations');
+                $pending->each->markLocalizedForApi();
+            }
+        }
+
+        return $collection;
+    }
+
+    /**
+     * Filet de sécurité pour les modèles lus en base sans passer par
+     * `newCollection()` (ex. `cursor()`) : seule la sortie JSON est
+     * traduite, les attributs ne sont pas modifiés (un `save()` ultérieur
+     * n'écrira jamais une traduction dans la colonne d'origine). Les modèles
+     * tout juste créés restent non localisés, comme avant.
+     */
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+        if (! $this->apiLocalized
+            && $this->exists
+            && ! $this->wasRecentlyCreated
+            && static::shouldAutoLocalize()) {
+            foreach ($this->getTranslatableFields() as $field) {
+                if (array_key_exists($field, $array)) {
+                    $array[$field] = $this->t($field);
+                }
+            }
+        }
+
+        return $array;
+    }
+
+    public function markLocalizedForApi(): void
+    {
+        $this->localizeForApi();
+        $this->apiLocalized = true;
     }
 }

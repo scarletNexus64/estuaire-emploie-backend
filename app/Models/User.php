@@ -38,6 +38,7 @@ class User extends Authenticatable
         'password',
         'must_change_password',
         'profile_photo',
+        'cover_photo',
         'bio',
         'skills',
         'cv_path',
@@ -99,6 +100,42 @@ class User extends Authenticatable
             'insam_ia_niveau' => 'integer',
             'insam_ia_profile_completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Rattache le jeton FCM de l'appareil à ce compte, et à lui seul.
+     *
+     * Un téléphone n'a qu'un jeton : si un autre compte s'y est connecté
+     * avant, il le garde encore en base et recevrait les notifications
+     * destinées à celui-ci. On le retire donc des autres comptes.
+     */
+    public function assignFcmToken(?string $token): void
+    {
+        $token = trim((string) $token);
+        if ($token === '') {
+            return;
+        }
+
+        static::where('fcm_token', $token)
+            ->whereKeyNot($this->getKey())
+            ->update(['fcm_token' => null]);
+
+        if ($this->fcm_token !== $token) {
+            $this->forceFill(['fcm_token' => $token])->save();
+        }
+    }
+
+    /**
+     * Détache le jeton FCM (déconnexion de l'appareil).
+     */
+    public function detachFcmToken(?string $token = null): void
+    {
+        if ($token !== null && $this->fcm_token !== $token) {
+            return;
+        }
+        if ($this->fcm_token !== null) {
+            $this->forceFill(['fcm_token' => null])->save();
+        }
     }
 
     /**
@@ -737,6 +774,12 @@ class User extends Authenticatable
             if (empty($user->referral_code)) {
                 $user->referral_code = static::generateUniqueReferralCode();
             }
+        });
+
+        // Suppression définitive : les FK en cascade effacent ses lignes
+        // sociales, on corrige d'abord les compteurs dénormalisés.
+        static::forceDeleting(function ($user) {
+            \App\Services\Social\SocialUserCleanup::forUser((int) $user->id);
         });
     }
 

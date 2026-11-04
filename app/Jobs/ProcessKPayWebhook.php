@@ -33,8 +33,15 @@ class ProcessKPayWebhook implements ShouldQueue
      * @param bool $deferredVerdict true lorsque ce job est un ré-essai différé
      *   d'un échec transitoire (fenêtre USSD) : la déduplication est alors
      *   bypassée car le verrou initial event+id est encore actif (TTL 5 min).
+     * @param string|null $account `lite` pour un webhook reçu sur
+     *   /webhooks/kpay-lite (compte cartes KPay Lite) ; null = KPay historique.
      */
-    public function __construct(public array $payload, public string $event, public bool $deferredVerdict = false)
+    public function __construct(
+        public array $payload,
+        public string $event,
+        public bool $deferredVerdict = false,
+        public ?string $account = null
+    )
     {
         // Queue écoutée par le worker (deposits,withdrawals,default).
         $this->onQueue('default');
@@ -61,7 +68,10 @@ class ProcessKPayWebhook implements ShouldQueue
         // Exception : un ré-essai différé (verdict d'échec après fenêtre USSD) doit
         // pouvoir re-traiter le même event+id — son verrou initial est encore actif.
         if (!$this->deferredVerdict) {
-            $lock = Cache::lock("kpay_wh:{$event}:{$paymentId}", 300);
+            $lockKey = $this->isLiteWebhook()
+                ? "kpay_lite_wh:{$event}:{$paymentId}"
+                : "kpay_wh:{$event}:{$paymentId}";
+            $lock = Cache::lock($lockKey, 300);
             if (!$lock->get()) {
                 Log::info('[KPay Webhook Job] Évènement déjà en cours/traité, ignoré', ['event' => $event]);
                 return;
@@ -69,7 +79,9 @@ class ProcessKPayWebhook implements ShouldQueue
         }
 
         try {
-            if (str_starts_with($event, 'payment.')) {
+            if ($this->isLiteWebhook()) {
+                $this->handleLiteDeposit($event);
+            } elseif (str_starts_with($event, 'payment.')) {
                 $this->handleDeposit($event, $wallet, $notifier);
             } elseif (str_starts_with($event, 'payout.')) {
                 $this->handleWithdrawal($event, $notifier);
@@ -82,11 +94,67 @@ class ProcessKPayWebhook implements ShouldQueue
         }
     }
 
+    /**
+     * `??` lit sans erreur une propriété absente d'un job sérialisé avant
+     * l'ajout de `$account` (jobs déjà en file au déploiement).
+     */
+    protected function isLiteWebhook(): bool
+    {
+        return ($this->account ?? null) === \App\Services\Payment\KPayLiteService::ACCOUNT;
+    }
+
+    /**
+     * Webhook KPay Lite (cartes) : signature déjà vérifiée avec le secret
+     * webhook Lite. Pas de fenêtre de grâce USSD — un refus carte est
+     * définitif. Crédit idempotent via WalletService.
+     */
+    protected function handleLiteDeposit(string $event): void
+    {
+        if (!str_starts_with($event, 'payment.')) {
+            Log::info('[KPayLite Webhook Job] Évènement non géré', ['event' => $event]);
+            return;
+        }
+
+        $payment = $this->locatePayment();
+        if (!$payment || !\App\Services\Payment\KPayLiteService::isLitePayment($payment)) {
+            Log::warning('[KPayLite Webhook Job] Paiement carte Lite introuvable', [
+                'externalId' => $this->payload['externalId'] ?? null,
+                'paymentId' => $this->payload['paymentId'] ?? null,
+            ]);
+            return;
+        }
+
+        // Le statut du payload prime ; à défaut, on le déduit de l'évènement.
+        $status = strtoupper((string) ($this->payload['status'] ?? ''));
+        if ($status === '') {
+            $status = match ($event) {
+                'payment.completed' => 'COMPLETED',
+                'payment.failed' => 'FAILED',
+                'payment.cancelled', 'payment.canceled' => 'CANCELLED',
+                'payment.refunded' => 'REFUNDED',
+                default => '',
+            };
+        }
+
+        app(\App\Services\Payment\KPayLiteService::class)->applyStatus(
+            $payment,
+            array_merge($this->payload, ['status' => $status]),
+            "webhook {$event}"
+        );
+    }
+
     protected function handleDeposit(string $event, WalletService $wallet, WalletNotifier $notifier): void
     {
         $payment = $this->locatePayment();
         if (!$payment) {
             Log::warning('[KPay Webhook Job] Payment introuvable', ['payload' => $this->payload]);
+            return;
+        }
+
+        // Un paiement carte KPay Lite ne se finalise que par le webhook Lite
+        // (signé avec son propre secret), jamais par celui du compte KPay.
+        if (\App\Services\Payment\KPayLiteService::isLitePayment($payment)) {
+            Log::warning('[KPay Webhook Job] Webhook KPay reçu pour un paiement KPay Lite, ignoré', ['payment_id' => $payment->id]);
             return;
         }
 

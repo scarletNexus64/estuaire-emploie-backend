@@ -175,7 +175,7 @@
 
             <div class="card" style="margin-top: 1.5rem; background: #f8fafc;">
                 <div class="card-header">
-                    <h4 style="margin: 0; font-size: 0.875rem; color: #64748b;">💡 Conseils</h4>
+                    <h4 style="margin: 0; font-size: 0.875rem; color: #64748b;">Conseils</h4>
                 </div>
                 <div class="card-body" style="padding: 1rem;">
                     <div style="font-size: 0.875rem; color: #64748b; line-height: 1.6;">

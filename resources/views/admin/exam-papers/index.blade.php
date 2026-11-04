@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">📚 Épreuves d'Examen</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Épreuves d'Examen</h1>
             <p class="text-gray-600 mt-1">Gestion des sujets et corrigés pour le Mode Étudiant</p>
         </div>
         <a href="{{ route('admin.exam-papers.create') }}" class="btn btn-primary">
@@ -25,7 +25,7 @@
     <!-- Filtres -->
     <div class="card mb-6">
         <div class="card-header">
-            <h3 class="card-title">🔍 Filtres de recherche</h3>
+            <h3 class="card-title">Filtres de recherche</h3>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.exam-papers.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -112,7 +112,7 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
-                📋 Liste des épreuves
+                Liste des épreuves
                 <span class="badge badge-primary ml-2">{{ $examPapers->total() }}</span>
             </h3>
         </div>

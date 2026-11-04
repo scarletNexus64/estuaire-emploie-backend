@@ -15,6 +15,14 @@ return [
     'recharge_initiated' => 'Recharge initiée avec succès',
     'recharge_init_error' => 'Erreur lors de l\'initiation de la recharge',
     'card_unavailable' => 'Le paiement par carte bancaire n\'est pas disponible pour le moment.',
+    'card_min_amount' => 'Le montant minimum pour un paiement par carte est de :amount FCFA.',
+    'card_gateway_unavailable' => 'La page de paiement par carte est momentanément indisponible. Réessayez dans quelques instants.',
+    'card_duplicate_attempt' => 'Cette tentative de paiement a déjà été enregistrée. Réessayez : une nouvelle tentative sera créée.',
+    'card_init_failed' => 'Le paiement par carte n\'a pas pu être lancé. Réessayez.',
+    'card_finish_on_gateway' => 'Finalisez le paiement sur la page sécurisée.',
+    'card_payment_expired' => 'Le paiement n\'a pas été finalisé à temps et a expiré.',
+    'card_payment_cancelled' => 'Le paiement par carte a été annulé.',
+    'card_payment_declined' => 'Le paiement par carte a été refusé.',
     'verification_error' => 'Erreur lors de la vérification',
 
     // Payments

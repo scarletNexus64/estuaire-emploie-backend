@@ -39,7 +39,7 @@
     <div class="col-lg-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">💡 Comment ça marche ?</h5>
+                <h5 class="card-title mb-0">Comment ça marche ?</h5>
             </div>
             <div style="padding: 1.5rem;">
                 <div class="alert alert-info">
@@ -47,7 +47,7 @@
                     <p class="mb-0">L'étudiant progresse niveau par niveau (comme un jeu). Pour passer au niveau suivant, il doit réussir le QCM du niveau courant (score ≥ seuil).</p>
                 </div>
                 <div class="alert alert-warning">
-                    <strong>📝 Prochaine étape :</strong>
+                    <strong>Prochaine étape :</strong>
                     <p class="mb-0">Après la création, vous ajouterez les niveaux (contenu rédigé + QCM).</p>
                 </div>
             </div>

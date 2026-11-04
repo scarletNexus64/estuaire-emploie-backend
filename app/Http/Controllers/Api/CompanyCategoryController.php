@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\CompanyCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 class CompanyCategoryController extends Controller
 {
@@ -46,26 +48,39 @@ class CompanyCategoryController extends Controller
      */
     public function getLevel1Options(): JsonResponse
     {
-        $rows = CompanyCategory::active()
-            ->with('translations')
-            ->whereNotNull('level_1')
-            ->orderBy('level_1')
-            ->get();
+        // La liste bouge rarement : mise en cache par langue (elle chargeait
+        // ~900 catégories et leurs traductions à chaque ouverture).
+        $locale = App::getLocale();
+        $options = Cache::remember("company-level1-options:{$locale}", 600, function () {
+            $rows = CompanyCategory::active()
+                ->whereNotNull('level_1')
+                ->orderBy('level_1')
+                ->get();
 
-        $options = collect();
-        $seen = [];
-        foreach ($rows as $row) {
-            $key = $row->level_1;
-            if (isset($seen[$key])) {
-                continue;
+            $options = [];
+            $seen = [];
+            foreach ($rows as $row) {
+                // Valeur brute (FR) : les modèles sont localisés au chargement.
+                $raw = $row->getRawOriginal('level_1');
+                if ($raw === null || isset($seen[$raw])) {
+                    continue;
+                }
+                $seen[$raw] = true;
+                $options[] = [
+                    'code' => CompanyCategory::level1Code($raw),
+                    'label' => $row->t('level_1'),
+                ];
             }
-            $seen[$key] = true;
-            $options->push($row->t('level_1'));
-        }
+
+            return $options;
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $options->values(),
+            // `data` : libellés traduits (anciennes versions de l'app).
+            'data' => array_column($options, 'label'),
+            // `options` : code stable à renvoyer en filtre (`level_1_code`).
+            'options' => $options,
         ]);
     }
 

@@ -16,8 +16,8 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <select class="form-control" onchange="window.location.href='?status=' + this.value" style="width: auto; display: inline-block;">
                     <option value="">Tous les statuts</option>
-                    <option value="accepted" {{ request('status') === 'accepted' ? 'selected' : '' }}>✅ Acceptées</option>
-                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>❌ Rejetées</option>
+                    <option value="accepted" {{ request('status') === 'accepted' ? 'selected' : '' }}>Acceptées</option>
+                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejetées</option>
                 </select>
                 <button type="button" id="bulkDeleteBtn" class="btn btn-danger btn-sm">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: inline;">
@@ -82,11 +82,11 @@
                             </td>
                             <td>
                                 @if($application->status === 'accepted')
-                                    <span class="badge badge-success">✅ Acceptée</span>
+                                    <span class="badge badge-success">Acceptée</span>
                                 @elseif($application->status === 'rejected')
-                                    <span class="badge badge-danger">❌ Rejetée</span>
+                                    <span class="badge badge-danger">Rejetée</span>
                                 @else
-                                    <span class="badge badge-warning">⏳ En cours</span>
+                                    <span class="badge badge-warning">En cours</span>
                                 @endif
                             </td>
                             <td>{{ $application->created_at->format('d/m/Y H:i') }}</td>

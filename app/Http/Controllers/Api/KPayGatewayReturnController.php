@@ -36,6 +36,13 @@ class KPayGatewayReturnController extends Controller
         $timestamp = (string) $request->query('ts', '');
         $signature = (string) $request->query('sig', '');
 
+        // Un paiement initié sur KPay Lite se vérifie avec le secret passerelle
+        // Lite, même s'il revient par cette URL historique.
+        $payment = $externalId ? Payment::where('external_id', $externalId)->first() : null;
+        if (\App\Services\Payment\KPayLiteService::isLitePayment($payment)) {
+            return $this->respond($payment, $status, $externalId, $this->liteSignatureValid($request));
+        }
+
         $signatureValid = $signature !== ''
             && $kpay->verifyGatewaySignature($status, $reference, $externalId, $timestamp, $signature);
 
@@ -45,8 +52,6 @@ class KPayGatewayReturnController extends Controller
                 'status' => $status,
             ]);
         }
-
-        $payment = $externalId ? Payment::where('external_id', $externalId)->first() : null;
 
         // Le statut affiché vient de notre base (alimentée par le webhook), pas
         // de la query : celle-ci n'est qu'une indication côté client.
@@ -70,6 +75,69 @@ class KPayGatewayReturnController extends Controller
                 'signature_valid' => $signatureValid,
                 // Le statut final n'est jamais synchrone : l'app poll
                 // `payment-status` jusqu'au verdict du webhook.
+                'poll_url' => $payment ? "/api/wallet/payment-status/{$payment->id}" : null,
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/payments/kpay-lite/return — retour de la page hébergée KPay
+     * Lite (cartes). Même contrat que `handle` : affichage seulement.
+     */
+    public function handleLite(Request $request)
+    {
+        $externalId = (string) $request->query('externalId', '');
+        $payment = $externalId ? Payment::where('external_id', $externalId)->first() : null;
+
+        return $this->respond(
+            $payment,
+            (string) $request->query('status', ''),
+            $externalId,
+            $this->liteSignatureValid($request)
+        );
+    }
+
+    protected function liteSignatureValid(Request $request): bool
+    {
+        $valid = app(\App\Services\Payment\KPayLiteService::class)->verifyGatewaySignature(
+            (string) $request->query('status', ''),
+            (string) $request->query('reference', ''),
+            (string) $request->query('externalId', ''),
+            (string) $request->query('ts', ''),
+            (string) $request->query('sig', '')
+        );
+
+        if (!$valid) {
+            Log::warning('[KPayLite] Retour passerelle avec signature invalide', [
+                'external_id' => $request->query('externalId'),
+                'status' => $request->query('status'),
+            ]);
+        }
+
+        return $valid;
+    }
+
+    /**
+     * Réponse commune : le statut vient de NOTRE base, jamais de la query.
+     */
+    protected function respond(?Payment $payment, string $gatewayStatus, string $externalId, bool $signatureValid)
+    {
+        $resolvedStatus = $payment?->status ?? 'pending';
+
+        Log::info('[KPayLite] Retour passerelle', [
+            'external_id' => $externalId,
+            'gateway_status' => $gatewayStatus,
+            'payment_status' => $resolvedStatus,
+            'signature_valid' => $signatureValid,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'payment_id' => $payment?->id,
+                'status' => $resolvedStatus,
+                'gateway_status' => $gatewayStatus,
+                'signature_valid' => $signatureValid,
                 'poll_url' => $payment ? "/api/wallet/payment-status/{$payment->id}" : null,
             ],
         ]);

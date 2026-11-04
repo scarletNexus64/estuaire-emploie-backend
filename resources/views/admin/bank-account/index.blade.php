@@ -113,7 +113,7 @@
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-coins" style="font-size: 2rem;"></i>
                             <div>
-                                <h3 style="margin: 0; color: white;">📊 Revenus Plateforme (Achats de Services)</h3>
+                                <h3 style="margin: 0; color: white;">Revenus Plateforme (Achats de Services)</h3>
                                 <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">{{ $revenues->total() }} revenu(s) enregistré(s)</p>
                             </div>
                         </div>
@@ -215,7 +215,7 @@
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-arrow-down" style="font-size: 2rem;"></i>
                             <div>
-                                <h3 style="margin: 0; color: white;">💸 Historique des Retraits</h3>
+                                <h3 style="margin: 0; color: white;">Historique des Retraits</h3>
                                 <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">{{ $withdrawals->total() }} retrait(s) enregistré(s)</p>
                             </div>
                         </div>

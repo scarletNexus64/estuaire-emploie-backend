@@ -105,11 +105,11 @@
                     </td>
                     <td>
                         @if($request->status === 'pending')
-                            <span class="badge badge-warning">⏳ En Attente</span>
+                            <span class="badge badge-warning">En Attente</span>
                         @elseif($request->status === 'approved')
-                            <span class="badge badge-success">✅ Approuvée</span>
+                            <span class="badge badge-success">Approuvée</span>
                         @else
-                            <span class="badge badge-danger">❌ Refusée</span>
+                            <span class="badge badge-danger">Refusée</span>
                         @endif
                     </td>
                     <td>

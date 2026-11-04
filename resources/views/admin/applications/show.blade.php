@@ -24,7 +24,7 @@
                     @endif
 
                     @if($application->latitude && $application->longitude)
-                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">📍 Localisation du Candidat</h4>
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem; font-weight: 600;">Localisation du Candidat</h4>
                         <div style="border: 1px solid #dee2e6; border-radius: 4px; padding: 1rem; background-color: #f8f9fa;">
                             <p><strong>Coordonnées GPS:</strong></p>
                             <p style="margin-left: 1rem;">
@@ -130,8 +130,8 @@
                         <div class="form-group">
                             <label class="form-label">Changer le statut</label>
                             <select name="status" class="form-control">
-                                <option value="accepted" {{ $application->status === 'accepted' ? 'selected' : '' }}>✅ Acceptée</option>
-                                <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>❌ Rejetée</option>
+                                <option value="accepted" {{ $application->status === 'accepted' ? 'selected' : '' }}>Acceptée</option>
+                                <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>Rejetée</option>
                             </select>
                         </div>
 
@@ -155,12 +155,12 @@
 
                     <!-- Diploma Verification Section -->
                     <div style="margin-top: 2rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: 4px; background-color: #f8f9fa;">
-                        <h4 style="margin-bottom: 1rem; font-weight: 600;">🎓 Vérification de Diplômes</h4>
+                        <h4 style="margin-bottom: 1rem; font-weight: 600;">Vérification de Diplômes</h4>
 
                         @if($application->diploma_verified)
                             <div style="padding: 1rem; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 1rem;">
                                 <p style="margin: 0; color: #155724;">
-                                    <strong>✅ Diplôme vérifié</strong>
+                                    <strong>Diplôme vérifié</strong>
                                 </p>
                                 <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #155724;">
                                     Vérifié le: {{ $application->diploma_verified_at->format('d/m/Y H:i') }}
@@ -194,7 +194,7 @@
                     <!-- Test Results Section -->
                     @if($application->testResults && $application->testResults->count() > 0)
                         <div style="margin-top: 2rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: 4px; background-color: #f8f9fa;">
-                            <h4 style="margin-bottom: 1rem; font-weight: 600;">📊 Résultats des Tests</h4>
+                            <h4 style="margin-bottom: 1rem; font-weight: 600;">Résultats des Tests</h4>
 
                             @foreach($application->testResults as $result)
                                 <div style="padding: 1rem; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 1rem;">
@@ -202,9 +202,9 @@
                                     <p style="margin: 0;">
                                         <strong>Score:</strong> {{ $result->score }}%
                                         @if($result->passed)
-                                            <span style="color: #28a745;">✅ Réussi</span>
+                                            <span style="color: #28a745;">Réussi</span>
                                         @else
-                                            <span style="color: #dc3545;">❌ Échoué</span>
+                                            <span style="color: #dc3545;">Échoué</span>
                                         @endif
                                     </p>
                                     <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #6c757d;">

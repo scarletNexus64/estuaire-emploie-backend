@@ -43,6 +43,11 @@ class NotificationService
                     );
                     $fcmSent = true;
                 } catch (\Exception $fcmError) {
+                    Log::warning('FCM sendToUser échoué', [
+                        'user_id' => $user->id,
+                        'type' => $type,
+                        'error' => $fcmError->getMessage(),
+                    ]);
                     // Si le token est invalide, le supprimer
                     if (str_contains($fcmError->getMessage(), 'not found') ||
                         str_contains($fcmError->getMessage(), 'not valid') ||

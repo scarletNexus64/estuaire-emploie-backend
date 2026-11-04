@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Services\Chat\ConversationPresenter;
 use Database\Seeders\SupportAccountSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -148,29 +149,31 @@ class ConversationController extends Controller
     }
     public function getConversationsList()
     {
-        $userId = Auth::id();
-        \Log::info('📋 Loading conversations for user', ['user_id' => $userId]);
+        $userId = (int) Auth::id();
 
         $conversations = Conversation::query()
-            // Inclure à la fois les conversations d'application ET les conversations de service
+            // Conversations de candidature acceptée, de service, de support
+            // et de l'annuaire (sans candidature).
             ->where(function ($query) {
                 $query->whereHas('application', function ($q) {
                     $q->where('status', 'accepted');
                 })
-                // OU les conversations de service (sans application)
                 ->orWhereNull('application_id');
             })
             ->where(function ($q) use ($userId) {
                 $q->where('user_one', $userId)
                 ->orWhere('user_two', $userId);
             })
-            ->with([
-                'lastMessage',
-                'userOne:id,name,profile_photo',
-                'userOne.presence:user_id,online,last_seen',
-                'userTwo:id,name,profile_photo',
-                'userTwo.presence:user_id,online,last_seen',
-            ])
+            // Une demande refusée disparaît chez celui qui l'a refusée ; le
+            // demandeur la voit toujours « en attente ».
+            ->where(function ($q) use ($userId) {
+                $q->where('status', '!=', Conversation::STATUS_DECLINED)
+                    ->orWhere('requested_by', $userId);
+            })
+            ->with(ConversationPresenter::relations())
+            ->withCount(['messages as unread_count' => function ($q) use ($userId) {
+                $q->where('sender_id', '!=', $userId)->where('status', '!=', 'read');
+            }])
             ->orderByDesc(
                 Message::select('created_at')
                     ->whereColumn('messages.conversation_id', 'conversations.id')
@@ -178,53 +181,8 @@ class ConversationController extends Controller
                     ->take(1)
             )
             ->get()
-            ->map(function ($conversation) use ($userId) {
-
-                $otherUser = $conversation->user_one == $userId
-                    ? $conversation->userTwo
-                    : $conversation->userOne;
-
-                \Log::info('📋 Processing conversation', [
-                    'conversation_id' => $conversation->id,
-                    'user_one' => $conversation->user_one,
-                    'user_two' => $conversation->user_two,
-                    'current_user' => $userId,
-                    'other_user_id' => $otherUser?->id,
-                    'other_user_name' => $otherUser?->name,
-                    'presence_data' => $otherUser?->presence,
-                    'online_value' => $otherUser?->presence?->online,
-                    'online_type' => gettype($otherUser?->presence?->online),
-                ]);
-
-                return [
-                    'conversation_id' => $conversation->id,
-
-                    'user' => $otherUser ? [
-                        'id' => $otherUser->id,
-                        'name' => $otherUser->name,
-                        'profile_photo' => $otherUser->profile_photo,
-                        'is_online' => (bool) ($otherUser->presence?->online ?? false),
-                        'last_seen' => optional($otherUser->presence)->last_seen,
-                    ] : null,
-
-                    'last_message' => $conversation->lastMessage ? [
-                        'message' => $conversation->lastMessage->message,
-                        'status' => $conversation->lastMessage->status,
-                        'sent_at' => $conversation->lastMessage->created_at?->toDateTimeString(),
-                    ] : null,
-
-                    'unread_count' => Message::where('conversation_id', $conversation->id)
-                        ->where('sender_id', '!=', $userId)
-                        ->where('status', '!=', 'read')
-                        ->count(),
-                ];
-            })
+            ->map(fn (Conversation $conversation) => ConversationPresenter::item($conversation, $userId))
             ->values();
-
-        \Log::info('✅ Conversations loaded', [
-            'count' => $conversations->count(),
-            'data' => $conversations->toArray()
-        ]);
 
         return response()->json($conversations, 200);
     }
@@ -267,6 +225,15 @@ class ConversationController extends Controller
             \Log::info('💬 Service conversation already exists', [
                 'conversation_id' => $existingConversation->id
             ]);
+
+            // Contact via un service / le support / la boutique : flux métier
+            // sans demande préalable, la conversation s'ouvre.
+            if ($existingConversation->status !== Conversation::STATUS_ACCEPTED) {
+                $existingConversation->update([
+                    'status' => Conversation::STATUS_ACCEPTED,
+                    'accepted_at' => now(),
+                ]);
+            }
 
             // Si un message initial est fourni, l'envoyer
             if (!empty($validated['initial_message'])) {

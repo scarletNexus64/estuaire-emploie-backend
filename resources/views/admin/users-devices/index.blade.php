@@ -215,7 +215,7 @@
 @push('scripts')
 <script>
 function confirmResetDevice(userId, userName) {
-    if (confirm(`⚠️ Déconnecter l'appareil de "${userName}" ?\n\nL'utilisateur devra se reconnecter et son appareil sera réassocié automatiquement.`)) {
+    if (confirm(`Déconnecter l'appareil de "${userName}" ?\n\nL'utilisateur devra se reconnecter et son appareil sera réassocié automatiquement.`)) {
         const form = document.getElementById('resetDeviceForm');
         form.action = `/admin/users-devices/${userId}/reset`;
         form.submit();

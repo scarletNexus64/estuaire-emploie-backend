@@ -21,7 +21,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Total</div>
-                <div class="stat-value">{{ $services->total() }}</div>
+                <div class="stat-value">{{ \App\Models\QuickService::count() }}</div>
             </div>
             <div class="stat-icon">🛠️</div>
         </div>
@@ -31,7 +31,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">En attente</div>
-                <div class="stat-value">{{ $services->where('status', 'pending')->count() }}</div>
+                <div class="stat-value">{{ \App\Models\QuickService::where('status', 'pending')->count() }}</div>
             </div>
             <div class="stat-icon">⏰</div>
         </div>
@@ -41,7 +41,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Ouverts</div>
-                <div class="stat-value">{{ $services->where('status', 'open')->count() }}</div>
+                <div class="stat-value">{{ \App\Models\QuickService::where('status', 'open')->count() }}</div>
             </div>
             <div class="stat-icon">✓</div>
         </div>
@@ -51,7 +51,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Complétés</div>
-                <div class="stat-value">{{ $services->where('status', 'completed')->count() }}</div>
+                <div class="stat-value">{{ \App\Models\QuickService::where('status', 'completed')->count() }}</div>
             </div>
             <div class="stat-icon">🎉</div>
         </div>
@@ -185,7 +185,7 @@
                     </td>
                     <td>
                         @if($service->urgency === 'urgent')
-                            <span class="badge badge-danger">🔥 Urgent</span>
+                            <span class="badge badge-danger">Urgent</span>
                         @elseif($service->urgency === 'this_week')
                             <span class="badge badge-warning">Cette semaine</span>
                         @elseif($service->urgency === 'this_month')

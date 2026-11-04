@@ -33,3 +33,9 @@ Broadcast::channel('typing.{conversationId}', function ($user, $conversationId) 
 Broadcast::channel('presence', function ($user) {
     return ['id' => $user->id, 'name' => $user->name];
 });
+
+// Canal personnel : nouveaux messages et accusés de toutes les conversations
+// de l'utilisateur (liste des conversations, badges, coches).
+Broadcast::channel('inbox.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

@@ -147,6 +147,18 @@ class ServiceConfiguration extends Model
     }
 
     /**
+     * Get KPay Lite configuration (cartes Visa / Mastercard).
+     *
+     * Compte distinct de KPay Mobile Money. Les réglages vivent dans la
+     * colonne JSON `config` ; voir App\Services\Payment\KPayLiteConfig pour
+     * la résolution (admin d'abord, puis repli sur KPAY_LITE_* de l'env).
+     */
+    public static function getKPayLiteConfig(): ?self
+    {
+        return self::getConfig('kpay_lite');
+    }
+
+    /**
      * Montant minimum de dépôt KPay (XAF). Défaut 100.
      */
     public static function getKPayMinDeposit(): int
@@ -228,6 +240,7 @@ class ServiceConfiguration extends Model
             Cache::forget('service_config_nexah_sms');
             Cache::forget('service_config_freemopay');
             Cache::forget('service_config_kpay');
+            Cache::forget('service_config_kpay_lite');
             Cache::forget('service_config_paypal');
             Cache::forget('service_config_notification_preferences');
             Cache::forget('default_notification_channel');

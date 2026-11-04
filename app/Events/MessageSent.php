@@ -8,7 +8,11 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
 class MessageSent implements ShouldBroadcastNow
 {
-    public function __construct(public Message $message)
+    /**
+     * @param  string|null  $clientId  identifiant généré par l'app émettrice,
+     *         renvoyé pour qu'elle rapproche l'écho de son message en attente.
+     */
+    public function __construct(public Message $message, public ?string $clientId = null)
     {
         \Log::info('📡 [EVENT] MessageSent constructor called', [
             'message_id' => $this->message->id,
@@ -27,7 +31,19 @@ class MessageSent implements ShouldBroadcastNow
             'conversation_id' => $this->message->conversation_id,
         ]);
 
-        return $channel;
+        // Canal personnel de chaque participant : la liste des conversations
+        // et les badges se mettent à jour sans ouvrir la conversation.
+        $channels = [$channel];
+        $conversation = $this->message->conversation;
+        if ($conversation) {
+            foreach ([$conversation->user_one, $conversation->user_two] as $userId) {
+                if ($userId) {
+                    $channels[] = new PrivateChannel('inbox.' . $userId);
+                }
+            }
+        }
+
+        return $channels;
     }
 
     public function broadcastWith()
@@ -41,7 +57,9 @@ class MessageSent implements ShouldBroadcastNow
             'status' => $this->message->status,
             // Contexte épinglé (produit taggé, demande de prestation…).
             'metadata' => $this->message->metadata,
+            'client_id' => $this->clientId,
             'created_at' => $this->message->created_at->toDateTimeString(),
+            'created_at_iso' => $this->message->created_at->toIso8601String(),
             'updated_at' => $this->message->updated_at->toDateTimeString(),
         ];
 

@@ -216,7 +216,7 @@
                         <input type="checkbox" name="is_featured" id="is_featured" class="form-check-input" value="1"
                                {{ old('is_featured', $trainingPack->is_featured ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_featured">
-                            <strong>⭐ Mettre en Avant</strong>
+                            <strong>Mettre en Avant</strong>
                             <small class="d-block text-muted">Affiché dans les recommandations</small>
                         </label>
                     </div>
@@ -245,7 +245,7 @@
                             <small class="text-muted">Note Moyenne</small>
                             <div>
                                 @if($trainingPack->reviews_count > 0)
-                                    <strong>⭐ {{ number_format($trainingPack->average_rating, 1) }}</strong> ({{ $trainingPack->reviews_count }})
+                                    <strong>{{ number_format($trainingPack->average_rating, 1) }}</strong> ({{ $trainingPack->reviews_count }})
                                 @else
                                     -
                                 @endif
@@ -257,7 +257,7 @@
                 <div class="card" style="margin-top: 1.5rem;">
                     <div class="card-body">
                         <a href="{{ route('admin.training-packs.manage-videos', $trainingPack) }}" class="btn btn-info" style="width: 100%; margin-bottom: 0.5rem;">
-                            🎥 Gérer les Vidéos
+                            Gérer les Vidéos
                         </a>
                     </div>
                 </div>

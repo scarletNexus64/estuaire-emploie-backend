@@ -30,7 +30,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Total</div>
-                <div class="stat-value">{{ $companies->total() }}</div>
+                <div class="stat-value">{{ \App\Models\Company::count() }}</div>
             </div>
             <div class="stat-icon">🏢</div>
         </div>
@@ -40,7 +40,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">En attente</div>
-                <div class="stat-value">{{ $companies->where('status', 'pending')->count() }}</div>
+                <div class="stat-value">{{ \App\Models\Company::where('status', 'pending')->count() }}</div>
             </div>
             <div class="stat-icon">⏳</div>
         </div>
@@ -50,7 +50,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Vérifiées</div>
-                <div class="stat-value">{{ $companies->where('status', 'verified')->count() }}</div>
+                <div class="stat-value">{{ \App\Models\Company::where('status', 'verified')->count() }}</div>
             </div>
             <div class="stat-icon">✓</div>
         </div>
@@ -60,7 +60,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Suspendues</div>
-                <div class="stat-value">{{ $companies->where('status', 'suspended')->count() }}</div>
+                <div class="stat-value">{{ \App\Models\Company::where('status', 'suspended')->count() }}</div>
             </div>
             <div class="stat-icon">⛔</div>
         </div>

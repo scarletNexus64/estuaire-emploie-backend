@@ -11,6 +11,9 @@ namespace App\Services\Payment;
  */
 class KPayException extends \Exception
 {
+    /** Corps JSON de la réponse d'erreur KPay, s'il y en a un (champ en faute…). */
+    public array $responseBody = [];
+
     public function __construct(
         string $message,
         public int $statusCode = 0,

@@ -48,17 +48,17 @@
         <div class="form-check">
             <input class="form-check-input" type="checkbox" id="pack_c1" name="required_packs[]" value="C1"
                    {{ is_array($selectedPacks) && in_array('C1', $selectedPacks) ? 'checked' : '' }}>
-            <label class="form-check-label" for="pack_c1">🥈 PACK C1 (ARGENT)</label>
+            <label class="form-check-label" for="pack_c1">PACK C1 (ARGENT)</label>
         </div>
         <div class="form-check">
             <input class="form-check-input" type="checkbox" id="pack_c2" name="required_packs[]" value="C2"
                    {{ is_array($selectedPacks) && in_array('C2', $selectedPacks) ? 'checked' : '' }}>
-            <label class="form-check-label" for="pack_c2">🥇 PACK C2 (OR)</label>
+            <label class="form-check-label" for="pack_c2">PACK C2 (OR)</label>
         </div>
         <div class="form-check">
             <input class="form-check-input" type="checkbox" id="pack_c3" name="required_packs[]" value="C3"
                    {{ is_array($selectedPacks) && in_array('C3', $selectedPacks) ? 'checked' : '' }}>
-            <label class="form-check-label" for="pack_c3">💎 PACK C3 (DIAMANT)</label>
+            <label class="form-check-label" for="pack_c3">PACK C3 (DIAMANT)</label>
         </div>
     </div>
     @error('required_packs')

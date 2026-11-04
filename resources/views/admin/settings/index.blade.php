@@ -4,53 +4,53 @@
 @section('page-title', 'Paramètres du Système')
 
 @section('content')
-    <div class="card" style="border-radius: 8px; overflow: hidden;">
+    <div class="card" style="overflow: hidden;">
         <!-- Tabs Navigation -->
-        <div style="display: flex; border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
+        <div class="settings-tabs" role="tablist">
             <button
                 id="tab-btn-jobs"
                 class="tab-button active"
                 onclick="switchSettingsTab('jobs')"
-                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+                type="button" role="tab"
             >
                 <i class="mdi mdi-briefcase"></i> Configuration Emplois
-                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">4</span>
+                <span class="tab-count">4</span>
             </button>
             <button
                 id="tab-btn-companies"
                 class="tab-button"
                 onclick="switchSettingsTab('companies')"
-                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+                type="button" role="tab"
             >
                 <i class="mdi mdi-domain"></i> Catégories Entreprises
-                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">{{ $companyCategories->total() }}</span>
+                <span class="tab-count">{{ $companyCategories->total() }}</span>
             </button>
             <button
                 id="tab-btn-academic"
                 class="tab-button"
                 onclick="switchSettingsTab('academic')"
-                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+                type="button" role="tab"
             >
                 <i class="mdi mdi-school"></i> Configuration Académique
-                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">2</span>
+                <span class="tab-count">2</span>
             </button>
             <button
                 id="tab-btn-referral"
                 class="tab-button"
                 onclick="switchSettingsTab('referral')"
-                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+                type="button" role="tab"
             >
                 <i class="mdi mdi-account-multiple"></i> Parrainage
-                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">3</span>
+                <span class="tab-count">3</span>
             </button>
             <button
                 id="tab-btn-wallet"
                 class="tab-button"
                 onclick="switchSettingsTab('wallet')"
-                style="flex: 1; padding: 1.25rem 2rem; border: none; background: transparent; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; border-bottom: 3px solid transparent; color: #64748b;"
+                type="button" role="tab"
             >
                 <i class="mdi mdi-wallet"></i> Wallet
-                <span style="display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #667eea; color: white; border-radius: 0.25rem; margin-left: 0.5rem;">1</span>
+                <span class="tab-count">1</span>
             </button>
         </div>
 
@@ -89,20 +89,30 @@
     </div>
 
     <style>
-        /* Tab button active state */
-        .tab-button.active {
-            color: #1e293b !important;
-            border-bottom-color: #667eea !important;
-            background: white !important;
+        /* Onglets */
+        .settings-tabs {
+            display: flex; gap: 4px; padding: 0 12px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto; scrollbar-width: none;
         }
-
-        .tab-button:hover {
-            background: rgba(102, 126, 234, 0.05) !important;
+        .settings-tabs::-webkit-scrollbar { display: none; }
+        .tab-button {
+            flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 12px; margin-bottom: -1px;
+            font-size: 13.5px; font-weight: 500; white-space: nowrap;
+            color: var(--muted); background: none; border: 0; border-bottom: 2px solid transparent;
+            cursor: pointer; transition: color .12s, border-color .12s;
         }
-
-        .tab-button.active span {
-            background: #28a745 !important;
+        .tab-button .mdi { font-size: 17px; }
+        .tab-button:hover { color: var(--text); }
+        .tab-button.active { color: var(--text); border-bottom-color: var(--primary-hover); }
+        .tab-button.active .mdi { color: var(--primary); }
+        .tab-count {
+            min-width: 20px; padding: 1px 7px; border-radius: 999px;
+            font-size: 11.5px; font-weight: 500; text-align: center;
+            background: var(--surface-3); color: var(--muted);
         }
+        .tab-button.active .tab-count { background: var(--primary-soft); color: var(--primary); }
 
         /* Tab content animation */
         .settings-tab-content {

@@ -30,13 +30,13 @@
 
         @if($roadmap->objectives)
         <div class="card mb-3">
-            <div class="card-header"><h5 class="card-title mb-0">🎯 Objectifs</h5></div>
+            <div class="card-header"><h5 class="card-title mb-0">Objectifs</h5></div>
             <div style="padding: 1.5rem; white-space: pre-line;">{{ $roadmap->objectives }}</div>
         </div>
         @endif
 
         <div class="card">
-            <div class="card-header"><h5 class="card-title mb-0">🗺️ Niveaux ({{ $roadmap->levels->count() }})</h5></div>
+            <div class="card-header"><h5 class="card-title mb-0">Niveaux ({{ $roadmap->levels->count() }})</h5></div>
             <div style="padding: 1.5rem;">
                 @forelse($roadmap->levels as $level)
                     <div class="card mb-2" style="border-left: 4px solid {{ $roadmap->color }};">

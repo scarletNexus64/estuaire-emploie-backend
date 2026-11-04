@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSocialInteractions;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,9 +12,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class QuickService extends Model
 {
-    use HasFactory, HasTranslations, SoftDeletes;
+    // HasSocialInteractions : likes_count, comments_count, reposts_count,
+    // is_liked, is_reposted dans toute sérialisation JSON.
+    use HasFactory, HasSocialInteractions, HasTranslations, SoftDeletes;
 
     protected array $translatable = ['title', 'description'];
+
+    /** Colonnes de l'auteur chargées dans les listes (champs lus par l'app). */
+    public const LIST_USER_COLUMNS = ['id', 'name', 'email', 'phone', 'profile_photo', 'role', 'specialty', 'country'];
 
     protected $fillable = [
         'slug',

@@ -137,7 +137,7 @@
                                 <td>
                                     <strong>{{ $pack->name }}</strong>
                                     @if($pack->is_featured)
-                                        <span class="badge bg-warning">⭐ Mis en avant</span>
+                                        <span class="badge bg-warning">Mis en avant</span>
                                     @endif
                                 </td>
                                 <td>{{ $pack->specialty ?? '-' }}</td>

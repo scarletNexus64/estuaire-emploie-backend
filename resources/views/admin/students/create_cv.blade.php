@@ -374,7 +374,7 @@
 @endphp
 
 <div class="alert alert-info mb-4">
-    <strong>📝 {{ isset($resume) ? 'Modifier' : 'Étape 2/3' }} :</strong> {{ isset($resume) ? 'Modifiez' : 'Créez' }} le CV de <strong>{{ $student->name }}</strong> {{ isset($resume) ? '' : 'avant d\'envoyer le SMS d\'activation' }}.
+    <strong>{{ isset($resume) ? 'Modifier' : 'Étape 2/3' }} :</strong> {{ isset($resume) ? 'Modifiez' : 'Créez' }} le CV de <strong>{{ $student->name }}</strong> {{ isset($resume) ? '' : 'avant d\'envoyer le SMS d\'activation' }}.
 </div>
 
 <form id="cvForm" action="{{ route('admin.students.store-cv', $student->id) }}" method="POST" enctype="multipart/form-data">
@@ -383,7 +383,7 @@
     <div class="editor-container">
         <!-- Formulaire d'édition -->
         <div class="form-section">
-            <h3 class="mb-4">📋 Informations du CV</h3>
+            <h3 class="mb-4">Informations du CV</h3>
 
             <!-- Photo -->
             <div class="form-group mb-3">
@@ -405,7 +405,7 @@
             </div>
 
             <!-- Contact -->
-            <h4 class="mt-4 mb-3">📞 Contact</h4>
+            <h4 class="mt-4 mb-3">Contact</h4>
             <div class="form-group mb-3">
                 <label class="form-label">Téléphone</label>
                 <input type="text" name="phone" id="phoneInput" class="form-control" value="{{ old('phone', $resume->personal_info['phone'] ?? $student->phone) }}">
@@ -422,29 +422,29 @@
             </div>
 
             <!-- Objectif professionnel -->
-            <h4 class="mt-4 mb-3">🎯 Objectif Professionnel</h4>
+            <h4 class="mt-4 mb-3">Objectif Professionnel</h4>
             <div class="form-group mb-3">
                 <textarea name="objective" id="objectiveInput" class="form-control" rows="4" placeholder="Décrivez votre objectif professionnel...">{{ old('objective', $resume->professional_summary ?? '') }}</textarea>
             </div>
 
             <!-- Expériences -->
-            <h4 class="mt-4 mb-3">💼 Expériences Professionnelles</h4>
+            <h4 class="mt-4 mb-3">Expériences Professionnelles</h4>
             <div id="experiencesContainer"></div>
-            <button type="button" class="btn-add-entry" onclick="addExperience()">➕ Ajouter une expérience</button>
+            <button type="button" class="btn-add-entry" onclick="addExperience()">Ajouter une expérience</button>
 
             <!-- Formation -->
-            <h4 class="mt-4 mb-3">🎓 Formation</h4>
+            <h4 class="mt-4 mb-3">Formation</h4>
             <div id="educationContainer"></div>
-            <button type="button" class="btn-add-entry" onclick="addEducation()">➕ Ajouter une formation</button>
+            <button type="button" class="btn-add-entry" onclick="addEducation()">Ajouter une formation</button>
 
             <!-- Compétences -->
-            <h4 class="mt-4 mb-3">🛠️ Compétences</h4>
+            <h4 class="mt-4 mb-3">Compétences</h4>
             <div class="form-group mb-3">
                 <textarea name="skills" id="skillsInput" class="form-control" rows="5" placeholder="Une compétence par ligne&#10;Ex: Premiers secours et sécurité&#10;Gestion des maladies chroniques">{{ old('skills', $resumeSkillsText) }}</textarea>
             </div>
 
             <!-- Centres d'intérêt -->
-            <h4 class="mt-4 mb-3">🎨 Centres d'Intérêt</h4>
+            <h4 class="mt-4 mb-3">Centres d'Intérêt</h4>
             <div class="form-group mb-3">
                 <textarea name="hobbies" id="hobbiesInput" class="form-control" rows="3" placeholder="Ex: Jardinage, Pratique du Pilates">{{ old('hobbies', $resumeHobbiesText ?: $student->interests) }}</textarea>
             </div>
@@ -452,13 +452,13 @@
             <!-- Actions -->
             <div class="mt-4 d-flex gap-2 justify-content-end">
                 <a href="{{ isset($resume) ? route('admin.cvtheque.index') : route('admin.students.index') }}" class="btn btn-secondary">Annuler</a>
-                <button type="submit" class="btn btn-primary">💾 {{ isset($resume) ? 'Mettre à jour' : 'Sauvegarder' }} le CV {{ isset($resume) ? '' : 'et Continuer' }}</button>
+                <button type="submit" class="btn btn-primary">{{ isset($resume) ? 'Mettre à jour' : 'Sauvegarder' }} le CV {{ isset($resume) ? '' : 'et Continuer' }}</button>
             </div>
         </div>
 
         <!-- Preview -->
         <div class="preview-section">
-            <h3 class="mb-3">👁️ Aperçu en temps réel</h3>
+            <h3 class="mb-3">Aperçu en temps réel</h3>
             <div class="cv-preview">
                 <table>
                     <tr>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Jobs\SendJobPublishedNotification;
+use App\Models\Concerns\HasSocialInteractions;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Job extends Model
 {
-    use HasFactory, HasTranslations, SoftDeletes;
+    // HasSocialInteractions : likes_count, comments_count, reposts_count,
+    // is_liked, is_reposted dans toute sérialisation JSON.
+    use HasFactory, HasSocialInteractions, HasTranslations, SoftDeletes;
 
     protected array $translatable = ['title', 'description', 'requirements', 'benefits'];
 
@@ -212,14 +215,26 @@ class Job extends Model
         return $query->where(function (Builder $q) use ($city) {
             $q->where('visibility', 'national')
                 ->orWhere(function (Builder $sub) use ($city) {
+                    // Sous-requête non corrélée (calculée une fois) plutôt
+                    // qu'un EXISTS par offre. La collation de `city`
+                    // (utf8mb4_unicode_ci) ignore déjà casse et accents, et
+                    // la comparaison directe peut utiliser l'index `city`.
                     $sub->where('visibility', 'local')
-                        ->whereHas('company', function (Builder $companyQuery) use ($city) {
-                            $companyQuery->whereRaw(
-                                'LOWER(city) COLLATE utf8mb4_general_ci = LOWER(?) COLLATE utf8mb4_general_ci',
-                                [$city]
-                            );
-                        });
+                        ->whereIn('company_id', Company::query()
+                            ->select('id')
+                            ->where('city', $city));
                 });
         });
+    }
+
+    /**
+     * Exclut les offres de type Stage (slug `stage`). Comme l'ancien
+     * `whereHas`, une offre sans type de contrat est exclue aussi.
+     */
+    public function scopeExcludingInternships(Builder $query): Builder
+    {
+        return $query->whereIn('contract_type_id', ContractType::query()
+            ->select('id')
+            ->where('slug', '!=', 'stage'));
     }
 }

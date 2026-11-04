@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Fascicule;
+use App\Support\FasciculeCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -63,7 +64,9 @@ class FasciculeController extends Controller
         $validated = $this->validateRequest($request, true);
 
         $validated['file_path'] = $this->storePdf($request);
+        $validated['file_type'] = $this->uploadedType($request);
         $validated['file_size'] = $request->file('file')->getSize();
+        $validated = $this->withClassification($validated);
 
         if ($request->hasFile('cover')) {
             $validated['cover_path'] = $this->storeCover($request);
@@ -101,8 +104,10 @@ class FasciculeController extends Controller
                 Storage::disk(Fascicule::FILE_DISK)->delete($fascicule->file_path);
             }
             $validated['file_path'] = $this->storePdf($request);
+            $validated['file_type'] = $this->uploadedType($request);
             $validated['file_size'] = $request->file('file')->getSize();
         }
+        $validated = $this->withClassification($validated);
 
         if ($request->hasFile('cover')) {
             $this->deletePublicFile($fascicule->cover_path);
@@ -166,8 +171,11 @@ class FasciculeController extends Controller
             'level' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'author' => 'nullable|string|max:255',
+            'kind' => 'nullable|in:' . implode(',', [FasciculeCatalog::KIND_SUPPORT, FasciculeCatalog::KIND_BANQUE, FasciculeCatalog::KIND_OTHER]),
+            'filiere_code' => 'nullable|in:' . implode(',', array_keys(FasciculeCatalog::FILIERES)),
+            'domain' => 'nullable|in:' . implode(',', array_keys(FasciculeCatalog::DOMAINS)),
             'pages_count' => 'nullable|integer|min:1|max:100000',
-            'file' => ($creating ? 'required' : 'nullable') . '|file|mimes:pdf|max:51200', // Max 50MB
+            'file' => ($creating ? 'required' : 'nullable') . '|file|mimes:pdf,docx|max:51200', // PDF ou Word, 50 Mo max
             'cover' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             'remove_cover' => 'nullable|boolean',
             'is_published' => 'nullable|boolean',
@@ -177,7 +185,8 @@ class FasciculeController extends Controller
     private function storePdf(Request $request): string
     {
         $file = $request->file('file');
-        $uniqueName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.pdf';
+        $extension = $this->uploadedType($request) === Fascicule::TYPE_DOCX ? 'docx' : 'pdf';
+        $uniqueName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $extension;
 
         return $file->storeAs('fascicules', $uniqueName, Fascicule::FILE_DISK);
     }
@@ -210,5 +219,27 @@ class FasciculeController extends Controller
             'filieres' => $distinct('filiere'),
             'subjects' => $distinct('subject'),
         ];
+    }
+
+    private function uploadedType(Request $request): string
+    {
+        $extension = strtolower((string) $request->file('file')?->getClientOriginalExtension());
+
+        return $extension === 'docx' ? Fascicule::TYPE_DOCX : Fascicule::TYPE_PDF;
+    }
+
+    /**
+     * Type et dossier de rangement : le domaine suit la filière quand elle est choisie.
+     */
+    private function withClassification(array $validated): array
+    {
+        $validated['kind'] = $validated['kind'] ?? FasciculeCatalog::KIND_OTHER;
+        $code = $validated['filiere_code'] ?? null;
+        if (FasciculeCatalog::hasFiliere($code)) {
+            $validated['domain'] = FasciculeCatalog::domainOf($code);
+            $validated['filiere'] = $validated['filiere'] ?? FasciculeCatalog::filiereName($code);
+        }
+
+        return $validated;
     }
 }

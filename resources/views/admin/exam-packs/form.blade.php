@@ -199,7 +199,7 @@
                         <input type="checkbox" name="is_featured" id="is_featured" class="form-check-input" value="1"
                                {{ old('is_featured', $examPack->is_featured ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_featured">
-                            <strong>⭐ Mettre en Avant</strong>
+                            <strong>Mettre en Avant</strong>
                             <small class="d-block text-muted">Affiché dans les recommandations</small>
                         </label>
                     </div>

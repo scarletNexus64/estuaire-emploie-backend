@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamPaper;
 use App\Models\Fascicule;
+use App\Support\FasciculeCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 /**
- * Fascicules (supports de cours PDF) — espace étudiant.
+ * Fascicules (supports de cours, banques d'épreuves, annales) — espace étudiant.
  *
  * La consultation du catalogue est libre pour tout utilisateur connecté
  * (paywall côté app) ; seul le fichier PDF est réservé au Pack Étudiant
@@ -34,6 +36,10 @@ class FasciculeApiController extends Controller
             'id' => $fascicule->id,
             'title' => $fascicule->title,
             'description' => $fascicule->description,
+            'domain' => $fascicule->domain,
+            'filiere_code' => $fascicule->filiere_code,
+            'kind' => $fascicule->kind,
+            'file_type' => $fascicule->file_type ?: Fascicule::TYPE_PDF,
             'filiere' => $fascicule->filiere,
             'level' => $fascicule->level,
             'subject' => $fascicule->subject,
@@ -182,7 +188,7 @@ class FasciculeApiController extends Controller
         return Storage::disk(Fascicule::FILE_DISK)->response(
             $fascicule->file_path,
             $fascicule->downloadName(),
-            ['Content-Type' => 'application/pdf']
+            ['Content-Type' => $fascicule->mimeType()]
         );
     }
 
@@ -213,7 +219,7 @@ class FasciculeApiController extends Controller
         return Storage::disk(Fascicule::FILE_DISK)->response(
             $fascicule->file_path,
             $fascicule->downloadName(),
-            ['Content-Type' => 'application/pdf']
+            ['Content-Type' => $fascicule->mimeType()]
         );
     }
 }

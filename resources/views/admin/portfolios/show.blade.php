@@ -439,7 +439,7 @@
                         </div>
                         <div class="detail-badges">
                             <span class="detail-badge">{{ ucfirst($portfolio->template_id) }}</span>
-                            <span class="detail-badge">{{ $portfolio->is_public ? '👁️ Public' : '🔒 Privé' }}</span>
+                            <span class="detail-badge">{{ $portfolio->is_public ? 'Public' : 'Privé' }}</span>
                         </div>
                     </div>
                 </div>
@@ -448,7 +448,7 @@
             <div class="detail-card-body">
                 @if($portfolio->bio)
                 <div style="margin-bottom: 2rem;">
-                    <div class="section-title">📝 Bio</div>
+                    <div class="section-title">Bio</div>
                     <p style="color: #6b7280; line-height: 1.6;">{{ $portfolio->bio }}</p>
                 </div>
                 @endif
@@ -695,7 +695,7 @@
     <div>
         <!-- Stats -->
         <div class="stat-card-detail">
-            <div class="section-title">📈 Statistiques</div>
+            <div class="section-title">Statistiques</div>
             <div style="margin-bottom: 1.5rem;">
                 <div class="stat-description">Total Vues</div>
                 <div class="stat-number">{{ number_format($portfolio->view_count) }}</div>
@@ -717,7 +717,7 @@
         <!-- Views by Day Chart -->
         @if($viewsByDay->count() > 0)
         <div class="stat-card-detail">
-            <div class="section-title">📅 Vues par Jour</div>
+            <div class="section-title">Vues par Jour</div>
             <div class="views-chart">
                 @foreach($viewsByDay as $stat)
                 <div class="chart-bar">
@@ -747,7 +747,7 @@
 
         <!-- Actions -->
         <div class="stat-card-detail">
-            <div class="section-title">⚡ Actions</div>
+            <div class="section-title">Actions</div>
             <a href="{{ $portfolio->public_url }}" target="_blank" class="action-button action-button-primary">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>

@@ -15,6 +15,14 @@ return [
     'recharge_initiated' => 'Top-up initiated successfully',
     'recharge_init_error' => 'Error initiating the top-up',
     'card_unavailable' => 'Card payment is not available at the moment.',
+    'card_min_amount' => 'The minimum amount for a card payment is :amount FCFA.',
+    'card_gateway_unavailable' => 'The card payment page is temporarily unavailable. Please try again in a moment.',
+    'card_duplicate_attempt' => 'This payment attempt was already recorded. Try again: a new attempt will be created.',
+    'card_init_failed' => 'The card payment could not be started. Please try again.',
+    'card_finish_on_gateway' => 'Complete the payment on the secure page.',
+    'card_payment_expired' => 'The payment was not completed in time and has expired.',
+    'card_payment_cancelled' => 'The card payment was cancelled.',
+    'card_payment_declined' => 'The card payment was declined.',
     'verification_error' => 'Verification error',
 
     // Payments

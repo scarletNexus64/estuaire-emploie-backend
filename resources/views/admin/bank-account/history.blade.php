@@ -28,7 +28,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-muted mb-1 small">Retraits Complétés</p>
-                            <h5 class="mb-0 fw-bold">{{ $withdrawals->where('status', 'completed')->count() }}</h5>
+                            <h5 class="mb-0 fw-bold">{{ \App\Models\PlatformWithdrawal::where('status', 'completed')->count() }}</h5>
                         </div>
                         <i class="fas fa-check-circle fa-2x text-success opacity-50"></i>
                     </div>
@@ -41,7 +41,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-muted mb-1 small">En Attente</p>
-                            <h5 class="mb-0 fw-bold">{{ $withdrawals->where('status', 'pending')->count() }}</h5>
+                            <h5 class="mb-0 fw-bold">{{ \App\Models\PlatformWithdrawal::where('status', 'pending')->count() }}</h5>
                         </div>
                         <i class="fas fa-clock fa-2x text-warning opacity-50"></i>
                     </div>
@@ -54,7 +54,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-muted mb-1 small">Échoués</p>
-                            <h5 class="mb-0 fw-bold">{{ $withdrawals->where('status', 'failed')->count() }}</h5>
+                            <h5 class="mb-0 fw-bold">{{ \App\Models\PlatformWithdrawal::where('status', 'failed')->count() }}</h5>
                         </div>
                         <i class="fas fa-times-circle fa-2x text-danger opacity-50"></i>
                     </div>

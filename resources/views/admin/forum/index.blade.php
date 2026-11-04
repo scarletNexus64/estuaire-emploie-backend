@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">💬 Forum de Discussion</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Forum de Discussion</h1>
             <p class="text-gray-600 mt-1">Questions des étudiants et réponses des formateurs</p>
         </div>
         <a href="{{ route('admin.forum.admins') }}" class="btn btn-secondary">
@@ -76,7 +76,7 @@
     <!-- Filtres -->
     <div class="card mb-6">
         <div class="card-header">
-            <h3 class="card-title">🔍 Filtres de recherche</h3>
+            <h3 class="card-title">Filtres de recherche</h3>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.forum.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -140,7 +140,7 @@
     <!-- Répondre au forum -->
     <div class="card mb-6 bg-green-50 border-green-200">
         <div class="card-header bg-green-100">
-            <h3 class="card-title text-green-800">✍️ Répondre au forum</h3>
+            <h3 class="card-title text-green-800">Répondre au forum</h3>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('admin.forum.reply') }}">
@@ -164,7 +164,7 @@
     <!-- Liste des messages -->
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">📋 Messages du forum ({{ $messages->total() }})</h3>
+            <h3 class="card-title">Messages du forum ({{ $messages->total() }})</h3>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

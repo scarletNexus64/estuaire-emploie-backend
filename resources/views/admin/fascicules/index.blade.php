@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">📘 Fascicules</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Fascicules</h1>
             <p class="text-gray-600 mt-1">Supports de cours PDF réservés au Pack Étudiant</p>
         </div>
         <a href="{{ route('admin.fascicules.create') }}" class="btn btn-primary">
@@ -25,7 +25,7 @@
     <!-- Filtres -->
     <div class="card mb-6">
         <div class="card-header">
-            <h3 class="card-title">🔍 Filtres de recherche</h3>
+            <h3 class="card-title">Filtres de recherche</h3>
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('admin.fascicules.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -80,7 +80,7 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
-                📋 Liste des fascicules
+                Liste des fascicules
                 <span class="badge badge-primary ml-2">{{ $fascicules->total() }}</span>
             </h3>
         </div>

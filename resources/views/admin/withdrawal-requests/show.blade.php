@@ -25,11 +25,11 @@
                     <strong>Statut:</strong>
                     <div>
                         @if($request->status === 'pending')
-                            <span class="badge badge-warning">⏳ En Attente</span>
+                            <span class="badge badge-warning">En Attente</span>
                         @elseif($request->status === 'approved')
-                            <span class="badge badge-success">✅ Approuvée</span>
+                            <span class="badge badge-success">Approuvée</span>
                         @else
-                            <span class="badge badge-danger">❌ Refusée</span>
+                            <span class="badge badge-danger">Refusée</span>
                         @endif
                     </div>
                 </div>
@@ -91,10 +91,10 @@
 
                 <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
                     <button type="button" onclick="submitForm('approve')" class="btn btn-success" style="flex: 1;">
-                        ✅ Approuver et Effectuer le Retrait
+                        Approuver et Effectuer le Retrait
                     </button>
                     <button type="button" onclick="submitForm('reject')" class="btn btn-danger" style="flex: 1;">
-                        ❌ Refuser la Demande
+                        Refuser la Demande
                     </button>
                 </div>
 

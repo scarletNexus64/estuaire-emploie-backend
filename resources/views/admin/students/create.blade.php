@@ -126,7 +126,7 @@
 
         <div class="card-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
             <a href="{{ route('admin.students.index') }}" class="btn btn-secondary">Annuler</a>
-            <button type="submit" class="btn btn-primary">✅ Créer l'Étudiant</button>
+            <button type="submit" class="btn btn-primary">Créer l'Étudiant</button>
         </div>
     </form>
 </div>

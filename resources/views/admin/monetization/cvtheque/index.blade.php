@@ -35,7 +35,7 @@
                 </div>
             </div>
             <h3 class="text-gray-600 text-sm font-medium mb-1">CVs Publics</h3>
-            <p class="text-3xl font-bold text-gray-900">{{ number_format($resumes->where('is_public', true)->count()) }}</p>
+            <p class="text-3xl font-bold text-gray-900">{{ number_format(\App\Models\Resume::whereHas('user')->where('is_public', true)->count()) }}</p>
         </div>
 
         <div class="bg-white rounded-xl shadow-sm p-6">

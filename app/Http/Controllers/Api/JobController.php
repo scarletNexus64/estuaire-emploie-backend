@@ -4,11 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\Company;
+use App\Models\CompanyCategory;
 use App\Models\Job;
+use App\Models\Specialty;
 use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * @OA\Tag(
@@ -138,9 +145,7 @@ class JobController extends Controller
         // Utilisé par le home candidat : les stages sont présentés ailleurs
         // (section étudiant) et ne doivent pas polluer la liste des offres.
         if ($request->boolean('exclude_internships')) {
-            $query->whereHas('contractType', function ($q) {
-                $q->where('slug', '!=', 'stage');
-            });
+            $query->excludingInternships();
         }
 
         // Filtre par spécialité académique (filière).
@@ -167,38 +172,9 @@ class JobController extends Controller
             });
         }
 
-        // Recherche améliorée avec support des accents
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-
-            // Normaliser la recherche (retirer les accents pour meilleure correspondance)
-            $normalizedSearch = $this->normalizeString($search);
-
-            $query->where(function ($q) use ($search, $normalizedSearch) {
-                // Recherche dans le titre (insensible aux accents via COLLATE)
-                $q->whereRaw('LOWER(title) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                    // Recherche dans la description
-                    ->orWhereRaw('LOWER(description) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                    // Recherche dans les exigences
-                    ->orWhereRaw('LOWER(requirements) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                    // Recherche dans le nom de l'entreprise
-                    ->orWhereHas('company', function ($companyQuery) use ($normalizedSearch) {
-                        $companyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
-                    })
-                    // Recherche dans la catégorie (table company_categories :
-                    // colonnes level_1/2/3, pas de colonne `name`).
-                    ->orWhereHas('category', function ($categoryQuery) use ($normalizedSearch) {
-                        $categoryQuery->where(function ($c) use ($normalizedSearch) {
-                            $c->whereRaw('LOWER(level_1) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                                ->orWhereRaw('LOWER(level_2) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"])
-                                ->orWhereRaw('LOWER(level_3) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
-                        });
-                    })
-                    // Recherche dans la spécialité académique (filière).
-                    ->orWhereHas('specialty', function ($specialtyQuery) use ($normalizedSearch) {
-                        $specialtyQuery->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', ["%{$normalizedSearch}%"]);
-                    });
-            });
+        // Recherche texte (insensible aux accents).
+        if ($request->filled('search') && is_string($request->search)) {
+            $this->applySearch($query, $request->search);
         }
 
         // Limitation pour les candidats en mode preview
@@ -208,14 +184,14 @@ class JobController extends Controller
         if ($user && $user->isCandidate() && $user->isCandidateInPreviewMode()) {
             // Les candidats sans abonnement ne voient que 5 offres
             $previewLimit = 5;
-            Log::info("[JobController] Candidate in preview mode - limiting to {$previewLimit} jobs", [
+            Log::debug("[JobController] Candidate in preview mode - limiting to {$previewLimit} jobs", [
                 'user_id' => $user->id,
             ]);
         }
 
         // Appliquer la limite si nécessaire
         if ($previewLimit !== null) {
-            $jobs = $query->latest()
+            $jobs = $query->latest()->orderByDesc('id')
                 ->limit($previewLimit)
                 ->get();
 
@@ -244,7 +220,7 @@ class JobController extends Controller
         if ($useSimplePagination) {
             // simplePaginate() : plus rapide, pas de "total" ni "last_page"
             // Parfait pour le scroll infini (on a juste besoin de savoir s'il y a plus de données)
-            $jobs = $query->latest()
+            $jobs = $query->latest()->orderByDesc('id')
                 ->simplePaginate($perPage);
 
             $response = $jobs->toArray();
@@ -253,7 +229,7 @@ class JobController extends Controller
         } else {
             // paginate() : calcule le total (plus lent mais donne plus d'infos)
             // À utiliser uniquement si on a besoin du nombre total de pages
-            $jobs = $query->latest()
+            $jobs = $query->latest()->orderByDesc('id')
                 ->paginate($perPage);
 
             $response = $jobs->toArray();
@@ -262,6 +238,91 @@ class JobController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    /**
+     * Mots ignorés par l'index FULLTEXT InnoDB (liste par défaut) : exigés
+     * avec `+`, ils feraient échouer la recherche.
+     */
+    private const FULLTEXT_STOPWORDS = [
+        'a', 'about', 'an', 'are', 'as', 'at', 'be', 'by', 'com', 'de', 'en',
+        'for', 'from', 'how', 'i', 'in', 'is', 'it', 'la', 'of', 'on', 'or',
+        'that', 'the', 'this', 'to', 'was', 'what', 'when', 'where', 'who',
+        'will', 'with', 'und', 'www',
+    ];
+
+    /**
+     * Filtre texte des offres : titre, description, exigences, entreprise,
+     * catégorie et filière.
+     *
+     * - Titre/description/exigences : index FULLTEXT quand il existe (chaque
+     *   mot doit apparaître, en début de mot : « dev » trouve « développeur »).
+     *   Sinon, ou pour des mots trop courts, repli sur l'ancien LIKE.
+     * - Entreprise/catégorie/filière : sous-requêtes `IN (...)` non
+     *   corrélées sur des petites tables, au lieu de `whereHas` (EXISTS
+     *   réévalué pour chaque offre).
+     */
+    private function applySearch($query, string $search): void
+    {
+        $normalized = trim(preg_replace('/\s+/', ' ', $this->normalizeString($search)));
+        if ($normalized === '') {
+            return;
+        }
+        $like = "%{$normalized}%";
+
+        $words = array_values(array_filter(
+            explode(' ', $normalized),
+            fn ($w) => mb_strlen($w) >= 3 && ! in_array($w, self::FULLTEXT_STOPWORDS, true)
+        ));
+        // Tous les mots doivent être indexables, sinon le FULLTEXT ignorerait
+        // une partie de la recherche (ex. « ma », « it ») : on garde le LIKE.
+        $allIndexable = count($words) === count(explode(' ', $normalized));
+        $useFullText = $allIndexable && $words !== [] && $this->jobsFullTextAvailable();
+
+        $query->where(function ($q) use ($like, $words, $useFullText) {
+            if ($useFullText) {
+                $boolean = implode(' ', array_map(fn ($w) => '+'.$w.'*', $words));
+                $q->whereRaw(
+                    'MATCH(title, description, requirements) AGAINST (? IN BOOLEAN MODE)',
+                    [$boolean]
+                );
+            } else {
+                $q->whereRaw('LOWER(title) COLLATE utf8mb4_general_ci LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(description) COLLATE utf8mb4_general_ci LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(requirements) COLLATE utf8mb4_general_ci LIKE ?', [$like]);
+            }
+
+            $q->orWhereIn('company_id', Company::query()
+                ->select('id')
+                ->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', [$like]))
+                // Table company_categories : colonnes level_1/2/3, pas de `name`.
+                ->orWhereIn('category_id', CompanyCategory::query()
+                    ->select('id')
+                    ->where(function ($c) use ($like) {
+                        $c->whereRaw('LOWER(level_1) COLLATE utf8mb4_general_ci LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(level_2) COLLATE utf8mb4_general_ci LIKE ?', [$like])
+                            ->orWhereRaw('LOWER(level_3) COLLATE utf8mb4_general_ci LIKE ?', [$like]);
+                    }))
+                ->orWhereIn('specialty_id', Specialty::query()
+                    ->select('id')
+                    ->whereRaw('LOWER(name) COLLATE utf8mb4_general_ci LIKE ?', [$like]));
+        });
+    }
+
+    /**
+     * L'index FULLTEXT existe-t-il ? (migration 2026_11_02_100000). Mis en
+     * cache : tant qu'elle n'est pas passée, la recherche reste en LIKE.
+     */
+    private function jobsFullTextAvailable(): bool
+    {
+        return Cache::remember('jobs-fulltext-index', 600, function () {
+            try {
+                return DB::getDriverName() === 'mysql'
+                    && Schema::hasIndex('jobs', 'jobs_search_fulltext');
+            } catch (\Throwable) {
+                return false;
+            }
+        });
     }
 
     /**
@@ -373,12 +434,10 @@ class JobController extends Controller
         // Home candidat : exclure les offres de type Stage (slug `stage`),
         // présentées dans la section étudiant.
         if ($request->boolean('exclude_internships')) {
-            $query->whereHas('contractType', function ($q) {
-                $q->where('slug', '!=', 'stage');
-            });
+            $query->excludingInternships();
         }
 
-        $jobs = $query->latest()
+        $jobs = $query->latest()->orderByDesc('id')
             ->limit(10)
             ->get();
 

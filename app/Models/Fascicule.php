@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Fascicule : support de cours PDF destiné aux étudiants.
- * Fichiers stockés sur le disque "public" (comme les épreuves d'examen).
+ * Fascicule : support de cours ou banque d'épreuves (PDF ou Word) destiné aux étudiants.
+ * Rangé en dossiers Domaine → Filière (voir App\Support\FasciculeCatalog).
  */
 class Fascicule extends Model
 {
@@ -20,17 +20,26 @@ class Fascicule extends Model
      */
     public const FILE_DISK = 'local';
 
+    public const TYPE_PDF = 'pdf';
+    public const TYPE_DOCX = 'docx';
+
     use SoftDeletes;
 
     protected $fillable = [
         'title',
         'slug',
         'description',
+        'domain',
+        'filiere_code',
+        'kind',
+        'volume',
+        'display_order',
         'filiere',
         'level',
         'subject',
         'author',
         'file_path',
+        'file_type',
         'cover_path',
         'pages_count',
         'file_size',
@@ -48,6 +57,8 @@ class Fascicule extends Model
     {
         return [
             'pages_count' => 'integer',
+            'volume' => 'integer',
+            'display_order' => 'integer',
             'file_size' => 'integer',
             'downloads_count' => 'integer',
             'is_published' => 'boolean',
@@ -151,6 +162,23 @@ class Fascicule extends Model
      */
     public function downloadName(): string
     {
-        return (Str::slug($this->title) ?: 'fascicule') . '.pdf';
+        return (Str::slug($this->title) ?: 'fascicule') . '.' . $this->fileExtension();
+    }
+
+    public function isWord(): bool
+    {
+        return $this->file_type === self::TYPE_DOCX;
+    }
+
+    public function fileExtension(): string
+    {
+        return $this->isWord() ? 'docx' : 'pdf';
+    }
+
+    public function mimeType(): string
+    {
+        return $this->isWord()
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/pdf';
     }
 }

@@ -139,6 +139,9 @@ class AuthController extends Controller
             'referred_by_id'   => $referrerId,
         ]);
 
+        // Le jeton de cet appareil ne doit plus servir à un ancien compte.
+        $user->assignFcmToken($validated['fcm_token'] ?? null);
+
         Log::info('✅ [REGISTER] Utilisateur créé avec succès', [
             'user_id' => $user->id,
             'fcm_token_saved' => !empty($user->fcm_token),
@@ -158,7 +161,7 @@ class AuthController extends Controller
         if ($user->isRecruiter()) {
             $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
-        $user->load(['unreadNotifications']);
+        $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
 
         // Ajouter les comptes (pour un nouvel utilisateur, ces valeurs sont toujours 0)
         $user->applications_count = 0;
@@ -299,7 +302,7 @@ public function login(Request $request)
             'fcm_token' => $request->fcm_token
         ]);
         try {
-            $user->update(['fcm_token' => $request->fcm_token]);
+            $user->assignFcmToken($request->fcm_token);
             Log::info('✅ [LOGIN] FCM token enregistré avec succès', ['user_id' => $user->id]);
         } catch (\Throwable $e) {
             Log::error('❌ [LOGIN] Erreur enregistrement FCM token', [
@@ -317,7 +320,7 @@ public function login(Request $request)
     if ($user->isRecruiter()) {
         $user->load(['recruiter.company', 'companies', 'currentCompany']);
     }
-    $user->load(['unreadNotifications']);
+    $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
     $user->applications_count = $user->applications()->count();
     $user->favorites_count = $user->favorites()->count();
 
@@ -466,7 +469,7 @@ public function login(Request $request)
         }
 
         if ($request->filled('fcm_token')) {
-            $user->update(['fcm_token' => $request->fcm_token]);
+            $user->assignFcmToken($request->fcm_token);
         }
 
         $user->forceFill(['last_login_at' => now()])->save();
@@ -474,7 +477,7 @@ public function login(Request $request)
         if ($user->isRecruiter()) {
             $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
-        $user->load(['unreadNotifications']);
+        $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
         $user->applications_count = $user->applications()->count();
         $user->favorites_count = $user->favorites()->count();
 
@@ -598,7 +601,7 @@ public function login(Request $request)
         if ($user->isRecruiter()) {
             $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
-        $user->load(['unreadNotifications']);
+        $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
 
         // Ajouter les compteurs
         $user->applications_count = $user->applications()->count();
@@ -643,7 +646,7 @@ public function login(Request $request)
         if ($user->isRecruiter()) {
             $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
-        $user->load(['unreadNotifications']);
+        $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
 
         // Ajouter les comptes
         $user->applications_count = $user->applications()->count();
@@ -718,7 +721,7 @@ public function login(Request $request)
         if ($user->isRecruiter()) {
             $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
-        $user->load(['unreadNotifications']);
+        $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
 
         // Ajouter les comptes
         $user->applications_count = $user->applications()->count();
@@ -775,6 +778,9 @@ public function login(Request $request)
             'experience_level' => 'nullable|in:junior,intermediaire,senior,expert',
             'portfolio_url' => 'nullable|url',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            // Bannière du profil (plus large : 4 Mo) ; `remove_cover_photo` la retire.
+            'cover_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'remove_cover_photo' => 'sometimes|boolean',
             'country' => 'nullable|string|size:2|exists:countries,code', // Pays de résidence (ISO alpha-2)
             'preferred_currency' => 'nullable|string|size:3', // Devise ISO 4217 (déduite du pays)
         ]);
@@ -795,6 +801,19 @@ public function login(Request $request)
             $validated['profile_photo'] = $request->file('profile_photo')->store('profile_photos', 'public');
         }
 
+        if ($request->hasFile('cover_photo')) {
+            if ($user->cover_photo) {
+                Storage::disk('public')->delete($user->cover_photo);
+            }
+            $validated['cover_photo'] = $request->file('cover_photo')->store('cover_photos', 'public');
+        } elseif ($request->boolean('remove_cover_photo')) {
+            if ($user->cover_photo) {
+                Storage::disk('public')->delete($user->cover_photo);
+            }
+            $validated['cover_photo'] = null;
+        }
+        unset($validated['remove_cover_photo']);
+
         $user->update($validated);
         $user = $user->fresh();
 
@@ -802,7 +821,7 @@ public function login(Request $request)
         if ($user->isRecruiter()) {
             $user->load(['recruiter.company', 'companies', 'currentCompany']);
         }
-        $user->load(['unreadNotifications']);
+        $user->loadCount('unreadNotifications'); // compteur seul (unread_notifications_count), la liste n'est pas lue par l'app
 
         // Ajouter les comptes
         $user->applications_count = $user->applications()->count();

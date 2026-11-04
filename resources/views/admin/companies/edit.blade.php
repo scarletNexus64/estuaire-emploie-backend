@@ -91,7 +91,7 @@
             {{-- Barre de recherche --}}
             <div style="position: relative; margin-bottom: 0.75rem;">
                 <input type="text" id="catSearch" class="form-control"
-                       placeholder="🔍 Rechercher une catégorie..."
+                       placeholder="Rechercher une catégorie..."
                        style="padding-left: 2.25rem;">
                 <svg width="18" height="18" fill="none" stroke="#6b7280" viewBox="0 0 24 24" stroke-width="2"
                      style="position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); pointer-events: none;">
@@ -190,7 +190,7 @@
             <div style="margin-top: 1rem; margin-bottom: 1rem;">
                 <div id="map" style="width: 100%; height: 380px; border-radius: 8px; border: 1px solid #e5e7eb;"></div>
                 <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
-                    💡 Cliquez sur la carte ou déplacez le marqueur pour ajuster la position exacte.
+                    Cliquez sur la carte ou déplacez le marqueur pour ajuster la position exacte.
                 </small>
             </div>
 

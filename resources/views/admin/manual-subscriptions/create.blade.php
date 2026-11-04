@@ -64,10 +64,10 @@
 
                     @php
                         $sections = [
-                            ['title' => '📦 Packs Recruteur', 'items' => $recruiterPlans, 'type' => 'plan'],
-                            ['title' => '🎓 Packs Candidat', 'items' => $jobSeekerPlans, 'type' => 'plan'],
-                            ['title' => '✨ Services Premium', 'items' => $premiumServices, 'type' => 'premium_service'],
-                            ['title' => '🚀 Add-ons', 'items' => $addonServices, 'type' => 'addon_service'],
+                            ['title' => 'Packs Recruteur', 'items' => $recruiterPlans, 'type' => 'plan'],
+                            ['title' => 'Packs Candidat', 'items' => $jobSeekerPlans, 'type' => 'plan'],
+                            ['title' => 'Services Premium', 'items' => $premiumServices, 'type' => 'premium_service'],
+                            ['title' => 'Add-ons', 'items' => $addonServices, 'type' => 'addon_service'],
                         ];
                     @endphp
 

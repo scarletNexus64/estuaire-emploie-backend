@@ -40,7 +40,7 @@
         <div class="stat-header">
             <div>
                 <div class="stat-label">Actifs</div>
-                <div class="stat-value">{{ $admins->where('is_active', true)->count() }}</div>
+                <div class="stat-value">{{ \App\Models\User::where('role', 'admin')->where('is_active', true)->count() }}</div>
             </div>
             <div class="stat-icon">✓</div>
         </div>
@@ -113,7 +113,7 @@
                     </td>
                     <td>
                         @if($admin->isSuperAdmin())
-                            <span class="badge badge-primary" style="font-size: 0.8125rem;">⭐ Super Administrateur</span>
+                            <span class="badge badge-primary" style="font-size: 0.8125rem;">Super Administrateur</span>
                         @elseif($admin->admin_role)
                             <span class="badge badge-info" style="font-size: 0.8125rem;">{{ $admin->admin_role->label() }}</span>
                         @else

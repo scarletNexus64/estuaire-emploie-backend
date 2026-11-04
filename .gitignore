@@ -47,3 +47,10 @@ firebase/estuaire-emplois-firebase-adminsdk-fbsvc-6c0d8105ad.json
 
 CLAUDE.md
 .claude/
+
+# Comptes de service Firebase : jamais dans git (une clé publiée est révoquée par Google)
+/storage/firebase/*.json
+/firebase/*.json
+# Sources et fichiers générés des fascicules (trop lourds pour git)
+/database/data/*.rar
+/storage/app/fascicules/
