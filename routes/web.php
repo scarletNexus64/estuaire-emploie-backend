@@ -561,6 +561,28 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         Route::patch('/{ad}/toggle', [\App\Http\Controllers\Admin\AdvertisementController::class, 'toggle'])->name('toggle');
     });
 
+    // FIL D'ACTUALITÉ - Vidéos courtes « métiers »
+    Route::middleware('permission:manage_advertisements')->prefix('feed-videos')->name('feed-videos.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FeedVideoController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\FeedVideoController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\FeedVideoController::class, 'store'])->name('store');
+        Route::get('/{feedVideo}/edit', [\App\Http\Controllers\Admin\FeedVideoController::class, 'edit'])->name('edit');
+        Route::put('/{feedVideo}', [\App\Http\Controllers\Admin\FeedVideoController::class, 'update'])->name('update');
+        Route::delete('/{feedVideo}', [\App\Http\Controllers\Admin\FeedVideoController::class, 'destroy'])->name('destroy');
+        Route::patch('/{feedVideo}/toggle', [\App\Http\Controllers\Admin\FeedVideoController::class, 'toggle'])->name('toggle');
+    });
+
+    // FIL D'ACTUALITÉ - Pubs des applications partenaires
+    Route::middleware('permission:manage_advertisements')->prefix('feed-partner-ads')->name('feed-partner-ads.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'store'])->name('store');
+        Route::get('/{feedPartnerAd}/edit', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'edit'])->name('edit');
+        Route::put('/{feedPartnerAd}', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'update'])->name('update');
+        Route::delete('/{feedPartnerAd}', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'destroy'])->name('destroy');
+        Route::patch('/{feedPartnerAd}/toggle', [\App\Http\Controllers\Admin\FeedPartnerAdController::class, 'toggle'])->name('toggle');
+    });
+
     // MONÉTISATION - Tarification du sponsoring (Marketing Digital)
     Route::middleware('permission:manage_advertisements')->prefix('ad-pricing')->name('ad-pricing.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\AdPricingController::class, 'index'])->name('index');

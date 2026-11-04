@@ -26,6 +26,9 @@ class DatabaseSeeder extends Seeder
             AddonServiceConfigSeeder::class, // Services à la carte pour recruteurs
             AdPricingConfigSeeder::class, // Grille tarifaire du sponsoring (Marketing Digital)
             DefaultAdvertisementSeeder::class, // 13 bannières de repli de l'accueil (avec redirections)
+            FeedPartnerAdSeeder::class, // Cartes du fil : Estuaire Achats, Estuaire Eat, GFS (logos copiés sur le disque public)
+            // Vidéos courtes « métiers » du fil : téléchargements lourds, à lancer
+            // manuellement via `php artisan db:seed --class=FeedVideoSeeder`.
 
             // Utilisateurs et données de test
             SuperAdminSeeder::class, // Admin principal (à exécuter en premier)

@@ -292,6 +292,23 @@ class NavigationService
                 ],
             ],
             [
+                'section' => 'Fil d\'actualité',
+                'items' => [
+                    [
+                        'name' => 'Vidéos du fil',
+                        'route' => 'admin.feed-videos.index',
+                        'icon' => 'fas fa-video',
+                        'permission' => 'manage_advertisements',
+                    ],
+                    [
+                        'name' => 'Pubs partenaires',
+                        'route' => 'admin.feed-partner-ads.index',
+                        'icon' => 'fas fa-bullhorn',
+                        'permission' => 'manage_advertisements',
+                    ],
+                ],
+            ],
+            [
                 'section' => 'Communications',
                 'items' => [
                     [
@@ -444,6 +461,8 @@ class NavigationService
             AdminRole::ADVERTISING_MANAGER->value => [
                 'admin.announcements.index',
                 'admin.advertisements.index',
+                'admin.feed-videos.index',
+                'admin.feed-partner-ads.index',
             ],
 
             AdminRole::FINANCE_MANAGER->value => [

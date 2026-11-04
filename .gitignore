@@ -54,3 +54,8 @@ CLAUDE.md
 # Sources et fichiers générés des fascicules (trop lourds pour git)
 /database/data/*.rar
 /storage/app/fascicules/
+# Médias du fil (vidéos métiers) : copiés sur le serveur à part, pas dans git
+/storage/app/feed-videos-originals/
+/storage/app/public/feed-videos/
+/storage/app/public/feed-ads/
+/database/seeders/data/feed-videos/

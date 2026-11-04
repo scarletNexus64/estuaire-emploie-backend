@@ -168,6 +168,20 @@ Route::get('/advertisements', [AdvertisementController::class, 'index']);
 Route::post('/advertisements/{id}/impression', [AdvertisementController::class, 'recordImpression']);
 Route::post('/advertisements/{id}/click', [AdvertisementController::class, 'recordClick']);
 
+// Fil candidat : vidéos courtes « métiers » + cartes des apps partenaires (publiques)
+Route::prefix('feed')->group(function () {
+    Route::get('/videos', [\App\Http\Controllers\Api\FeedMediaController::class, 'videos'])->middleware('throttle:60,1');
+    Route::get('/videos/{id}/stream', [\App\Http\Controllers\Api\FeedMediaController::class, 'stream'])
+        ->whereNumber('id');
+    Route::post('/videos/{id}/view', [\App\Http\Controllers\Api\FeedMediaController::class, 'recordView'])
+        ->whereNumber('id')->middleware('throttle:120,1');
+    Route::get('/partner-ads', [\App\Http\Controllers\Api\FeedMediaController::class, 'partnerAds'])->middleware('throttle:60,1');
+    Route::post('/partner-ads/{id}/impression', [\App\Http\Controllers\Api\FeedMediaController::class, 'recordImpression'])
+        ->whereNumber('id')->middleware('throttle:120,1');
+    Route::post('/partner-ads/{id}/click', [\App\Http\Controllers\Api\FeedMediaController::class, 'recordClick'])
+        ->whereNumber('id')->middleware('throttle:60,1');
+});
+
 // Catégories de services rapides (publique)
 Route::get('/service-categories', [QuickServiceController::class, 'categories']);
 

@@ -1,0 +1,122 @@
+[
+  {
+    "title": "Infirmière : au cœur des soins",
+    "description": "L'infirmière accompagne les patients au quotidien : soins, suivi des traitements et écoute. Un métier d'empathie et de rigueur, accessible après une formation en soins infirmiers (IDE) dans une école agréée.",
+    "category": "Santé",
+    "video_url": "https://videos.pexels.com/video-files/6130562/6130562-hd_720_1280_30fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/6130562/pictures/preview-0.jpeg",
+    "duration_seconds": 18,
+    "author_name": "RDNE Stock project",
+    "source_credit": "Pexels — RDNE Stock project",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/nurse-looking-at-camera-6130562/"
+  },
+  {
+    "title": "Enseignante : transmettre pour bâtir l'avenir",
+    "description": "L'enseignant prépare ses cours, anime la classe et accompagne chaque élève dans sa progression. Pédagogie, patience et sens de l'organisation sont clés ; on y accède via une licence puis l'ENS ou un concours de recrutement.",
+    "category": "Éducation",
+    "video_url": "https://videos.pexels.com/video-files/5904786/5904786-hd_720_1280_24fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/5904786/pictures/preview-0.jpeg",
+    "duration_seconds": 19,
+    "author_name": "Katerina Holmes",
+    "source_credit": "Pexels — Katerina Holmes",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/students-and-teacher-in-classroom-5904786/"
+  },
+  {
+    "title": "BTP : bâtir en toute sécurité",
+    "description": "Sur le chantier, le technicien ou l'ingénieur BTP contrôle la conformité des ouvrages et la sécurité des équipes. Lecture de plans, rigueur et normes de construction : le métier s'apprend en BTS, DUT ou école d'ingénieurs en génie civil.",
+    "category": "BTP",
+    "video_url": "https://videos.pexels.com/video-files/8293129/8293129-hd_720_1280_25fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/8293129/pictures/preview-0.jpeg",
+    "duration_seconds": 22,
+    "author_name": "RDNE Stock project",
+    "source_credit": "Pexels — RDNE Stock project",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/construction-worker-inspecting-property-for-safety-8293129/"
+  },
+  {
+    "title": "Agricultrice : nourrir le pays",
+    "description": "L'agriculteur cultive, irrigue et récolte en suivant les saisons et les besoins du marché. Connaissance des sols, gestion et esprit d'entreprise sont essentiels ; lycées agricoles, formations en agronomie et coopératives ouvrent la voie.",
+    "category": "Agriculture",
+    "video_url": "https://videos.pexels.com/video-files/5527767/5527767-hd_720_1280_24fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/5527767/pictures/preview-0.jpeg",
+    "duration_seconds": 20,
+    "author_name": "Zen Chung",
+    "source_credit": "Pexels — Zen Chung",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/a-woman-watering-her-crops-using-a-plastic-bucket-sprinkler-5527767/"
+  },
+  {
+    "title": "Commerçant : l'art de vendre au marché",
+    "description": "Le commerçant conseille ses clients, met en valeur ses produits et gère son stock et sa caisse. Relation client, négociation et sens du calcul font la différence ; on se lance par l'expérience terrain ou une formation en commerce et vente.",
+    "category": "Commerce",
+    "video_url": "https://videos.pexels.com/video-files/8540545/8540545-hd_720_1280_30fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/8540545/pictures/preview-0.jpeg",
+    "duration_seconds": 21,
+    "author_name": "RDNE Stock project",
+    "source_credit": "Pexels — RDNE Stock project",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/a-farmer-selling-vegetables-and-fruits-8540545/"
+  },
+  {
+    "title": "Comptable : les chiffres au service de l'entreprise",
+    "description": "Le comptable enregistre les opérations, prépare les bilans et veille à la santé financière de l'entreprise. Rigueur, maîtrise des logiciels de gestion et du droit fiscal sont attendues ; un BTS ou une licence en comptabilité-gestion permet de débuter.",
+    "category": "Finance",
+    "video_url": "https://videos.pexels.com/video-files/5683799/5683799-hd_720_1280_25fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/5683799/pictures/preview-0.jpeg",
+    "duration_seconds": 28,
+    "author_name": "Tima Miroshnichenko",
+    "source_credit": "Pexels — Tima Miroshnichenko",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/close-up-of-a-man-working-on-a-table-5683799/"
+  },
+  {
+    "title": "Développeur : coder les solutions de demain",
+    "description": "Le développeur conçoit des applications et des sites web, de l'analyse du besoin à la mise en ligne. Logique, curiosité et apprentissage continu sont indispensables ; une licence en informatique, un bootcamp ou l'autoformation permettent d'y accéder.",
+    "category": "Tech",
+    "video_url": "https://assets.mixkit.co/videos/39854/39854-720.mp4",
+    "thumbnail_url": "https://assets.mixkit.co/videos/39854/39854-thumb-720-0.jpg",
+    "duration_seconds": 23,
+    "author_name": "Mixkit",
+    "source_credit": "Mixkit",
+    "orientation": "portrait",
+    "source_page": "https://mixkit.co/free-stock-video/exhausted-man-working-in-an-office-overtime-39854/"
+  },
+  {
+    "title": "Cuisinier : la passion du goût",
+    "description": "Le cuisinier prépare les plats, gère les cuissons et respecte des règles d'hygiène strictes, souvent en plein coup de feu. Créativité, endurance et organisation sont clés ; CAP cuisine, écoles hôtelières ou apprentissage en restaurant ouvrent la porte.",
+    "category": "Restauration",
+    "video_url": "https://videos.pexels.com/video-files/5793730/5793730-hd_720_1280_25fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/5793730/pictures/preview-0.jpeg",
+    "duration_seconds": 22,
+    "author_name": "Tima Miroshnichenko",
+    "source_credit": "Pexels — Tima Miroshnichenko",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/person-cooking-inside-a-food-truck-5793730/"
+  },
+  {
+    "title": "Mécanicien : expert de la route",
+    "description": "Le mécanicien diagnostique les pannes, entretient et répare les véhicules. Sens technique, minutie et maîtrise des outils de diagnostic électronique sont recherchés ; un CAP ou un BT en mécanique automobile, puis l'expérience en garage, forment au métier.",
+    "category": "Mécanique",
+    "video_url": "https://videos.pexels.com/video-files/8987301/8987301-hd_720_1280_30fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/8987301/pictures/preview-0.jpeg",
+    "duration_seconds": 23,
+    "author_name": "Artem Podrez",
+    "source_credit": "Pexels — Artem Podrez",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/mechanic-checking-under-the-car-8987301/"
+  },
+  {
+    "title": "Couturier : l'élégance sur mesure",
+    "description": "Le couturier ou styliste crée des patrons, coupe et assemble les tissus pour réaliser des tenues sur mesure. Créativité, précision et sens du détail sont essentiels ; on se forme en atelier, en CAP couture ou dans une école de mode.",
+    "category": "Mode",
+    "video_url": "https://videos.pexels.com/video-files/6767023/6767023-hd_720_1280_25fps.mp4",
+    "thumbnail_url": "https://images.pexels.com/videos/6767023/pictures/preview-0.jpeg",
+    "duration_seconds": 21,
+    "author_name": "Tima Miroshnichenko",
+    "source_credit": "Pexels — Tima Miroshnichenko",
+    "orientation": "portrait",
+    "source_page": "https://www.pexels.com/video/a-couturier-standing-in-a-sewing-factory-6767023/"
+  }
+]
