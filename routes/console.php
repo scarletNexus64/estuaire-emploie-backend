@@ -64,3 +64,11 @@ Schedule::command('payments:expire-abandoned-cards')
     ->everyTenMinutes()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/card-payment-expirations.log'));
+
+// Export SQL quotidien à minuit (Paris), deux copies locales et mail chaque jour.
+Schedule::command('backup:database')
+    ->dailyAt('00:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping(120)
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/database-backup.log'));

@@ -32,6 +32,12 @@ class DatabaseSeeder extends Seeder
 
             // Utilisateurs et données de test
             SuperAdminSeeder::class, // Admin principal (à exécuter en premier)
+            // Compte officiel « Estuaire Emploi » destinataire du support in-app
+            // (`POST /api/conversations/support`). Sans ce user en base, l'API
+            // répond 503 et le chat support ne s'ouvre pas côté app.
+            // Idempotent et strictement additif : restaure le compte s'il a été
+            // soft-deleted, ne touche jamais au mot de passe existant.
+            SupportAccountSeeder::class,
             UserSeeder::class, // Utilisateurs de test (recruteurs et candidats)
             CompanySeeder::class,
             RecruiterSeeder::class,

@@ -19,14 +19,8 @@ class CompanyRecoveryService
 {
     public function eligibleQuery()
     {
-        return Company::where('status', 'verified')->whereNotNull('recovery_source')
-            ->whereNotNull('recovery_user_id')->whereNull('recovery_claimed_at')
-            ->has('recruiters', '=', 1)
-            ->whereHas('recoveryAccount', function ($q) {
-                $q->where('role', 'recruiter')->where('is_active', true)->where('must_change_password', true)
-                    ->whereNull('last_login_at')->whereNull('device_id')->whereNull('email_verified_at')
-                    ->has('recruiters', '=', 1);
-            });
+        // Toute entreprise publiée peut faire l'objet d'une demande examinée par l'administration.
+        return Company::where('status', 'verified')->whereNull('recovery_claimed_at');
     }
 
     /** Check again under lock at approval; imported provenance alone is not ownership. */
@@ -47,16 +41,19 @@ class CompanyRecoveryService
         return true;
     }
 
-    public function assertAvailable(Company $company): User
+    public function assertAvailable(Company $company): void
     {
-        if ($company->status !== 'verified' || !$company->recovery_source || $company->recovery_claimed_at) {
+        if ($company->status !== 'verified' || $company->recovery_claimed_at) {
             $this->fail('Cette entreprise ne peut plus être récupérée par ce parcours.');
         }
+    }
+
+    /** Seul un compte d'import identifié et toujours inutilisé peut être remplacé. */
+    private function unusedImportedAccount(Company $company): ?User
+    {
+        if (!$company->recovery_source || !$company->recovery_user_id) return null;
         $user = User::lockForUpdate()->find($company->recovery_user_id);
-        if (!$user || !$this->unusedAccount($company, $user)) {
-            $this->fail('Ce compte a déjà été utilisé ou possède d’autres accès. Une vérification manuelle par l’administration est nécessaire.');
-        }
-        return $user;
+        return $user && $this->unusedAccount($company, $user) ? $user : null;
     }
 
     public function review(int $id, User $admin, bool $approve, ?string $reply): CompanyRecoveryRequest
@@ -71,11 +68,12 @@ class CompanyRecoveryService
                 return $claim;
             }
             if ($claim->mode === 'account' && !$admin->hasPermission('manage_users')) abort(403);
-            $placeholder = $this->assertAvailable($company);
+            $this->assertAvailable($company);
+            $placeholder = $this->unusedImportedAccount($company);
             $password = null;
             if ($claim->mode === 'attach') {
                 $target = User::lockForUpdate()->find($claim->requester_user_id);
-                if (!$target || !$target->is_active || $target->isAdmin() || $target->id === $placeholder->id) {
+                if (!$target || !$target->is_active || $target->isAdmin() || $target->id === $placeholder?->id) {
                     $this->fail('Le compte demandeur n’est plus disponible pour ce rattachement.');
                 }
                 Recruiter::firstOrCreate(['user_id' => $target->id, 'company_id' => $company->id], [
@@ -84,24 +82,35 @@ class CompanyRecoveryService
                 ]);
                 $roles = array_values(array_unique(array_merge($target->available_roles ?? [], [$target->role, 'recruiter'])));
                 $target->forceFill(['available_roles' => $roles, 'role' => 'recruiter', 'current_company_id' => $company->id])->save();
-                $this->invalidateAccess($placeholder);
-                $placeholder->forceFill([
-                    'is_active' => false, 'current_company_id' => null, 'device_id' => null,
-                    'fcm_token' => null, 'phone' => null, 'password' => Hash::make(Str::random(64)),
-                ])->save();
-                Recruiter::where('company_id', $company->id)->where('user_id', $placeholder->id)->delete();
+                if ($placeholder) {
+                    $this->invalidateAccess($placeholder);
+                    $placeholder->forceFill([
+                        'is_active' => false, 'current_company_id' => null, 'device_id' => null,
+                        'fcm_token' => null, 'phone' => null, 'password' => Hash::make(Str::random(64)),
+                    ])->save();
+                    Recruiter::where('company_id', $company->id)->where('user_id', $placeholder->id)->delete();
+                }
             } else {
-                if (User::withTrashed()->where('email', $claim->reply_email)->where('id', '!=', $placeholder->id)->exists()) {
+                if (User::withTrashed()->where('email', $claim->reply_email)
+                    ->when($placeholder, fn ($q) => $q->where('id', '!=', $placeholder->id))->exists()) {
                     $this->fail('Cet email appartient déjà à un compte. Le demandeur doit se connecter et demander le rattachement.');
                 }
-                $target = $placeholder;
-                $this->invalidateAccess($target);
+                $target = $placeholder ?? new User([
+                    'name' => $claim->name, 'role' => 'recruiter', 'available_roles' => ['recruiter'],
+                    'is_active' => true, 'must_change_password' => true,
+                    'password' => Hash::make(Str::random(64)),
+                ]);
+                if ($placeholder) $this->invalidateAccess($target);
                 // The submitted contact phone is not a verified login/recovery factor.
                 $target->forceFill([
                     'email' => $claim->reply_email, 'email_verified_at' => now(),
                     'phone' => null, 'device_id' => null, 'fcm_token' => null,
                     'current_company_id' => $company->id,
                 ])->save();
+                Recruiter::firstOrCreate(['user_id' => $target->id, 'company_id' => $company->id], [
+                    'position' => $claim->position, 'can_publish' => true,
+                    'can_view_applications' => true, 'can_modify_company' => true,
+                ]);
                 $password = $this->setTemporaryPassword($target);
             }
             $company->forceFill(['recovery_claimed_at' => now(), 'recovery_claimed_by' => $target->id])->save();

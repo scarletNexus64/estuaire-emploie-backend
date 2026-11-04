@@ -85,15 +85,20 @@ class WithdrawalRequestController extends Controller
 
             $admin = auth()->user();
             $action = $validated['action'];
-            $adminMessage = $validated['message'];
+            $adminMessage = $validated['message'] ?? null;
 
             $withdrawalRequest = WithdrawalRequest::with('user')->findOrFail($id);
 
             if ($withdrawalRequest->status !== 'pending') {
+                DB::rollBack();
                 return back()->with('error', 'Cette demande a déjà été traitée.');
             }
 
             $user = $withdrawalRequest->user;
+            if (!$user) {
+                DB::rollBack();
+                return back()->with('error', 'Le compte utilisateur a été supprimé. Cette demande ne peut plus être traitée.');
+            }
 
             // Mettre à jour la demande
             $newStatus = $action === 'approve' ? 'approved' : 'rejected';

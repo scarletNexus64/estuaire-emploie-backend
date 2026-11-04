@@ -79,8 +79,9 @@ class CompanyRecoveryController extends Controller
         ];
         if ($detail) {
             // Imported placeholder emails are not verified business contact addresses.
-            $placeholderEmail = $company->recovery_source && (!$company->recovery_source_key
-                || $company->recovery_source_key === hash('sha256', 'entreprises_cameroun:'.$company->email));
+            $placeholderEmail = Str::endsWith(Str::lower($company->email ?? ''), '.invalid')
+                || ($company->recovery_source && (!$company->recovery_source_key
+                || $company->recovery_source_key === hash('sha256', 'entreprises_cameroun:'.$company->email)));
             $data += ['photos_urls' => $company->photos_urls, 'country' => $company->country,
                 'phone' => $company->phone, 'email' => $placeholderEmail ? null : $company->email,
                 'website' => $company->website, 'facebook' => $company->facebook, 'tiktok' => $company->tiktok];

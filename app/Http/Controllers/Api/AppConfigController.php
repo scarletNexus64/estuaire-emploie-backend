@@ -10,7 +10,8 @@ class AppConfigController extends Controller
 {
     /**
      * Configuration publique consommée par l'application mobile au démarrage.
-     * Expose les feature flags globaux (OTP, PayPal).
+     * Expose les feature flags globaux (OTP, PayPal) et les infos de version
+     * (mise à jour forcée / recommandée).
      */
     public function index(): JsonResponse
     {
@@ -19,6 +20,7 @@ class AppConfigController extends Controller
             'data' => [
                 'use_otp' => ServiceConfiguration::isOtpEnabled(),
                 'use_paypal' => ServiceConfiguration::isPaypalEnabled(),
+                ...ServiceConfiguration::getAppVersionInfo(),
             ],
         ]);
     }

@@ -147,6 +147,9 @@ class EntreprisesCamerounSeeder extends Seeder
                     'email' => $email,
                     'phone' => $this->normalizePhone($row['tel']),
                     'description' => $this->buildDescription($row),
+                    // Même défaut que CompanyController::store : l'app mobile attend un
+                    // `domain` non null pour construire ses markers.
+                    'domain' => 'Général',
                     'sector' => $row['secteur'],
                     'website' => null,
                     'address' => $this->buildAddress($row),
@@ -244,7 +247,7 @@ class EntreprisesCamerounSeeder extends Seeder
         return $candidates;
     }
 
-    private function readRows(string $path): array
+    public function readRows(string $path): array
     {
         $links = $this->extractHyperlinks($path);
 
@@ -387,7 +390,7 @@ class EntreprisesCamerounSeeder extends Seeder
     /**
      * Construit une description à partir des services, avis et note Google.
      */
-    private function buildDescription(array $row): string
+    public function buildDescription(array $row): string
     {
         $parts = [];
 
@@ -425,7 +428,7 @@ class EntreprisesCamerounSeeder extends Seeder
      * lisible à partir de la ville, complété par le `place_id` Google qui
      * permet de retrouver l'établissement exact.
      */
-    private function buildAddress(array $row): string
+    public function buildAddress(array $row): string
     {
         return $row['ville'].', Cameroun';
     }
@@ -433,7 +436,7 @@ class EntreprisesCamerounSeeder extends Seeder
     /**
      * Normalise un numéro camerounais au format « +237 6XX XX XX XX ».
      */
-    private function normalizePhone(string $phone): ?string
+    public function normalizePhone(string $phone): ?string
     {
         $digits = preg_replace('/[^\d+]/', '', $phone);
 

@@ -77,7 +77,7 @@
         </div>
 
         <!-- Actions -->
-        @if($request->status === 'pending')
+        @if($request->status === 'pending' && $request->user)
         <div class="card">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600;">Traiter la Demande</h3>
 
@@ -109,6 +109,7 @@
         <div class="card">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600;">Utilisateur</h3>
 
+            @if($request->user)
             <div style="text-align: center; margin-bottom: 1.5rem;">
                 <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700;">
                     {{ strtoupper(substr($request->user->name, 0, 1)) }}
@@ -146,6 +147,9 @@
                     Voir le Wallet
                 </a>
             </div>
+            @else
+                <p>Compte supprimé. Cette demande reste consultable, mais ne peut plus être traitée.</p>
+            @endif
         </div>
     </div>
 </div>

@@ -161,15 +161,69 @@ class CompanyRecoveryTest extends TestCase
         $this->actingAs($this->admin())->post('/admin/company-recoveries/'.$claim->id.'/resend')->assertSessionHasErrors();
     }
 
-    public function test_used_or_multi_company_accounts_are_never_transferred(): void
+    public function test_used_accounts_are_preserved_when_an_attach_request_is_approved(): void
     {
         [$company, $owner] = $this->imported();
         $alice = User::factory()->create();
         $id = $this->actingAs($alice, 'sanctum')->postJson('/api/company-recovery/requests', $this->payload($company))->assertCreated()->json('data.id');
         $owner->update(['last_login_at' => now()]);
-        $this->actingAs($this->admin())->post('/admin/company-recoveries/'.$id.'/review', ['decision' => 'approved', 'verified' => '1'])->assertSessionHasErrors();
+        $before = $owner->fresh()->getAttributes();
+        $this->actingAs($this->admin())->post('/admin/company-recoveries/'.$id.'/review', ['decision' => 'approved', 'verified' => '1'])->assertSessionHasNoErrors();
+        $this->assertSame($before, $owner->fresh()->getAttributes());
+        $this->assertSame($alice->id, $company->fresh()->recovery_claimed_by);
+        $this->assertDatabaseHas('recruiters', ['company_id' => $company->id, 'user_id' => $owner->id]);
+        $this->assertDatabaseHas('recruiters', ['company_id' => $company->id, 'user_id' => $alice->id]);
+        $this->assertDatabaseHas('company_recovery_requests', ['id' => $id, 'status' => 'approved']);
+    }
+
+    public function test_catalog_and_filters_include_verified_companies_without_import_or_owner(): void
+    {
+        $company = Company::create(['name'=>'Entreprise ouverte', 'email'=>'directory.test@annuaire.estuaireemploi.invalid', 'city'=>'Kribi', 'status'=>'verified']);
+        Company::create(['name'=>'En attente', 'email'=>'pending@example.test', 'status'=>'pending']);
+        Company::create(['name'=>'Suspendue', 'email'=>'suspended@example.test', 'status'=>'suspended']);
+        $this->getJson('/api/company-recovery/companies')->assertOk()->assertJsonCount(1,'data.data')
+            ->assertJsonPath('data.data.0.id',$company->id)->assertJsonPath('data.data.0.can_request',true);
+        $this->getJson('/api/company-recovery/filters')->assertOk()->assertJsonPath('cities.0','Kribi');
+        $this->getJson('/api/company-recovery/companies/'.$company->id)->assertOk()->assertJsonPath('data.email',null);
+        $alice = User::factory()->create();
+        $id = $this->actingAs($alice,'sanctum')->postJson('/api/company-recovery/requests',$this->payload($company))
+            ->assertCreated()->json('data.id');
+        $this->assertDatabaseMissing('recruiters',['company_id'=>$company->id,'user_id'=>$alice->id]);
+        $this->actingAs($this->admin())->post('/admin/company-recoveries/'.$id.'/review',['decision'=>'approved','verified'=>'1'])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('recruiters',['company_id'=>$company->id,'user_id'=>$alice->id]);
+    }
+
+    public function test_guest_approval_creates_a_separate_account_and_preserves_existing_managers(): void
+    {
+        $company = Company::create(['name'=>'Entreprise gérée', 'email'=>'business@example.test', 'city'=>'Douala', 'status'=>'verified']);
+        $manager = User::factory()->create(['role'=>'recruiter','last_login_at'=>now()]);
+        Recruiter::create(['user_id'=>$manager->id,'company_id'=>$company->id]);
+        $other = Company::create(['name'=>'Autre agence', 'email'=>'branch@example.test', 'status'=>'verified']);
+        Recruiter::create(['user_id'=>$manager->id,'company_id'=>$other->id]);
+        $manager->createToken('existing-access');
+        $before = $manager->fresh()->getAttributes();
+        $claim = $this->guestClaim($company);
+        $this->assertDatabaseMissing('users',['email'=>'alice@example.test']);
+        $this->actingAs($this->admin())->post('/admin/company-recoveries/'.$claim->id.'/review',['decision'=>'approved','verified'=>'1'])->assertSessionHasNoErrors();
+        $target = User::where('email','alice@example.test')->firstOrFail();
+        $this->assertNotEquals($manager->id,$target->id);
+        $this->assertTrue($target->must_change_password);
+        $this->assertNotNull($target->email_verified_at);
+        $this->assertSame($before,$manager->fresh()->getAttributes());
+        $this->assertSame(1,$manager->tokens()->count());
+        $this->assertSame(2,$manager->recruiters()->count());
+        $this->assertDatabaseHas('recruiters',['company_id'=>$company->id,'user_id'=>$target->id,'can_modify_company'=>true]);
+        $this->assertSame($target->id,$company->fresh()->recovery_claimed_by);
+    }
+
+    public function test_approval_rechecks_company_publication_status(): void
+    {
+        $company=Company::create(['name'=>'Entreprise ouverte','email'=>'open@example.test','status'=>'verified']);
+        $claim=$this->guestClaim($company);
+        $company->update(['status'=>'suspended']);
+        $this->actingAs($this->admin())->post('/admin/company-recoveries/'.$claim->id.'/review',['decision'=>'approved','verified'=>'1'])->assertSessionHasErrors();
         $this->assertNull($company->fresh()->recovery_claimed_at);
-        $this->assertDatabaseHas('company_recovery_requests', ['id' => $id, 'status' => 'pending']);
+        $this->assertDatabaseMissing('users',['email'=>'alice@example.test']);
     }
 
     public function test_admin_permissions_and_refusal_reason_are_required(): void

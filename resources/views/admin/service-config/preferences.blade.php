@@ -106,6 +106,65 @@
                     </div>
                 </div>
 
+                <h5 class="mb-3 mt-4">Mise à jour de l'application</h5>
+
+                <div class="card border">
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Contrôle la popup de mise à jour affichée au démarrage de l'app mobile.
+                            Si la version installée est inférieure à la <strong>version minimale</strong>, la mise à jour est <strong>obligatoire</strong> (bloquante).
+                            Si elle est inférieure à la <strong>dernière version</strong>, la mise à jour est simplement <strong>recommandée</strong>.
+                            Laisser vide pour désactiver toute popup.
+                        </p>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="app_latest_version" class="form-label">Dernière version publiée</label>
+                                <input type="text" class="form-control @error('app_latest_version') is-invalid @enderror"
+                                       id="app_latest_version" name="app_latest_version"
+                                       placeholder="3.1.0"
+                                       value="{{ old('app_latest_version', $preferencesConfig?->app_latest_version) }}">
+                                @error('app_latest_version')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="app_min_supported_version" class="form-label">Version minimale supportée</label>
+                                <input type="text" class="form-control @error('app_min_supported_version') is-invalid @enderror"
+                                       id="app_min_supported_version" name="app_min_supported_version"
+                                       placeholder="3.0.0"
+                                       value="{{ old('app_min_supported_version', $preferencesConfig?->app_min_supported_version) }}">
+                                @error('app_min_supported_version')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="app_store_url_android" class="form-label">Lien Play Store (Android)</label>
+                            <input type="url" class="form-control @error('app_store_url_android') is-invalid @enderror"
+                                   id="app_store_url_android" name="app_store_url_android"
+                                   placeholder="https://play.google.com/store/apps/details?id=com.insam.estuaire_emploie"
+                                   value="{{ old('app_store_url_android', $preferencesConfig?->app_store_url_android) }}">
+                            @error('app_store_url_android')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="app_store_url_ios" class="form-label">Lien App Store (iOS)</label>
+                            <input type="url" class="form-control @error('app_store_url_ios') is-invalid @enderror"
+                                   id="app_store_url_ios" name="app_store_url_ios"
+                                   placeholder="https://apps.apple.com/app/id1666203946"
+                                   value="{{ old('app_store_url_ios', $preferencesConfig?->app_store_url_ios) }}">
+                            @error('app_store_url_ios')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="app_release_notes" class="form-label">Notes de version</label>
+                            <textarea class="form-control @error('app_release_notes') is-invalid @enderror"
+                                      id="app_release_notes" name="app_release_notes" rows="4"
+                                      placeholder="• Nouveautés&#10;• Corrections">{{ old('app_release_notes', $preferencesConfig?->app_release_notes) }}</textarea>
+                            @error('app_release_notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <small class="text-muted">Affichées dans la popup de mise à jour (une ligne par point).</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary">
                         <i class="mdi mdi-content-save"></i> Sauvegarder les préférences

@@ -15,6 +15,7 @@ use App\Services\InsamIa\InsamIaException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -28,6 +29,7 @@ class InsamIaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Storage::fake('public');
 
         config([
             'services.insam_ia.base_url' => 'https://insam-ia.test',
@@ -44,9 +46,11 @@ class InsamIaTest extends TestCase
      */
     private function student(): User
     {
-        $user = User::factory()->create(['role' => 'candidate']);
+        $user = User::factory()->create([
+            'role' => 'candidate', 'insam_ia_category_id' => 9, 'insam_ia_niveau' => 1,
+        ]);
 
-        $config = PremiumServiceConfig::create([
+        $config = PremiumServiceConfig::firstOrCreate(['slug' => 'student_mode'], [
             'name' => 'Mode Étudiant',
             'slug' => 'student_mode',
             'description' => 'Accès aux ressources étudiantes',
@@ -100,6 +104,14 @@ class InsamIaTest extends TestCase
             ->assertJsonPath('data.configured', true)
             ->assertJsonPath('data.has_access', true)
             ->assertJsonPath('data.pass_threshold', InsamIaAttestation::PASS_THRESHOLD);
+    }
+
+    public function test_resources_require_a_completed_study_profile(): void
+    {
+        $student = $this->student();
+        $student->update(['insam_ia_category_id' => null, 'insam_ia_niveau' => null]);
+        $this->actingAs($student, 'sanctum')->getJson('/api/insam-ia/exams')
+            ->assertStatus(428)->assertJsonPath('requires_study_profile', true);
     }
 
     // ------------------------------------------------------------------

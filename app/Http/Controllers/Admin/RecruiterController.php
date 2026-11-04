@@ -46,6 +46,11 @@ class RecruiterController extends Controller
             ->with('success', 'Recruteur créé avec succès');
     }
 
+    public function show(Recruiter $recruiter): RedirectResponse
+    {
+        return redirect()->route('admin.recruiters.edit', $recruiter);
+    }
+
     public function edit(Recruiter $recruiter): View
     {
         $companies = Company::where('status', 'verified')->get();

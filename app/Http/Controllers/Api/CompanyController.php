@@ -1047,6 +1047,7 @@ class CompanyController extends Controller
                 'longitude' => 'required|numeric|between:-180,180',
                 'radius' => 'nullable|numeric|min:1|max:500', // Max 500km
                 'level_1' => 'nullable|string|max:255',
+                'level_1_code' => 'nullable|string|max:255',
             ]);
 
             $latitude = $validated['latitude'];
@@ -1058,11 +1059,14 @@ class CompanyController extends Controller
                 ->with('categories')
                 ->withCount('jobs');
 
-            // Filtre par domaine d'activité niveau 1 (CompanyCategory.level_1)
-            if (! empty($validated['level_1'])) {
-                $level1 = $validated['level_1'];
-                $query->whereHas('categories', function ($q) use ($level1) {
-                    $q->where('level_1', $level1);
+            // Filtre par domaine d'activité niveau 1 : code stable, valeur FR
+            // ou libellé traduit (comme pour l'annuaire).
+            $code = $validated['level_1_code'] ?? null;
+            $label = $validated['level_1'] ?? $code;
+            if (! empty($code) || ! empty($label)) {
+                $values = CompanyCategory::resolveLevel1Values($code, $label);
+                $query->whereHas('categories', function ($q) use ($values) {
+                    $q->whereIn('level_1', $values);
                 });
             }
 

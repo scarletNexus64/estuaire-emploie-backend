@@ -70,6 +70,13 @@ class ServiceConfiguration extends Model
         // App feature flags (exposés à l'app mobile via /api/app-config)
         'use_otp',
         'use_paypal',
+
+        // Mise à jour forcée de l'app (exposé via /api/app-config)
+        'app_latest_version',
+        'app_min_supported_version',
+        'app_store_url_android',
+        'app_store_url_ios',
+        'app_release_notes',
     ];
 
     protected $casts = [
@@ -219,6 +226,24 @@ class ServiceConfiguration extends Model
     public static function isPaypalEnabled(): bool
     {
         return (bool) (self::getConfig('notification_preferences')?->use_paypal ?? true);
+    }
+
+    /**
+     * Infos de version de l'app mobile (mise à jour forcée / recommandée).
+     * Toutes les valeurs sont nullables : tant qu'elles sont absentes,
+     * l'app n'affiche aucune popup.
+     */
+    public static function getAppVersionInfo(): array
+    {
+        $config = self::getConfig('notification_preferences');
+
+        return [
+            'latest_version' => $config?->app_latest_version ?: null,
+            'min_supported_version' => $config?->app_min_supported_version ?: null,
+            'store_url_android' => $config?->app_store_url_android ?: null,
+            'store_url_ios' => $config?->app_store_url_ios ?: null,
+            'release_notes' => $config?->app_release_notes ?: null,
+        ];
     }
 
     /**

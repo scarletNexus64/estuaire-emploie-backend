@@ -424,6 +424,14 @@ class ServiceConfigController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'default_notification_channel' => 'required|in:whatsapp,sms',
+            'app_latest_version' => 'nullable|string|max:20|regex:/^\d+\.\d+\.\d+$/',
+            'app_min_supported_version' => 'nullable|string|max:20|regex:/^\d+\.\d+\.\d+$/',
+            'app_store_url_android' => 'nullable|url|max:500',
+            'app_store_url_ios' => 'nullable|url|max:500',
+            'app_release_notes' => 'nullable|string|max:2000',
+        ], [
+            'app_latest_version.regex' => 'La version doit être au format X.Y.Z (ex: 3.1.0).',
+            'app_min_supported_version.regex' => 'La version minimale doit être au format X.Y.Z (ex: 3.0.0).',
         ]);
 
         if ($validator->fails()) {
@@ -440,6 +448,11 @@ class ServiceConfigController extends Controller
                     'default_notification_channel' => $request->default_notification_channel,
                     'use_otp' => $request->has('use_otp'),
                     'use_paypal' => $request->has('use_paypal'),
+                    'app_latest_version' => $request->input('app_latest_version') ?: null,
+                    'app_min_supported_version' => $request->input('app_min_supported_version') ?: null,
+                    'app_store_url_android' => $request->input('app_store_url_android') ?: null,
+                    'app_store_url_ios' => $request->input('app_store_url_ios') ?: null,
+                    'app_release_notes' => $request->input('app_release_notes') ?: null,
                     'is_active' => true,
                 ]
             );

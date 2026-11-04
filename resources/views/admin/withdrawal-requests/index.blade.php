@@ -94,8 +94,8 @@
                 <tr>
                     <td>{{ $request->id }}</td>
                     <td>
-                        <div style="font-weight: 500;">{{ $request->user->name }}</div>
-                        <small style="color: #6c757d;">{{ $request->user->email }}</small>
+                        <div style="font-weight: 500;">{{ $request->user?->name ?? 'Compte supprimé' }}</div>
+                        <small style="color: #6c757d;">{{ $request->user?->email }}</small>
                     </td>
                     <td>
                         <strong>{{ number_format($request->amount, 0, ',', ' ') }} FCFA</strong>

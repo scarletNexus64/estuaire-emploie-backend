@@ -102,7 +102,7 @@ class PortfolioController extends Controller
             ], 422);
         }
 
-        $data = $request->except(['photo', 'cv']);
+        $data = collect($validator->validated())->except(['photo', 'cv'])->all();
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -127,6 +127,11 @@ class PortfolioController extends Controller
             'message' => __('portfolio.saved'),
             'data' => $portfolio,
         ]);
+    }
+
+    public function update(Request $request): JsonResponse
+    {
+        return $this->store($request);
     }
 
     /**

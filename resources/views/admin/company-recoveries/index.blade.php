@@ -21,7 +21,7 @@
 <article class="card recovery-card" id="request-{{ $claim->id }}">
     <h3>#{{ $claim->id }} — {{ $claim->company?->name ?? 'Entreprise indisponible' }}</h3>
     <p class="recovery-muted">{{ $claim->company?->city }} · {{ $claim->created_at->format('d/m/Y H:i') }} · {{ \App\Models\CompanyRecoveryRequest::LABELS[$claim->status] }}</p>
-    <p><strong>{{ $claim->mode === 'attach' ? 'Rattachement au compte existant' : 'Récupération du compte complet' }}</strong></p>
+    <p><strong>{{ $claim->mode === 'attach' ? 'Rattachement au compte existant' : 'Accès via un compte recruteur' }}</strong></p>
     <div class="recovery-grid" style="margin-top:20px">
         <div>
             <h4>Demandeur</h4>
@@ -38,6 +38,7 @@
             <p>Propriété : {{ $claim->company?->recovery_claimed_at ? 'Déjà récupérée' : 'Non réclamée' }}</p>
             <p>Gestionnaires actuels :</p>
             @foreach($claim->company?->recruiters ?? [] as $recruiter)<p class="recovery-muted">#{{ $recruiter->user_id }} {{ $recruiter->user?->name }} — {{ $recruiter->user?->email }}</p>@endforeach
+            <p class="recovery-muted">L’approbation accorde la gestion de cette entreprise au demandeur. Les comptes déjà utilisés et leurs accès sont conservés.</p>
             @php $others = ($competing[$claim->company_id] ?? collect())->where('id', '!=', $claim->id); @endphp
             @if($others->isNotEmpty())
                 <p style="color:#b45309"><strong>{{ $others->count() }} autre(s) demande(s) en attente pour cette entreprise.</strong></p>

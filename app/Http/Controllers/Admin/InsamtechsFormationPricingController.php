@@ -6,18 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\InsamtechsFormationPricing;
 use App\Models\InsamtechsFormationPurchase;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use App\Services\InsamtechsCatalogService;
 
 class InsamtechsFormationPricingController extends Controller
 {
-    /**
-     * URL de l'API InsamTechs
-     */
-    private function insamtechsApiUrl(): string
-    {
-        return config('services.insamtechs.api_url', 'http://127.0.0.1:8001/api');
-    }
-
     /**
      * Liste des prix configurés pour les formations InsamTechs
      */
@@ -56,7 +48,7 @@ class InsamtechsFormationPricingController extends Controller
      */
     public function create(Request $request)
     {
-        // Récupérer les formations depuis l'API InsamTechs
+        // Récupérer les formations du catalogue local
         $formations = $this->fetchInsamtechsFormations();
 
         // Exclure celles qui ont déjà un prix configuré
@@ -151,38 +143,16 @@ class InsamtechsFormationPricingController extends Controller
     }
 
     /**
-     * Récupérer les formations depuis l'API InsamTechs
+     * Récupérer les formations du catalogue local synchronisé
      */
     private function fetchInsamtechsFormations(): array
     {
-        try {
-            $response = Http::timeout(10)->get($this->insamtechsApiUrl() . '/formations', [
-                'per_page' => 500,
-            ]);
-
-            if (!$response->successful()) {
-                return [];
-            }
-
-            $data = $response->json();
-            $formations = $data['data'] ?? [];
-
-            // Extraire les champs pertinents et décoder les titres translatables
-            return array_map(function ($f) {
-                $title = $f['intitule'] ?? '';
-                if (is_array($title) || (is_string($title) && str_starts_with($title, '{'))) {
-                    $decoded = is_string($title) ? json_decode($title, true) : $title;
-                    $title = $decoded['fr'] ?? $decoded['en'] ?? 'Sans titre';
-                }
-                return [
-                    'id' => $f['id'],
-                    'title' => $title,
-                    'slug' => $f['slug'] ?? null,
-                ];
-            }, $formations);
-        } catch (\Exception $e) {
-            \Log::error('Erreur récupération formations InsamTechs: ' . $e->getMessage());
-            return [];
-        }
+        return collect(app(InsamtechsCatalogService::class)->catalog())
+            ->filter(fn ($formation) => $formation['etat'] ?? true)
+            ->map(fn ($formation) => [
+                'id' => $formation['id'],
+                'title' => InsamtechsCatalogService::text($formation['intitule'] ?? '') ?: 'Sans titre',
+                'slug' => $formation['slug'] ?? null,
+            ])->values()->all();
     }
 }

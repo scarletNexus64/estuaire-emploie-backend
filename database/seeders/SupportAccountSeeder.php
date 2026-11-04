@@ -22,6 +22,14 @@ class SupportAccountSeeder extends Seeder
     /** Adresse identifiant le compte ; sert de clé de recherche à l'API. */
     public const EMAIL = 'support@estuaire-emploi.com';
 
+    /**
+     * Avatar du compte : le logo de l'app. Doit vivre sous `profile_photos/`
+     * du disque `public` comme toutes les autres photos de profil — l'app
+     * prefixe la valeur par `/storage/`, donc un chemin `images/...`
+     * (qui vit dans `public/`, hors storage) renvoie un 404 et casse l'avatar.
+     */
+    public const PHOTO = 'profile_photos/logo-estuaire-emploi.png';
+
     public function run(): void
     {
         $user = User::withTrashed()->where('email', self::EMAIL)->first();
@@ -33,7 +41,7 @@ class SupportAccountSeeder extends Seeder
             $user->forceFill([
                 'name' => 'Estuaire Emploi',
                 'role' => 'admin',
-                'profile_photo' => 'images/logo-estuaire-emploi.png',
+                'profile_photo' => self::PHOTO,
                 'is_active' => true,
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ])->save();
@@ -50,7 +58,7 @@ class SupportAccountSeeder extends Seeder
             // Aucun humain ne se connecte avec ce compte : le mot de passe est
             // aléatoire et n'est jamais communiqué.
             'password' => Hash::make(Str::random(48)),
-            'profile_photo' => 'images/logo-estuaire-emploi.png',
+            'profile_photo' => self::PHOTO,
             'bio' => "Compte officiel du support Estuaire Emploi.",
             'is_active' => true,
             'email_verified_at' => now(),
